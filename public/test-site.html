@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay AI Test Sitesi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f1a;
+      color: #e5e5e5;
+      line-height: 1.6;
+    }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+      animation: rotate 30s linear infinite;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      padding: 2rem;
+    }
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: #a0a0b8;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #8B5CF6, #EC4899);
+      color: white;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(139,92,246,0.4);
+    }
+    .features {
+      padding: 80px 2rem;
+      background: #12121f;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: linear-gradient(145deg, #1a1a2e, #1f1f35);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(139,92,246,0.4);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .feature-card h3 {
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .feature-card p {
+      color: #8888a8;
+      font-size: 0.95rem;
+    }
+    .pricing {
+      padding: 80px 2rem;
+      background: linear-gradient(180deg, #0f0f1a, #1a1a2e);
+      text-align: center;
+    }
+    .pricing h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 3rem auto 0;
+    }
+    .pricing-card {
+      background: #1a1a2e;
+      border: 1px solid rgba(139,92,246,0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .pricing-card:hover {
+      transform: translateY(-4px);
+    }
+    .pricing-card.featured {
+      border-color: #8B5CF6;
+      box-shadow: 0 0 30px rgba(139,92,246,0.2);
+    }
+    .pricing-card h3 {
+      color: #fff;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #8B5CF6;
+      margin: 1rem 0;
+    }
+    .price span {
+      font-size: 1rem;
+      color: #8888a8;
+      font-weight: 400;
+    }
+    .pricing-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+    .pricing-card li {
+      padding: 0.5rem 0;
+      color: #a0a0b8;
+      font-size: 0.95rem;
+    }
+    .pricing-card li::before {
+      content: '✓ ';
+      color: #8B5CF6;
+    }
+    .contact-form {
+      padding: 80px 2rem;
+      background: #12121f;
+    }
+    .contact-form h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 2rem;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #1a1a2e;
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      color: #a0a0b8;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0f0f1a;
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #8B5CF6;
+      box-shadow: 0 0 20px rgba(139,92,246,0.15);
+    }
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .cursor-tracker {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(139,92,246,0.9);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: monospace;
+      z-index: 99999;
+      pointer-events: none;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #555;
+      font-size: 0.85rem;
+      background: #0a0a12;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cursor position tracker for testing -->
+  <div class="cursor-tracker" id="cursorTracker">🖱️ x: 0, y: 0</div>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Overlay AI Test</h1>
+      <p>Bu sayfa ekran izleme, cursor takibi ve form doldurma testi için oluşturulmuştur. Fareyi hareket ettirin, tıklayın, formları doldurun — tümü Overlay AI panelinde görünecek!</p>
+      <a href="#features" class="btn">Özellikleri Keşfet</a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 style="text-align:center;font-size:2.5rem;font-weight:700;color:#fff;margin-bottom:1rem;">Neler Test Edilecek?</h2>
+    <p style="text-align:center;color:#8888a8;margin-bottom:3rem;">Aşağıdaki kartlara tıklayın, scroll yapın, fareyi hareket ettirin</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">👁️</div>
+        <h3>Canlı Ekran İzleme</h3>
+        <p>Agent panelinde ziyaretçinin ekranını gerçek zamanlı görebilirsiniz. Cursor hareketleri anlık olarak aktarılır.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🖱️</div>
+        <h3>Cursor Takibi</h3>
+        <p>Fare pozisyonu 12fps ile izlenir. Nereye tıkladığını, nereye scroll ettiğini canlı olarak görün.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>Form Takibi</h3>
+        <p>Ziyaretçinin hangi form alanına odaklandığını ve ne yazdığını (şifreler hariç) görebilirsiniz.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Destekli Yardım</h3>
+        <p>AI, ziyaretçinin aktivitelerine göre öneriler sunar. Pro ve İş paketlerinde mevcuttur.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Sayfa Geçişleri</h3>
+        <p>SPA navigasyonu dahil tüm sayfa geçişleri anlık olarak takip edilir.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Gizlilik Filtresi</h3>
+        <p>Şifreler ve kredi kartı bilgileri otomatik olarak filtrelenir, asla iletilmez.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <h2>Fiyatlandırma</h2>
+    <p style="color:#8888a8;margin-bottom:2rem;">Her bütçeye uygun paketler</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3>Ücretsiz</h3>
+        <div class="price">₺0<span>/ay</span></div>
+        <ul>
+          <li>2 temsilci</li>
+          <li>100 sohbet/ay</li>
+          <li>Temel widget</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <h3>Profesyonel</h3>
+        <div class="price">₺499<span>/ay</span></div>
+        <ul>
+          <li>15 temsilci</li>
+          <li>Sınırsız sohbet</li>
+          <li>Overlay AI</li>
+          <li>AI destekli yardım</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <h3>İş</h3>
+        <div class="price">₺999<span>/ay</span></div>
+        <ul>
+          <li>Sınırsız temsilci</li>
+          <li>Sınırsız sohbet</li>
+          <li>Tüm özellikler</li>
+          <li>Özel marka</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form Section -->
+  <section class="contact-form" id="contact">
+    <h2>İletişim Formu</h2>
+    <p style="text-align:center;color:#8888a8;margin-bottom:2rem;">Bu formu doldurun — Overlay AI form takibini test edin</p>
+    <div class="form-container">
+      <div class="form-group">
+        <label for="name">Ad Soyad</label>
+        <input type="text" id="name" name="name" placeholder="Adınız Soyadınız">
+      </div>
+      <div class="form-group">
+        <label for="email">E-posta</label>
+        <input type="email" id="email" name="email" placeholder="ornek@email.com">
+      </div>
+      <div class="form-group">
+        <label for="phone">Telefon</label>
+        <input type="tel" id="phone" name="phone" placeholder="+90 5XX XXX XX XX">
+      </div>
+      <div class="form-group">
+        <label for="subject">Konu</label>
+        <select id="subject" name="subject">
+          <option value="">Konu seçin...</option>
+          <option value="sales">Satış</option>
+          <option value="support">Destek</option>
+          <option value="partnership">İş Birliği</option>
+          <option value="other">Diğer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="message">Mesajınız</label>
+        <textarea id="message" name="message" placeholder="Mesajınızı yazın..."></textarea>
+      </div>
+      <button type="button" class="btn" style="width:100%;text-align:center;" onclick="alert('Form gönderildi! (test)')">Gönder</button>
+    </div>
+  </section>
+
+  <!-- Long content for scroll testing -->
+  <section style="padding:80px 2rem;background:#0f0f1a;">
+    <div style="max-width:800px;margin:0 auto;">
+      <h2 style="font-size:2rem;color:#fff;margin-bottom:1rem;">Scroll Test Bölümü</h2>
+      <p style="color:#8888a8;margin-bottom:2rem;">Bu bölüm scroll takibini test etmek için uzun içerik içerir. Aşağı kaydırın!</p>
+      <div style="display:grid;gap:1.5rem;">
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 1: Overlay AI nasıl çalışır?</h3>
+          <p style="color:#8888a8;">Overlay AI, ziyaretçilerin sayfanızdaki fare hareketlerini, tıklamalarını, form doldurma süreçlerini ve sayfa geçişlerini gerçek zamanlı olarak izler. Tüm veriler şifreli olarak iletilir ve şifre alanları otomatik olarak filtrelenir.</p>
+        </div>
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 2: Gizlilik nasıl sağlanır?</h3>
+          <p style="color:#8888a8;">Şifre alanları, kredi kartı numaraları ve CVV gibi hassas bilgiler otomatik olarak filtrelenir ve asla sunucuya iletilmez. Ziyaretçiler diledikleri zaman widget'ı kapatabilir.</p>
+        </div>
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 3: Hangi paketlerde mevcut?</h3>
+          <p style="color:#8888a8;">Overlay AI ve AI destekli canlı yardım, Profesyonel (₺499/ay) ve İş (₺999/ay) paketlerinde mevcuttur. Başlangıç paketinde ziyaretçi takibi vardır ancak ekran izleme ve AI özellikleri yoktur.</p>
+        </div>
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 4: Performans etkisi var mı?</h3>
+          <p style="color:#8888a8;">Widget ve izleme scripti yaklaşık 15KB boyutundadır. Mouse hareketleri 80ms aralıklarla, diğer event'lar 500ms aralıklarla gönderilir. Sayfa performansına minimum etki eder.</p>
+        </div>
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 5: Mobil uyumlu mu?</h3>
+          <p style="color:#8888a8;">Evet! Widget mobil cihazlarda tam uyumludur. Mobil ziyaretçilerin dokunma event'ları, scroll ve sayfa geçişleri de takip edilir.</p>
+        </div>
+        <div style="background:#1a1a2e;border-radius:12px;padding:2rem;border:1px solid rgba(139,92,246,0.1);">
+          <h3 style="color:#fff;margin-bottom:0.5rem;">📋 SSS 6: Veriler ne kadar süre saklanır?</h3>
+          <p style="color:#8888a8;">Aktif oturum süresince veriler gerçek zamanlı olarak gösterilir. Oturum sona erdiğinde sayfa görüntüleme geçmişi kalıcı olarak saklanır, ancak cursor hareketleri ve tıklama detayları yalnızca canlı oturumda mevcuttur.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Overlay AI Test Sitesi © 2024 — Bu sayfa yalnızca test amaçlıdır.</p>
+  </footer>
+
+  <!-- Cursor tracker display -->
+  <script>
+    document.addEventListener('mousemove', function(e) {
+      var tracker = document.getElementById('cursorTracker');
+      if (tracker) {
+        tracker.textContent = '🖱️ x: ' + e.clientX + ', y: ' + e.clientY;
+      }
+    });
+  </script>
+
+  <!-- Gu Live Chat Widget -->
+  <script>
+    window.GU_WIDGET_URL = 'http://localhost:3000';
+    window.$gu = window.$gu || function() {
+      (window.$gu.q = window.$gu.q || []).push(arguments);
+    };
+    $gu('set', 'WEBSITE_ID', 'Mogid8fOn8FHdgUawxL51jAV');
+  </script>
+  <script async src="http://localhost:3000/widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F0EDFF;
+  --foreground: #0F0F1A;
+  --card: #ffffff;
+  --card-foreground: #0F0F1A;
+  --primary: #6C3CE1;
+  --primary-foreground: #ffffff;
+  --primary-hover: #5B2CC4;
+  --primary-light: #EDE9FE;
+  --primary-glow: rgba(108, 60, 225, 0.15);
+  --secondary: #F0EDFF;
+  --secondary-foreground: #0F0F1A;
+  --muted: #F5F3FF;
+  --muted-foreground: #6b7280;
+  --accent: #EDE9FE;
+  --accent-foreground: #4A2080;
+  --destructive: #EF4444;
+  --destructive-foreground: #ffffff;
+  --border: #E5E0F0;
+  --input: #E5E0F0;
+  --ring: #6C3CE1;
+  --radius: 0.75rem;
+  --sidebar-bg: #1A1D2E;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-active: #6C3CE1;
+  --dark-surface: #1A1D2E;
+  --blue: #3B82F6;
+  --blue-foreground: #ffffff;
+  --blue-light: #EFF6FF;
+}
+
+.dark {
+  --background: #0a0a12;
+  --foreground: #e2e8f0;
+  --card: #1a1d2e;
+  --card-foreground: #e2e8f0;
+  --primary: #8B5CF6;
+  --primary-foreground: #ffffff;
+  --primary-hover: #7C3AED;
+  --primary-light: #2d1a5e;
+  --primary-glow: rgba(139, 92, 246, 0.2);
+  --secondary: #1a1d2e;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e2137;
+  --muted-foreground: #94a3b8;
+  --accent: #2d1a5e;
+  --accent-foreground: #c4b5fd;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #2d2d44;
+  --input: #2d2d44;
+  --ring: #8B5CF6;
+  --sidebar-bg: #0f0a1e;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-active: #8B5CF6;
+  --dark-surface: #0f0a1e;
+  --blue: #60a5fa;
+  --blue-foreground: #ffffff;
+  --blue-light: #1e3a5f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius: var(--radius);
+  --color-dark-surface: var(--dark-surface);
+  --color-blue: var(--blue);
+  --color-blue-foreground: var(--blue-foreground);
+  --color-blue-light: var(--blue-light);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Smooth transitions */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
+}
+
+/* Video element reset for WebRTC viewer */
+video {
+  background: #000;
+}
+
+/* Ensure no white flash on page load */
+html {
+  background: var(--background);
+}
+
+/* Widget root — always fixed, always on top, never inside scroll containers */
+#gu-live-chat-widget-root {
+  position: fixed !important;
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 2147483647 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}

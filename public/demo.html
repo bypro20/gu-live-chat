@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay AI Demo — Canlı İzleme Testi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e5e5e5; }
+    
+    .debug-panel {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999990;
+      background: rgba(15,15,26,0.95); backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(139,92,246,0.3);
+      padding: 12px 20px; display: flex; align-items: center; gap: 16px;
+    }
+    .debug-panel h2 { font-size: 14px; color: #a78bfa; margin: 0; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-dot.green { background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
+    .status-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+    .status-dot.yellow { background: #eab308; box-shadow: 0 0 8px #eab308; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .debug-log {
+      position: fixed; top: 50px; left: 0; bottom: 0; width: 360px; z-index: 999989;
+      background: rgba(10,10,20,0.95); backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(139,92,246,0.2);
+      overflow-y: auto; padding: 12px; font-size: 12px; font-family: 'SF Mono', monospace;
+    }
+    .debug-log .event { padding: 4px 8px; margin: 2px 0; border-radius: 6px; background: rgba(139,92,246,0.08); border-left: 2px solid #8B5CF6; }
+    .debug-log .event.pageview { border-left-color: #3b82f6; }
+    .debug-log .event.click { border-left-color: #22c55e; }
+    .debug-log .event.cursor { border-left-color: #a78bfa; }
+    .debug-log .event.scroll { border-left-color: #06b6d4; }
+    .debug-log .event.focus { border-left-color: #8b5cf6; }
+    .debug-log .event.input { border-left-color: #f59e0b; }
+    .debug-log .event.online { border-left-color: #22c55e; background: rgba(34,197,94,0.08); }
+    .debug-log .time { color: #6b7280; font-size: 10px; }
+    
+    .content { margin-left: 360px; padding: 60px 40px 40px; }
+    .hero { text-align: center; padding: 60px 0; }
+    .hero h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+    .hero p { color: #a0a0b8; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+    
+    .instructions { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 16px; padding: 24px; margin: 40px auto; max-width: 700px; }
+    .instructions h2 { color: #a78bfa; font-size: 1.2rem; margin-bottom: 16px; }
+    .instructions ol { padding-left: 24px; }
+    .instructions li { margin: 8px 0; line-height: 1.6; }
+    .instructions code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+    .instructions .highlight { color: #a78bfa; font-weight: 600; }
+    
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 32px; }
+    .card { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; padding: 20px; transition: all 0.2s; cursor: pointer; }
+    .card:hover { transform: translateY(-2px); border-color: rgba(139,92,246,0.4); }
+    .card .icon { font-size: 2rem; margin-bottom: 8px; }
+    .card h3 { color: #fff; font-size: 1.1rem; margin-bottom: 4px; }
+    .card p { color: #8888a8; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <!-- Debug Panel -->
+  <div class="debug-panel">
+    <h2>🔴 Overlay AI — Canlı İzleme Testi</h2>
+    <div id="connectionStatus">
+      <span class="status-dot yellow" id="statusDot"></span>
+      <span id="statusText" style="color: #eab308; font-size: 13px;">Bağlanıyor...</span>
+    </div>
+    <div style="margin-left: auto; font-size: 12px; color: #6b7280;">
+      Olay: <span id="eventCount" style="color: #a78bfa; font-weight: 700;">0</span>
+    </div>
+  </div>
+  
+  <div class="debug-log" id="debugLog">
+    <div style="color: #6b7280; padding: 8px; text-align: center;">Olaylar burada görünecek...</div>
+  </div>
+
+  <div class="content">
+    <div class="hero">
+      <h1>Overlay AI Test</h1>
+      <p>Bu sayfada fareyi hareket ettirin, tıklayın, scroll yapın ve formları doldurun. Tüm hareketleriniz sol panelde ve admin panelinde canlı olarak görünecek.</p>
+    </div>
+
+    <div class="instructions">
+      <h2>📋 Sistemi Nasıl Kullanırsınız?</h2>
+      <ol>
+        <li><span class="highlight">Sağ alt köşedeki göz ikonuna tıklayın</span> — sohbet penceresi açılacak</li>
+        <li>Sohbet penceresinde adınızı ve e-postanızı girin</li>
+        <li>Admin paneline (<code>/visitors</code>) gidin — ziyaretçiniz listede görünecek</li>
+        <li>Ziyaretçiye tıklayın — <span class="highlight">cursor, tıklamalar, scroll ve sayfa geçmişi</span> canlı olarak gösterilecek</li>
+        <li>Bu sayfada hareket ettikçe sol paneldeki olaylar güncellenecek</li>
+      </ol>
+    </div>
+
+    <div class="cards">
+      <div class="card" onclick="console.log('card click')">
+        <div class="icon">🖱️</div>
+        <h3>Cursor Takibi</h3>
+        <p>Fare pozisyonunuz anlık olarak izlenir</p>
+      </div>
+      <div class="card" onclick="console.log('card click')">
+        <div class="icon">👆</div>
+        <h3>Tıklama Takibi</h3>
+        <p>Nereye tıkladığınız kaydedilir</p>
+      </div>
+      <div class="card" onclick="console.log('card click')">
+        <div class="icon">📜</div>
+        <h3>Scroll Takibi</h3>
+        <p>Sayfa kaydırma yüzdesi gösterilir</p>
+      </div>
+      <div class="card" onclick="console.log('card click')">
+        <div class="icon">✏️</div>
+        <h3>Form Takibi</h3>
+        <p>Hangi alana odaklandığınız ve ne yazdığınız</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 32px; background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; padding: 20px;">
+      <h3 style="color: #a78bfa; margin-bottom: 12px;">📝 İletişim Formu</h3>
+      <div style="display: grid; gap: 12px;">
+        <input type="text" id="name" name="name" placeholder="Adınız Soyadınız" style="width: 100%; padding: 12px; background: #0a0a12; border: 1px solid rgba(139,92,246,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none;">
+        <input type="email" id="email" name="email" placeholder="E-posta adresiniz" style="width: 100%; padding: 12px; background: #0a0a12; border: 1px solid rgba(139,92,46,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none;">
+        <textarea id="message" name="message" placeholder="Mesajınızı yazın..." rows="4" style="width: 100%; padding: 12px; background: #0a0a12; border: 1px solid rgba(139,92,246,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none; resize: vertical;"></textarea>
+        <button onclick="alert('Form gönderildi! (test)')" style="padding: 12px 24px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;">Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gu Live Chat Widget -->
+  <script>
+    window.GU_WIDGET_URL = 'http://localhost:3000';
+    window.$gu = window.$gu || function() { (window.$gu.q = window.$gu.q || []).push(arguments); };
+    $gu('set', 'WEBSITE_ID', 'Mogid8fOn8FHdgUawxL51jAV');
+  </script>
+  <script async src="http://localhost:3000/widget.js"></script>
+
+  <!-- Debug: Monitor widget events -->
+  <script>
+    var eventCount = 0;
+    var logEl = document.getElementById('debugLog');
+    var statusDot = document.getElementById('statusDot');
+    var statusText = document.getElementById('statusText');
+    var eventCountEl = document.getElementById('eventCount');
+
+    function addLog(type, msg) {
+      eventCount++;
+      eventCountEl.textContent = eventCount;
+      var div = document.createElement('div');
+      div.className = 'event ' + type;
+      var now = new Date();
+      var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+      div.innerHTML = '<span class="time">' + time + '</span> ' + msg;
+      logEl.insertBefore(div, logEl.firstChild);
+    }
+
+    // Check widget loaded
+    setTimeout(function() {
+      var btn = document.getElementById('gu-chat-button');
+      if (btn) {
+        statusDot.className = 'status-dot green';
+        statusText.textContent = 'Widget yüklendi — Göz ikonuna tıklayın!';
+        statusText.style.color = '#22c55e';
+        addLog('online', '✅ Widget yüklendi — Sağ alt köşedeki 👁️ ikonuna tıklayın');
+      } else {
+        statusDot.className = 'status-dot red';
+        statusText.textContent = 'Widget yüklenemedi!';
+        statusText.style.color = '#ef4444';
+        addLog('online', '❌ Widget yüklenemedi — widget.js bulunamadı');
+      }
+    }, 2000);
+
+    // Monitor iframe visibility
+    setInterval(function() {
+      var iframe = document.getElementById('gu-widget-iframe');
+      if (iframe) {
+        var isVisible = iframe.style.display !== 'none';
+        // Add visual feedback
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
