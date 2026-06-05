@@ -42,17 +42,105 @@ export function OverlayPreview({
   const [remoteClicks, setRemoteClicks] = useState<Array<{ x: number; y: number; timestamp: number }>>([])
   const [interventionMode, setInterventionMode] = useState(false)
   const lastScreenshotRef = useRef<string | null>(null)
+  const { emit: socketEmit } = useSocket()
 
   const viewportW = visitor.viewportW || 1920
   const viewportH = visitor.viewportH || 1080
 
-  const scrollPercent = viewportH && visitor.documentH && visitor.documentH > viewportH
-    ? Math.min(100, Math.round(((visitor.scrollY || 0) / (visitor.documentH - viewportH)) * 100))
-    : 0
+  const lastInterventionEmitRef = useRef(0)
 
   const hasWebRTC = !!webrtcStream
   const isConnected = hasWebRTC && webrtcState === 'connected'
   const isConnecting = !hasWebRTC && !!isScreenCapturing && !screenshotReady
+  const isActive = hasWebRTC || !!isScreenCapturing
+
+  // Intervention: mouse move — send viewport-mapped coordinates to visitor
+  const handleInterventionMouseMove = useCallback((event: React.MouseEvent) => {
+    if (!interventionMode || !isActive || !visitor.visitorId || !visitor.websiteId) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const relX = (event.clientX - rect.left) / rect.width
+    const relY = (event.clientY - rect.top) / rect.height
+    const mx = Math.round(relX * viewportW)
+    const my = Math.round(relY * viewportH)
+
+    const now = Date.now()
+    if (now - lastInterventionEmitRef.current > 80) {
+      socketEmit?.('agent:visitor:mousemove', {
+        visitorId: visitor.visitorId,
+        websiteId: visitor.websiteId,
+        x: mx,
+        y: my,
+      })
+      lastInterventionEmitRef.current = now
+    }
+  }, [interventionMode, isActive, visitor.visitorId, visitor.websiteId, viewportW, viewportH, socketEmit])
+
+  // Intervention: scroll — send wheel delta to visitor
+  const handleInterventionWheel = useCallback((event: React.WheelEvent) => {
+    if (!interventionMode || !isActive || !visitor.visitorId || !visitor.websiteId) return
+    socketEmit?.('agent:visitor:scroll', {
+      visitorId: visitor.visitorId,
+      websiteId: visitor.websiteId,
+      deltaX: event.deltaX,
+      deltaY: event.deltaY,
+    })
+  }, [interventionMode, isActive, visitor.visitorId, visitor.websiteId, socketEmit])
+
+  // Intervention: keyboard — capture keystrokes and send to visitor
+  useEffect(() => {
+    if (!interventionMode || !isActive) return
+    const handleKey = (event: KeyboardEvent) => {
+      if (!visitor.visitorId || !visitor.websiteId) return
+      // Don't capture if the agent is typing in their own input
+      const tag = (event.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      // Don't capture modifier-only keys
+      const modKeys = ['Control', 'Shift', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock']
+      if (modKeys.includes(event.key)) return
+
+      const payload = {
+        visitorId: visitor.visitorId,
+        websiteId: visitor.websiteId,
+        key: event.key,
+        code: event.code,
+        keyCode: event.keyCode,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+      }
+      socketEmit?.('agent:visitor:keydown', payload)
+    }
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (!visitor.visitorId || !visitor.websiteId) return
+      const tag = (event.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const modKeys = ['Control', 'Shift', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock']
+      if (modKeys.includes(event.key)) return
+
+      socketEmit?.('agent:visitor:keyup', {
+        visitorId: visitor.visitorId,
+        websiteId: visitor.websiteId,
+        key: event.key,
+        code: event.code,
+        keyCode: event.keyCode,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+      })
+    }
+    window.addEventListener('keydown', handleKey)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [interventionMode, isActive, visitor.visitorId, visitor.websiteId, socketEmit])
+
+  const scrollPercent = viewportH && visitor.documentH && visitor.documentH > viewportH
+    ? Math.min(100, Math.round(((visitor.scrollY || 0) / (visitor.documentH - viewportH)) * 100))
+    : 0
 
   useEffect(() => {
     const img = screenshotImgRef.current
@@ -134,7 +222,6 @@ export function OverlayPreview({
     return `${hours} sa ${mins % 60} dk`
   }
 
-  const isActive = hasWebRTC || !!isScreenCapturing
   const showScreenshot = !!isScreenCapturing && !hasWebRTC && screenshotReady
 
   // Remote click handler — admin clicks on the screen, we send click to visitor
@@ -311,6 +398,8 @@ export function OverlayPreview({
     <div
       className="relative flex-1 min-h-0 bg-black overflow-hidden"
       onClick={handleRemoteClick}
+      onMouseMove={handleInterventionMouseMove}
+      onWheel={handleInterventionWheel}
       style={{ cursor: interventionMode && isActive && zoom <= 1 ? 'crosshair' : undefined }}
     >
       {/* Intervention mode banner */}
@@ -320,7 +409,7 @@ export function OverlayPreview({
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 13l6 6" />
           </svg>
-          Müdahale Modu — Ekrana tıklayın
+          Müdahale Modu — Fare, klavye ve scroll ile yardım edin
         </div>
       )}
 

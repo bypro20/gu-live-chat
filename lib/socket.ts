@@ -411,11 +411,54 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent sends remote click to visitor (intervention) ────────
+    socket.on('agent:remote-cursor-move', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      const visitorSocket = Array.from(visitorSessions.entries())
+        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      if (visitorSocket) {
+        io.to(visitorSocket[0]).emit('visitor:remote-cursor-move', { x: data.x, y: data.y })
+      }
+    })
+
     socket.on('agent:visitor:click', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
         io.to(visitorSocket[0]).emit('visitor:remote-click', { x: data.x, y: data.y })
+      }
+    })
+
+    // ─── Agent sends mouse move to visitor (intervention mode) ──
+    socket.on('agent:visitor:mousemove', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      const visitorSocket = Array.from(visitorSessions.entries())
+        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      if (visitorSocket) {
+        io.to(visitorSocket[0]).emit('visitor:remote-mousemove', { x: data.x, y: data.y })
+      }
+    })
+
+    // ─── Agent sends scroll to visitor (intervention mode) ──
+    socket.on('agent:visitor:scroll', (data: { visitorId: string; websiteId: string; deltaX: number; deltaY: number }) => {
+      const visitorSocket = Array.from(visitorSessions.entries())
+        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      if (visitorSocket) {
+        io.to(visitorSocket[0]).emit('visitor:remote-scroll', { deltaX: data.deltaX, deltaY: data.deltaY })
+      }
+    })
+
+    // ─── Agent sends keyboard events to visitor (intervention mode) ──
+    socket.on('agent:visitor:keydown', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      const visitorSocket = Array.from(visitorSessions.entries())
+        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      if (visitorSocket) {
+        io.to(visitorSocket[0]).emit('visitor:remote-keydown', data)
+      }
+    })
+
+    socket.on('agent:visitor:keyup', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      const visitorSocket = Array.from(visitorSessions.entries())
+        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      if (visitorSocket) {
+        io.to(visitorSocket[0]).emit('visitor:remote-keyup', data)
       }
     })
 

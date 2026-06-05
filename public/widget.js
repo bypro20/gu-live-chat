@@ -34,25 +34,25 @@
   var forceStyle = document.createElement('style');
   forceStyle.id = 'gu-widget-force-style';
   forceStyle.textContent =
-    // Chat button: directly on body, position:fixed, always viewport-anchored
     '#gu-chat-button{position:fixed!important;bottom:24px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;transform:none!important;filter:none!important;}' +
-    // Widget iframe: directly on body, position:fixed, always viewport-anchored
     '#gu-widget-iframe{position:fixed!important;bottom:88px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;transform:none!important;filter:none!important;}' +
-    // Protect html/body from transforms that would break ALL fixed elements
     'html,body{transform:none!important;filter:none!important;}' +
-    // Also protect common wrapper/container selectors that might break fixed
-    '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}';
+    '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}' +
+    '#gu-chat-button svg{display:block;pointer-events:none;}' +
+    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(108,60,225,0.45),0 8px 32px rgba(108,60,225,0.35)}50%{box-shadow:0 0 0 18px rgba(108,60,225,0.08),0 8px 32px rgba(108,60,225,0.5)}100%{box-shadow:0 0 0 0 rgba(108,60,225,0),0 8px 32px rgba(108,60,225,0.35)}}' +
+    '@keyframes gu-fade-in{from{opacity:0}to{opacity:1}}' +
+    '@keyframes gu-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}';
   (document.head || document.documentElement).appendChild(forceStyle);
 
   // ─── Chat button — DIRECTLY on document.body (no container) ──────────
   // position:fixed anchors to viewport. Directly on body so no parent container
   // can interfere. CSS !important rules protect against style overrides.
-  var CHAT_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
-  var CLOSE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  var CHAT_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h6"/><path d="M9 14h4"/></svg>';
+  var CLOSE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
   var chatBtn = document.createElement('div');
   chatBtn.id = 'gu-chat-button';
-  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);cursor:pointer;box-shadow:0 4px 20px rgba(139,92,246,0.4),0 0 0 3px rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;transition:box-shadow 0.2s ease;pointer-events:auto;transform:none;filter:none;';
+  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6C3CE1,#8B5CF6);cursor:pointer;box-shadow:0 8px 32px rgba(108,60,225,0.35);display:flex;align-items:center;justify-content:center;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;transform:none;filter:none;animation:gu-pulse 2.5s ease-in-out 1;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;';
 
   var chatOpen = false;  // Start closed — user clicks to open chat
   chatBtn.innerHTML = CHAT_ICON;
@@ -69,8 +69,8 @@
       chatBtn.innerHTML = CHAT_ICON;
     }
   });
-  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 6px 28px rgba(139,92,246,0.5),0 0 0 3px rgba(255,255,255,0.2)'; });
-  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 4px 20px rgba(139,92,246,0.4),0 0 0 3px rgba(255,255,255,0.15)'; });
+  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 12px 48px rgba(108,60,225,0.5)'; chatBtn.style.transform = 'scale(1.08)'; });
+  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 8px 32px rgba(108,60,225,0.35)'; chatBtn.style.transform = 'scale(1)'; });
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(chatBtn);
 
@@ -747,6 +747,72 @@
       // Track remote click for verification
       window.__guRemoteClicks = window.__guRemoteClicks || [];
       window.__guRemoteClicks.push({ x: event.data.x, y: event.data.y, target: target ? target.tagName : null, timestamp: Date.now() });
+    }
+
+    // Remote mouse move from agent (intervention) — move cursor on visitor's page
+    if (event.data.type === 'gu:remote-mousemove' && event.data.x != null && event.data.y != null) {
+      var moveTarget = document.elementFromPoint(event.data.x, event.data.y);
+      if (moveTarget) {
+        moveTarget.dispatchEvent(new MouseEvent('mousemove', {
+          bubbles: true, cancelable: true, view: window,
+          clientX: event.data.x, clientY: event.data.y
+        }));
+      }
+    }
+
+    // Remote scroll from agent (intervention) — scroll the page
+    if (event.data.type === 'gu:remote-scroll') {
+      window.scrollBy({
+        left: event.data.deltaX || 0,
+        top: event.data.deltaY || 0,
+        behavior: 'instant'
+      });
+    }
+
+    // Remote keyboard events from agent (intervention) — type on visitor's page
+    if (event.data.type === 'gu:remote-keydown') {
+      var kbTarget = document.activeElement || document.body;
+      var kbOpts = {
+        bubbles: true, cancelable: true, view: window,
+        key: event.data.key || '',
+        code: event.data.code || '',
+        keyCode: event.data.keyCode || 0,
+        which: event.data.keyCode || 0,
+        shiftKey: !!event.data.shiftKey,
+        ctrlKey: !!event.data.ctrlKey,
+        altKey: !!event.data.altKey,
+        metaKey: !!event.data.metaKey
+      };
+      kbTarget.dispatchEvent(new KeyboardEvent('keydown', kbOpts));
+      // For printable characters: also inject the character into input fields
+      if (event.data.key && event.data.key.length === 1 && !event.data.ctrlKey && !event.data.altKey && !event.data.metaKey) {
+        kbTarget.dispatchEvent(new KeyboardEvent('keypress', kbOpts));
+        var tag = kbTarget.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') {
+          var start = kbTarget.selectionStart || kbTarget.value.length;
+          var end = kbTarget.selectionEnd || kbTarget.value.length;
+          kbTarget.value = kbTarget.value.substring(0, start) + event.data.key + kbTarget.value.substring(end);
+          kbTarget.selectionStart = kbTarget.selectionEnd = start + 1;
+          kbTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (kbTarget.isContentEditable) {
+          document.execCommand('insertText', false, event.data.key);
+        }
+      }
+    }
+
+    if (event.data.type === 'gu:remote-keyup') {
+      var kbTarget = document.activeElement || document.body;
+      kbTarget.dispatchEvent(new KeyboardEvent('keyup', {
+        bubbles: true, cancelable: true, view: window,
+        key: event.data.key || '',
+        code: event.data.code || '',
+        keyCode: event.data.keyCode || 0,
+        which: event.data.keyCode || 0,
+        shiftKey: !!event.data.shiftKey,
+        ctrlKey: !!event.data.ctrlKey,
+        altKey: !!event.data.altKey,
+        metaKey: !!event.data.metaKey
+      }));
     }
   });
 

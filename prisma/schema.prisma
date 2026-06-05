@@ -17,8 +17,14 @@ model User {
   emailVerified DateTime?
   passwordHash  String?
   role          UserRole  @default(USER)
-  activeWebsiteId String?   // Currently selected website context
+  activeWebsiteId String?
   lastSeenAt    DateTime?
+  isBanned      Boolean   @default(false)
+  isMuted       Boolean   @default(false)
+  bannedIp      String?
+  banReason     String?
+  bannedAt      DateTime?
+  mutedUntil    DateTime?
 
   memberships        TeamMember[]
   ownedWebsites      Website[]  @relation("WebsiteOwner")
@@ -27,6 +33,9 @@ model User {
   notes              Note[]
   sentMessages       Message[]  @relation("MessageSender")
   notifications      Notification[]
+  ticketsAssigned    Ticket[]   @relation("TicketAssignee")
+  knowledgeArticles  KnowledgeArticle[]
+  ticketMessages     TicketMessage[]
 
   accounts      Account[]
   sessions      Session[]
@@ -113,6 +122,14 @@ model Website {
   invoices        Invoice[]
   analytics       AnalyticsSnapshot[]
   notifications   Notification[]
+  knowledgeCategories KnowledgeCategory[]
+  knowledgeArticles   KnowledgeArticle[]
+  tickets             Ticket[]
+  statusPage          StatusPage?
+  campaigns           Campaign[]
+  channelIntegrations ChannelIntegration[]
+  workflows           Workflow[]
+  addonPurchases      AddonPurchase[]
 
   // PayTR
   paytrMerchantOid      String?            @unique
@@ -253,6 +270,15 @@ model VisitorSession {
   userAgent   String?
   country     String?
   city        String?
+  region      String?
+  latitude    Float?
+  longitude   Float?
+  isp         String?
+  timezone    String?
+  browser     String?
+  os          String?
+  device      String?
+  deviceType  String?     // mobile, desktop, tablet
 
   pages       PageView[]
 
@@ -415,6 +441,8 @@ model Attachment {
   thumbnailUrl String?
 
   message      Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  ticketMessage TicketMessage? @relation(fields: [ticketMessageId], references: [id])
+  ticketMessageId String?
 
   createdAt    DateTime @default(now())
 
@@ -431,6 +459,7 @@ model Tag {
 
   website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   conversations ConversationTag[]
+  ticketTags  TicketTag[]
 
   @@unique([websiteId, name])
   @@map("tags")
@@ -673,4 +702,451 @@ model AnalyticsSnapshot {
 
   @@unique([websiteId, date, type])
   @@map("analytics_snapshots")
+}
+
+// ─── KNOWLEDGE BASE ──────────────────────────────────────────────
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model KnowledgeCategory {
+  id          String   @id @default(cuid())
+  websiteId   String
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  order       Int      @default(0)
+
+  website     Website      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  articles    KnowledgeArticle[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([websiteId, slug])
+  @@map("knowledge_categories")
+}
+
+model KnowledgeArticle {
+  id          String        @id @default(cuid())
+  websiteId   String
+  categoryId  String?
+  title       String
+  slug        String
+  content     String
+  excerpt     String?
+  status      ArticleStatus @default(DRAFT)
+  authorId    String?
+  author      User?         @relation(fields: [authorId], references: [id])
+  viewCount   Int           @default(0)
+  helpful     Int           @default(0)
+  notHelpful  Int           @default(0)
+  tags        String?
+  isFeatured  Boolean       @default(false)
+  order       Int           @default(0)
+  publishedAt DateTime?
+
+  website  Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  category KnowledgeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([websiteId, slug])
+  @@index([websiteId, status])
+  @@map("knowledge_articles")
+}
+
+// ─── TICKETING SYSTEM ────────────────────────────────────────────
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  PENDING_CUSTOMER
+  PENDING_AGENT
+  ON_HOLD
+  RESOLVED
+  CLOSED
+}
+
+enum TicketChannel {
+  EMAIL
+  WIDGET
+  API
+  WHATSAPP
+  MESSENGER
+  INSTAGRAM
+  IMPORT
+}
+
+model Ticket {
+  id          String        @id @default(cuid())
+  websiteId   String
+  requesterId String?
+  requesterEmail String
+  requesterName  String?
+  subject     String
+  description String?
+  status      TicketStatus  @default(NEW)
+  priority    TicketPriority @default(MEDIUM)
+  channel     TicketChannel @default(EMAIL)
+  assignedToId String?
+  ccAddresses String?
+
+  website    Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  assignedTo User?     @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  messages   TicketMessage[]
+  tags       TicketTag[]
+
+  closedAt   DateTime?
+  firstResponseAt DateTime?
+  resolvedAt     DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([websiteId, status])
+  @@index([websiteId, priority])
+  @@index([websiteId, createdAt])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  content   String
+  senderType SenderType
+  senderId  String?
+  sender    User?     @relation(fields: [senderId], references: [id])
+  isInternal Boolean @default(false) // Internal notes
+
+  attachments Attachment[]
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("ticket_messages")
+}
+
+model TicketTag {
+  id       String @id @default(cuid())
+  ticketId String
+  tagId    String
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, tagId])
+  @@map("ticket_tags")
+}
+
+// ─── STATUS PAGE ────────────────────────────────────────────────
+
+enum IncidentStatus {
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+}
+
+enum ComponentStatus {
+  OPERATIONAL
+  DEGRADED_PERFORMANCE
+  PARTIAL_OUTAGE
+  MAJOR_OUTAGE
+  UNDER_MAINTENANCE
+}
+
+model StatusPage {
+  id            String   @id @default(cuid())
+  websiteId     String   @unique
+  title         String   @default("Service Status")
+  description   String?
+  subdomain     String   @unique
+  customDomain  String?
+  logoUrl       String?
+  faviconUrl    String?
+  isActive      Boolean  @default(true)
+  isPublic      Boolean  @default(true)
+  primaryColor  String   @default("#6D28D9")
+  twitterHandle String?
+  showHistory   Boolean  @default(true)
+
+  website    Website            @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  components StatusPageComponent[]
+  incidents  Incident[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("status_pages")
+}
+
+model StatusPageComponent {
+  id          String          @id @default(cuid())
+  statusPageId String
+  name        String
+  description String?
+  status      ComponentStatus @default(OPERATIONAL)
+  order       Int             @default(0)
+  groupName   String?
+
+  statusPage StatusPage @relation(fields: [statusPageId], references: [id], onDelete: Cascade)
+
+  @@map("status_page_components")
+}
+
+model Incident {
+  id           String          @id @default(cuid())
+  statusPageId String
+  title        String
+  status       IncidentStatus @default(INVESTIGATING)
+  severity     TicketPriority @default(MEDIUM)
+  message      String
+  components   String?         // JSON array of component IDs
+  startedAt    DateTime        @default(now())
+  resolvedAt   DateTime?
+
+  statusPage   StatusPage        @relation(fields: [statusPageId], references: [id], onDelete: Cascade)
+  updates      IncidentUpdate[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("incidents")
+}
+
+model IncidentUpdate {
+  id         String         @id @default(cuid())
+  incidentId String
+  status     IncidentStatus
+  message    String
+  createdAt  DateTime       @default(now())
+
+  incident   Incident       @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("incident_updates")
+}
+
+// ─── CAMPAIGNS ──────────────────────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignType {
+  EMAIL
+  IN_APP
+  BROADCAST
+}
+
+enum CampaignTarget {
+  ALL_VISITORS
+  ACTIVE_CONVERSATIONS
+  SEGMENTED
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  websiteId   String
+  name        String
+  description String?
+  type        CampaignType   @default(EMAIL)
+  status      CampaignStatus @default(DRAFT)
+  target      CampaignTarget @default(ALL_VISITORS)
+  segmentFilter String?       // JSON filter criteria
+  subject     String?
+  content     String?         // HTML content for email / message content
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  sentCount   Int            @default(0)
+  openCount   Int            @default(0)
+  clickCount  Int            @default(0)
+  replyCount  Int            @default(0)
+
+  website    Website         @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([websiteId, status])
+  @@map("campaigns")
+}
+
+// ─── MULTI-CHANNEL ──────────────────────────────────────────────
+
+enum ChannelType {
+  WHATSAPP
+  EMAIL
+  MESSENGER
+  INSTAGRAM
+  TELEGRAM
+  SLACK
+}
+
+model ChannelIntegration {
+  id        String      @id @default(cuid())
+  websiteId String
+  type      ChannelType
+  name      String
+  isActive  Boolean     @default(false)
+  config    String?     // JSON config (API keys, webhook URLs, etc)
+  lastSyncAt DateTime?
+
+  website   Website     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([websiteId, type])
+  @@map("channel_integrations")
+}
+
+// ─── WORKFLOW / AUTOMATION BUILDER ─────────────────────────────
+
+enum WorkflowTriggerType {
+  CONVERSATION_CREATED
+  CONVERSATION_RESOLVED
+  CONVERSATION_CLOSED
+  MESSAGE_RECEIVED
+  VISITOR_CREATED
+  VISITOR_SEEN_PAGE
+  TICKET_CREATED
+  TICKET_UPDATED
+  SCHEDULED
+  WEBHOOK_RECEIVED
+}
+
+enum WorkflowActionType {
+  SEND_MESSAGE
+  SEND_EMAIL
+  ASSIGN_AGENT
+  CHANGE_STATUS
+  SET_PRIORITY
+  ADD_TAG
+  REMOVE_TAG
+  FORWARD_TO_WEBHOOK
+  ADD_NOTE
+  TRIGGER_CHATBOT
+  SEND_NOTIFICATION
+  DELAY
+  CONDITIONAL_BRANCH
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  websiteId   String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  triggerType WorkflowTriggerType
+  triggerConfig String? // JSON config for trigger conditions
+  order       Int      @default(0)
+
+  website    Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  steps      WorkflowStep[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([websiteId, isActive])
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id         String             @id @default(cuid())
+  workflowId String
+  order      Int
+  actionType WorkflowActionType
+  config     String?            // JSON config for the action
+  delayMs    Int?               // Delay before executing this step
+
+  workflow   Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_steps")
+}
+
+// ─── ADD-ON / PLUGIN MARKETPLACE ───────────────────────────────
+
+enum AddonCategory {
+  ANALYTICS
+  AUTOMATION
+  AI
+  CRM
+  MARKETING
+  SUPPORT
+  SECURITY
+  SOCIAL
+  ECOMMERCE
+  CUSTOM
+}
+
+enum PurchaseType {
+  ONCE
+  MONTHLY
+  YEARLY
+}
+
+model Addon {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String
+  longDescription String?
+  category    AddonCategory @default(CUSTOM)
+  icon        String?
+  imageUrl    String?
+  price       Int           // In kuruş (cents), 0 = free
+  purchaseType PurchaseType @default(MONTHLY)
+  isActive    Boolean       @default(true)
+  isFeatured  Boolean       @default(false)
+  version     String        @default("1.0.0")
+  developer   String        @default("Gu Live Chat")
+  docsUrl     String?
+  configSchema String?      // JSON schema for addon configuration
+  permissions String?       // JSON array of required permissions
+  setupGuide  String?       // HTML/markdown setup guide
+
+  purchases   AddonPurchase[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("addons")
+}
+
+model AddonPurchase {
+  id          String   @id @default(cuid())
+  websiteId   String
+  addonId     String
+  isActive    Boolean  @default(true)
+  config      String?  // JSON configuration
+  autoRenew   Boolean  @default(true)
+  expiresAt   DateTime?
+  cancelledAt DateTime?
+
+  website    Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  addon      Addon    @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([websiteId, addonId])
+  @@map("addon_purchases")
 }

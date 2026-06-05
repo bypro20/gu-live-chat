@@ -1,13 +1,224 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import {
+  MessageCircle, Bot, Users, BarChart3, Blocks,
+  Workflow, Store, ChevronDown, Check, ArrowRight, Star,
+  Menu, X, MessageSquare, Send, Phone, Monitor,
+  Shield, Copyright, Sparkles, Globe, Infinity,
+  Zap, Eye, Puzzle, LineChart, Mail, HelpCircle,
+  ChevronRight, Plus, Minus,
+} from 'lucide-react'
+
+const featureData = [
+  { icon: MessageCircle, title: 'Gerçek Zamanlı Sohbet', desc: 'Milisaniyelik mesajlaşma ile müşterilerinize anında yanıt verin. Yazıyor göstergesi, okundu onayı ve dosya paylaşımı.' },
+  { icon: Bot, title: 'AI Chatbot & Otomasyon', desc: 'Yapay zeka destekli chatbot ile sık sorulan sorulara otomatik yanıt verin, gerektiğinde temsilciye aktarın.' },
+  { icon: Monitor, title: 'Ziyaretçi İzleme & Ekran Paylaşımı', desc: 'Ziyaretçilerinizi gerçek zamanlı izleyin, WebRTC ile ekran paylaşımı yaparak sorunları görerek çözün.' },
+  { icon: Blocks, title: 'Çoklu Kanal Desteği', desc: 'Web, mobil, WhatsApp ve e-posta kanallarını tek bir panelden yönetin. Tüm müşterileriniz bir arada.' },
+  { icon: Users, title: 'Bilgi Bankası & Bilet Sistemi', desc: 'Kendi bilgi bankanızı oluşturun, gelen talepleri bilet sistemine dönüştürerek takip edin.' },
+  { icon: Workflow, title: 'Akıllı Otomasyon', desc: 'Görsel workflow editörü ile otomatik yanıt akışları oluşturun. Tetikleyiciler ve aksiyonlarla süreçleri otomatize edin.' },
+  { icon: BarChart3, title: 'Gelişmiş Analitik', desc: 'Yanıt süreleri, sohbet hacmi, çözüm oranları ve ekip performansını detaylı raporlarla ölçün.' },
+  { icon: Store, title: 'Eklenti Mağazası', desc: 'WhatsApp entegrasyonu, AI asistan, beyaz etiket ve daha fazlası. İhtiyacınız olan her şey tek tıkla.' },
+]
+
+const addonData = [
+  { title: 'WhatsApp Kanalı', desc: 'WhatsApp Business API ile müşterilerinize WhatsApp üzerinden yanıt verin. Tek panelden tüm konuşmalar.', price: '₺149/ay', popular: false },
+  { title: 'AI Asistan Pro', desc: 'GPT-4 destekli akıllı asistan. Müşteri taleplerini anlar, bağlama göre yanıt verir ve öğrenir.', price: '₺299/ay', popular: true },
+  { title: 'Beyaz Etiket', desc: 'Kendi markanızla kullanın. Özel alan adı, logo, renkler ve tam marka deneyimi.', price: '₺199/ay', popular: false },
+  { title: 'Gelişmiş Analitik', desc: 'Detaylı raporlar, müşteri segmentasyonu, davranış analizi ve özel dashboard.', price: '₺79/ay', popular: false },
+]
+
+const plans = [
+  { name: 'Ücretsiz', desc: 'Küçük işletmeler için ideal başlangıç', monthly: 0, features: ['2 Temsilci', '100 Sohbet / Ay', 'Temel Widget', 'E-posta Bildirimleri', 'Temel İstatistikler'], highlighted: false, cta: 'Ücretsiz Başla' },
+  { name: 'Başlangıç', desc: 'Büyüyen işletmeler için', monthly: 199, features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Ziyaretçi Takibi', 'Chatbot & Otomasyon', 'Hazır Cevaplar', 'Dosya Yükleme', 'E-posta Bildirimleri'], highlighted: false, cta: 'Hemen Başla' },
+  { name: 'Profesyonel', desc: 'Profesyonel ekipler için tam çözüm', monthly: 499, features: ['15 Temsilci', 'Sınırsız Sohbet', 'Ekran İzleme & Müdahale', 'WebRTC HD Paylaşım', 'AI Destekli Yardım', 'API & Webhook Desteği', 'Öncelikli Destek', 'Gelişmiş Analitik'], highlighted: true, cta: 'Hemen Başla' },
+  { name: 'Kurumsal', desc: 'Büyük ölçekli işletmeler için', monthly: 999, features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'Beyaz Etiket', 'SLA Garantisi', 'Özel Destek Hattı', 'Özel Entegrasyonlar', 'Alan Adı Özelleştirme', 'Tüm Özellikler'], highlighted: false, cta: 'İletişime Geç' },
+]
+
+const comparisonRows = [
+  { name: 'Temsilci Sayısı', free: '2', starter: '5', pro: '15', biz: 'Sınırsız' },
+  { name: 'Sohbet / Ay', free: '100', starter: '1.000', pro: 'Sınırsız', biz: 'Sınırsız' },
+  { name: 'Gerçek Zamanlı Sohbet', free: true, starter: true, pro: true, biz: true },
+  { name: 'Widget Özelleştirme', free: true, starter: true, pro: true, biz: true },
+  { name: 'E-posta Bildirimleri', free: true, starter: true, pro: true, biz: true },
+  { name: 'Ziyaretçi Takibi', free: false, starter: true, pro: true, biz: true },
+  { name: 'Chatbot & Otomasyon', free: false, starter: true, pro: true, biz: true },
+  { name: 'Hazır Cevaplar', free: false, starter: true, pro: true, biz: true },
+  { name: 'Dosya Yükleme', free: false, starter: true, pro: true, biz: true },
+  { name: 'Ekran İzleme (SD/HD)', free: false, starter: false, pro: true, biz: true },
+  { name: 'WebRTC HD Paylaşım', free: false, starter: false, pro: true, biz: true },
+  { name: 'Müdahale Modu', free: false, starter: false, pro: true, biz: true },
+  { name: 'AI Destekli Yardım', free: false, starter: false, pro: true, biz: true },
+  { name: 'API & Webhook', free: false, starter: false, pro: true, biz: true },
+  { name: 'Beyaz Etiket', free: false, starter: false, pro: false, biz: true },
+  { name: 'SLA Garantisi', free: false, starter: false, pro: false, biz: true },
+  { name: 'Özel Destek Hattı', free: false, starter: false, pro: false, biz: true },
+  { name: 'Özel Entegrasyon', free: false, starter: false, pro: false, biz: true },
+]
+
+const testimonials = [
+  { quote: 'Gu Live Chat sayesinde müşterilerimize anında yanıt veriyoruz. Ekran izleme özelliği ile sorunları görerek çözüyoruz, destek süremiz %60 azaldı. Crisp\'ten çok daha uygun fiyatlı.', author: 'Ahmet Yılmaz', role: 'CEO, TrendyShop', rating: 5 },
+  { quote: 'Crisp\'ten geçtik, çok daha uygun fiyatlı ve Türkçe destek muhteşem. Widget\'ı 2 dakikada kurduk, AI chatbot sayesinde gelen taleplerin %40\'ı otomatik çözülüyor.', author: 'Elif Demir', role: 'Operasyon Müdürü, HızlıMarket', rating: 5 },
+  { quote: 'Profesyonel paketteki ekran izleme ve uzaktan yardım özellikleri rakipsiz. Müşterilerimizin yaşadığı sorunu görüp anında müdahale edebiliyoruz. Tam bir Crisp alternatifi.', author: 'Mehmet Kaya', role: 'IT Yöneticisi, TeknoSoft', rating: 5 },
+]
+
+const faqs = [
+  { q: 'Gu Live Chat\'i siteme eklemek ne kadar sürer?', a: 'Sadece 2 dakika! Bir satır kodu sitenize ekleyin ve anında çalışmaya başlasın. Teknik bilgi gerektirmez. Dashboard\'dan widget rengini, pozisyonunu ve hoş geldin mesajını özelleştirebilirsiniz.' },
+  { q: 'Ücretsiz pakette neler var?', a: '2 temsilci, ayda 100 sohbet, temel widget özelleştirmesi ve e-posta bildirimleri. Kredi kartı gerekmeden hemen başlayın. İstediğiniz zaman ücretli paketlere geçiş yapabilirsiniz.' },
+  { q: 'Daha fazla pakete geçebilir miyim?', a: 'Evet! İstediğiniz zaman paket yükseltebilir veya düşürebilirsiniz. Fark ücreti günlük olarak hesaplanır (prorate). Hiçbir veri kaybı yaşamazsınız.' },
+  { q: 'Verilerim güvende mi?', a: 'Tüm veriler SSL/TLS ile şifrelenir. Sunucularımız Avrupa\'da (Türkiye) bulunur, KVKK ve GDPR uyumlu çalışıyoruz. Düzenli yedekleme ve 99.9% uptime garantisi sunuyoruz.' },
+  { q: 'Chatbot nasıl çalışıyor?', a: 'Görsel editör ile adımlar oluşturun: mesaj gönderme, seçenek sunma, e-posta toplama ve temsilciye aktarma. Kod yazmanıza gerek yok. AI destekli chatbot ile daha akıllı yanıtlar verebilirsiniz.' },
+  { q: 'Crisp\'ten verilerimi taşıyabilir miyim?', a: 'Evet! Crisp\'ten Gu Live Chat\'e veri taşıma aracımız var. Tek tıkla tüm sohbet geçmişinizi, kişi bilgilerinizi ve ayarlarınızı aktarabilirsiniz.' },
+]
+
+function FadeInView({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.08 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.98)',
+        transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const numericValue = parseInt(value.replace(/[^0-9]/g, ''))
+  const isPercentage = value.includes('%')
+  const hasPlus = value.includes('+')
+  const displaySuffix = isPercentage ? '%' : hasPlus ? '+' : suffix
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.5 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!visible) return
+    let current = 0
+    const end = numericValue
+    const duration = 1500
+    const increment = Math.max(1, Math.floor(end / 60))
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= end) { setCount(end); clearInterval(timer) }
+      else setCount(current)
+    }, duration / Math.ceil(end / increment))
+    return () => clearInterval(timer)
+  }, [visible, numericValue])
+
+  return <div ref={ref} className="tabular-nums">{count}{displaySuffix}</div>
+}
+
+function PricingCard({ plan, billingPeriod, yearlyDiscount, idx }: {
+  plan: typeof plans[0]; billingPeriod: 'monthly' | 'yearly'; yearlyDiscount: number; idx: number
+}) {
+  const isYearly = billingPeriod === 'yearly'
+  const price = isYearly ? Math.round(plan.monthly * (1 - yearlyDiscount)) : plan.monthly
+  const yearlyTotal = isYearly && plan.monthly > 0 ? plan.monthly * 12 : 0
+  const yearlyBilled = isYearly && plan.monthly > 0 ? price * 12 : 0
+
+  return (
+    <FadeInView delay={idx * 0.08} className="h-full">
+      <div className={`relative h-full surface p-6 flex flex-col ${plan.highlighted ? 'border-primary/50 shadow-brand scale-[1.03] sm:scale-[1.04] z-10' : ''}`}>
+        {plan.highlighted && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-brand text-white text-[11px] font-bold rounded-full shadow-brand whitespace-nowrap">
+            En Popüler
+          </span>
+        )}
+        <h3 className={`text-lg font-bold text-foreground ${plan.highlighted ? 'mt-2' : ''}`}>{plan.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{plan.desc}</p>
+        <div className="mt-5 mb-1">
+          {plan.monthly === 0 ? (
+            <span className="text-4xl font-bold text-foreground tracking-tight">Ücretsiz</span>
+          ) : (
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold text-foreground tracking-tight">₺{price}</span>
+              <span className="text-sm text-muted-foreground">/ay</span>
+            </div>
+          )}
+        </div>
+        {isYearly && plan.monthly > 0 && (
+          <p className="text-xs text-success font-medium mt-2 flex items-center gap-1.5">
+            <Zap className="w-3 h-3" />
+            ₺{yearlyBilled}/yıl fatura &mdash; <span className="line-through text-muted-foreground">₺{yearlyTotal}/yıl</span>
+          </p>
+        )}
+        {plan.monthly === 0 && <div className="mt-6" />}
+        {plan.monthly > 0 && <div className="mt-4" />}
+        <Link href="/register" className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all mt-5 ${
+          plan.highlighted
+            ? 'bg-gradient-brand text-white shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
+            : 'bg-primary-light text-primary hover:bg-primary hover:text-white'
+        }`}>
+          {plan.cta}
+        </Link>
+        <ul className="space-y-3 mt-6 flex-1">
+          {plan.features.map(f => (
+            <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+              <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
+              {f}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </FadeInView>
+  )
+}
+
+function renderCell(value: boolean | string) {
+  if (typeof value === 'boolean') {
+    return value
+      ? <Check className="w-4 h-4 text-success mx-auto" />
+      : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />
+  }
+  return <span className="text-foreground font-medium">{value}</span>
+}
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState<Array<{id: number; text: string; sender: 'bot' | 'user'}>>([])
   const [chatInput, setChatInput] = useState('')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [scrolled, setScrolled] = useState(false)
+  const yearlyDiscount = 0.2
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return
@@ -15,377 +226,639 @@ export default function HomePage() {
     setChatMessages(prev => [...prev, userMsg])
     setChatInput('')
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { id: Date.now() + 1, text: 'Merhaba! Size yardımcı olmak için buradayım. 😊 Ücretsiz denemek için yukarıdaki butona tıklayabilirsiniz!', sender: 'bot' as const }])
+      setChatMessages(prev => [...prev, { id: Date.now() + 1, text: 'Merhaba! Size yardımcı olmak için buradayım. Ücretsiz denemek için yukarıdaki butona tıklayabilirsiniz!', sender: 'bot' as const }])
     }, 1000)
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-[#E5E0F0] dark:border-gray-800">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">
+
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-xl border-b border-border shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand transition-transform duration-300 group-hover:scale-105">
+                <MessageCircle className="w-4.5 h-4.5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Gu Live Chat</span>
+              <span className="text-lg font-bold text-foreground tracking-tight">Gu Live Chat</span>
             </Link>
 
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition">Özellikler</a>
-              <a href="#pricing" className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition">Fiyatlandırma</a>
-              <a href="#how-it-works" className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition">Nasıl Çalışır?</a>
-              <a href="#faq" className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition">SSS</a>
-              <Link href="/login" className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition">Giriş Yap</Link>
-              <Link href="/register" className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-xl transition">Ücretsiz Başla</Link>
+            <div className="hidden md:flex items-center gap-1">
+              {[
+                { label: 'Özellikler', href: '#features' },
+                { label: 'Fiyatlandırma', href: '#pricing' },
+                { label: 'Eklentiler', href: '#addons' },
+                { label: 'SSS', href: '#faq' },
+              ].map(item => (
+                <a key={item.label} href={item.href}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-primary-light transition-all duration-200">
+                  {item.label}
+                </a>
+              ))}
             </div>
 
-            {/* Mobile Hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-[#4A2080] dark:text-gray-300 hover:text-primary"
-              aria-label="Menü"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+            <div className="hidden md:flex items-center gap-3">
+              <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-lg hover:bg-primary-light">
+                Giriş Yap
+              </Link>
+              <Link href="/register" className="relative group">
+                <div className="absolute -inset-1 bg-gradient-brand rounded-xl blur-md opacity-40 group-hover:opacity-70 transition-all duration-300 group-hover:blur-lg" />
+                <span className="relative px-5 py-2.5 bg-gradient-brand text-white text-sm font-semibold rounded-xl flex items-center gap-1.5 transition-transform duration-200 group-hover:scale-[1.02]">
+                  Ücretsiz Başla <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
+            </div>
+
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-primary-light transition-colors">
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
+        </div>
 
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4 border-t border-[#E5E0F0] dark:border-gray-800">
-              <div className="flex flex-col gap-3 pt-4">
-                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition py-2">Özellikler</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition py-2">Fiyatlandırma</a>
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition py-2">Nasıl Çalışır?</a>
-                <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition py-2">SSS</a>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-[#4A2080] dark:text-gray-300 hover:text-primary transition py-2">Giriş Yap</Link>
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-xl transition text-center">Ücretsiz Başla</Link>
-              </div>
+        <div className={`md:hidden transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="border-t border-border bg-background/95 backdrop-blur-xl px-4 py-4 space-y-1">
+            {[
+              { label: 'Özellikler', href: '#features' },
+              { label: 'Fiyatlandırma', href: '#pricing' },
+              { label: 'Eklentiler', href: '#addons' },
+              { label: 'SSS', href: '#faq' },
+            ].map(item => (
+              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-primary-light transition-colors">
+                {item.label}
+              </a>
+            ))}
+            <div className="border-t border-border mt-3 pt-3 space-y-2">
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors">
+                Giriş Yap
+              </Link>
+              <Link href="/register" onClick={() => setMobileMenuOpen(false)}
+                className="block px-5 py-2.5 bg-gradient-brand text-white text-sm font-semibold rounded-xl text-center shadow-brand">
+                Ücretsiz Başla
+              </Link>
             </div>
-          )}
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            Türk yapımı canlı destek sistemi
-          </div>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white leading-tight">
-            Müşterilerinizle
-            <span className="text-primary"> anında </span>
-            bağlantı kurun
-          </h1>
-          <p className="mt-6 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Gu Live Chat ile web sitenize profesyonel canlı destek ekleyin. Gerçek zamanlı mesajlaşma, ziyaretçi takibi, chatbot ve daha fazlası.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl text-lg transition shadow-lg shadow-primary/25">
-              Ücretsiz Başla
-            </Link>
-            <a href="#features" className="px-8 py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-xl text-lg transition">
-              Özellikleri Keşfet
-            </a>
-          </div>
+      <section className="relative pt-32 pb-24 sm:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh pointer-events-none" />
+        <div className="absolute inset-0 bg-dots opacity-[0.03] pointer-events-none" />
 
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            <div>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">10K+</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Aktif Kullanıcı</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">99.9%</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Uptime</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{"< 2 dk"}</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Kurulum Süresi</div>
-            </div>
-          </div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-40 right-10 w-96 h-96 bg-purple-500/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-10 left-1/3 w-80 h-80 bg-indigo-500/6 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-violet-500/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2.5s' }} />
 
-          {/* Chat Preview */}
-          <div className="mt-16 relative max-w-4xl mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-gray-950 via-transparent to-transparent z-10 pointer-events-none" style={{ bottom: '0', top: '70%' }}></div>
-            <div className="bg-[#F5F3FF] dark:bg-gray-900 rounded-2xl border border-[#E5E0F0] dark:border-gray-700 shadow-2xl overflow-hidden">
-              <div className="bg-primary p-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-sm">Destek Ekibi</p>
-                  <p className="text-white/70 text-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                    Çevrimiçi • Tipik yanıt: 2 dk
-                  </p>
-                </div>
+        <div className="relative max-w-7xl mx-auto">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary-light text-primary rounded-full text-sm font-medium mb-8 animate-in-up shadow-xs">
+              <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
+              Türk yapımı canlı destek sistemi
+              <ChevronRight className="w-3 h-3" />
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[4.5rem] font-bold tracking-tight leading-[1.05] animate-in-up">
+              Müşterilerinizle
+              <br />
+              <span className="text-gradient-brand">Anında</span> Bağlantı Kurun
+            </h1>
+
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-in-up" style={{ animationDelay: '0.1s' }}>
+              Gu Live Chat ile web sitenize profesyonel canlı destek ekleyin.
+              Gerçek zamanlı mesajlaşma, yapay zeka destekli chatbot ve ziyaretçi takibi.
+            </p>
+
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-in-up" style={{ animationDelay: '0.2s' }}>
+              <Link href="/register" className="relative group">
+                <div className="absolute -inset-1.5 bg-gradient-brand rounded-xl blur-xl opacity-50 group-hover:opacity-80 transition-all duration-500 group-hover:blur-2xl" />
+                <span className="relative px-8 py-4 bg-gradient-brand text-white font-semibold rounded-xl text-lg flex items-center gap-2 shadow-brand-lg transition-transform duration-200 group-hover:scale-[1.02]">
+                  Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+              <a href="#features" className="group px-8 py-4 surface-hover font-semibold rounded-xl text-lg flex items-center gap-2 transition-all duration-200">
+                Özellikleri Keşfet <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5" />
+              </a>
+            </div>
+
+            <FadeInView delay={0.3} className="mt-16">
+              <div className="grid grid-cols-3 gap-8 sm:gap-12 max-w-lg mx-auto">
+                {[
+                  { value: '10K+', label: 'Aktif Kullanıcı' },
+                  { value: '99.9%', label: 'Uptime' },
+                  { value: '2dk', label: 'Kurulum Süresi' },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
+                      <AnimatedCounter value={stat.value} />
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium">{stat.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="p-6 space-y-4 min-h-[300px]">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+            </FadeInView>
+          </div>
+
+          <FadeInView delay={0.4} className="mt-20 max-w-5xl mx-auto">
+            <div className="relative">
+              <div className="absolute -inset-6 bg-gradient-brand rounded-3xl blur-3xl opacity-[0.08] pointer-events-none" />
+              <div className="relative glass-strong rounded-2xl border border-border shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 sm:px-5 py-3 border-b border-border bg-card/50">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-destructive/80" />
+                    <div className="w-3 h-3 rounded-full bg-warning/80" />
+                    <div className="w-3 h-3 rounded-full bg-success/80" />
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-4 max-w-xs shadow-sm border border-gray-100 dark:border-gray-700">
-                    <p className="text-sm text-gray-900 dark:text-white">Merhaba! Size nasıl yardımcı olabiliriz? 😊</p>
-                    <span className="text-xs text-gray-400 mt-1 block">Şimdi</span>
+                  <div className="flex-1 text-center">
+                    <span className="text-xs font-medium text-muted-foreground">gu-live-chat.com</span>
                   </div>
+                  <div className="w-16" />
                 </div>
-                <div className="flex items-start gap-3 justify-end">
-                  <div className="bg-primary text-white rounded-2xl rounded-tr-none p-4 max-w-xs shadow-sm">
-                    <p className="text-sm">Merhaba, ürün iadesi yapmak istiyorum. Nasıl yapabilirim?</p>
-                    <span className="text-xs text-white/70 mt-1 block">Şimdi</span>
+
+                <div className="flex flex-col sm:flex-row">
+                  <div className="hidden sm:flex w-56 shrink-0 border-r border-border bg-card/20 p-3 flex-col gap-0.5">
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">Sohbetler</div>
+                    {[
+                      { name: 'Ali Yılmaz', active: true, last: 'Merhaba, yardıma ihtiyacım var' },
+                      { name: 'Ayşe Demir', active: false, last: 'Teşekkür ederim, çözdüm' },
+                      { name: 'Mehmet Kaya', active: false, last: 'Ürün iadesi yapmak istiyorum' },
+                      { name: 'Zeynep Şahin', active: false, last: 'Fatura ile ilgili sorun var' },
+                    ].map((c, i) => (
+                      <div key={c.name} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${i === 0 ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-primary-light/40 cursor-pointer'}`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${i === 0 ? 'bg-gradient-brand text-white' : 'bg-muted text-muted-foreground'}`}>
+                          {c.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="truncate min-w-0">
+                          <div className="truncate text-xs font-medium">{c.name}</div>
+                          <div className="truncate text-[11px] text-muted-foreground/70">{c.last}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none p-4 max-w-xs shadow-sm border border-gray-100 dark:border-gray-700">
-                    <p className="text-sm text-gray-900 dark:text-white">Tabii ki! İade sürecinizi başlatmanıza yardımcı olayım. Sipariş numaranızı paylaşır mısınız?</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-xs text-gray-400">✓✓</span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="p-4 border-b border-border bg-card/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-bold shadow-brand shrink-0">
+                          G
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Destek Ekibi</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
+                            Çevrimiçi &middot; Tipik yanıt: 2 dk
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-3 min-h-[260px] bg-background/40">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+                        <div className="bg-card rounded-xl rounded-tl-none p-3.5 max-w-[80%] shadow-xs border border-border">
+                          <p className="text-sm text-foreground">Merhaba! Size nasıl yardımcı olabiliriz?</p>
+                          <span className="text-[11px] text-muted-foreground mt-1.5 block">Şimdi</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5 justify-end">
+                        <div className="bg-gradient-brand text-white rounded-xl rounded-tr-none p-3.5 max-w-[80%] shadow-xs">
+                          <p className="text-sm">Merhaba, ürün iadesi yapmak istiyorum.</p>
+                          <span className="text-[11px] text-white/70 mt-1.5 block">Şimdi</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+                        <div className="bg-card rounded-xl rounded-tl-none p-3.5 max-w-[80%] shadow-xs border border-border">
+                          <p className="text-sm text-foreground">Tabii ki! İade sürecinizi başlatmanıza yardımcı olayım. Sipariş numaranızı paylaşır mısınız?</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+                        <div className="bg-card rounded-xl rounded-tl-none p-3.5 max-w-[80%] shadow-xs border border-border">
+                          <p className="text-sm text-foreground">Bu arada, ekran paylaşımı ile sorunu daha hızlı çözebiliriz. İzin verir misiniz?</p>
+                          <div className="flex gap-2 mt-3">
+                            <button className="px-3.5 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover transition shadow-xs">Evet, Paylaş</button>
+                            <button className="px-3.5 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-lg hover:bg-border transition">Hayır</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 border-t border-border bg-card/30">
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="Mesajınızı yazın..." readOnly
+                          className="flex-1 px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary transition-shadow" />
+                        <button className="p-2.5 bg-gradient-brand text-white rounded-xl shadow-brand hover:shadow-brand-lg transition-all">
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </FadeInView>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F3FF] dark:bg-gray-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              3 Adımda Başlayın
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-400">
-              Dakikalar içinde canlı desteği sitenize ekleyin
+      <section className="py-14 border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInView>
+            <p className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-8">
+              Güvenen Markalar
             </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <StepCard step="1" title="Hesap Oluşturun" description="Ücretsiz kayıt olun ve dashboardunuza erişin. Kredi kartı gerekmez." icon="🚀" />
-            <StepCard step="2" title="Widget'ı Özelleştirin" description="Renk, pozisyon ve mesajlarınızı ayarlayın. 2 dakikada kurulum tamamlansın." icon="🎨" />
-            <StepCard step="3" title="Sitenize Ekleyin" description="Bir satır kod kopyalayın ve yapıştırın. Anında müşterilerinizle sohbet edin!" icon="💬" />
+            <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-6">
+              {['TrendyShop', 'HızlıMarket', 'TeknoSoft', 'ModaVip', 'Evinİçin', 'BoostAI'].map(name => (
+                <span key={name} className="text-xl font-bold text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors duration-300 tracking-tight">{name}</span>
+              ))}
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
+      <section id="features" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute inset-0 bg-grid opacity-[0.02] pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative">
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Özellikler</span>
+            </div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">İhtiyacınız olan her şey</h2>
+              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Müşteri destek sürecinizi hızlandıracak güçlü özellikler, tek platformda.
+              </p>
+            </div>
+          </FadeInView>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {featureData.map((feature, i) => (
+              <FadeInView key={feature.title} delay={i * 0.05}>
+                <div className="group surface-hover p-6 h-full transition-all duration-300 hover:-translate-y-1">
+                  <div className="w-11 h-11 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-4 group-hover:bg-gradient-brand group-hover:text-white transition-all duration-300 shadow-xs group-hover:shadow-brand">
+                    <feature.icon className="w-5.5 h-5.5" />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                </div>
+              </FadeInView>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              İhtiyacınız olan her şey
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Müşteri destek sürecinizi hızlandıracak güçlü özellikler
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard icon="💬" title="Gerçek Zamanlı Sohbet" description="Milisaniyelik mesajlaşma ile müşterilerinize anında yanıt verin. Yazıyor göstergesi, okundu onayı ve dosya paylaşımı." />
-            <FeatureCard icon="🤖" title="Akıllı Chatbot" description="Otomatik yanıt akışları oluşturun. Sık sorulan sorulara otomatik cevap verin ve gerektiğinde temsilciye aktarın." />
-            <FeatureCard icon="👥" title="Takım Yönetimi" description="Temsilci ekleyin, roller atayın ve sohbetleri dağıtın. Yuvarlak robin veya manuel atama desteği." />
-            <FeatureCard icon="📊" title="Ziyaretçi Takibi" description="Hangi sayfalarda geziniyorlar, nereden geliyorlar ve ne kadar süre kalıyorlar? Tam görünür." />
-            <FeatureCard icon="⚡" title="Hazır Cevaplar" description="Sık tekrar eden sorulara tek tuşla yanıt verin. Slash komutları ile hızlı erişim." />
-            <FeatureCard icon="🔗" title="Webhook & API" description="CRM'inizle entegre edin, Slack bildirimleri alın veya özel işlemler oluşturun." />
-            <FeatureCard icon="🏷️" title="Etiketler & Notlar" description="Sohbetleri kategorize edin ve iç notlar ekleyin. Takım içinde bilgi paylaşımı kolaylaşsın." />
-            <FeatureCard icon="🎨" title="Özelleştirilebilir Widget" description="Renk, pozisyon, hoş geldin mesajı ve avatar gibi tüm detayları markanıza uygun ayarlayın." />
-            <FeatureCard icon="📈" title="Detaylı Analitik" description="Yanıt süreleri, sohbet hacmi, çözüm oranları ve daha fazlası ile performansı ölçün." />
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Nasıl Çalışır?</span>
+            </div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">3 Adımda Başlayın</h2>
+              <p className="mt-4 text-lg text-muted-foreground">Dakikalar içinde canlı desteği sitenize ekleyin.</p>
+            </div>
+          </FadeInView>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
+            <div className="hidden md:block absolute top-16 left-[16.66%] right-[16.66%] h-[2px] bg-gradient-to-r from-primary/30 via-primary/20 to-transparent" />
+
+            {[
+              { step: '01', title: 'Hesap Oluşturun', desc: 'Ücretsiz kayıt olun ve dashboard\'unuza erişin. Kredi kartı gerekmez.', icon: MessageSquare },
+              { step: '02', title: 'Widget\'ı Özelleştirin', desc: 'Renk, pozisyon ve mesajlarınızı markanıza uygun ayarlayın.', icon: Sparkles },
+              { step: '03', title: 'Sitenize Ekleyin', desc: 'Tek satır kod kopyalayıp yapıştırın. Anında müşterilerinizle sohbet edin!', icon: Zap },
+            ].map((item, i) => (
+              <FadeInView key={item.step} delay={i * 0.12}>
+                <div className="text-center relative">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-brand flex items-center justify-center mx-auto mb-5 shadow-brand-lg relative z-10">
+                    <item.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="inline-flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-xs font-bold mb-5 relative z-10 shadow-md">
+                    {item.step}
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">{item.desc}</p>
+                </div>
+              </FadeInView>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#F5F3FF] dark:bg-gray-900/50">
+      <section id="addons" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-muted/40">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              Basit, şeffaf fiyatlandırma
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-400">
-              İşletmenizin büyüklüğüne uygun paketi seçin
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <PricingCard name="Ücretsiz" price="₺0" period="/ay" description="Küçük işletmeler için" features={['2 temsilci', '100 sohbet/ay', 'Temel widget', 'E-posta bildirimleri']} highlighted={false} />
-            <PricingCard name="Başlangıç" price="₺199" period="/ay" description="Büyüyen işletmeler" features={['5 temsilci', '1.000 sohbet/ay', 'Ziyaretçi takibi', 'Chatbot', 'Hazır cevaplar', 'Dosya yükleme']} highlighted={false} />
-            <PricingCard name="Profesyonel" price="₺499" period="/ay" description="Profesyonel ekipler" features={['15 temsilci', 'Sınırsız sohbet', 'Ekran İzleme', 'AI destekli yardım', 'API erişimi', 'Webhook desteği', 'Öncelikli destek']} highlighted={true} />
-            <PricingCard name="İş" price="₺999" period="/ay" description="Kurumsal çözümler" features={['Sınırsız temsilci', 'Sınırsız sohbet', 'Ekran İzleme', 'AI destekli yardım', 'Özel marka', 'SLA garantisi', 'Özel destek', 'Tüm özellikler']} highlighted={false} />
-          </div>
-        </div>
-      </section>
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Eklentiler</span>
+            </div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Ek özelliklerle gücünüzü artırın</h2>
+              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Eklenti mağazamızdan ihtiyacınız olan ek hizmetleri seçin.
+              </p>
+            </div>
+          </FadeInView>
 
-      {/* FAQ */}
-      <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-              Sık Sorulan Sorular
-            </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {addonData.map((addon, i) => (
+              <FadeInView key={addon.title} delay={i * 0.08}>
+                <div className="relative group h-full">
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative h-full surface-hover p-6 flex flex-col">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-base font-semibold text-foreground">{addon.title}</h3>
+                      {addon.popular && (
+                        <span className="text-[10px] font-bold bg-gradient-brand text-white px-2.5 py-0.5 rounded-full shadow-brand shrink-0 ml-2">
+                          Popüler
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{addon.desc}</p>
+                    <div className="flex items-end justify-between pt-2 border-t border-border">
+                      <div>
+                        <span className="text-xl font-bold text-foreground tracking-tight">{addon.price}</span>
+                      </div>
+                      <button className="px-4 py-2 bg-primary-light text-primary text-sm font-semibold rounded-lg hover:bg-primary hover:text-white transition-all duration-200 shadow-xs hover:shadow-brand">
+                        Ekle
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </FadeInView>
+            ))}
           </div>
-          <div className="space-y-4">
-            <FAQItem question="Gu Live Chat'i siteme eklemek ne kadar sürer?" answer="Sadece 2 dakika! Bir satır kodu sitenize ekleyin ve anında çalışmaya başlasın. Teknik bilgi gerektirmez." />
-            <FAQItem question="Ücretsiz pakette neler var?" answer="2 temsilci, ayda 100 sohbet, temel widget özelleştirmesi ve e-posta bildirimleri. Kredi kartı gerekmeden başlayın." />
-            <FAQItem question="Daha fazla pakete geçebilir miyim?" answer="Evet! İstediğiniz zaman paket yükseltebilir veya düşürebilirsiniz. Fark ücreti prorate edilir." />
-            <FAQItem question="Verilerim güvende mi?" answer="Tüm veriler SSL ile şifrelenir. Sunucularımız Avrupa'da bulunur ve KVKK uyumlu çalışıyoruz." />
-            <FAQItem question="Chatbot nasıl çalışıyor?" answer="Görsel editör ile adımlar oluşturun: mesaj, seçenek, e-posta toplama ve temsilciye aktarma. Kod yazmanıza gerek yok." />
-          </div>
-        </div>
-      </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white">
-            Hemen başlayın, 2 dakikada kurun
-          </h2>
-          <p className="mt-4 text-xl text-white/80">
-            Kredi kartı gerekmeden ücretsiz deneyin. İlk 100 sohbet tamamen ücretsiz.
-          </p>
-          <div className="mt-8">
-            <Link href="/register" className="px-8 py-4 bg-white text-primary font-semibold rounded-xl text-lg hover:bg-gray-100 transition shadow-lg">
-              Ücretsiz Hesap Oluştur
+          <FadeInView className="mt-10 text-center">
+            <Link href="#" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-hover transition-colors group">
+              Tüm eklentileri görüntüle
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
+          </FadeInView>
+        </div>
+      </section>
+
+      <section id="pricing" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute inset-0 bg-mesh opacity-[0.03] pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative">
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Fiyatlandırma</span>
+            </div>
+            <div className="text-center mb-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Basit, şeffaf fiyatlandırma</h2>
+              <p className="mt-4 text-lg text-muted-foreground">İşletmenizin büyüklüğüne uygun paketi seçin.</p>
+            </div>
+          </FadeInView>
+
+          <FadeInView delay={0.1} className="flex items-center justify-center gap-4 mb-14">
+            <span className={`text-sm font-medium transition-colors duration-300 ${billingPeriod === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>Aylık</span>
+            <button onClick={() => setBillingPeriod(p => p === 'monthly' ? 'yearly' : 'monthly')}
+              className={`relative w-14 h-7 rounded-full transition-all duration-300 ${billingPeriod === 'yearly' ? 'bg-primary shadow-brand' : 'bg-border'}`}>
+              <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 ${billingPeriod === 'yearly' ? 'translate-x-7' : ''}`} />
+            </button>
+            <span className={`text-sm font-medium transition-colors duration-300 ${billingPeriod === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Yıllık
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-success-light text-success">
+                <Zap className="w-2.5 h-2.5 mr-0.5" />
+                2 Ay Ücretsiz
+              </span>
+            </span>
+          </FadeInView>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-start">
+            {plans.map((plan, i) => (
+              <PricingCard key={plan.name} plan={plan} billingPeriod={billingPeriod} yearlyDiscount={yearlyDiscount} idx={i} />
+            ))}
+          </div>
+
+          <FadeInView delay={0.2} className="mt-20">
+            <h3 className="text-xl font-bold text-center text-foreground mb-10">Tüm özellikleri karşılaştırın</h3>
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-md">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-left p-4 pl-6 font-semibold text-foreground">Özellik</th>
+                    <th className="p-4 font-semibold text-foreground text-center">Ücretsiz</th>
+                    <th className="p-4 font-semibold text-foreground text-center">Başlangıç</th>
+                    <th className="p-4 font-semibold text-primary text-center">Profesyonel</th>
+                    <th className="p-4 font-semibold text-foreground text-center pr-6">Kurumsal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonRows.map((row, i) => (
+                    <tr key={row.name} className={`border-b border-border transition-colors hover:bg-primary-light/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}`}>
+                      <td className="p-4 pl-6 text-muted-foreground font-medium">{row.name}</td>
+                      <td className="p-4 text-center">{renderCell(row.free)}</td>
+                      <td className="p-4 text-center">{renderCell(row.starter)}</td>
+                      <td className="p-4 text-center">{renderCell(row.pro)}</td>
+                      <td className="p-4 text-center pr-6">{renderCell(row.biz)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
+      <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-muted/40">
+        <div className="max-w-7xl mx-auto">
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Müşteri Yorumları</span>
+            </div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Müşterilerimiz ne diyor?</h2>
+              <p className="mt-4 text-lg text-muted-foreground">1.000&apos;den fazla işletme Gu Live Chat ile müşteri memnuniyetini artırıyor.</p>
+            </div>
+          </FadeInView>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <FadeInView key={t.author} delay={i * 0.1}>
+                <div className="surface p-7 h-full flex flex-col transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="flex items-center gap-0.5 mb-4">
+                    {Array.from({ length: t.rating }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 text-warning fill-warning" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1 italic">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
+                    <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold text-sm shadow-brand shrink-0">
+                      {t.author.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{t.author}</p>
+                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInView>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-[#E5E0F0] dark:border-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Ürün</h4>
-              <div className="space-y-2">
-                <a href="#features" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Özellikler</a>
-                <a href="#pricing" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Fiyatlandırma</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Entegrasyonlar</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Changelog</a>
-              </div>
+      <section id="faq" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <FadeInView>
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">SSS</span>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Destek</h4>
-              <div className="space-y-2">
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Dokümantasyon</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">API Referansı</a>
-                <a href="#faq" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">SSS</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">İletişim</a>
-              </div>
+            <div className="text-center mb-14">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Sık Sorulan Sorular</h2>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Şirket</h4>
-              <div className="space-y-2">
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Hakkımızda</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Blog</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Kariyer</a>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Yasal</h4>
-              <div className="space-y-2">
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Gizlilik Politikası</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">Kullanım Şartları</a>
-                <a href="#" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">KVKK</a>
-              </div>
-            </div>
+          </FadeInView>
+
+          <div className="space-y-3">
+            {faqs.map((faq, i) => (
+              <FadeInView key={i} delay={i * 0.05}>
+                <div className="surface overflow-hidden transition-all duration-300 hover:shadow-md">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/30 transition-colors duration-200">
+                    <span className="font-medium text-foreground text-sm sm:text-base pr-4">{faq.q}</span>
+                    <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${openFaq === i ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+                      {openFaq === i ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                    </div>
+                  </button>
+                  <div className={`transition-all duration-300 overflow-hidden ${openFaq === i ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{faq.a}</div>
+                  </div>
+                </div>
+              </FadeInView>
+            ))}
           </div>
-          <div className="pt-8 border-t border-[#E5E0F0] dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+        </div>
+      </section>
+
+      <section className="relative py-28 sm:py-36 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-brand" />
+        <div className="absolute inset-0 bg-grid opacity-[0.05]" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
+
+        <div className="relative max-w-4xl mx-auto text-center">
+          <FadeInView>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">Hemen başlayın, 2 dakikada kurun</h2>
+            <p className="mt-5 text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
+              Kredi kartı gerekmeden ücretsiz deneyin. İlk 100 sohbet tamamen ücretsiz.
+            </p>
+          </FadeInView>
+
+          <FadeInView delay={0.15} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/register" className="relative group">
+              <div className="absolute -inset-1 bg-white/30 rounded-xl blur-lg opacity-60 group-hover:opacity-100 transition-all duration-500 animate-pulse-glow" />
+              <span className="relative px-8 py-4 bg-white text-primary font-semibold rounded-xl text-lg flex items-center gap-2 shadow-xl hover:shadow-2xl transition-all duration-200 group-hover:scale-[1.02]">
+                Ücretsiz Hesap Oluştur <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
+            <a href="#" className="px-8 py-4 border border-white/20 text-white font-semibold rounded-xl text-lg hover:bg-white/10 transition-all duration-200 flex items-center gap-2 hover:border-white/30">
+              <Phone className="w-4 h-4" /> Bize Ulaşın
+            </a>
+          </FadeInView>
+        </div>
+      </section>
+
+      <footer className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-border bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-14">
+            <div className="col-span-2 lg:col-span-1">
+              <Link href="/" className="flex items-center gap-2.5 mb-4 group">
+                <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand transition-transform duration-300 group-hover:scale-105">
+                  <MessageCircle className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-base font-bold text-foreground">Gu Live Chat</span>
+              </Link>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[200px]">
+                Türk yapımı, profesyonel canlı destek sistemi. Crisp&apos;e yerli alternatif.
+              </p>
+              <div className="flex items-center gap-2.5">
+                {[
+                  { icon: MessageCircle, href: '#' },
+                  { icon: Mail, href: '#' },
+                  { icon: Globe, href: '#' },
+                  { icon: MessageSquare, href: '#' },
+                ].map((social, i) => (
+                  <a key={i} href={social.href}
+                    className="w-9 h-9 rounded-xl bg-muted hover:bg-primary-light text-muted-foreground hover:text-primary flex items-center justify-center transition-all duration-200 hover:shadow-xs">
+                    <social.icon className="w-4 h-4" />
+                  </a>
+                ))}
               </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">© 2024 Gu Live Chat. Tüm hakları saklıdır.</span>
             </div>
-            <div className="flex items-center gap-4">
-              <a href="#" className="text-gray-400 hover:text-primary transition">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-primary transition">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-              </a>
+
+            {[
+              { title: 'Ürün', links: ['Özellikler', 'Fiyatlandırma', 'Entegrasyonlar', 'Eklentiler', 'Changelog'] },
+              { title: 'Destek', links: ['Dokümantasyon', 'API Referansı', 'SSS', 'Durum Sayfası', 'İletişim'] },
+              { title: 'Şirket', links: ['Hakkımızda', 'Blog', 'Kariyer', 'Basın', 'Bize Ulaşın'] },
+              { title: 'Yasal', links: ['Gizlilik Politikası', 'Kullanım Şartları', 'KVKK', 'Çerez Politikası'] },
+            ].map(col => (
+              <div key={col.title}>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-[0.12em] mb-4">{col.title}</h4>
+                <div className="space-y-3">
+                  {col.links.map(link => (
+                    <a key={link} href="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
+                      {link}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Copyright className="w-3.5 h-3.5" />
+              <span>{new Date().getFullYear()} Gu Live Chat. Tüm hakları saklıdır.</span>
+            </div>
+            <div className="flex items-center gap-5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />KVKK Uyumlu</span>
+              <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" />Türkiye&apos;de Üretildi</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-success rounded-full animate-pulse" />99.9% Uptime</span>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* Floating Chat Widget Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {chatOpen && (
-          <div className="mb-4 w-[380px] h-[520px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-[#E5E0F0] dark:border-gray-700 flex flex-col overflow-hidden">
-            {/* Chat Header */}
-            <div className="bg-primary p-4 flex items-center justify-between shrink-0">
+          <div className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in-scale origin-bottom-right">
+            <div className="bg-gradient-brand p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
+                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <p className="text-white font-semibold text-sm">Gu Live Chat</p>
                   <p className="text-white/70 text-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
                     Çevrimiçi
                   </p>
                 </div>
               </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F5F3FF] dark:bg-gray-900">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20 scroll-smooth">
               {chatMessages.length === 0 && (
-                <div className="flex gap-2 items-start">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-xl rounded-tl-none p-3 shadow-sm border border-[#E5E0F0] dark:border-gray-700 max-w-[260px]">
-                    <p className="text-sm text-gray-900 dark:text-white">Merhaba! 👋 Gu Live Chat destek ekibi burada. Size nasıl yardımcı olabiliriz?</p>
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold shadow-brand">G</div>
+                  <div className="bg-card rounded-xl rounded-tl-none p-3.5 shadow-xs border border-border max-w-[260px]">
+                    <p className="text-sm text-foreground">Merhaba! Gu Live Chat destek ekibi burada. Size nasıl yardımcı olabiliriz?</p>
                   </div>
                 </div>
               )}
               {chatMessages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
+                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'items-start gap-2.5'}`}>
                   {msg.sender === 'bot' && (
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold shadow-brand">G</div>
                   )}
-                  <div className={`rounded-xl p-3 max-w-[260px] text-sm ${
+                  <div className={`rounded-xl p-3.5 max-w-[260px] text-sm leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-primary text-white rounded-tr-none'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-tl-none shadow-sm border border-[#E5E0F0] dark:border-gray-700'
+                      ? 'bg-primary text-white rounded-tr-none shadow-sm'
+                      : 'bg-card text-foreground rounded-tl-none shadow-xs border border-border'
                   }`}>
                     {msg.text}
                   </div>
@@ -393,138 +866,29 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Chat Input */}
-            <div className="p-3 border-t border-[#E5E0F0] dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+            <div className="p-3.5 border-t border-border bg-card shrink-0">
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                <input type="text" value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Mesajınızı yazın..."
-                  className="flex-1 px-4 py-2.5 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  onClick={handleSendMessage}
+                  className="flex-1 px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary transition-shadow" />
+                <button onClick={handleSendMessage}
                   disabled={!chatInput.trim()}
-                  className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                  className="p-2.5 bg-gradient-brand text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-brand hover:shadow-brand-lg transition-all">
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Chat Button */}
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className="w-16 h-16 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center transition-transform hover:scale-105"
-        >
-          {chatOpen ? (
-            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          )}
+        <button onClick={() => setChatOpen(!chatOpen)}
+          className={`w-14 h-14 bg-gradient-brand text-white rounded-full shadow-brand-lg flex items-center justify-center transition-all duration-200 hover:scale-110 animate-pulse-glow ${chatOpen ? 'scale-90' : ''}`}>
+          {chatOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
         </button>
       </div>
-    </div>
-  )
-}
 
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-[#E5E0F0] dark:border-gray-700 hover:border-primary/50 dark:hover:border-primary/50 transition hover:shadow-lg">
-      <div className="text-3xl mb-4">{icon}</div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
-    </div>
-  )
-}
-
-function PricingCard({ name, price, period, description, features, highlighted }: {
-  name: string; price: string; period: string; description: string; features: string[]; highlighted: boolean
-}) {
-  return (
-    <div className={`rounded-2xl p-6 border-2 transition ${
-      highlighted
-        ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-lg shadow-primary/10'
-        : 'border-[#E5E0F0] dark:border-gray-700 bg-white dark:bg-gray-800'
-    }`}>
-      {highlighted && (
-        <span className="inline-block px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full mb-4">
-          En Popüler
-        </span>
-      )}
-      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{name}</h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
-      <div className="mt-4 mb-6">
-        <span className="text-4xl font-bold text-gray-900 dark:text-white">{price}</span>
-        <span className="text-gray-500 dark:text-gray-400">{period}</span>
-      </div>
-      <ul className="space-y-3 mb-6">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <Link
-        href="/register"
-        className={`block text-center py-3 rounded-xl font-semibold transition ${
-          highlighted
-            ? 'bg-primary text-white hover:bg-primary/90'
-            : 'bg-[#F5F3FF] dark:bg-gray-700 text-[#0F0F1A] dark:text-white hover:bg-[#EDE9FE] dark:hover:bg-gray-600'
-        }`}
-      >
-        Başla
-      </Link>
-    </div>
-  )
-}
-
-function StepCard({ step, title, description, icon }: { step: string; title: string; description: string; icon: string }) {
-  return (
-    <div className="text-center">
-      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-        {icon}
-      </div>
-      <div className="inline-flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-sm font-bold mb-3">
-        {step}
-      </div>
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400">{description}</p>
-    </div>
-  )
-}
-
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="border border-[#E5E0F0] dark:border-gray-700 rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F5F3FF] dark:hover:bg-gray-800 transition"
-      >
-        <span className="font-medium text-gray-900 dark:text-white">{question}</span>
-        <svg className={`w-5 h-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="px-4 pb-4 text-gray-600 dark:text-gray-400">
-          {answer}
-        </div>
-      )}
     </div>
   )
 }
