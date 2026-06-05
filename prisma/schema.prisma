@@ -103,6 +103,13 @@ model Website {
   // Widget Customization
   primaryColor   String         @default("#0074E0")
   position      WidgetPosition @default(BOTTOM_RIGHT)
+
+  // Privacy / GDPR
+  showConsentBanner  Boolean  @default(true)
+  consentBannerText  String?  @default("Bu site, size daha iyi hizmet verebilmek için çerezler ve kişisel verilerinizi işlemektedir. Devam ederek bunu kabul etmiş olursunuz.")
+  cookieConsentEnabled Boolean @default(true)
+  cookieConsentText  String?  @default("Bu site, deneyiminizi iyileştirmek için çerezler kullanmaktadır.")
+  privacyPolicyUrl   String?
   avatarUrl     String?
   welcomeMessage String        @default("Merhaba! Size nasıl yardımcı olabiliriz?")
   offlineMessage String        @default("Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.")
@@ -130,6 +137,10 @@ model Website {
   channelIntegrations ChannelIntegration[]
   workflows           Workflow[]
   addonPurchases      AddonPurchase[]
+  conversationRatings ConversationRating[]
+  proactiveMessages   ProactiveMessage[]
+  gdprConsents        GDPRConsent[]
+  dataRetentionPolicy DataRetentionPolicy?
 
   // PayTR
   paytrMerchantOid      String?            @unique
@@ -330,6 +341,7 @@ model Conversation {
   messages    Message[]
   tags        ConversationTag[]
   notes       Note[]
+  rating      ConversationRating?
 
   // Metadata
   lastMessageAt     DateTime @default(now())
@@ -998,6 +1010,7 @@ enum ChannelType {
   INSTAGRAM
   TELEGRAM
   SLACK
+  SMS
 }
 
 model ChannelIntegration {
@@ -1082,6 +1095,22 @@ model WorkflowStep {
   @@map("workflow_steps")
 }
 
+// ─── CSAT RATING ────────────────────────────────────────────────
+
+model ConversationRating {
+  id             String   @id @default(cuid())
+  conversationId String   @unique
+  websiteId      String
+  rating         Int      // 1-5
+  comment        String?
+  ratedAt        DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  website        Website      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_ratings")
+}
+
 // ─── ADD-ON / PLUGIN MARKETPLACE ───────────────────────────────
 
 enum AddonCategory {
@@ -1149,4 +1178,51 @@ model AddonPurchase {
 
   @@unique([websiteId, addonId])
   @@map("addon_purchases")
+}
+
+model ProactiveMessage {
+  id          String   @id @default(cuid())
+  websiteId   String
+  title       String
+  message     String
+  triggerType String   // 'TIME_ON_PAGE' | 'SCROLL_DEPTH' | 'EXIT_INTENT' | 'PAGE_VISIT' | 'CUSTOM'
+  triggerValue String? // seconds, percentage, URL, etc
+  targetPages String?  // JSON array of URLs or '*'
+  isActive    Boolean  @default(true)
+  delay       Int      @default(0) // seconds to wait before showing
+  showOnce    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  @@map("proactive_messages")
+}
+
+// ─── GDPR / KVKK COMPLIANCE ──────────────────────────────────────────
+
+model GDPRConsent {
+  id          String   @id @default(cuid())
+  websiteId   String
+  visitorId   String?
+  consentType String   // 'GDPR' | 'KVKK' | 'COOKIE' | 'DATA_PROCESSING'
+  granted     Boolean  @default(false)
+  ipAddress   String?
+  userAgent   String?
+  grantedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  @@map("gdpr_consents")
+}
+
+model DataRetentionPolicy {
+  id              String   @id @default(cuid())
+  websiteId       String   @unique
+  visitorDataDays Int      @default(365)
+  sessionDataDays Int      @default(90)
+  chatHistoryDays Int      @default(730)
+  autoDelete      Boolean  @default(false)
+  lastCleanupAt   DateTime?
+  website         Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("data_retention_policies")
 }

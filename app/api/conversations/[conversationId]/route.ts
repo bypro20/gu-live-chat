@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { getIO } from '@/lib/socket'
 import { updateConversationSchema } from '@/lib/validators/conversation'
 
 export async function GET(

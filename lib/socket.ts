@@ -215,12 +215,38 @@ export function initSocketServer(httpServer: HTTPServer) {
       socket.to(`conversation:${data.conversationId}`).emit('visitor:typing:stop', data)
     })
 
-    socket.on('visitor:typing', (data: { conversationId: string; visitorId: string }) => {
+    const typingThrottle = new Map<string, NodeJS.Timeout>()
+
+    socket.on('visitor:typing', (data: { conversationId: string; visitorId: string; content?: string }) => {
       socket.to(`conversation:${data.conversationId}`).emit('agent:typing', data)
+
+      const key = `${data.conversationId}:${data.visitorId}`
+      if (data.content && data.content.trim()) {
+        if (!typingThrottle.has(key)) {
+          socket.to(`conversation:${data.conversationId}`).emit('visitor:typing-preview', {
+            conversationId: data.conversationId,
+            visitorId: data.visitorId,
+            content: data.content,
+          })
+          typingThrottle.set(key, setTimeout(() => typingThrottle.delete(key), 300))
+        }
+      }
     })
 
     socket.on('visitor:typing:stop', (data: { conversationId: string; visitorId: string }) => {
       socket.to(`conversation:${data.conversationId}`).emit('agent:typing:stop', data)
+
+      const key = `${data.conversationId}:${data.visitorId}`
+      const timer = typingThrottle.get(key)
+      if (timer) {
+        clearTimeout(timer)
+        typingThrottle.delete(key)
+      }
+
+      socket.to(`conversation:${data.conversationId}`).emit('visitor:typing-preview:clear', {
+        conversationId: data.conversationId,
+        visitorId: data.visitorId,
+      })
     })
 
     // ─── Read Receipts ─────────────────────────────────────────

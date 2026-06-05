@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   if (!websiteId) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
 
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+    where: { websiteId, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 

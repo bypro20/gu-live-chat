@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket-client'
 
 // ─── Conversation List Item ─────────────────────────────────────────
 
@@ -78,21 +79,53 @@ function ConversationItem({ conversation, selected, onClick }: {
 
 // ─── Message Bubble ─────────────────────────────────────────────────
 
-function MessageBubble({ message }: { message: {
+function MessageBubble({ message, autoTranslate }: { message: {
   id: string
   content: string
   type: string
   senderType: string
   createdAt: string
-} }) {
+}
+  autoTranslate: boolean
+}) {
   const isVisitor = message.senderType === 'VISITOR'
   const isSystem = message.senderType === 'SYSTEM' || message.type === 'SYSTEM'
   const isBot = message.senderType === 'BOT'
+  const [translatedText, setTranslatedText] = useState<string | null>(null)
+  const [translating, setTranslating] = useState(false)
+  const [showTranslate, setShowTranslate] = useState(false)
 
   const formatTime = (date: string) => {
     const d = new Date(date)
     return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
   }
+
+  const handleTranslate = async () => {
+    if (translatedText) {
+      setShowTranslate(!showTranslate)
+      return
+    }
+    setTranslating(true)
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: message.content, toLang: 'tr' }),
+      })
+      const data = await res.json()
+      setTranslatedText(data.translatedText)
+      setShowTranslate(true)
+    } catch {
+    } finally {
+      setTranslating(false)
+    }
+  }
+
+  useEffect(() => {
+    if (autoTranslate && isVisitor && !translatedText && !translating) {
+      handleTranslate()
+    }
+  }, [autoTranslate, message.content])
 
   if (isSystem) {
     return (
@@ -118,10 +151,25 @@ function MessageBubble({ message }: { message: {
             : 'bg-gradient-to-br from-[#6C3CE1] to-[#8B5CF6] text-white rounded-br-sm shadow-md shadow-[#6C3CE1]/20'
         }`}>
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          {showTranslate && translatedText && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 pt-1.5 border-t border-[#E5E0F0] dark:border-gray-600 italic">
+              🌐 {translatedText}
+            </p>
+          )}
         </div>
-        <span className={`text-[10px] text-gray-400 mt-0.5 block ${isVisitor ? 'ml-1' : 'mr-1 text-right'}`}>
-          {formatTime(message.createdAt)}
-        </span>
+        <div className={`flex items-center gap-1 mt-0.5 ${isVisitor ? 'ml-1' : 'mr-1 justify-end'}`}>
+          <span className="text-[10px] text-gray-400">{formatTime(message.createdAt)}</span>
+          {isVisitor && (
+            <button
+              onClick={handleTranslate}
+              disabled={translating}
+              className="text-[10px] text-gray-400 hover:text-[#6C3CE1] transition disabled:opacity-50"
+              title="Türkçe'ye çevir"
+            >
+              {translating ? '⏳' : '🌐'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -135,6 +183,8 @@ export default function InboxPage() {
   const [filter, setFilter] = useState<'all' | 'OPEN' | 'PENDING' | 'RESOLVED'>('all')
   const [search, setSearch] = useState('')
   const [messageText, setMessageText] = useState('')
+  const [typingPreview, setTypingPreview] = useState<{ conversationId: string; content: string } | null>(null)
+  const [autoTranslate, setAutoTranslate] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { conversations, total, isLoading, error } = useConversations({
@@ -150,6 +200,34 @@ export default function InboxPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Socket connection for typing preview
+  useEffect(() => {
+    const socket = connectSocket()
+
+    socket.on('visitor:typing-preview', (data: { conversationId: string; content: string }) => {
+      setTypingPreview(data)
+    })
+
+    socket.on('visitor:typing-preview:clear', (data: { conversationId: string }) => {
+      setTypingPreview((prev) => prev?.conversationId === data.conversationId ? null : prev)
+    })
+
+    socket.on('agent:typing:stop', (data: { conversationId: string }) => {
+      setTypingPreview((prev) => prev?.conversationId === data.conversationId ? null : prev)
+    })
+
+    if (activeWebsite) {
+      socket.emit('agent:auth', {
+        userId: 'inbox-agent',
+        websiteIds: [activeWebsite.id],
+      })
+    }
+
+    return () => {
+      disconnectSocket()
+    }
+  }, [activeWebsite])
 
   const handleSend = async () => {
     if (!messageText.trim() || sending) return
@@ -199,6 +277,17 @@ export default function InboxPage() {
                 {f.label}
               </button>
             ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoTranslate}
+                onChange={(e) => setAutoTranslate(e.target.checked)}
+                className="w-3.5 h-3.5 text-[#6C3CE1] rounded border-gray-300 focus:ring-[#6C3CE1]"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Otomatik Çeviri</span>
+            </label>
           </div>
         </div>
 
@@ -313,8 +402,17 @@ export default function InboxPage() {
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <MessageBubble key={msg.id} message={msg} />
+                  <MessageBubble key={msg.id} message={msg} autoTranslate={autoTranslate} />
                 ))
+              )}
+              {typingPreview && typingPreview.conversationId === selectedId && (
+                <div className="flex justify-start">
+                  <div className="max-w-[70%]">
+                    <div className="px-4 py-2.5 rounded-2xl text-sm bg-white dark:bg-gray-800 text-gray-400 italic border border-[#E5E0F0] dark:border-gray-700 rounded-bl-sm">
+                      {typingPreview.content}
+                    </div>
+                  </div>
+                </div>
               )}
               <div ref={messagesEndRef} />
             </div>

@@ -20,8 +20,9 @@ export default function WidgetSettingsPage() {
   const [saved, setSaved] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [websiteId, setWebsiteId] = useState('')
+  const [livePreviewOpen, setLivePreviewOpen] = useState(false)
+  const [previewMessage, setPreviewMessage] = useState('')
 
-  // Fetch website ID for the installation code
   useEffect(() => {
     fetch('/api/websites')
       .then(res => res.ok ? res.json() : null)
@@ -36,7 +37,6 @@ export default function WidgetSettingsPage() {
   const handleSave = async () => {
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
-    // Will be replaced with real API call
   }
 
   return (

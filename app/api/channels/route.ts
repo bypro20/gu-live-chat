@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 const channelSchema = z.object({
   websiteId: z.string(),
-  type: z.enum(['WHATSAPP', 'EMAIL', 'MESSENGER', 'INSTAGRAM', 'TELEGRAM', 'SLACK']),
+  type: z.enum(['WHATSAPP', 'EMAIL', 'MESSENGER', 'INSTAGRAM', 'TELEGRAM', 'SLACK', 'SMS']),
   name: z.string().min(1, 'Kanal adı gerekli'),
   config: z.string().optional(),
   isActive: z.boolean().default(false),

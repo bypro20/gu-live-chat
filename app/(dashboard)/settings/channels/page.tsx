@@ -5,7 +5,7 @@ import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 
 interface ChannelIntegration {
   id: string
-  type: 'WHATSAPP' | 'EMAIL' | 'MESSENGER' | 'INSTAGRAM' | 'TELEGRAM' | 'SLACK'
+  type: 'WHATSAPP' | 'EMAIL' | 'MESSENGER' | 'INSTAGRAM' | 'TELEGRAM' | 'SLACK' | 'SMS'
   name: string
   isActive: boolean
   config: string | null
@@ -19,6 +19,7 @@ const CHANNEL_DEFS: Record<string, { label: string; icon: string; color: string;
   INSTAGRAM: { label: 'Instagram', icon: '📷', color: '#E4405F', description: 'Instagram DM entegrasyonu' },
   TELEGRAM: { label: 'Telegram', icon: '✈️', color: '#0088CC', description: 'Telegram Bot entegrasyonu' },
   SLACK: { label: 'Slack', icon: '#️⃣', color: '#4A154B', description: 'Slack entegrasyonu' },
+  SMS: { label: 'SMS', icon: '📱', color: '#F97316', description: 'Twilio SMS entegrasyonu' },
 }
 
 const CONFIG_FIELDS: Record<string, { key: string; label: string; type: string; placeholder: string }[]> = {
@@ -46,6 +47,11 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; type: string; 
   SLACK: [
     { key: 'botToken', label: 'Bot Tokeni', type: 'password', placeholder: 'xoxb-...' },
     { key: 'signingSecret', label: 'İmza Sırrı', type: 'password', placeholder: 'Signing Secret' },
+  ],
+  SMS: [
+    { key: 'accountSid', label: 'Twilio Account SID', type: 'text', placeholder: 'ACxxxxxxxxxxxx' },
+    { key: 'authToken', label: 'Auth Token', type: 'password', placeholder: 'Twilio Auth Token' },
+    { key: 'phoneNumber', label: 'Telefon Numarası', type: 'text', placeholder: '+901234567890' },
   ],
 }
 

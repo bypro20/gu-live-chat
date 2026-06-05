@@ -79,6 +79,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         { href: '/settings', icon: 'settings', label: 'Genel Ayarlar', badge: null },
         { href: '/settings/team', icon: 'team', label: 'Takım', badge: null },
         { href: '/settings/webhooks', icon: 'webhook', label: 'Webhook\'lar', badge: null },
+        { href: '/settings/proactive', icon: 'proactive', label: 'Hedefli Mesajlar', badge: null },
         { href: '/settings/status-page', icon: 'status', label: 'Durum Sayfası', badge: null },
       ],
     },

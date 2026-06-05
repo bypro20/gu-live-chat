@@ -103,13 +103,13 @@ export default function AdminUsersPage() {
       }
     })
 
-  async function apiAction(userId: string, action: string, body?: object) {
+  async function apiAction(userId: string, action: string, extra?: object) {
     setActionLoading(`${action}-${userId}`)
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body || { action }),
+        body: JSON.stringify({ action, ...extra }),
       })
       if (res.ok) {
         const updated = await res.json()

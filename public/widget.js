@@ -84,6 +84,120 @@
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(iframe);
 
+  // ─── Proactive Messages ────────────────────────────────────────────
+  var proactiveMessages = [];
+  var shownProactiveIds = JSON.parse(localStorage.getItem('gu_proactive_shown') || '[]');
+  var proactiveTimer = null;
+  var proactiveExitAdded = false;
+  var proactiveStartTime = Date.now();
+  var proactiveLastScrollPct = 0;
+
+  function fetchProactiveMessages() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', (window.GU_WIDGET_URL || 'https://chat.gulive.com') + '/api/proactive?websiteId=' + WEBSITE_ID, true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          proactiveMessages = JSON.parse(xhr.responseText);
+          startProactiveTracking();
+        } catch(e) {}
+      }
+    };
+    xhr.send();
+  }
+
+  function startProactiveTracking() {
+    if (!proactiveMessages || !proactiveMessages.length) return;
+
+    for (var i = 0; i < proactiveMessages.length; i++) {
+      var msg = proactiveMessages[i];
+      if (!msg.isActive) continue;
+
+      if (msg.showOnce && shownProactiveIds.indexOf(msg.id) !== -1) continue;
+
+      if (msg.targetPages && msg.targetPages !== '*') {
+        try {
+          var pages = JSON.parse(msg.targetPages);
+          var currentPath = window.location.pathname;
+          var matched = false;
+          for (var p = 0; p < pages.length; p++) {
+            if (currentPath.indexOf(pages[p]) !== -1) {
+              matched = true;
+              break;
+            }
+          }
+          if (!matched) continue;
+        } catch(e) { continue; }
+      }
+
+      if (msg.triggerType === 'EXIT_INTENT') {
+        if (!proactiveExitAdded) {
+          proactiveExitAdded = true;
+          document.addEventListener('mouseleave', function(e) {
+            if (e.clientY > 0) return;
+            for (var j = 0; j < proactiveMessages.length; j++) {
+              var pm = proactiveMessages[j];
+              if (!pm.isActive) continue;
+              if (pm.showOnce && shownProactiveIds.indexOf(pm.id) !== -1) continue;
+              if (pm.triggerType !== 'EXIT_INTENT') continue;
+              triggerProactiveMessage(pm);
+            }
+          });
+        }
+      } else if (msg.triggerType === 'TIME_ON_PAGE') {
+        var seconds = parseInt(msg.triggerValue) || 30;
+        (function(pm, sec) {
+          setTimeout(function() {
+            if (pm.showOnce && shownProactiveIds.indexOf(pm.id) !== -1) return;
+            var elapsed = (Date.now() - proactiveStartTime) / 1000;
+            if (elapsed >= sec) {
+              triggerProactiveMessage(pm);
+            }
+          }, (sec + (pm.delay || 0)) * 1000);
+        })(msg, seconds);
+      } else if (msg.triggerType === 'SCROLL_DEPTH') {
+        var pct = parseInt(msg.triggerValue) || 50;
+        (function(pm, targetPct) {
+          var scrollHandler = function() {
+            if (pm.showOnce && shownProactiveIds.indexOf(pm.id) !== -1) {
+              window.removeEventListener('scroll', scrollHandler);
+              return;
+            }
+            var scrollPct = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+            if (scrollPct >= targetPct && proactiveLastScrollPct < targetPct) {
+              setTimeout(function() {
+                triggerProactiveMessage(pm);
+              }, (pm.delay || 0) * 1000);
+            }
+            proactiveLastScrollPct = scrollPct;
+          };
+          window.addEventListener('scroll', scrollHandler);
+        })(msg, pct);
+      } else if (msg.triggerType === 'PAGE_VISIT') {
+        (function(pm) {
+          setTimeout(function() {
+            if (pm.showOnce && shownProactiveIds.indexOf(pm.id) !== -1) return;
+            triggerProactiveMessage(pm);
+          }, (pm.delay || 0) * 1000);
+        })(msg);
+      }
+    }
+  }
+
+  function triggerProactiveMessage(msg) {
+    if (!iframe.contentWindow) return;
+    if (msg.showOnce) {
+      shownProactiveIds.push(msg.id);
+      localStorage.setItem('gu_proactive_shown', JSON.stringify(shownProactiveIds));
+    }
+    iframe.contentWindow.postMessage({
+      type: 'gu:proactive',
+      id: msg.id,
+      title: msg.title,
+      message: msg.message,
+    }, '*');
+  }
+
   // ─── Self-healing: ensure widget stays mounted in the DOM ──────────
   var isReAddingWidget = false;
 
@@ -240,6 +354,7 @@
   // Send initial page view + auto-open widget inside iframe
   iframe.addEventListener('load', function() {
     trackPageView();
+    fetchProactiveMessages();
     if (chatOpen && iframe.contentWindow) {
       iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
     }
@@ -853,5 +968,93 @@
     }
   };
 
-  console.log('[Gu Live Chat] Widget loaded for website:', WEBSITE_ID, '| Self-healing enabled');
+  // ─── GDPR/KVKK Consent Banner ─────────────────────────────────────────
+  var GDPR_STORAGE_KEY = 'gu_gdpr_consent';
+  var gdprConsent = localStorage.getItem(GDPR_STORAGE_KEY);
+
+  function createConsentBanner() {
+    var banner = document.createElement('div');
+    banner.id = 'gu-consent-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:2147483646;background:#1A1D2E;color:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 -4px 24px rgba(0,0,0,0.15);animation:gu-slide-up 0.4s ease;transform:none;filter:none;';
+
+    var content = document.createElement('div');
+    content.style.cssText = 'max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px;';
+
+    var text = document.createElement('p');
+    text.style.cssText = 'margin:0;font-size:13px;line-height:1.6;color:#E5E0F0;';
+    text.textContent = 'Bu site, size daha iyi hizmet verebilmek için çerezler ve kişisel verilerinizi işlemektedir. Devam ederek bunu kabul etmiş olursunuz.';
+
+    var buttons = document.createElement('div');
+    buttons.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Kabul Et';
+    acceptBtn.style.cssText = 'padding:8px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#6C3CE1,#8B5CF6);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;';
+    acceptBtn.addEventListener('mouseenter', function() { acceptBtn.style.opacity = '0.9'; });
+    acceptBtn.addEventListener('mouseleave', function() { acceptBtn.style.opacity = '1'; });
+    acceptBtn.addEventListener('click', function() {
+      localStorage.setItem(GDPR_STORAGE_KEY, 'granted');
+      sendConsent(true);
+      banner.remove();
+      initWidget();
+    });
+
+    var rejectBtn = document.createElement('button');
+    rejectBtn.textContent = 'Reddet';
+    rejectBtn.style.cssText = 'padding:8px 20px;border:1px solid rgba(255,255,255,0.2);border-radius:10px;background:transparent;color:#E5E0F0;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;';
+    rejectBtn.addEventListener('mouseenter', function() { rejectBtn.style.background = 'rgba(255,255,255,0.08)'; });
+    rejectBtn.addEventListener('mouseleave', function() { rejectBtn.style.background = 'transparent'; });
+    rejectBtn.addEventListener('click', function() {
+      localStorage.setItem(GDPR_STORAGE_KEY, 'rejected');
+      sendConsent(false);
+      banner.remove();
+      initWidget();
+    });
+
+    buttons.appendChild(acceptBtn);
+    buttons.appendChild(rejectBtn);
+    content.appendChild(text);
+    content.appendChild(buttons);
+    banner.appendChild(content);
+
+    return banner;
+  }
+
+  function sendConsent(granted) {
+    var payload = JSON.stringify({
+      websiteId: WEBSITE_ID,
+      visitorId: WEBSITE_ID + '-' + Date.now(),
+      consentType: 'GDPR',
+      granted: granted,
+      userAgent: navigator.userAgent,
+    });
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', (window.GU_WIDGET_URL || 'https://chat.gulive.com') + '/api/privacy/consent', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(payload);
+  }
+
+  // ─── Wrapped init ────────────────────────────────────────────────────
+  function initWidget(limited) {
+    chatBtn.style.display = 'flex';
+    if (limited) {
+      chatBtn.style.opacity = '0.6';
+    } else {
+      chatBtn.style.opacity = '1';
+      chatBtn.style.pointerEvents = 'auto';
+    }
+  }
+
+  if (gdprConsent === 'granted' || gdprConsent === 'rejected') {
+    initWidget(gdprConsent === 'rejected');
+  } else {
+    chatBtn.style.display = 'none';
+    iframe.style.display = 'none';
+    chatBtn.style.pointerEvents = 'none';
+
+    var consentBanner = createConsentBanner();
+    document.body.appendChild(consentBanner);
+  }
+
+  console.log('[Gu Live Chat] Widget loaded for website:', WEBSITE_ID, '| Self-healing enabled | GDPR/KVKK consent:', gdprConsent || 'pending');
 })();
