@@ -5,6 +5,8 @@ import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { isTranslationAvailable } from '@/lib/ai/translate'
 import { PLAN_LIMITS } from '@/lib/constants'
+import { websiteHasAutoTranslate } from '@/lib/plan-features'
+import { resolveAgentsOnline } from '@/lib/agents-online'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
 const widgetInitSchema = z.object({
@@ -87,6 +89,8 @@ export async function POST(req: Request) {
     // Parse user-agent
     const ua = parseUserAgent(validated.userAgent || '')
 
+    let isNewVisitor = false
+
     // Find or create visitor
     let visitor = await prisma.visitor.findUnique({
       where: {
@@ -98,6 +102,7 @@ export async function POST(req: Request) {
     })
 
     if (!visitor) {
+      isNewVisitor = true
       visitor = await prisma.visitor.create({
         data: {
           websiteId: website.id,
@@ -162,7 +167,8 @@ export async function POST(req: Request) {
     // plan limit first, then verifies an AI/Google key is actually configured.
     // Never throws — translation simply stays disabled when unavailable.
     let aiTranslate = false
-    if (planLimits.autoTranslate) {
+    const translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
+    if (translateAllowed) {
       try {
         const aiCfg = await prisma.aIConfig.findUnique({
           where: { websiteId: website.id },
@@ -182,10 +188,21 @@ export async function POST(req: Request) {
       }
     }
 
+    const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+
+    if (isNewVisitor) {
+      const { runWorkflows } = await import('@/lib/workflow-runner')
+      await runWorkflows('VISITOR_CREATED', {
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        visitorId: visitor.id,
+      })
+    }
+
     return NextResponse.json({
       visitorToken,
       visitorId: visitor.id,
-      sessionId: session.id,
+      sessionId: session.sessionId,
       conversationId: existingConversation?.id || null,
       features: {
         fileUpload,
@@ -198,7 +215,10 @@ export async function POST(req: Request) {
         offlineMessage: website.offlineMessage,
         avatarUrl: website.avatarUrl,
         websiteName: website.name,
-        agentsOnline: 0, // Will be updated via Socket.io
+        agentsOnline,
+        showPreChatForm: website.showPreChatForm,
+        requireName: website.requireName,
+        requireEmail: website.requireEmail,
       },
     })
   } catch (error: unknown) {

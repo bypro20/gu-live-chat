@@ -14,9 +14,12 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = pageviewSchema.parse(body)
 
-    // Find the session
     const session = await prisma.visitorSession.findUnique({
       where: { sessionId: validated.sessionId },
+      include: {
+        website: { select: { id: true, websiteId: true } },
+        visitor: { select: { id: true } },
+      },
     })
 
     if (!session) {
@@ -36,11 +39,20 @@ export async function POST(req: Request) {
     // Create a page view record
     await prisma.pageView.create({
       data: {
-        sessionId: session.sessionId,
+        sessionId: session.id,
         url: validated.url,
         title: validated.title || null,
         viewedAt: new Date(),
       },
+    })
+
+    const { runWorkflows } = await import('@/lib/workflow-runner')
+    await runWorkflows('VISITOR_SEEN_PAGE', {
+      websiteDbId: session.website.id,
+      websitePublicId: session.website.websiteId,
+      visitorId: session.visitor.id,
+      pageUrl: validated.url,
+      pageTitle: validated.title,
     })
 
     return NextResponse.json({ ok: true })

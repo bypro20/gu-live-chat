@@ -33,6 +33,23 @@ function isAgentAuthed(socket: { userId?: string; websiteIds?: string[] }, websi
   return true
 }
 
+function getVisitorSession(socket: { id: string }): VisitorSessionInfo | undefined {
+  return visitorSessions.get(socket.id)
+}
+
+async function agentCanAccessConversation(
+  socket: { userId?: string; websiteIds?: string[] },
+  conversationId: string
+): Promise<boolean> {
+  if (!isAgentAuthed(socket)) return false
+  const conv = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { website: { select: { websiteId: true } } },
+  })
+  if (!conv) return false
+  return socket.websiteIds?.includes(conv.website.websiteId) ?? false
+}
+
 
 export function initSocketServer(httpServer: HTTPServer) {
   io = new SocketIOServer(httpServer, {
@@ -199,11 +216,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Join Conversation Rooms ───────────────────────────────
-    socket.on('agent:join-conversation', (data: { conversationId: string }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] })) return
-      if (data.conversationId) {
-        socket.join(`conversation:${data.conversationId}`)
-      }
+    socket.on('agent:join-conversation', async (data: { conversationId: string }) => {
+      const agentSocket = socket as { userId?: string; websiteIds?: string[] }
+      if (!data.conversationId || !(await agentCanAccessConversation(agentSocket, data.conversationId))) return
+      socket.join(`conversation:${data.conversationId}`)
     })
 
     socket.on('visitor:join-conversation', (data: { conversationId: string }) => {
@@ -213,8 +229,11 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent Messages ────────────────────────────────────────
-    socket.on('agent:message', (data: { conversationId: string; websiteId?: string; content: string; type: string; senderId: string; senderName: string }) => {
+    socket.on('agent:message', async (data: { conversationId: string; websiteId?: string; content: string; type: string; senderId: string; senderName: string }) => {
+      const agentSocket = socket as { userId?: string; websiteIds?: string[] }
       const { conversationId, content, type, senderId, senderName } = data
+      if (!conversationId || !(await agentCanAccessConversation(agentSocket, conversationId))) return
+      if (data.websiteId && !isAgentAuthed(agentSocket, data.websiteId)) return
 
       // Broadcast to visitor and other agents in the conversation
       io.to(`conversation:${conversationId}`).emit('visitor:message', {
@@ -238,6 +257,11 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Visitor Messages ──────────────────────────────────────
     socket.on('visitor:message', (data: { conversationId: string; websiteId?: string; content: string; type: string; visitorId: string }) => {
+      const session = getVisitorSession(socket)
+      if (!session || !data.conversationId) return
+      if (data.visitorId && session.visitorId !== data.visitorId) return
+      if (data.websiteId && session.websiteId !== data.websiteId) return
+
       const { conversationId, content, type, visitorId } = data
 
       io.to(`conversation:${conversationId}`).emit('agent:message', {
@@ -260,11 +284,15 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Typing Indicators ──────────────────────────────────────
-    socket.on('agent:typing', (data: { conversationId: string; agentName: string }) => {
+    socket.on('agent:typing', async (data: { conversationId: string; agentName: string }) => {
+      const agentSocket = socket as { userId?: string; websiteIds?: string[] }
+      if (!data.conversationId || !(await agentCanAccessConversation(agentSocket, data.conversationId))) return
       socket.to(`conversation:${data.conversationId}`).emit('visitor:typing', data)
     })
 
-    socket.on('agent:typing:stop', (data: { conversationId: string }) => {
+    socket.on('agent:typing:stop', async (data: { conversationId: string }) => {
+      const agentSocket = socket as { userId?: string; websiteIds?: string[] }
+      if (!data.conversationId || !(await agentCanAccessConversation(agentSocket, data.conversationId))) return
       socket.to(`conversation:${data.conversationId}`).emit('visitor:typing:stop', data)
     })
 
@@ -303,7 +331,9 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Read Receipts ─────────────────────────────────────────
-    socket.on('agent:read', (data: { conversationId: string; messageIds: string[]; agentId: string }) => {
+    socket.on('agent:read', async (data: { conversationId: string; messageIds: string[]; agentId: string }) => {
+      const agentSocket = socket as { userId?: string; websiteIds?: string[] }
+      if (!data.conversationId || !(await agentCanAccessConversation(agentSocket, data.conversationId))) return
       socket.to(`conversation:${data.conversationId}`).emit('visitor:read', data)
     })
 
@@ -332,14 +362,20 @@ export function initSocketServer(httpServer: HTTPServer) {
               lastActiveAt: new Date(),
             },
           })
-          await prisma.pageView.create({
-            data: {
-              sessionId: session.sessionId,
-              url: data.url,
-              title: data.title || null,
-              viewedAt: new Date(),
-            },
+          const dbSession = await prisma.visitorSession.findUnique({
+            where: { sessionId: session.sessionId },
+            select: { id: true },
           })
+          if (dbSession) {
+            await prisma.pageView.create({
+              data: {
+                sessionId: dbSession.id,
+                url: data.url,
+                title: data.title || null,
+                viewedAt: new Date(),
+              },
+            })
+          }
         } catch {
           // Session may not exist in DB if visitor connected before init completed
         }
@@ -468,6 +504,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent requests screen capture start/stop ──────────────────
     socket.on('agent:screen:start', (data: { visitorId: string; websiteId: string }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       // Forward to the specific visitor to start sending screenshots
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
@@ -480,6 +517,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     socket.on('agent:screen:stop', (data: { visitorId: string; websiteId: string }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       // Forward to the specific visitor to stop sending screenshots
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
@@ -491,6 +529,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent sends remote click to visitor (intervention) ────────
     socket.on('agent:remote-cursor-move', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -499,6 +538,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     socket.on('agent:visitor:click', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -508,6 +548,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent sends mouse move to visitor (intervention mode) ──
     socket.on('agent:visitor:mousemove', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -517,6 +558,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent sends scroll to visitor (intervention mode) ──
     socket.on('agent:visitor:scroll', (data: { visitorId: string; websiteId: string; deltaX: number; deltaY: number }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -526,6 +568,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent sends keyboard events to visitor (intervention mode) ──
     socket.on('agent:visitor:keydown', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -534,6 +577,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     socket.on('agent:visitor:keyup', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -544,6 +588,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     // ─── WebRTC Signaling (screen sharing) ──────────────────────
     // Agent requests WebRTC screen sharing start
     socket.on('webrtc:start', (data: { visitorId: string; websiteId: string; agentId: string }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -561,15 +606,18 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // Agent or visitor stops WebRTC screen sharing
     socket.on('webrtc:stop', (data: { visitorId: string; websiteId: string; agentId?: string }) => {
+      const senderSession = getVisitorSession(socket)
+      const fromVisitor = !!senderSession && senderSession.visitorId === data.visitorId && senderSession.websiteId === data.websiteId
+      if (!fromVisitor && !isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       const visitorSocket = Array.from(visitorSessions.entries())
-        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+        .find(([_, vs]) => vs.visitorId === data.visitorId && vs.websiteId === data.websiteId)
       if (visitorSocket) {
         io.to(visitorSocket[0]).emit('visitor:webrtc:stop')
       }
       // Also notify the agent if this came from the visitor
-      const session = visitorSocket?.[1]
-      if (session && (session as any).webrtcAgentSocketId) {
-        io.to((session as any).webrtcAgentSocketId).emit('webrtc:stopped', { visitorId: data.visitorId })
+      const visitorSession = visitorSocket?.[1]
+      if (visitorSession && (visitorSession as any).webrtcAgentSocketId) {
+        io.to((visitorSession as any).webrtcAgentSocketId).emit('webrtc:stopped', { visitorId: data.visitorId })
       }
       console.log(`[Socket] WebRTC screen share stopped for visitor ${data.visitorId?.substring(0, 8)}...`)
     })
@@ -596,6 +644,7 @@ export function initSocketServer(httpServer: HTTPServer) {
           })
         }
       } else {
+        if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
         // Sender is the agent → forward to the visitor.
         // Also (re)bind the agent socket so visitor→agent signals route back even
         // if an ICE candidate arrives before/around the webrtc:start handshake.
@@ -699,6 +748,10 @@ export function initSocketServer(httpServer: HTTPServer) {
 
 export function getIO() {
   return io
+}
+
+export function getAgentsOnlineCount(websitePublicId: string): number {
+  return agentOnline.get(websitePublicId)?.size ?? 0
 }
 
 /**
