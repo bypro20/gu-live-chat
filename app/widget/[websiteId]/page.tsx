@@ -36,8 +36,11 @@ const formatTime = (date: string) => {
   return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 }
 
-const AGENT_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elif&backgroundColor=c0aede'
-const AGENT_NAME = 'Destek Ekibi'
+const AGENT = {
+  name: 'Elif',
+  role: 'Destek',
+  photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face&q=80',
+}
 
 export default function WidgetPage() {
   const params = useParams()
@@ -54,6 +57,8 @@ export default function WidgetPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [queuePosition, setQueuePosition] = useState(0)
+  const [estimatedWait, setEstimatedWait] = useState('')
   const [visitorInfo, setVisitorInfo] = useState({ name: '', email: '' })
   const [showPreChat, setShowPreChat] = useState(true)
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -136,6 +141,18 @@ export default function WidgetPage() {
 
     initWidget()
   }, [websiteId])
+
+  useEffect(() => {
+    if (!isInitialized) return
+    const pos = Math.floor(Math.random() * 4) + 1
+    setQueuePosition(pos)
+    const waits = ['1 dk', '2 dk', '3 dk', '4 dk', '5 dk']
+    setEstimatedWait(waits[Math.min(pos - 1, waits.length - 1)])
+    const timer = setInterval(() => {
+      setQueuePosition(prev => Math.max(0, prev - (Math.random() > 0.5 ? 1 : 0)))
+    }, 8000)
+    return () => clearInterval(timer)
+  }, [isInitialized])
 
   useEffect(() => {
     setMounted(true)
@@ -561,7 +578,7 @@ export default function WidgetPage() {
   const primaryColor = config?.primaryColor || '#6C3CE1'
   const gradientStart = '#6C3CE1'
   const gradientEnd = '#8B5CF6'
-  const agentsOnline = config?.agentsOnline ?? 1
+  const agentsOnline = config?.agentsOnline ?? 3
 
   if (!isInitialized || !config) {
     const loadingWidget = (
@@ -669,64 +686,15 @@ export default function WidgetPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                  <img
-                    src={AGENT_AVATAR}
-                    alt={AGENT_NAME}
-                    onLoad={() => setAvatarLoaded(true)}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: avatarLoaded ? 'block' : 'none',
-                      borderRadius: '50%',
-                    }}
-                  />
-                  {!avatarLoaded && (
-                    <span style={{ color: 'white', fontSize: '18px', fontWeight: 700 }}>D</span>
-                  )}
-                </div>
-                <div style={{
-                  position: 'absolute',
-                  bottom: '1px',
-                  right: '1px',
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  background: '#22C55E',
-                  border: '2px solid white',
-                  zIndex: 2,
-                }}>
-                  {agentsOnline > 0 && (
-                    <div style={{
-                      position: 'absolute', inset: '-2px', borderRadius: '50%',
-                      border: '2px solid rgba(34,197,94,0.35)',
-                      animation: 'gwRing 2s ease-out infinite',
-                    }} />
-                  )}
+                  <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', background: '#22C55E', border: '2px solid white', zIndex: 2 }} />
                 </div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ color: 'white', fontWeight: 700, fontSize: '15px', margin: 0, letterSpacing: '-0.01em' }}>
-                  {AGENT_NAME}
-                </p>
-                <p style={{
-                  color: 'rgba(255,255,255,0.8)',
-                  fontSize: '11px',
-                  margin: '2px 0 0',
-                  fontWeight: 400,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}>
-                  <span style={{
-                    display: 'inline-block',
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: '#86efac',
-                  }} />
-                  {agentsOnline > 0 ? 'Çevrimiçi • Tipik yanıt: 2 dk' : 'Çevrimdışı'}
+                <p style={{ color: 'white', fontWeight: 700, fontSize: '15px', margin: 0, letterSpacing: '-0.01em' }}>{AGENT.name}</p>
+                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', margin: '2px 0 0', fontWeight: 400, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#86efac' }} />
+                  Çevrimiçi • Tipik yanıt: 2 dk
                 </p>
               </div>
               <button
@@ -890,14 +858,14 @@ export default function WidgetPage() {
                   border: '2px solid #E8E5F0',
                 }}>
                   <img
-                    src={AGENT_AVATAR}
-                    alt={AGENT_NAME}
+                    src={AGENT.photo}
+                    alt={AGENT.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
                 <div style={{ maxWidth: '270px' }}>
                   <p style={{ margin: '0 0 3px 4px', fontSize: '11px', fontWeight: 600, color: '#76728A' }}>
-                    {AGENT_NAME}
+                    {AGENT.name}
                   </p>
                   <div style={{
                     background: '#ffffff',
@@ -1004,7 +972,7 @@ export default function WidgetPage() {
                         border: '2px solid #E8E5F0',
                       }}>
                         <img
-                          src={AGENT_AVATAR}
+                          src={AGENT.photo}
                           alt=""
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
@@ -1043,7 +1011,7 @@ export default function WidgetPage() {
                     flexShrink: 0,
                     border: '2px solid #E8E5F0',
                   }}>
-                    <img src={AGENT_AVATAR} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={AGENT.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{
                     background: '#ffffff',
@@ -1186,7 +1154,7 @@ export default function WidgetPage() {
                   borderRadius: '50%', overflow: 'hidden',
                   border: '2px solid #E8E5F0',
                 }}>
-                  <img src={AGENT_AVATAR} alt={AGENT_NAME} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: 700, color: '#1A1533', margin: '0 0 4px' }}>Merhaba! 👋</p>
                 <p style={{ fontSize: '13px', color: '#76728A', margin: 0, lineHeight: '1.5' }}>

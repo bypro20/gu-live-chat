@@ -4,44 +4,44 @@ import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Logo } from '@/components/marketing/logo'
+import { Zap, Shield, Bot, Globe } from 'lucide-react'
 
-export default function LoginPage() {
+const markaÖzellikleri = [
+  { simge: Zap, metin: '30 saniyede kurulum' },
+  { simge: Shield, metin: 'KVKK uyumlu güvenli altyapı' },
+  { simge: Bot, metin: 'AI destekli akıllı chatbot' },
+  { simge: Globe, metin: 'Çoklu kanal desteği' },
+]
+
+export default function GirisSayfasi() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showGoogle, setShowGoogle] = useState(false)
+  const [eposta, setEposta] = useState('')
+  const [sifre, setSifre] = useState('')
+  const [hata, setHata] = useState('')
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [googleGoster, setGoogleGoster] = useState(false)
 
   useEffect(() => {
-    // Check if Google provider is available
     fetch('/api/auth/providers')
       .then(res => res.json())
-      .then(data => {
-        setShowGoogle(!!data?.google)
-      })
+      .then(data => setGoogleGoster(!!data?.google))
       .catch(() => {})
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const formuGonder = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    setYukleniyor(true)
+    setHata('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('E-posta veya şifre hatalı')
+      const sonuc = await signIn('credentials', { email: eposta, password: sifre, redirect: false })
+      if (sonuc?.error) {
+        setHata('E-posta veya şifre hatalı')
       } else {
-        // Check if user is admin and redirect accordingly
-        const sessionRes = await fetch('/api/auth/session')
-        const session = await sessionRes.json()
-        if (session?.user?.role === 'ADMIN') {
+        const oturumSonucu = await fetch('/api/auth/session')
+        const oturum = await oturumSonucu.json()
+        if (oturum?.user?.role === 'ADMIN') {
           router.push('/admin')
         } else {
           router.push('/dashboard')
@@ -49,41 +49,78 @@ export default function LoginPage() {
         router.refresh()
       }
     } catch {
-      setError('Giriş sırasında bir hata oluştu')
+      setHata('Giriş sırasında bir hata oluştu')
     } finally {
-      setLoading(false)
+      setYukleniyor(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F3FF] dark:bg-gray-950 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+    <div className="min-h-screen flex">
+      {/* Sol Panel - Marka ve Tanıtım (mobilde gizli) */}
+      <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-brand-animated items-center justify-center p-12 overflow-hidden">
+        {/* Dekoratif ışık küreleri */}
+        <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '4s' }} />
+
+        <div className="relative z-10 max-w-md">
+          {/* Büyük logo */}
+          <div className="flex justify-center mb-6">
+            <Logo boyut="lg" metinGoster={false} animasyonlu />
+          </div>
+          {/* Marka başlığı - animasyonlu beyaz shimmer */}
+          <h2 className="text-3xl font-bold text-white text-center animate-text-shimmer-white">Gu Live Chat</h2>
+          <p className="text-white/70 mt-3 text-lg text-center leading-relaxed">
+            Profesyonel canlı destek sistemi ile müşterilerinize anında yanıt verin.
+          </p>
+
+          {/* Özellik listesi */}
+          <div className="mt-12 space-y-5">
+            {markaÖzellikleri.map(özellik => (
+              <div key={özellik.metin} className="flex items-center gap-4 group">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors duration-300">
+                  <özellik.simge className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white/90 font-medium group-hover:text-white transition-colors duration-300">{özellik.metin}</span>
               </div>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hoş Geldiniz</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Hesabınıza giriş yapın</p>
+            ))}
           </div>
 
-          {error && (
+          {/* Alt bilgi */}
+          <div className="mt-12 pt-8 border-t border-white/15 text-center">
+            <p className="text-white/50 text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sağ Panel - Beyaz Form Bölümü (tamamen dolar) */}
+      <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-950 p-8 min-h-screen lg:min-h-0">
+        <div className="w-full max-w-md">
+          {/* Mobilde logo göster */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo boyut="default" animasyonlu />
+          </div>
+
+          {/* Başlık */}
+          <div className="mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Hoş Geldiniz</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Hesabınıza giriş yapın</p>
+          </div>
+
+          {/* Hata mesajı */}
+          {hata && (
             <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg p-3 mb-6 text-sm">
-              {error}
+              {hata}
             </div>
           )}
 
-          {/* Social Login Buttons */}
-          {showGoogle && (
+          {/* Google ile giriş */}
+          {googleGoster && (
             <div className="space-y-3 mb-6">
               <button
                 onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-600 transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-700 transition font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -96,55 +133,57 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Divider */}
-          {showGoogle && (
+          {/* Ayırıcı çizgi */}
+          {googleGoster && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#E5E0F0] dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">veya e-posta ile</span>
+                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Giriş formu */}
+          <form onSubmit={formuGonder} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                 E-posta
               </label>
               <input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                value={eposta}
+                onChange={(e) => setEposta(e.target.value)}
+                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="ornek@email.com"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                 Şifre
               </label>
               <input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                value={sifre}
+                onChange={(e) => setSifre(e.target.value)}
+                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 required
               />
             </div>
 
+            {/* Giriş butonu - gradient ve gölge efekti */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={yukleniyor}
+              className="w-full py-3 px-4 bg-gradient-brand text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-brand-lg hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? (
+              {yukleniyor ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -158,6 +197,7 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Kayıt linki */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Hesabınız yok mu?{' '}
@@ -167,7 +207,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-[#E5E0F0] dark:border-gray-600 text-center">
+          {/* Siteye dönüş */}
+          <div className="mt-6 pt-6 border-t border-[#E5E0F0] dark:border-gray-700 text-center">
             <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

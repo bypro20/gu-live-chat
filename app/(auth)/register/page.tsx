@@ -4,8 +4,17 @@ import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Logo } from '@/components/marketing/logo'
+import { Zap, Shield, BarChart3, Users } from 'lucide-react'
 
-export default function RegisterPage() {
+const markaOzellikleri = [
+  { simge: Zap, metin: 'Ücretsiz başlayın, kredi kartı gereksin' },
+  { simge: Shield, metin: 'KVKK uyumlu, Avrupa veri merkezi' },
+  { simge: BarChart3, metin: 'Gelişmiş analitik ve raporlama' },
+  { simge: Users, metin: 'Sınırsız ekip üyesi ekleme' },
+]
+
+export default function KayitSayfasi() {
   const router = useRouter()
   const [form, setForm] = useState({
     name: '',
@@ -15,32 +24,29 @@ export default function RegisterPage() {
     websiteName: '',
     websiteDomain: '',
   })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showGoogle, setShowGoogle] = useState(false)
+  const [hata, setHata] = useState('')
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [googleGoster, setGoogleGoster] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/providers')
       .then(res => res.json())
-      .then(data => {
-        setShowGoogle(!!data?.google)
-      })
+      .then(data => setGoogleGoster(!!data?.google))
       .catch(() => {})
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const formuGonder = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    setYukleniyor(true)
+    setHata('')
 
     if (form.password !== form.confirmPassword) {
-      setError('Şifreler eşleşmiyor')
-      setLoading(false)
+      setHata('Şifreler eşleşmiyor')
+      setYukleniyor(false)
       return
     }
 
     try {
-      // Register
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,64 +56,100 @@ export default function RegisterPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Kayıt sırasında bir hata oluştu')
-        setLoading(false)
+        setHata(data.error || 'Kayıt sırasında bir hata oluştu')
+        setYukleniyor(false)
         return
       }
 
-      // Auto-login using NextAuth
-      const result = await signIn('credentials', {
+      const sonuc = await signIn('credentials', {
         email: form.email,
         password: form.password,
         redirect: false,
       })
 
-      if (result?.ok) {
+      if (sonuc?.ok) {
         router.push('/dashboard')
         router.refresh()
       } else {
         router.push('/login')
       }
     } catch {
-      setError('Kayıt sırasında bir hata oluştu')
+      setHata('Kayıt sırasında bir hata oluştu')
     } finally {
-      setLoading(false)
+      setYukleniyor(false)
     }
   }
 
-  const update = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
+  const guncelle = (alan: string, deger: string) => {
+    setForm((onceki) => ({ ...onceki, [alan]: deger }))
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F3FF] dark:bg-gray-950 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+    <div className="min-h-screen flex">
+      {/* Sol Panel - Marka ve Tanıtım (mobilde gizli) */}
+      <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-brand-animated items-center justify-center p-12 overflow-hidden">
+        {/* Dekoratif ışık küreleri */}
+        <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '4s' }} />
+
+        <div className="relative z-10 max-w-md">
+          {/* Büyük logo */}
+          <div className="flex justify-center mb-6">
+            <Logo boyut="lg" metinGoster={false} animasyonlu />
+          </div>
+          {/* Marka başlığı */}
+          <h2 className="text-3xl font-bold text-white text-center animate-text-shimmer-white">Gu Live Chat</h2>
+          <p className="text-white/70 mt-3 text-lg text-center leading-relaxed">
+            2 dakikada profesyonel canlı destek sistemi kurun.
+          </p>
+
+          {/* Özellik listesi */}
+          <div className="mt-12 space-y-5">
+            {markaOzellikleri.map(ozellik => (
+              <div key={ozellik.metin} className="flex items-center gap-4 group">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors duration-300">
+                  <ozellik.simge className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white/90 font-medium group-hover:text-white transition-colors duration-300">{ozellik.metin}</span>
               </div>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hesap Oluştur</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">2 dakikada ücretsiz başlayın</p>
+            ))}
           </div>
 
-          {error && (
+          {/* Alt bilgi */}
+          <div className="mt-12 pt-8 border-t border-white/15 text-center">
+            <p className="text-white/50 text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sağ Panel - Beyaz Form Bölümü (tamamen dolar, kaydırılabilir) */}
+      <div className="flex-1 flex items-start justify-center bg-white dark:bg-gray-950 p-8 overflow-y-auto min-h-screen lg:min-h-0 lg:items-center">
+        <div className="w-full max-w-md my-8">
+          {/* Mobilde logo göster */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo boyut="default" animasyonlu />
+          </div>
+
+          {/* Başlık */}
+          <div className="mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Hesap Oluştur</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">2 dakikada ücretsiz başlayın</p>
+          </div>
+
+          {/* Hata mesajı */}
+          {hata && (
             <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg p-3 mb-6 text-sm">
-              {error}
+              {hata}
             </div>
           )}
 
-          {/* Social Login */}
-          {showGoogle && (
+          {/* Google ile kayıt */}
+          {googleGoster && (
             <div className="mb-6 space-y-3">
               <button
                 onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-600 transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-700 transition font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -120,44 +162,45 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Divider */}
-          {showGoogle && (
+          {/* Ayırıcı çizgi */}
+          {googleGoster && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#E5E0F0] dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">veya e-posta ile</span>
+                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Kayıt formu */}
+          <form onSubmit={formuGonder} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                 Adınız
               </label>
               <input
                 id="name"
                 type="text"
                 value={form.name}
-                onChange={(e) => update('name', e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                onChange={(e) => guncelle('name', e.target.value)}
+                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Ad Soyad"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                 E-posta
               </label>
               <input
                 id="email"
                 type="email"
                 value={form.email}
-                onChange={(e) => update('email', e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                onChange={(e) => guncelle('email', e.target.value)}
+                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="ornek@email.com"
                 required
               />
@@ -165,63 +208,64 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                   Şifre
                 </label>
                 <input
                   id="password"
                   type="password"
                   value={form.password}
-                  onChange={(e) => update('password', e.target.value)}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  onChange={(e) => guncelle('password', e.target.value)}
+                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
                   minLength={6}
                 />
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                   Şifre Tekrar
                 </label>
                 <input
                   id="confirmPassword"
                   type="password"
                   value={form.confirmPassword}
-                  onChange={(e) => update('confirmPassword', e.target.value)}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  onChange={(e) => guncelle('confirmPassword', e.target.value)}
+                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
                 />
               </div>
             </div>
 
-            <div className="border-t border-[#E5E0F0] dark:border-gray-600 pt-4 mt-4">
+            {/* Website bilgileri bölümü */}
+            <div className="border-t border-[#E5E0F0] dark:border-gray-700 pt-4 mt-4">
               <h3 className="text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-3">Website Bilgileri</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="websiteName" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+                  <label htmlFor="websiteName" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                     Website Adı
                   </label>
                   <input
                     id="websiteName"
                     type="text"
                     value={form.websiteName}
-                    onChange={(e) => update('websiteName', e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    onChange={(e) => guncelle('websiteName', e.target.value)}
+                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder="Şirket Adı"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="websiteDomain" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1">
+                  <label htmlFor="websiteDomain" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
                     Website Domain
                   </label>
                   <input
                     id="websiteDomain"
                     type="text"
                     value={form.websiteDomain}
-                    onChange={(e) => update('websiteDomain', e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    onChange={(e) => guncelle('websiteDomain', e.target.value)}
+                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder="orneksite.com"
                     required
                   />
@@ -229,12 +273,13 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Kayıt butonu */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              disabled={yukleniyor}
+              className="w-full py-3 px-4 bg-gradient-brand text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-brand-lg hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
             >
-              {loading ? (
+              {yukleniyor ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -248,6 +293,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
+          {/* Giriş linki */}
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Zaten hesabınız var mı?{' '}
             <Link href="/login" className="text-primary hover:underline font-medium">

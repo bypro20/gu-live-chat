@@ -395,13 +395,8 @@ export default function AddonsPage() {
                             {addon.price === 0 ? 'Ücretsiz' : `₺${(addon.price / 100).toLocaleString('tr-TR')}`}
                           </span>
                           {addon.price > 0 && (
-                            <>
-                              <span className="text-xs text-[var(--muted-foreground)]">/{addon.purchaseType === 'YEARLY' ? 'yıl' : 'ay'}</span>
-                              <span className="text-xs text-[var(--muted-foreground)] line-through ml-1">
-                                ₺{((addon.price * 1.4) / 100).toLocaleString('tr-TR')}
-                              </span>
-                            </>
-                          )}
+                             <span className="text-xs text-[var(--muted-foreground)]">/ay</span>
+                           )}
                         </div>
                       </div>
                       <button
@@ -489,9 +484,7 @@ export default function AddonsPage() {
                             <span className="text-xs text-[var(--muted-foreground)]">/{addon.purchaseType === 'YEARLY' ? 'yıl' : 'ay'}</span>
                           )}
                           {addon.isFeatured && addon.price > 0 && (
-                            <span className="text-[11px] text-[var(--muted-foreground)] line-through ml-1">
-                              ₺{((addon.price * 1.35) / 100).toLocaleString('tr-TR')}
-                            </span>
+                            <span className="text-[10px] text-[var(--success)] font-medium ml-1">14 gün para iade garantisi</span>
                           )}
                         </div>
                         {addon.price > 0 && (

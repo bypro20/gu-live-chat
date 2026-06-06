@@ -1,45 +1,9 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import Google from '@auth/core/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
-
-// Custom Google OAuth provider (avoids OIDC iss validation issue in Auth.js v5 beta)
-function GoogleProvider(options: { clientId: string; clientSecret: string }) {
-  return {
-    id: 'google',
-    name: 'Google',
-    type: 'oauth' as const,
-    checks: ['state'] as ('state' | 'pkce' | 'none')[],
-    issuer: 'https://accounts.google.com',
-    authorization: {
-      url: 'https://accounts.google.com/o/oauth2/v2/auth',
-      params: {
-        prompt: 'consent',
-        access_type: 'offline',
-        response_type: 'code',
-        scope: 'openid email profile',
-      },
-    },
-    token: {
-      url: 'https://oauth2.googleapis.com/token',
-    },
-    userinfo: {
-      url: 'https://www.googleapis.com/oauth2/v3/userinfo',
-    },
-    clientId: options.clientId,
-    clientSecret: options.clientSecret,
-    allowDangerousEmailAccountLinking: true,
-    profile(profile: { sub: string; email: string; name: string; picture: string }) {
-      return {
-        id: profile.sub,
-        email: profile.email,
-        name: profile.name,
-        image: profile.picture,
-      }
-    },
-  }
-}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -82,9 +46,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
     // Google OAuth — only active when env vars are set
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [GoogleProvider({
+      ? [Google({
           clientId: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          authorization: {
+            params: {
+              prompt: 'consent',
+              access_type: 'offline',
+              response_type: 'code',
+            },
+          },
+          allowDangerousEmailAccountLinking: true,
         })]
       : []),
   ],

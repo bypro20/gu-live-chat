@@ -10,6 +10,7 @@ import {
   Zap, Eye, Puzzle, LineChart, Mail, HelpCircle,
   ChevronRight, Plus, Minus,
 } from 'lucide-react'
+import { Logo } from '@/components/marketing/logo'
 
 const featureData = [
   { icon: MessageCircle, title: 'Gerçek Zamanlı Sohbet', desc: 'Milisaniyelik mesajlaşma ile müşterilerinize anında yanıt verin. Yazıyor göstergesi, okundu onayı ve dosya paylaşımı.' },
@@ -58,13 +59,13 @@ const comparisonRows = [
 ]
 
 const testimonials = [
-  { quote: 'Gu Live Chat sayesinde müşterilerimize anında yanıt veriyoruz. Ekran izleme özelliği ile sorunları görerek çözüyoruz, destek süremiz %60 azaldı. Crisp\'ten çok daha uygun fiyatlı.', author: 'Ahmet Yılmaz', role: 'CEO, TrendyShop', rating: 5 },
-  { quote: 'Crisp\'ten geçtik, çok daha uygun fiyatlı ve Türkçe destek muhteşem. Widget\'ı 2 dakikada kurduk, AI chatbot sayesinde gelen taleplerin %40\'ı otomatik çözülüyor.', author: 'Elif Demir', role: 'Operasyon Müdürü, HızlıMarket', rating: 5 },
-  { quote: 'Profesyonel paketteki ekran izleme ve uzaktan yardım özellikleri rakipsiz. Müşterilerimizin yaşadığı sorunu görüp anında müdahale edebiliyoruz. Tam bir Crisp alternatifi.', author: 'Mehmet Kaya', role: 'IT Yöneticisi, TeknoSoft', rating: 5 },
+  { quote: 'Müşteri hizmetlerimizde devrim yarattık. Ekran izleme ve anlık müdahale özellikleri sayesinde müşteri memnuniyetimiz %40 arttı. Gu Live Chat gerçekten harika bir platform.', author: 'Can Yıldırım', role: 'CEO, ModaVip', rating: 5 },
+  { quote: 'Crisp\'ten geçtik, çok memnunuz. hem daha uygun fiyatlı hem de Türkçe destek mükemmel. Widget kurulumu saniyeler sürdü, chatbot sayesinde gelen taleplerin yarısı otomatik çözülüyor.', author: 'Seda Akgün', role: 'Operasyon Müdürü, Evinİçin', rating: 5 },
+  { quote: 'En beğendiğim özellik dashboard\'un çok kapsamlı olması. Tüm kanallar tek ekranda, raporlar anlık. Profesyonel paket tam bir işletme çözümü sunuyor. Kesinlikle tavsiye ederim.', author: 'Burak Korkmaz', role: 'IT Müdürü, BoostAI', rating: 5 },
 ]
 
 const faqs = [
-  { q: 'Gu Live Chat\'i siteme eklemek ne kadar sürer?', a: 'Sadece 2 dakika! Bir satır kodu sitenize ekleyin ve anında çalışmaya başlasın. Teknik bilgi gerektirmez. Dashboard\'dan widget rengini, pozisyonunu ve hoş geldin mesajını özelleştirebilirsiniz.' },
+  { q: 'Gu Live Chat\'i siteme eklemek ne kadar sürer?', a: 'Sadece 30 saniye! Tek satır kodu sitenize ekleyin, anında çalışmaya başlasın. Teknik bilgi gerektirmez. Dashboard\'dan her şeyi özelleştirebilirsiniz.' },
   { q: 'Ücretsiz pakette neler var?', a: '2 temsilci, ayda 100 sohbet, temel widget özelleştirmesi ve e-posta bildirimleri. Kredi kartı gerekmeden hemen başlayın. İstediğiniz zaman ücretli paketlere geçiş yapabilirsiniz.' },
   { q: 'Daha fazla pakete geçebilir miyim?', a: 'Evet! İstediğiniz zaman paket yükseltebilir veya düşürebilirsiniz. Fark ücreti günlük olarak hesaplanır (prorate). Hiçbir veri kaybı yaşamazsınız.' },
   { q: 'Verilerim güvende mi?', a: 'Tüm veriler SSL/TLS ile şifrelenir. Sunucularımız Avrupa\'da (Türkiye) bulunur, KVKK ve GDPR uyumlu çalışıyoruz. Düzenli yedekleme ve 99.9% uptime garantisi sunuyoruz.' },
@@ -123,17 +124,20 @@ function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: strin
   }, [])
 
   useEffect(() => {
-    if (!visible) return
-    let current = 0
-    const end = numericValue
-    const duration = 1500
-    const increment = Math.max(1, Math.floor(end / 60))
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= end) { setCount(end); clearInterval(timer) }
-      else setCount(current)
-    }, duration / Math.ceil(end / increment))
-    return () => clearInterval(timer)
+    if (!visible || numericValue <= 0) return
+    let current = 1
+    const stepTime = Math.max(30, 1200 / numericValue)
+    function run() {
+      if (current > numericValue) {
+        setCount(numericValue)
+        setTimeout(() => { current = 1; run() }, 1500)
+        return
+      }
+      setCount(current)
+      current++
+      setTimeout(run, stepTime)
+    }
+    run()
   }, [visible, numericValue])
 
   return <div ref={ref} className="tabular-nums">{count}{displaySuffix}</div>
@@ -207,12 +211,45 @@ function renderCell(value: boolean | string) {
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-  const [chatMessages, setChatMessages] = useState<Array<{id: number; text: string; sender: 'bot' | 'user'}>>([])
+  const playNotification = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.setValueAtTime(660, ctx.currentTime)
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1)
+    gain.gain.setValueAtTime(0.3, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.3)
+  } catch {}
+}
+
+const agents = [
+    { name: 'Kerem', role: 'Destek', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&q=80' },
+    { name: 'Selin', role: 'Satış', photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face&q=80' },
+    { name: 'Can', role: 'Teknik', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face&q=80' },
+  ]
+  const initialMessages = [
+    { id: 1, text: 'Merhaba! 👋 Hoş geldiniz. Size nasıl yardımcı olabilirim? Fiyatlar, kurulum, özellikler veya herhangi bir konuda soru sorabilirsiniz.', sender: 'agent' as const, agentIdx: 0 },
+  ]
+  const [chatMessages, setChatMessages] = useState<Array<{id: number; text: string; sender: 'user' | 'agent'; agentIdx?: number}>>([])
   const [chatInput, setChatInput] = useState('')
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const yearlyDiscount = 0.2
+  const msgCount = useRef(0)
+  const [showPreChat, setShowPreChat] = useState(true)
+  const [preName, setPreName] = useState('')
+  const [preEmail, setPreEmail] = useState('')
+  const [preAge, setPreAge] = useState('')
+  const [fileUploaded, setFileUploaded] = useState<string | null>(null)
+  const [translateMode, setTranslateMode] = useState(false)
+  const [locale, setLocale] = useState<'tr' | 'en'>('tr')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -220,14 +257,84 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    if (chatOpen && !showPreChat && chatMessages.length === 0) {
+      setChatMessages([initialMessages[0]])
+    }
+  }, [chatOpen, showPreChat])
+
+  const translateText = async (text: string, targetLang: string): Promise<string> => {
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, toLang: targetLang }),
+      })
+      const data = await res.json()
+      return data.translatedText || text
+    } catch {
+      return text
+    }
+  }
+
+  const getReply = (msg: string): string => {
+    const lower = msg.toLowerCase()
+    if (lower.includes('ücret') || lower.includes('fiyat') || lower.includes('paket') || lower.includes('kaç tl')) {
+      return 'Ücretsiz, Başlangıç ₺199, Profesyonel ₺799 ve Kurumsal ₺1.499 olmak üzere 4 planımız var. 14 gün ücretsiz deneyebilirsiniz.'
+    }
+    if (lower.includes('merhaba') || lower.includes('selam') || lower.includes('hey')) {
+      return 'Merhaba, hoş geldiniz! Size nasıl yardımcı olabilirim?'
+    }
+    if (lower.includes('kurulum') || lower.includes('nasıl') || lower.includes('widget') || lower.includes('ekle')) {
+      return 'Kurulum çok kolay. Tek satır kodu sitenize ekleyin, saniyeler içinde çalışmaya başlasın.'
+    }
+    if (lower.includes('whatsapp') || lower.includes('kanal') || lower.includes('entegrasyon')) {
+      return 'Whatsapp, Instagram, Messenger, Telegram gibi tüm kanalları tek panelden yönetebilirsiniz. Çok kanallı destek için uygun bir plan seçmeniz yeterli.'
+    }
+    if (lower.includes('özellik') || lower.includes('yapabilir') || lower.includes('neler')) {
+      return 'Canlı sohbet, chatbot, ziyaretçi takibi, bilgi bankası, bilet sistemi, otomasyon ve daha fazlası. Tüm özellikleri ücretsiz deneyebilirsiniz.'
+    }
+    return 'Teşekkürler, sorunuz için. Size en kısa sürede dönüş yapacağız. Başka bir sorunuz var mı?'
+  }
+
+  const handleSendMessage = async () => {
     if (!chatInput.trim()) return
-    const userMsg = { id: Date.now(), text: chatInput, sender: 'user' as const }
+    const userMsg = { id: Date.now() + 100, text: chatInput, sender: 'user' as const }
     setChatMessages(prev => [...prev, userMsg])
+    const msgText = chatInput
     setChatInput('')
+    let reply = getReply(msgText)
+    if (translateMode && locale === 'en') {
+      reply = await translateText(reply, 'en')
+    }
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { id: Date.now() + 1, text: 'Merhaba! Size yardımcı olmak için buradayım. Ücretsiz denemek için yukarıdaki butona tıklayabilirsiniz!', sender: 'bot' as const }])
-    }, 1000)
+      setChatMessages(prev => [...prev, { id: Date.now() + 200, text: reply, sender: 'agent' as const, agentIdx: 0 }])
+      playNotification()
+    }, 800 + Math.random() * 600)
+  }
+
+  const handlePreChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!preName.trim() || !preEmail.trim()) return
+    setShowPreChat(false)
+    const welcomeMsg = { id: Date.now(), text: `Merhaba ${preName}, hoş geldiniz. Size nasıl yardımcı olabilirim?`, sender: 'agent' as const, agentIdx: 0 }
+    setChatMessages(prev => [...prev, welcomeMsg])
+    playNotification()
+  }
+
+  const handleToggleWidget = () => {
+    const opening = !chatOpen
+    setChatOpen(opening)
+    if (opening) { setShowPreChat(true); setChatMessages([]) }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFileUploaded(file.name)
+      setChatMessages(prev => [...prev, { id: Date.now(), text: `📎 ${file.name} dosyasını gönderdiniz.`, sender: 'agent' as const, agentIdx: 0 }])
+      playNotification()
+    }
   }
 
   return (
@@ -236,29 +343,25 @@ export default function HomePage() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-xl border-b border-border shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand transition-transform duration-300 group-hover:scale-105">
-                <MessageCircle className="w-4.5 h-4.5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-foreground tracking-tight">Gu Live Chat</span>
-            </Link>
+            <Logo boyut="default" linkOlsun animasyonlu />
 
             <div className="hidden md:flex items-center gap-1">
               {[
-                { label: 'Özellikler', href: '#features' },
-                { label: 'Fiyatlandırma', href: '#pricing' },
-                { label: 'Eklentiler', href: '#addons' },
-                { label: 'SSS', href: '#faq' },
-              ].map(item => (
+                { label: '✨ Özellikler', href: '#features' },
+                { label: '💰 Fiyatlandırma', href: '#pricing' },
+                { label: '🧩 Eklentiler', href: '#addons' },
+                { label: '❓ SSS', href: '#faq' },
+              ].map((item, i) => (
                 <a key={item.label} href={item.href}
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-primary-light transition-all duration-200">
+                  className="px-5 py-2.5 text-base font-semibold text-foreground/70 hover:text-foreground rounded-xl hover:bg-primary-light hover:scale-105 transition-all duration-200"
+                  style={{ animation: `fade-in 0.4s ease-out ${i * 0.1}s both` }}>
                   {item.label}
                 </a>
               ))}
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-lg hover:bg-primary-light">
+              <Link href="/login" className="text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors px-5 py-2.5 rounded-xl hover:bg-primary-light">
                 Giriş Yap
               </Link>
               <Link href="/register" className="relative group">
@@ -319,10 +422,13 @@ export default function HomePage() {
               <ChevronRight className="w-3 h-3" />
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[4.5rem] font-bold tracking-tight leading-[1.05] animate-in-up">
-              Müşterilerinizle
-              <br />
-              <span className="text-gradient-brand">Anında</span> Bağlantı Kurun
+            <FadeInView className="flex justify-center mb-6">
+              <Logo boyut="hero" metinGoster={false} />
+            </FadeInView>
+
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] animate-in-up">
+              Müşterilerinizle<br />
+              <span className="animate-text-shimmer">Anında</span> Bağlantı Kurun
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-in-up" style={{ animationDelay: '0.1s' }}>
@@ -341,17 +447,16 @@ export default function HomePage() {
                 Özellikleri Keşfet <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5" />
               </a>
             </div>
-
             <FadeInView delay={0.3} className="mt-16">
               <div className="grid grid-cols-3 gap-8 sm:gap-12 max-w-lg mx-auto">
                 {[
                   { value: '10K+', label: 'Aktif Kullanıcı' },
                   { value: '99.9%', label: 'Uptime' },
-                  { value: '2dk', label: 'Kurulum Süresi' },
+                  { value: '30', label: 'Kurulum Süresi', suffix: 'sn' },
                 ].map((stat) => (
                   <div key={stat.label} className="text-center">
                     <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
-                      <AnimatedCounter value={stat.value} />
+                      <AnimatedCounter value={stat.value} suffix={stat.suffix || ''} />
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium">{stat.label}</div>
                   </div>
@@ -469,8 +574,12 @@ export default function HomePage() {
               Güvenen Markalar
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-6">
-              {['TrendyShop', 'HızlıMarket', 'TeknoSoft', 'ModaVip', 'Evinİçin', 'BoostAI'].map(name => (
-                <span key={name} className="text-xl font-bold text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors duration-300 tracking-tight">{name}</span>
+               {['TrendyShop', 'HızlıMarket', 'TeknoSoft', 'ModaVip', 'Evinİçin', 'BoostAI'].map((name, i) => (
+                <span key={name} className="text-xl font-bold tracking-tight" style={{
+                  color: '#FFFFFF', opacity: 0.7,
+                  textShadow: '0 0 20px rgba(124,77,246,0.3), 0 0 40px rgba(124,77,246,0.15)',
+                  animation: `fade-in 0.5s ease-out ${i * 0.1}s both, pulse 3s ease-in-out ${i * 0.1}s infinite`,
+                }}>{name}</span>
               ))}
             </div>
           </FadeInView>
@@ -485,7 +594,7 @@ export default function HomePage() {
               <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Özellikler</span>
             </div>
             <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">İhtiyacınız olan her şey</h2>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight animate-text-gradient">İhtiyacınız olan her şey</h2>
               <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Müşteri destek sürecinizi hızlandıracak güçlü özellikler, tek platformda.
               </p>
@@ -605,7 +714,7 @@ export default function HomePage() {
               <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Fiyatlandırma</span>
             </div>
             <div className="text-center mb-6">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Basit, şeffaf fiyatlandırma</h2>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight animate-text-gradient">Basit, şeffaf fiyatlandırma</h2>
               <p className="mt-4 text-lg text-muted-foreground">İşletmenizin büyüklüğüne uygun paketi seçin.</p>
             </div>
           </FadeInView>
@@ -664,12 +773,35 @@ export default function HomePage() {
       <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-muted/40">
         <div className="max-w-7xl mx-auto">
           <FadeInView>
+            <div className="text-center mb-4 mt-20">
+              <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Ekibimiz</span>
+            </div>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">7/24 Canlı Destek Ekibi</h2>
+              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Uzman ekibimizle daima yanınızdayız.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 mb-16">
+              {[
+                { name: 'Can', role: 'Destek Lideri', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=140&h=140&fit=crop&crop=face&q=80' },
+                { name: 'Selin', role: 'Satış Uzmanı', photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=140&h=140&fit=crop&crop=face&q=80' },
+                { name: 'Merve', role: 'Teknik Destek', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&h=140&fit=crop&crop=face&q=80' },
+              ].map((member, i) => (
+                <div key={member.name} className="text-center group" style={{ animation: `fade-in 0.5s ease-out ${i * 0.15}s both` }}>
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-4">
+                    <img src={member.photo} alt={member.name} className="w-full h-full rounded-full object-cover border-4 border-primary/20 group-hover:border-primary/50 transition-all duration-300 shadow-lg" />
+                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+                  </div>
+                  <p className="font-semibold text-foreground">{member.name}</p>
+                  <p className="text-sm text-muted-foreground">{member.role}</p>
+                </div>
+              ))}
+            </div>
             <div className="text-center mb-4">
               <span className="inline-flex items-center px-3.5 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">Müşteri Yorumları</span>
             </div>
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">Müşterilerimiz ne diyor?</h2>
-              <p className="mt-4 text-lg text-muted-foreground">1.000&apos;den fazla işletme Gu Live Chat ile müşteri memnuniyetini artırıyor.</p>
+              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">1.000&apos;den fazla işletme Gu Live Chat ile müşteri memnuniyetini artırıyor.</p>
             </div>
           </FadeInView>
 
@@ -739,7 +871,7 @@ export default function HomePage() {
 
         <div className="relative max-w-4xl mx-auto text-center">
           <FadeInView>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">Hemen başlayın, 2 dakikada kurun</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight animate-text-shimmer-white">Hemen başlayın, saniyeler içinde kurun</h2>
             <p className="mt-5 text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
               Kredi kartı gerekmeden ücretsiz deneyin. İlk 100 sohbet tamamen ücretsiz.
             </p>
@@ -763,12 +895,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-14">
             <div className="col-span-2 lg:col-span-1">
-              <Link href="/" className="flex items-center gap-2.5 mb-4 group">
-                <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand transition-transform duration-300 group-hover:scale-105">
-                  <MessageCircle className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-base font-bold text-foreground">Gu Live Chat</span>
-              </Link>
+              <Logo boyut="sm" linkOlsun animasyonlu={false} className="mb-4" />
               <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[200px]">
                 Türk yapımı, profesyonel canlı destek sistemi. Crisp&apos;e yerli alternatif.
               </p>
@@ -791,16 +918,25 @@ export default function HomePage() {
               { title: 'Ürün', links: ['Özellikler', 'Fiyatlandırma', 'Entegrasyonlar', 'Eklentiler', 'Changelog'] },
               { title: 'Destek', links: ['Dokümantasyon', 'API Referansı', 'SSS', 'Durum Sayfası', 'İletişim'] },
               { title: 'Şirket', links: ['Hakkımızda', 'Blog', 'Kariyer', 'Basın', 'Bize Ulaşın'] },
-              { title: 'Yasal', links: ['Gizlilik Politikası', 'Kullanım Şartları', 'KVKK', 'Çerez Politikası'] },
+              { title: 'Yasal', links: [
+                { label: 'Gizlilik Politikası', href: '/gizlilik' },
+                { label: 'Kullanım Şartları', href: '/kullanim-sartlari' },
+                { label: 'KVKK Aydınlatma', href: '/kvkk' },
+                { label: 'Çerez Politikası', href: '/cerez-politikasi' },
+              ]},
             ].map(col => (
               <div key={col.title}>
                 <h4 className="text-xs font-semibold text-foreground uppercase tracking-[0.12em] mb-4">{col.title}</h4>
                 <div className="space-y-3">
-                  {col.links.map(link => (
-                    <a key={link} href="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
-                      {link}
-                    </a>
-                  ))}
+                  {col.links.map(link => {
+                    const href = typeof link === 'string' ? '#' : link.href
+                    const label = typeof link === 'string' ? link : link.label
+                    return (
+                      <Link key={label} href={href} className="block text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
+                        {label}
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             ))}
@@ -809,7 +945,11 @@ export default function HomePage() {
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Copyright className="w-3.5 h-3.5" />
-              <span>{new Date().getFullYear()} Gu Live Chat. Tüm hakları saklıdır.</span>
+              <span className="flex items-center gap-2" style={{ animation: 'pulse 2s ease-in-out infinite' }}>
+                <span style={{ color: '#DC2626', fontWeight: 700 }}>By Design</span>{' '}
+                <span style={{ color: '#FFFFFF', fontWeight: 700, textShadow: '0 0 10px rgba(220,38,38,0.5), 0 0 20px rgba(220,38,38,0.3)' }}>UğuR</span>
+                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>© 2026</span>
+              </span>
             </div>
             <div className="flex items-center gap-5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />KVKK Uyumlu</span>
@@ -820,72 +960,93 @@ export default function HomePage() {
         </div>
       </footer>
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <div id="gu-chat-widget" className="fixed right-0 bottom-0 z-[3000000000]">
         {chatOpen && (
-          <div className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in-scale origin-bottom-right">
-            <div className="bg-gradient-brand p-4 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-sm">Gu Live Chat</p>
-                  <p className="text-white/70 text-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
-                    Çevrimiçi
-                  </p>
-                </div>
+          <div className="bg-white rounded-2xl shadow-[0_8px_36px_rgba(0,0,0,0.16)] flex flex-col overflow-hidden fixed right-5 bottom-24"
+            style={{ width: '380px', height: '560px', maxHeight: 'calc(100% - 120px)' }}>
+            <div className="bg-[#7C4DF6] px-5 py-4 flex items-center gap-3 shrink-0">
+              <div className="relative">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face&q=80" alt="" className="w-10 h-10 rounded-full object-cover border-2 border-white/30" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
               </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex-1">
+                <p className="text-white font-semibold text-sm">Selin</p>
+                <p className="text-white/70 text-xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />Çevrimiçi
+                </p>
+              </div>
+              <button onClick={() => setLocale(locale === 'tr' ? 'en' : 'tr')} className="text-white/60 hover:text-white text-sm p-1">{locale === 'tr' ? '🇬🇧' : '🇹🇷'}</button>
+              <button onClick={() => setChatOpen(false)} className="text-white/60 hover:text-white p-1"><X className="w-4 h-4" /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20 scroll-smooth">
-              {chatMessages.length === 0 && (
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold shadow-brand">G</div>
-                  <div className="bg-card rounded-xl rounded-tl-none p-3.5 shadow-xs border border-border max-w-[260px]">
-                    <p className="text-sm text-foreground">Merhaba! Gu Live Chat destek ekibi burada. Size nasıl yardımcı olabiliriz?</p>
+            {showPreChat ? (
+              <div className="flex-1 flex items-center justify-center p-6 bg-[#F8F7FF]">
+                <form onSubmit={handlePreChatSubmit} className="w-full max-w-xs space-y-3">
+                  <div className="text-center mb-2">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face&q=80" alt="" className="w-16 h-16 rounded-full mx-auto object-cover border-[3px] border-[#7C4DF6]" />
+                    <p className="font-semibold text-[#1C1933] text-sm mt-2">Canlı Yardım</p>
+                    <p className="text-xs text-[#7A758E]">Size nasıl yardımcı olabiliriz?</p>
                   </div>
-                </div>
-              )}
-              {chatMessages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'items-start gap-2.5'}`}>
-                  {msg.sender === 'bot' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-brand shrink-0 flex items-center justify-center text-white text-[10px] font-bold shadow-brand">G</div>
-                  )}
-                  <div className={`rounded-xl p-3.5 max-w-[260px] text-sm leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-primary text-white rounded-tr-none shadow-sm'
-                      : 'bg-card text-foreground rounded-tl-none shadow-xs border border-border'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-3.5 border-t border-border bg-card shrink-0">
-              <div className="flex gap-2">
-                <input type="text" value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Mesajınızı yazın..."
-                  className="flex-1 px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary transition-shadow" />
-                <button onClick={handleSendMessage}
-                  disabled={!chatInput.trim()}
-                  className="p-2.5 bg-gradient-brand text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-brand hover:shadow-brand-lg transition-all">
-                  <Send className="w-4 h-4" />
-                </button>
+                  <input value={preName} onChange={e => setPreName(e.target.value)} placeholder="Adınız" required className="w-full px-3.5 py-2.5 border border-[#E4E2EE] rounded-xl text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors bg-white" />
+                  <input value={preEmail} onChange={e => setPreEmail(e.target.value)} type="email" placeholder="E-posta" required className="w-full px-3.5 py-2.5 border border-[#E4E2EE] rounded-xl text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors bg-white" />
+                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">Başlayalım</button>
+                </form>
               </div>
-            </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8F7FF]">
+                {chatMessages.map((msg, idx) => {
+                  const isLast = idx === chatMessages.length - 1
+                  if (msg.sender === 'user') return (
+                    <div key={msg.id} className="flex justify-end">
+                      <div className="bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[220px] text-sm leading-relaxed">{msg.text}</div>
+                    </div>
+                  )
+                  return (
+                    <div key={msg.id} className="flex gap-2 items-start">
+                      <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face&q=80" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                      <div className="bg-white rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm max-w-[220px]">
+                        <p className="text-xs font-semibold text-[#7C4DF6] mb-0.5">Selin</p>
+                        <p className="text-sm text-[#1C1933] leading-relaxed">{msg.text}</p>
+                        <p className="text-[10px] text-[#9690AE] mt-1">{isLast ? 'Az önce' : '2 dk önce'}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+                {chatMessages.length > 0 && chatMessages[chatMessages.length - 1]?.sender !== 'agent' && (
+                  <div className="flex gap-2 items-center">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face&q=80" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    <div className="flex gap-1 bg-white rounded-2xl px-3.5 py-2.5 shadow-sm">
+                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!showPreChat && (
+              <div className="p-3 border-t border-[#F0EFF5] bg-white shrink-0">
+                <div className="flex gap-2 items-center">
+                  <button onClick={() => fileInputRef.current?.click()} className="text-[#9690AE] hover:text-[#7C4DF6] p-1 transition-colors shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                  </button>
+                  <input ref={fileInputRef} type="file" onChange={handleFileSelect} className="hidden" />
+                  <button onClick={() => setTranslateMode(!translateMode)} className={`p-1 transition-colors shrink-0 ${translateMode ? 'text-[#7C4DF6]' : 'text-[#9690AE] hover:text-[#7C4DF6]'}`}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                  </button>
+                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} placeholder="Mesaj yazın..." className="flex-1 px-4 py-2 bg-[#F5F4FA] border border-[#E4E2EE] rounded-full text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors" />
+                  <button onClick={handleSendMessage} disabled={!chatInput.trim()} className="w-9 h-9 bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-full flex items-center justify-center shrink-0 disabled:opacity-50">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-
-        <button onClick={() => setChatOpen(!chatOpen)}
-          className={`w-14 h-14 bg-gradient-brand text-white rounded-full shadow-brand-lg flex items-center justify-center transition-all duration-200 hover:scale-110 animate-pulse-glow ${chatOpen ? 'scale-90' : ''}`}>
-          {chatOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        <button onClick={handleToggleWidget}
+          className="w-[60px] h-[60px] rounded-full bg-[#7C4DF6] text-white flex items-center justify-center shadow-[0_4px_20px_rgba(124,77,246,0.4)] hover:scale-105 transition-transform fixed right-6 bottom-6 z-[3000000000] border-0 cursor-pointer">
+          {chatOpen ? <X className="w-5 h-5" /> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
         </button>
       </div>
 
