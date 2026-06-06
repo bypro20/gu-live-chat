@@ -87,38 +87,28 @@ export default function KayitSayfasi() {
   return (
     <div className="min-h-screen flex">
       {/* Sol Panel - Marka ve Tanıtım (mobilde gizli) */}
-      <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-brand-animated items-center justify-center p-12 overflow-hidden">
-        {/* Dekoratif ışık küreleri */}
-        <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float pointer-events-none" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '4s' }} />
-
+      <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh pointer-events-none" />
         <div className="relative z-10 max-w-md">
-          {/* Büyük logo */}
           <div className="flex justify-center mb-6">
-            <Logo boyut="lg" metinGoster={false} animasyonlu />
+            <Logo boyut="lg" metinGoster={false} />
           </div>
-          {/* Marka başlığı */}
-          <h2 className="text-3xl font-bold text-white text-center animate-text-shimmer-white">Gu Live Chat</h2>
-          <p className="text-white/70 mt-3 text-lg text-center leading-relaxed">
+          <h2 className="text-3xl font-bold text-foreground text-center">Gu Chat</h2>
+          <p className="text-muted-foreground mt-3 text-lg text-center leading-relaxed">
             2 dakikada profesyonel canlı destek sistemi kurun.
           </p>
-
-          {/* Özellik listesi */}
           <div className="mt-12 space-y-5">
             {markaOzellikleri.map(ozellik => (
               <div key={ozellik.metin} className="flex items-center gap-4 group">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors duration-300">
-                  <ozellik.simge className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
+                  <ozellik.simge className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-white/90 font-medium group-hover:text-white transition-colors duration-300">{ozellik.metin}</span>
+                <span className="text-foreground font-medium">{ozellik.metin}</span>
               </div>
             ))}
           </div>
-
-          {/* Alt bilgi */}
-          <div className="mt-12 pt-8 border-t border-white/15 text-center">
-            <p className="text-white/50 text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+          <div className="mt-12 pt-8 border-t border-border text-center">
+            <p className="text-muted-foreground text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
           </div>
         </div>
       </div>
@@ -149,7 +139,7 @@ export default function KayitSayfasi() {
             <div className="mb-6 space-y-3">
               <button
                 onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-700 transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-muted dark:hover:bg-gray-700 transition font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -166,7 +156,7 @@ export default function KayitSayfasi() {
           {googleGoster && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E5E0F0] dark:border-gray-600"></div>
+                <div className="w-full border-t border-border dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
@@ -177,7 +167,7 @@ export default function KayitSayfasi() {
           {/* Kayıt formu */}
           <form onSubmit={formuGonder} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+              <label htmlFor="name" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                 Adınız
               </label>
               <input
@@ -185,14 +175,14 @@ export default function KayitSayfasi() {
                 type="text"
                 value={form.name}
                 onChange={(e) => guncelle('name', e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Ad Soyad"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                 E-posta
               </label>
               <input
@@ -200,7 +190,7 @@ export default function KayitSayfasi() {
                 type="email"
                 value={form.email}
                 onChange={(e) => guncelle('email', e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="ornek@email.com"
                 required
               />
@@ -208,7 +198,7 @@ export default function KayitSayfasi() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                   Şifre
                 </label>
                 <input
@@ -216,14 +206,14 @@ export default function KayitSayfasi() {
                   type="password"
                   value={form.password}
                   onChange={(e) => guncelle('password', e.target.value)}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
                   minLength={6}
                 />
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                   Şifre Tekrar
                 </label>
                 <input
@@ -231,7 +221,7 @@ export default function KayitSayfasi() {
                   type="password"
                   value={form.confirmPassword}
                   onChange={(e) => guncelle('confirmPassword', e.target.value)}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
                 />
@@ -239,11 +229,11 @@ export default function KayitSayfasi() {
             </div>
 
             {/* Website bilgileri bölümü */}
-            <div className="border-t border-[#E5E0F0] dark:border-gray-700 pt-4 mt-4">
-              <h3 className="text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-3">Website Bilgileri</h3>
+            <div className="border-t border-border dark:border-gray-700 pt-4 mt-4">
+              <h3 className="text-sm font-medium text-foreground dark:text-gray-300 mb-3">Website Bilgileri</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="websiteName" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+                  <label htmlFor="websiteName" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                     Website Adı
                   </label>
                   <input
@@ -251,13 +241,13 @@ export default function KayitSayfasi() {
                     type="text"
                     value={form.websiteName}
                     onChange={(e) => guncelle('websiteName', e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder="Şirket Adı"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="websiteDomain" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+                  <label htmlFor="websiteDomain" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
                     Website Domain
                   </label>
                   <input
@@ -265,7 +255,7 @@ export default function KayitSayfasi() {
                     type="text"
                     value={form.websiteDomain}
                     onChange={(e) => guncelle('websiteDomain', e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder="orneksite.com"
                     required
                   />
@@ -277,7 +267,7 @@ export default function KayitSayfasi() {
             <button
               type="submit"
               disabled={yukleniyor}
-              className="w-full py-3 px-4 bg-gradient-brand text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-brand-lg hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
+              className="w-full py-3 px-4 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed  mt-2"
             >
               {yukleniyor ? (
                 <span className="flex items-center justify-center gap-2">

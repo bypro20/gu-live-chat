@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Zap, Shield, Bot, Globe } from 'lucide-react'
@@ -14,8 +14,18 @@ const markaÖzellikleri = [
   { simge: Globe, metin: 'Çoklu kanal desteği' },
 ]
 
+const oauthHataMesajlari: Record<string, string> = {
+  OAuthSignin: 'Google girişi başlatılamadı. Lütfen tekrar deneyin.',
+  OAuthCallback: 'Google geri dönüş hatası. Callback URL ayarlarını kontrol edin.',
+  OAuthAccountNotLinked: 'Bu e-posta başka bir yöntemle kayıtlı. E-posta ile giriş yapın.',
+  AccessDenied: 'Erişim reddedildi. Hesabınız askıya alınmış olabilir.',
+  Configuration: 'OAuth yapılandırması eksik. Yöneticiyle iletişime geçin.',
+  Default: 'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.',
+}
+
 export default function GirisSayfasi() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [eposta, setEposta] = useState('')
   const [sifre, setSifre] = useState('')
   const [hata, setHata] = useState('')
@@ -28,6 +38,13 @@ export default function GirisSayfasi() {
       .then(data => setGoogleGoster(!!data?.google))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const oauthHata = searchParams.get('error')
+    if (oauthHata) {
+      setHata(oauthHataMesajlari[oauthHata] || oauthHataMesajlari.Default)
+    }
+  }, [searchParams])
 
   const formuGonder = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,39 +74,29 @@ export default function GirisSayfasi() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Sol Panel - Marka ve Tanıtım (mobilde gizli) */}
-      <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-brand-animated items-center justify-center p-12 overflow-hidden">
-        {/* Dekoratif ışık küreleri */}
-        <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float pointer-events-none" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-white/8 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: '4s' }} />
-
+      {/* Sol Panel — Crisp tarzı beyaz/mavi */}
+      <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
+        <div className="absolute inset-0 bg-mesh pointer-events-none" />
         <div className="relative z-10 max-w-md">
-          {/* Büyük logo */}
           <div className="flex justify-center mb-6">
-            <Logo boyut="lg" metinGoster={false} animasyonlu />
+            <Logo boyut="lg" metinGoster={false} />
           </div>
-          {/* Marka başlığı - animasyonlu beyaz shimmer */}
-          <h2 className="text-3xl font-bold text-white text-center animate-text-shimmer-white">Gu Live Chat</h2>
-          <p className="text-white/70 mt-3 text-lg text-center leading-relaxed">
+          <h2 className="text-3xl font-bold text-foreground text-center">Gu Chat</h2>
+          <p className="text-muted-foreground mt-3 text-lg text-center leading-relaxed">
             Profesyonel canlı destek sistemi ile müşterilerinize anında yanıt verin.
           </p>
-
-          {/* Özellik listesi */}
           <div className="mt-12 space-y-5">
             {markaÖzellikleri.map(özellik => (
               <div key={özellik.metin} className="flex items-center gap-4 group">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors duration-300">
-                  <özellik.simge className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
+                  <özellik.simge className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-white/90 font-medium group-hover:text-white transition-colors duration-300">{özellik.metin}</span>
+                <span className="text-foreground font-medium">{özellik.metin}</span>
               </div>
             ))}
           </div>
-
-          {/* Alt bilgi */}
-          <div className="mt-12 pt-8 border-t border-white/15 text-center">
-            <p className="text-white/50 text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+          <div className="mt-12 pt-8 border-t border-border text-center">
+            <p className="text-muted-foreground text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
           </div>
         </div>
       </div>
@@ -120,7 +127,7 @@ export default function GirisSayfasi() {
             <div className="space-y-3 mb-6">
               <button
                 onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-[#F5F3FF] dark:hover:bg-gray-700 transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-muted transition font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -137,7 +144,7 @@ export default function GirisSayfasi() {
           {googleGoster && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E5E0F0] dark:border-gray-600"></div>
+                <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
@@ -148,7 +155,7 @@ export default function GirisSayfasi() {
           {/* Giriş formu */}
           <form onSubmit={formuGonder} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                 E-posta
               </label>
               <input
@@ -156,14 +163,14 @@ export default function GirisSayfasi() {
                 type="email"
                 value={eposta}
                 onChange={(e) => setEposta(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-border rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="ornek@email.com"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#4A2080] dark:text-gray-300 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
                 Şifre
               </label>
               <input
@@ -171,7 +178,7 @@ export default function GirisSayfasi() {
                 type="password"
                 value={sifre}
                 onChange={(e) => setSifre(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#FAFAFF] dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-border rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="••••••••"
                 required
               />
@@ -181,7 +188,7 @@ export default function GirisSayfasi() {
             <button
               type="submit"
               disabled={yukleniyor}
-              className="w-full py-3 px-4 bg-gradient-brand text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-brand-lg hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full py-3 px-4 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-brand-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {yukleniyor ? (
                 <span className="flex items-center justify-center gap-2">
@@ -208,7 +215,7 @@ export default function GirisSayfasi() {
           </div>
 
           {/* Siteye dönüş */}
-          <div className="mt-6 pt-6 border-t border-[#E5E0F0] dark:border-gray-700 text-center">
+          <div className="mt-6 pt-6 border-t border-border text-center">
             <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

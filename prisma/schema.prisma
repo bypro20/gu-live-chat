@@ -102,7 +102,7 @@ model Website {
   plan      Plan     @default(FREE)
 
   // Widget Customization
-  primaryColor   String         @default("#0074E0")
+  primaryColor   String         @default("#1972F5")
   position      WidgetPosition @default(BOTTOM_RIGHT)
 
   // Privacy / GDPR
@@ -893,7 +893,7 @@ model StatusPage {
   faviconUrl    String?
   isActive      Boolean  @default(true)
   isPublic      Boolean  @default(true)
-  primaryColor  String   @default("#6D28D9")
+  primaryColor  String   @default("#1972F5")
   twitterHandle String?
   showHistory   Boolean  @default(true)
 

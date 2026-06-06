@@ -107,7 +107,7 @@ export default function WidgetPage() {
         if (!res.ok || data.error) {
           setInitError(data.error || 'Bağlantı hatası')
           setConfig({
-            primaryColor: '#6C3CE1',
+            primaryColor: '#1972F5',
             position: 'BOTTOM_RIGHT',
             welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
             offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
@@ -128,7 +128,7 @@ export default function WidgetPage() {
         console.error('[Gu Widget] Init failed:', error)
         setInitError('Bağlantı hatası')
         setConfig({
-          primaryColor: '#6C3CE1',
+          primaryColor: '#1972F5',
           position: 'BOTTOM_RIGHT',
           welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
           offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
@@ -596,16 +596,16 @@ export default function WidgetPage() {
     }
   }, [inputMessage, websiteId, conversationId, visitorInfo])
 
-  const primaryColor = config?.primaryColor || '#6C3CE1'
-  const gradientStart = '#6C3CE1'
-  const gradientEnd = '#8B5CF6'
+  const primaryColor = config?.primaryColor || '#1972F5'
+  const gradientStart = '#1972F5'
+  const gradientEnd = '#3B82F6'
   const agentsOnline = config?.agentsOnline ?? 3
 
   if (!isInitialized || !config) {
     const loadingWidget = (
       <div style={{ width: '100vw', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', margin: '0 auto', border: '3px solid rgba(108,60,225,0.15)', borderTopColor: gradientStart, borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }}></div>
+          <div style={{ width: '40px', height: '40px', margin: '0 auto', border: '3px solid rgba(25,114,245,0.15)', borderTopColor: gradientStart, borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }}></div>
           <style>{`@keyframes gwSpin { to { transform: rotate(360deg) } }`}</style>
         </div>
       </div>
@@ -619,7 +619,7 @@ export default function WidgetPage() {
   const mainWidget = (
     <div style={{
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      color: '#1A1533',
+      color: '#111827',
       colorScheme: 'light',
       position: 'fixed',
       bottom: '24px',
@@ -639,9 +639,9 @@ export default function WidgetPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes gwPulse {
-          0% { box-shadow: 0 8px 32px rgba(108,60,225,0.35); }
-          50% { box-shadow: 0 8px 48px rgba(108,60,225,0.55); }
-          100% { box-shadow: 0 8px 32px rgba(108,60,225,0.35); }
+          0% { box-shadow: 0 8px 32px rgba(25,114,245,0.35); }
+          50% { box-shadow: 0 8px 48px rgba(25,114,245,0.55); }
+          100% { box-shadow: 0 8px 32px rgba(25,114,245,0.35); }
         }
         @keyframes gwBounce {
           0%, 80%, 100% { transform: translateY(0); }
@@ -683,7 +683,7 @@ export default function WidgetPage() {
           position: 'relative',
         }}>
           <div style={{
-            background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)',
+            background: primaryColor,
             padding: '20px 20px 16px',
             flexShrink: 0,
             position: 'relative',
@@ -747,21 +747,21 @@ export default function WidgetPage() {
           {showKnowledgeBase ? (
             <div className="gw-scroll" style={{
               flex: 1, overflowY: 'auto', overflowX: 'hidden',
-              padding: '16px', background: '#F8F7FF',
+              padding: '16px', background: '#F9FAFB',
               display: 'flex', flexDirection: 'column', gap: '8px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', flexShrink: 0 }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#1A1533' }}>📚 Yardım</p>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#111827' }}>📚 Yardım</p>
                 <button
                   onClick={() => { setShowKnowledgeBase(false); setSelectedArticle(null) }}
                   style={{
-                    background: '#EEEDF5', border: 'none', borderRadius: '10px',
+                    background: '#F3F4F6', border: 'none', borderRadius: '10px',
                     padding: '6px 12px', fontSize: '12px', cursor: 'pointer',
                     color: '#76728A', fontWeight: 600, fontFamily: 'inherit',
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#E0DFEF' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#EEEDF5' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#F3F4F6' }}
                 >
                   Sohbete Dön
                 </button>
@@ -774,15 +774,15 @@ export default function WidgetPage() {
                     onClick={() => setSelectedArticle(null)}
                     style={{
                       background: 'none', border: 'none', padding: '4px 0 12px',
-                      cursor: 'pointer', color: '#6C3CE1', fontWeight: 600,
+                      cursor: 'pointer', color: '#1972F5', fontWeight: 600,
                       fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px',
                       fontFamily: 'inherit',
                     }}
                   >
                     ← Geri
                   </button>
-                  <h3 style={{ margin: '0 0 12px', fontSize: '16px', color: '#1A1533', lineHeight: '1.4' }}>{selectedArticle.title}</h3>
-                  <div style={{ fontSize: '14px', color: '#1A1533', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{selectedArticle.content}</div>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '16px', color: '#111827', lineHeight: '1.4' }}>{selectedArticle.title}</h3>
+                  <div style={{ fontSize: '14px', color: '#111827', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{selectedArticle.content}</div>
                 </div>
               ) : kbArticles.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>
@@ -794,15 +794,15 @@ export default function WidgetPage() {
                     key={article.id}
                     onClick={() => setSelectedArticle(article)}
                     style={{
-                      background: '#ffffff', border: '1px solid #E8E5F0', borderRadius: '12px',
+                      background: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '12px',
                       padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
                       transition: 'all 0.2s', fontFamily: 'inherit',
                       width: '100%',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#6C3CE1'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(108,60,225,0.1)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E8E5F0'; e.currentTarget.style.boxShadow = 'none' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(25,114,245,0.1)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none' }}
                   >
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#1A1533' }}>{article.title}</p>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#111827' }}>{article.title}</p>
                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>
                       {article.content?.slice(0, 80)}{article.content?.length > 80 ? '...' : ''}
                     </p>
@@ -814,7 +814,7 @@ export default function WidgetPage() {
             <>
             {proactiveMessage && (
               <div style={{
-                background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)',
+                background: '#1972F5',
                 padding: '10px 16px',
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -853,13 +853,13 @@ export default function WidgetPage() {
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
-              background: '#F8F7FF',
+              background: '#F9FAFB',
             }}>
               <div style={{ textAlign: 'center', margin: '0 0 12px', flexShrink: 0 }}>
                 <span style={{
                   fontSize: '11px',
                   color: '#76728A',
-                  background: '#EEEDF5',
+                  background: '#F3F4F6',
                   padding: '4px 14px',
                   borderRadius: '20px',
                   fontWeight: 600,
@@ -876,7 +876,7 @@ export default function WidgetPage() {
                   borderRadius: '50%',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  border: '2px solid #E8E5F0',
+                  border: '2px solid #E5E7EB',
                 }}>
                   <img
                     src={AGENT.photo}
@@ -894,7 +894,7 @@ export default function WidgetPage() {
                     padding: '12px 16px',
                     boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                   }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#1A1533', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#111827', lineHeight: '1.6' }}>
                       {config.welcomeMessage || 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?'}
                     </p>
                   </div>
@@ -921,11 +921,11 @@ export default function WidgetPage() {
                       }}
                       style={{
                         background: '#ffffff',
-                        border: '1px solid rgba(108,60,225,0.12)',
+                        border: '1px solid rgba(25,114,245,0.12)',
                         borderRadius: '20px',
                         padding: '9px 16px',
                         fontSize: '13px',
-                        color: '#1A1533',
+                        color: '#111827',
                         cursor: 'pointer',
                         textAlign: 'left',
                         transition: 'all 0.2s ease',
@@ -933,12 +933,12 @@ export default function WidgetPage() {
                         maxWidth: 'fit-content',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#6C3CE1'
-                        e.currentTarget.style.background = 'rgba(108,60,225,0.04)'
+                        e.currentTarget.style.borderColor = '#1972F5'
+                        e.currentTarget.style.background = 'rgba(25,114,245,0.04)'
                         e.currentTarget.style.transform = 'translateX(4px)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(108,60,225,0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(25,114,245,0.12)'
                         e.currentTarget.style.background = '#ffffff'
                         e.currentTarget.style.transform = 'translateX(0)'
                       }}
@@ -960,13 +960,13 @@ export default function WidgetPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <div style={{ maxWidth: '270px' }}>
                         <div style={{
-                          background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)',
+                          background: '#1972F5',
                           color: 'white',
                           borderRadius: '12px 12px 4px 12px',
                           padding: '11px 16px',
                           fontSize: '14px',
                           lineHeight: '1.6',
-                          boxShadow: '0 2px 8px rgba(108,60,225,0.25)',
+                          boxShadow: '0 2px 8px rgba(25,114,245,0.25)',
                         }}>
                           {msg.content}
                         </div>
@@ -976,7 +976,7 @@ export default function WidgetPage() {
                           </span>
                           {idx === messages.length - 1 && (
                             <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: 'gwCheckIn 0.3s ease-out' }}>
-                              <path d="M3 6l2 2 4-4" stroke="#6C3CE1" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M3 6l2 2 4-4" stroke="#1972F5" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           )}
                         </div>
@@ -990,7 +990,7 @@ export default function WidgetPage() {
                         borderRadius: '50%',
                         overflow: 'hidden',
                         flexShrink: 0,
-                        border: '2px solid #E8E5F0',
+                        border: '2px solid #E5E7EB',
                       }}>
                         <img
                           src={AGENT.photo}
@@ -1008,7 +1008,7 @@ export default function WidgetPage() {
                           padding: '11px 16px',
                           fontSize: '14px',
                           lineHeight: '1.6',
-                          color: '#1A1533',
+                          color: '#111827',
                           boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                         }}>
                           {msg.content}
@@ -1030,7 +1030,7 @@ export default function WidgetPage() {
                     borderRadius: '50%',
                     overflow: 'hidden',
                     flexShrink: 0,
-                    border: '2px solid #E8E5F0',
+                    border: '2px solid #E5E7EB',
                   }}>
                     <img src={AGENT.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
@@ -1049,8 +1049,8 @@ export default function WidgetPage() {
                 </div>
               )}
               {(conversationStatus === 'RESOLVED' || conversationStatus === 'CLOSED') && messages.length > 0 && !ratingSubmitted && (
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E8E5F0', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 600, color: '#1A1533' }}>Sohbeti değerlendirin</p>
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
+                  <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>Sohbeti değerlendirin</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginBottom: '10px' }}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -1097,18 +1097,18 @@ export default function WidgetPage() {
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      border: '1px solid #E8E5F0',
+                      border: '1px solid #E5E7EB',
                       borderRadius: '12px',
                       fontSize: '13px',
                       outline: 'none',
                       fontFamily: 'inherit',
                       boxSizing: 'border-box',
                       background: '#ffffff',
-                      color: '#1A1533',
+                      color: '#111827',
                       marginBottom: '10px',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#6C3CE1' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E8E5F0' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5' }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }}
                   />
                   <button
                     onClick={async () => {
@@ -1134,7 +1134,7 @@ export default function WidgetPage() {
                     style={{
                       width: '100%',
                       padding: '11px',
-                      background: rating === 0 ? '#E8E5F0' : 'linear-gradient(135deg, #6C3CE1, #8B5CF6)',
+                      background: rating === 0 ? '#E5E7EB' : '#1972F5',
                       color: rating === 0 ? '#B0B0C5' : 'white',
                       border: 'none',
                       borderRadius: '12px',
@@ -1151,8 +1151,8 @@ export default function WidgetPage() {
               )}
 
               {ratingSubmitted && (
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E8E5F0', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#1A1533' }}>Değerlendirmeniz için teşekkür ederiz! 🙏</p>
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#111827' }}>Değerlendirmeniz için teşekkür ederiz! 🙏</p>
                   <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>Görüşleriniz bizim için çok değerli</p>
                 </div>
               )}
@@ -1165,7 +1165,7 @@ export default function WidgetPage() {
           {showPreChat ? (
             <div style={{
               padding: '24px 20px 20px',
-              borderTop: '1px solid #E8E5F0',
+              borderTop: '1px solid #E5E7EB',
               background: '#ffffff',
               flexShrink: 0,
             }}>
@@ -1173,11 +1173,11 @@ export default function WidgetPage() {
                 <div style={{
                   width: '48px', height: '48px', margin: '0 auto 12px',
                   borderRadius: '50%', overflow: 'hidden',
-                  border: '2px solid #E8E5F0',
+                  border: '2px solid #E5E7EB',
                 }}>
                   <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <p style={{ fontSize: '15px', fontWeight: 700, color: '#1A1533', margin: '0 0 4px' }}>Merhaba! 👋</p>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Merhaba! 👋</p>
                 <p style={{ fontSize: '13px', color: '#76728A', margin: 0, lineHeight: '1.5' }}>
                   Sohbete başlamak için bilgilerinizi girin
                 </p>
@@ -1194,13 +1194,13 @@ export default function WidgetPage() {
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, name: e.target.value }))}
                     style={{
                       width: '100%', padding: '12px 14px 12px 40px',
-                      border: '1px solid #E8E5F0', borderRadius: '12px',
+                      border: '1px solid #E5E7EB', borderRadius: '12px',
                       fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8F7FF', color: '#1A1533',
+                      boxSizing: 'border-box', background: '#F9FAFB', color: '#111827',
                       transition: 'all 0.2s',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#6C3CE1'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(108,60,225,0.12)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E8E5F0'; e.currentTarget.style.background = '#F8F7FF'; e.currentTarget.style.boxShadow = 'none' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -1214,13 +1214,13 @@ export default function WidgetPage() {
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, email: e.target.value }))}
                     style={{
                       width: '100%', padding: '12px 14px 12px 40px',
-                      border: '1px solid #E8E5F0', borderRadius: '12px',
+                      border: '1px solid #E5E7EB', borderRadius: '12px',
                       fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8F7FF', color: '#1A1533',
+                      boxSizing: 'border-box', background: '#F9FAFB', color: '#111827',
                       transition: 'all 0.2s',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#6C3CE1'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(108,60,225,0.12)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E8E5F0'; e.currentTarget.style.background = '#F8F7FF'; e.currentTarget.style.boxShadow = 'none' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
                 <button
@@ -1241,7 +1241,7 @@ export default function WidgetPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (visitorInfo.name && visitorInfo.email) {
-                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(108,60,225,0.35)'
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(25,114,245,0.35)'
                       e.currentTarget.style.transform = 'translateY(-1px)'
                     }
                   }}
@@ -1265,7 +1265,7 @@ export default function WidgetPage() {
           ) : (
             <div style={{
               padding: '12px 16px 14px',
-              borderTop: '1px solid #E8E5F0',
+              borderTop: '1px solid #E5E7EB',
               background: '#ffffff',
               flexShrink: 0,
               position: 'relative',
@@ -1317,14 +1317,14 @@ export default function WidgetPage() {
                         key={label}
                         onClick={() => handleGifClick(label)}
                         style={{
-                          background: '#F8F7FF', border: '1px solid #E8E5F0',
+                          background: '#F9FAFB', border: '1px solid #E5E7EB',
                           borderRadius: '10px', padding: '10px 14px',
                           cursor: 'pointer', fontSize: '14px',
                           textAlign: 'left', fontFamily: 'inherit',
-                          color: '#1A1533', transition: 'all 0.15s',
+                          color: '#111827', transition: 'all 0.15s',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#EEEDF5'; e.currentTarget.style.borderColor = '#6C3CE1' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#F8F7FF'; e.currentTarget.style.borderColor = '#E8E5F0' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.borderColor = '#1972F5' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#E5E7EB' }}
                       >
                         {label}
                       </button>
@@ -1379,7 +1379,7 @@ export default function WidgetPage() {
                   style={{
                     flex: 1,
                     padding: '10px 14px',
-                    border: '1px solid #E8E5F0',
+                    border: '1px solid #E5E7EB',
                     borderRadius: '20px',
                     fontSize: '14px',
                     resize: 'none',
@@ -1387,13 +1387,13 @@ export default function WidgetPage() {
                     fontFamily: 'inherit',
                     lineHeight: '1.5',
                     boxSizing: 'border-box',
-                    background: '#F8F7FF',
-                    color: '#1A1533',
+                    background: '#F9FAFB',
+                    color: '#111827',
                     transition: 'all 0.2s',
                     maxHeight: '120px',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#6C3CE1'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(108,60,225,0.12)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E8E5F0'; e.currentTarget.style.background = '#F8F7FF'; e.currentTarget.style.boxShadow = 'none' }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
                 />
                 <button
                   onClick={() => { setShowEmojiPicker(false); setShowGifPicker(false); if (!showKnowledgeBase) handleOpenKB(); else { setShowKnowledgeBase(false); setSelectedArticle(null) } }}
@@ -1416,7 +1416,7 @@ export default function WidgetPage() {
                   style={{
                     width: '38px',
                     height: '38px',
-                    background: inputMessage.trim() ? 'linear-gradient(135deg, #6C3CE1, #8B5CF6)' : '#E8E5F0',
+                    background: inputMessage.trim() ? '#1972F5' : '#E5E7EB',
                     color: inputMessage.trim() ? 'white' : '#B0B0C5',
                     border: 'none',
                     borderRadius: '50%',
@@ -1426,7 +1426,7 @@ export default function WidgetPage() {
                     justifyContent: 'center',
                     flexShrink: 0,
                     transition: 'all 0.2s',
-                    boxShadow: inputMessage.trim() ? '0 2px 8px rgba(108,60,225,0.3)' : 'none',
+                    boxShadow: inputMessage.trim() ? '0 2px 8px rgba(25,114,245,0.3)' : 'none',
                   }}
                 >
                   ➤
@@ -1446,19 +1446,19 @@ export default function WidgetPage() {
             width: '56px',
             height: '56px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)',
+            background: '#1972F5',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(108,60,225,0.35)',
+            boxShadow: '0 8px 32px rgba(25,114,245,0.35)',
             animation: 'gwPulse 2.5s ease-in-out infinite',
             transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             position: 'relative',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(108,60,225,0.5)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(108,60,225,0.35)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(25,114,245,0.5)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(25,114,245,0.35)' }}
         >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

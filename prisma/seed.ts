@@ -30,7 +30,7 @@ async function main() {
       domain: 'demo.gulive.com',
       websiteId: 'demo-website-id-2024',
       ownerId: user.id,
-      primaryColor: '#0074E0',
+      primaryColor: '#1972F5',
       welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
       offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
       plan: 'FREE',

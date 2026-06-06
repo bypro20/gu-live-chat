@@ -46,15 +46,15 @@ function ConversationItem({ conversation, selected, onClick }: {
   return (
     <button
       onClick={onClick}
-      className={`w-full p-3 flex items-start gap-3 border-b border-[#E5E0F0] dark:border-gray-700/50 hover:bg-[#F5F3FF] dark:hover:bg-gray-700/50 transition text-left ${
-        selected ? 'bg-[#6C3CE1]/5 dark:bg-[#6C3CE1]/10 border-l-2 border-l-[#6C3CE1]' : ''
+      className={`w-full p-3 flex items-start gap-3 border-b border-[#E5E7EB] dark:border-gray-700/50 hover:bg-[#F9FAFB] dark:hover:bg-gray-700/50 transition text-left ${
+        selected ? 'bg-[#2563EB]/5 dark:bg-[#2563EB]/10 border-l-2 border-l-[#2563EB]' : ''
       }`}
     >
       <div className="relative shrink-0">
         {conversation.visitor.avatarUrl ? (
           <img src={conversation.visitor.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C3CE1]/20 to-[#8B5CF6]/20 flex items-center justify-center text-sm font-semibold text-[#6C3CE1] dark:text-[#A78BFA]">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB]/20 to-[#3B82F6]/20 flex items-center justify-center text-sm font-semibold text-[#2563EB] dark:text-[#60A5FA]">
             {initial}
           </div>
         )}
@@ -70,7 +70,7 @@ function ConversationItem({ conversation, selected, onClick }: {
         </p>
       </div>
       {conversation.unreadCount > 0 && (
-        <span className="w-5 h-5 bg-[#6C3CE1] text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0 shadow-md shadow-[#6C3CE1]/30">
+        <span className="w-5 h-5 bg-[#2563EB] text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0 shadow-md shadow-[#2563EB]/30">
           {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
         </span>
       )}
@@ -131,7 +131,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
   if (isSystem) {
     return (
       <div className="flex justify-center">
-        <span className="text-xs text-gray-400 bg-[#EDE9FE] dark:bg-gray-800 px-3 py-1 rounded-full">
+        <span className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-800 px-3 py-1 rounded-full">
           {message.content}
         </span>
       </div>
@@ -148,12 +148,12 @@ function MessageBubble({ message, autoTranslate }: { message: {
         )}
         <div className={`px-4 py-2.5 rounded-2xl text-sm ${
           isVisitor
-            ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-sm border border-[#E5E0F0] dark:border-gray-700'
-            : 'bg-gradient-to-br from-[#6C3CE1] to-[#8B5CF6] text-white rounded-br-sm shadow-md shadow-[#6C3CE1]/20'
+            ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-sm border border-[#E5E7EB] dark:border-gray-700'
+            : 'bg-gradient-to-br from-[#2563EB] to-[#3B82F6] text-white rounded-br-sm shadow-md shadow-[#2563EB]/20'
         }`}>
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
           {showTranslate && translatedText && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 pt-1.5 border-t border-[#E5E0F0] dark:border-gray-600 italic">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 pt-1.5 border-t border-[#E5E7EB] dark:border-gray-600 italic">
               🌐 {translatedText}
             </p>
           )}
@@ -164,7 +164,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
             <button
               onClick={handleTranslate}
               disabled={translating}
-              className="text-[10px] text-gray-400 hover:text-[#6C3CE1] transition disabled:opacity-50"
+              className="text-[10px] text-gray-400 hover:text-[#2563EB] transition disabled:opacity-50"
               title="Türkçe'ye çevir"
             >
               {translating ? '⏳' : '🌐'}
@@ -333,13 +333,13 @@ export default function InboxPage() {
   return (
     <div className="h-screen flex">
       {/* Conversation List */}
-      <div className="w-96 border-r border-[#E5E0F0] dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
+      <div className="w-96 border-r border-[#E5E7EB] dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
         {/* Header */}
-        <div className="p-4 border-b border-[#E5E0F0] dark:border-gray-700">
+        <div className="p-4 border-b border-[#E5E7EB] dark:border-gray-700">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-bold text-gray-900 dark:text-white">Gelen Kutusu</h1>
             {total > 0 && (
-              <span className="text-xs text-gray-400 bg-[#EDE9FE] dark:bg-gray-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-700 px-2 py-0.5 rounded-full">
                 {total} sohbet
               </span>
             )}
@@ -356,8 +356,8 @@ export default function InboxPage() {
                 onClick={() => setFilter(f.key)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
                   filter === f.key
-                    ? 'bg-[#6C3CE1] text-white shadow-md shadow-[#6C3CE1]/30'
-                    : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 hover:bg-[#DDD6FE] dark:hover:bg-gray-600'
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/30'
+                    : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#DDD6FE] dark:hover:bg-gray-600'
                 }`}
               >
                 {f.label}
@@ -370,7 +370,7 @@ export default function InboxPage() {
                 type="checkbox"
                 checked={autoTranslate}
                 onChange={(e) => setAutoTranslate(e.target.checked)}
-                className="w-3.5 h-3.5 text-[#6C3CE1] rounded border-gray-300 focus:ring-[#6C3CE1]"
+                className="w-3.5 h-3.5 text-[#2563EB] rounded border-gray-300 focus:ring-[#2563EB]"
               />
               <span className="text-xs text-gray-500 dark:text-gray-400">Otomatik Çeviri</span>
             </label>
@@ -388,7 +388,7 @@ export default function InboxPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Sohbet ara..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F5F3FF] dark:bg-gray-900 border border-[#E5E0F0] dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#F9FAFB] dark:bg-gray-900 border border-[#E5E7EB] dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition"
             />
           </div>
         </div>
@@ -397,7 +397,7 @@ export default function InboxPage() {
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-32 text-center px-6">
@@ -405,7 +405,7 @@ export default function InboxPage() {
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-6">
-              <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -429,11 +429,11 @@ export default function InboxPage() {
       </div>
 
       {/* Conversation Detail / Empty State */}
-      <div className="flex-1 flex flex-col bg-[#F5F3FF] dark:bg-gray-900">
+      <div className="flex-1 flex flex-col bg-[#F9FAFB] dark:bg-gray-900">
         {!selectedConversation ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-20 h-20 bg-[#EDE9FE] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-[#EFF6FF] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -445,8 +445,8 @@ export default function InboxPage() {
         ) : (
           <>
             {/* Conversation header */}
-            <div className="p-4 border-b border-[#E5E0F0] dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C3CE1]/20 to-[#8B5CF6]/20 flex items-center justify-center text-sm font-semibold text-[#6C3CE1] dark:text-[#A78BFA]">
+            <div className="p-4 border-b border-[#E5E7EB] dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB]/20 to-[#3B82F6]/20 flex items-center justify-center text-sm font-semibold text-[#2563EB] dark:text-[#60A5FA]">
                 {(selectedConversation.visitor.name || selectedConversation.visitor.email || 'A')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -470,7 +470,7 @@ export default function InboxPage() {
                 </div>
               </div>
               {selectedConversation.assignedTo && (
-                <div className="text-xs text-gray-400 bg-[#EDE9FE] dark:bg-gray-700 px-2 py-1 rounded-lg">
+                <div className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-700 px-2 py-1 rounded-lg">
                   {selectedConversation.assignedTo.name || 'Temsilci'}
                 </div>
               )}
@@ -480,7 +480,7 @@ export default function InboxPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messagesLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center text-sm text-gray-400 mt-8">
@@ -494,7 +494,7 @@ export default function InboxPage() {
               {typingPreview && typingPreview.conversationId === selectedId && (
                 <div className="flex justify-start">
                   <div className="max-w-[70%]">
-                    <div className="px-4 py-2.5 rounded-2xl text-sm bg-white dark:bg-gray-800 text-gray-400 italic border border-[#E5E0F0] dark:border-gray-700 rounded-bl-sm">
+                    <div className="px-4 py-2.5 rounded-2xl text-sm bg-white dark:bg-gray-800 text-gray-400 italic border border-[#E5E7EB] dark:border-gray-700 rounded-bl-sm">
                       {typingPreview.content}
                     </div>
                   </div>
@@ -504,7 +504,7 @@ export default function InboxPage() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-[#E5E0F0] dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="p-4 border-t border-[#E5E7EB] dark:border-gray-700 bg-white dark:bg-gray-800">
               <div className="flex items-end gap-3">
                 <div className="flex-1 relative">
                   <textarea
@@ -512,7 +512,7 @@ export default function InboxPage() {
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Mesaj yazın..."
-                    className="w-full px-4 py-3 bg-[#F5F3FF] dark:bg-gray-900 border border-[#E5E0F0] dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition text-sm"
+                    className="w-full px-4 py-3 bg-[#F9FAFB] dark:bg-gray-900 border border-[#E5E7EB] dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition text-sm"
                     rows={1}
                     disabled={sending}
                   />
@@ -520,7 +520,7 @@ export default function InboxPage() {
                 <button
                   onClick={handleSend}
                   disabled={!messageText.trim() || sending}
-                  className="w-10 h-10 bg-[#6C3CE1] hover:bg-[#5B2FC5] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition shrink-0 shadow-md shadow-[#6C3CE1]/30"
+                  className="w-10 h-10 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition shrink-0 shadow-md shadow-[#2563EB]/30"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

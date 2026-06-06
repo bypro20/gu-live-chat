@@ -44,7 +44,7 @@
     'html,body{transform:none!important;filter:none!important;}' +
     '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}' +
     '#gu-chat-button svg{display:block;pointer-events:none;}' +
-    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(108,60,225,0.45),0 8px 32px rgba(108,60,225,0.35)}50%{box-shadow:0 0 0 18px rgba(108,60,225,0.08),0 8px 32px rgba(108,60,225,0.5)}100%{box-shadow:0 0 0 0 rgba(108,60,225,0),0 8px 32px rgba(108,60,225,0.35)}}' +
+    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(25,114,245,0.35),0 4px 16px rgba(25,114,245,0.3)}50%{box-shadow:0 0 0 12px rgba(25,114,245,0.06),0 4px 20px rgba(25,114,245,0.4)}100%{box-shadow:0 0 0 0 rgba(25,114,245,0),0 4px 16px rgba(25,114,245,0.3)}}' +
     '@keyframes gu-fade-in{from{opacity:0}to{opacity:1}}' +
     '@keyframes gu-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}';
   (document.head || document.documentElement).appendChild(forceStyle);
@@ -57,7 +57,7 @@
 
   var chatBtn = document.createElement('div');
   chatBtn.id = 'gu-chat-button';
-  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6C3CE1,#8B5CF6);cursor:pointer;box-shadow:0 8px 32px rgba(108,60,225,0.35);display:flex;align-items:center;justify-content:center;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;transform:none;filter:none;animation:gu-pulse 2.5s ease-in-out 1;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;';
+  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:48px;height:48px;border-radius:50%;background:#1972F5;cursor:pointer;box-shadow:0 4px 16px rgba(25,114,245,0.35);display:flex;align-items:center;justify-content:center;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;transform:none;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;';
 
   var chatOpen = false;  // Start closed — user clicks to open chat
   chatBtn.innerHTML = CHAT_ICON;
@@ -74,8 +74,8 @@
       chatBtn.innerHTML = CHAT_ICON;
     }
   });
-  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 12px 48px rgba(108,60,225,0.5)'; chatBtn.style.transform = 'scale(1.08)'; });
-  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 8px 32px rgba(108,60,225,0.35)'; chatBtn.style.transform = 'scale(1)'; });
+  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 6px 24px rgba(25,114,245,0.45)'; chatBtn.style.transform = 'scale(1.06)'; });
+  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 4px 16px rgba(25,114,245,0.35)'; chatBtn.style.transform = 'scale(1)'; });
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(chatBtn);
 
@@ -84,7 +84,7 @@
   var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:88px;right:24px;z-index:2147483647;width:400px;height:640px;border-radius:20px;box-shadow:0 20px 60px -15px rgba(139,92,246,0.35),0 0 0 1px rgba(236,72,153,0.1);display:none;opacity:0;transition:opacity 0.3s ease;pointer-events:auto;background:white;transform:none;filter:none;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:80px;right:24px;z-index:2147483647;width:380px;height:600px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.05);display:none;opacity:0;transition:opacity 0.3s ease;pointer-events:auto;background:white;transform:none;filter:none;';
   iframe.allow = 'microphone; camera';
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(iframe);
@@ -994,7 +994,7 @@
 
     var acceptBtn = document.createElement('button');
     acceptBtn.textContent = 'Kabul Et';
-    acceptBtn.style.cssText = 'padding:8px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#6C3CE1,#8B5CF6);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;';
+    acceptBtn.style.cssText = 'padding:8px 20px;border:none;border-radius:10px;background:#1972F5;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;';
     acceptBtn.addEventListener('mouseenter', function() { acceptBtn.style.opacity = '0.9'; });
     acceptBtn.addEventListener('mouseleave', function() { acceptBtn.style.opacity = '1'; });
     acceptBtn.addEventListener('click', function() {

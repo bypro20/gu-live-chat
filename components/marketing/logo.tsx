@@ -38,8 +38,8 @@ export function Logo({
       >
         <defs>
           <linearGradient id="gu-logo-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#2563EB" />
-            <stop offset="100%" stopColor="#7C3AED" />
+            <stop offset="0%" stopColor="#1972F5" />
+            <stop offset="100%" stopColor="#2563EB" />
           </linearGradient>
         </defs>
         <rect x="2" y="2" width="44" height="44" rx="11" fill="url(#gu-logo-grad)" />
@@ -53,7 +53,7 @@ export function Logo({
           fill="white"
           fillOpacity="0.95"
         />
-        <path d="M22 20l-3 4h2l-1 4 5-5h-2l1-3z" fill="#2563EB" />
+        <path d="M22 20l-3 4h2l-1 4 5-5h-2l1-3z" fill="#1972F5" />
       </svg>
       {metinGoster && (
         <span className={cn(ayar.metin, 'font-bold tracking-tight text-foreground')}>

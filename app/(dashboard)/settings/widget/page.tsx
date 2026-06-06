@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 export default function WidgetSettingsPage() {
   const [config, setConfig] = useState({
-    primaryColor: '#6C3CE1',
+    primaryColor: '#1972F5',
     position: 'BOTTOM_RIGHT',
     welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
     offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
