@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
+import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
@@ -31,6 +32,7 @@ function DeviceIcon({ device }: { device?: string | null }) {
 // ─── Main Page ──────────────────────────────────────────────────────
 export default function VisitorsPage() {
   const { data: session } = useSession()
+  const { activeWebsite, websites } = useActiveWebsite()
   const {
     visitors,
     activities,
@@ -52,8 +54,8 @@ export default function VisitorsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterDevice, setFilterDevice] = useState<string>('all')
   const [upgradeRequired, setUpgradeRequired] = useState(false)
-  const [userWebsiteIds, setUserWebsiteIds] = useState<string[]>([])
   const [screenCapturingId, setScreenCapturingId] = useState<string | null>(null)
+  const userWebsiteIds = websites.map((w) => w.websiteId)
   const [webrtcStream, setWebrtcStream] = useState<MediaStream | null>(null)
   const [webrtcState, setWebrtcState] = useState<WebRTCConnectionState | 'idle' | 'denied'>('idle')
   const [privacyMode, setPrivacyMode] = useState(false)
@@ -76,7 +78,8 @@ export default function VisitorsPage() {
     if (!session?.user) return
     try {
       setLoading(true)
-      const res = await fetch('/api/visitors/live')
+      const query = activeWebsite?.websiteId ? `?websiteId=${activeWebsite.websiteId}` : ''
+      const res = await fetch(`/api/visitors/live${query}`)
       if (res.status === 403) {
         const data = await res.json()
         if (data.upgradeRequired) {
@@ -88,30 +91,12 @@ export default function VisitorsPage() {
       if (!res.ok) throw new Error('Ziyaretçiler alınamadı')
       const data = await res.json()
       setVisitors(data.visitors || [])
-      // Extract website IDs for socket auth
-      if (data.visitors?.length > 0) {
-        const ids = [...new Set(data.visitors.map((v: any) => v.websiteId).filter(Boolean))] as string[]
-        if (ids.length > 0) setUserWebsiteIds(ids)
-      }
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [session, setVisitors, setLoading, setError])
-
-  // Fetch user's websites for socket auth
-  useEffect(() => {
-    if (!session?.user || userWebsiteIds.length > 0) return
-    fetch('/api/websites')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.websites) {
-          setUserWebsiteIds(data.websites.map((w: any) => w.websiteId))
-        }
-      })
-      .catch(() => {})
-  }, [session, userWebsiteIds.length])
+  }, [session, activeWebsite?.websiteId, setVisitors, setLoading, setError])
 
   useEffect(() => {
     fetchLiveVisitors()

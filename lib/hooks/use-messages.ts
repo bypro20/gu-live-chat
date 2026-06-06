@@ -1,7 +1,8 @@
 'use client'
 
 import useSWR from 'swr'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { connectSocket, isSocketConnected } from '@/lib/socket-client'
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -43,12 +44,21 @@ async function fetcher(url: string) {
 
 export function useMessages(conversationId: string | null) {
   const [sending, setSending] = useState(false)
+  const [pollInterval, setPollInterval] = useState(30000)
+
+  useEffect(() => {
+    connectSocket()
+    const update = () => setPollInterval(isSocketConnected() ? 30000 : 4000)
+    update()
+    const id = setInterval(update, 5000)
+    return () => clearInterval(id)
+  }, [])
 
   const { data, error, mutate, isLoading } = useSWR<MessagesResponse>(
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
     fetcher,
     {
-      refreshInterval: 30000, // Fallback poll; real-time via socket
+      refreshInterval: pollInterval,
       revalidateOnFocus: true,
     }
   )

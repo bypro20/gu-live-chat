@@ -1,6 +1,8 @@
 'use client'
 
 import useSWR from 'swr'
+import { useEffect, useState } from 'react'
+import { connectSocket, isSocketConnected } from '@/lib/socket-client'
 import { useActiveWebsite } from './use-active-website'
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -74,6 +76,15 @@ export function useConversations(options?: {
   limit?: number
 }) {
   const { activeWebsite } = useActiveWebsite()
+  const [pollInterval, setPollInterval] = useState(30000)
+
+  useEffect(() => {
+    connectSocket()
+    const update = () => setPollInterval(isSocketConnected() ? 30000 : 4000)
+    update()
+    const id = setInterval(update, 5000)
+    return () => clearInterval(id)
+  }, [])
 
   const params = new URLSearchParams()
   if (options?.status && options.status !== 'all') params.set('status', options.status)
@@ -90,7 +101,7 @@ export function useConversations(options?: {
     activeWebsite ? url : null,
     fetcher,
     {
-      refreshInterval: 30000, // Fallback poll; real-time via socket
+      refreshInterval: pollInterval,
       revalidateOnFocus: true,
     }
   )

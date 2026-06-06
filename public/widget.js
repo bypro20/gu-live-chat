@@ -17,6 +17,11 @@
     return;
   }
 
+  // Same-origin when embedded on guchat.org; override with window.GU_WIDGET_URL for cross-domain installs
+  function getWidgetBaseUrl() {
+    return window.GU_WIDGET_URL || window.location.origin || 'https://guchat.org';
+  }
+
   // ─── Force widget visibility with !important CSS ──────────────────────
   // CRITICAL: Elements are directly on document.body with position:fixed.
   // transform:none !important prevents parent containers with transform/filter
@@ -76,7 +81,7 @@
 
   // Create iframe — DIRECTLY on document.body (no container)
   var iframe = document.createElement('iframe');
-  var iframeSrc = (window.GU_WIDGET_URL || 'https://chat.gulive.com') + '/widget/' + WEBSITE_ID;
+  var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
   iframe.style.cssText = 'border:none;position:fixed;bottom:88px;right:24px;z-index:2147483647;width:400px;height:640px;border-radius:20px;box-shadow:0 20px 60px -15px rgba(139,92,246,0.35),0 0 0 1px rgba(236,72,153,0.1);display:none;opacity:0;transition:opacity 0.3s ease;pointer-events:auto;background:white;transform:none;filter:none;';
@@ -94,7 +99,7 @@
 
   function fetchProactiveMessages() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', (window.GU_WIDGET_URL || 'https://chat.gulive.com') + '/api/proactive?websiteId=' + WEBSITE_ID, true);
+    xhr.open('GET', getWidgetBaseUrl() + '/api/proactive?websiteId=' + WEBSITE_ID, true);
     xhr.onload = function() {
       if (xhr.status === 200) {
         try {
@@ -1029,7 +1034,7 @@
       userAgent: navigator.userAgent,
     });
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', (window.GU_WIDGET_URL || 'https://chat.gulive.com') + '/api/privacy/consent', true);
+    xhr.open('POST', getWidgetBaseUrl() + '/api/privacy/consent', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(payload);
   }

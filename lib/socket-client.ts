@@ -4,6 +4,12 @@ import { io, Socket } from 'socket.io-client'
 
 let socket: Socket | null = null
 let retainCount = 0
+let socketConnected = false
+
+/** True when Socket.io is connected. Vercel serverless has no socket — falls back to REST polling. */
+export function isSocketConnected(): boolean {
+  return socketConnected
+}
 
 export function getSocket(): Socket | null {
   return socket
@@ -14,7 +20,9 @@ export function connectSocket(): Socket {
   // creating a new one would orphan the old socket and lose its event handlers.
   if (socket) return socket
 
-  socket = io({
+  const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || undefined
+
+  socket = io(socketUrl, {
     path: '/socket.io',
     transports: ['websocket', 'polling'],
     autoConnect: true,
@@ -23,14 +31,17 @@ export function connectSocket(): Socket {
   })
 
   socket.on('connect', () => {
-    console.log('[Gu Socket] Connected:', socket?.id)
+    socketConnected = true
+    console.log('[Gu Socket] Connected:', socket?.id, socketUrl ? `(server: ${socketUrl})` : '(same-origin)')
   })
 
   socket.on('disconnect', (reason) => {
+    socketConnected = false
     console.log('[Gu Socket] Disconnected:', reason)
   })
 
   socket.on('connect_error', (err) => {
+    socketConnected = false
     console.error('[Gu Socket] Connection error:', err.message)
   })
 

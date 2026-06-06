@@ -7,7 +7,7 @@ import {
   Workflow, Store, ChevronDown, Check, ArrowRight, Star,
   Menu, X, MessageSquare, Send, Phone, Monitor,
   Shield, Copyright, Sparkles, Globe, Infinity,
-  Zap, Eye, Puzzle, LineChart, Mail, HelpCircle,
+  Zap, Mail,
   ChevronRight, Plus, Minus,
 } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
@@ -210,46 +210,10 @@ function renderCell(value: boolean | string) {
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [chatOpen, setChatOpen] = useState(false)
-  const playNotification = () => {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.setValueAtTime(660, ctx.currentTime)
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1)
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.3)
-  } catch {}
-}
-
-const agents = [
-    { name: 'Kerem', role: 'Destek', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&q=80' },
-    { name: 'Selin', role: 'Satış', photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face&q=80' },
-    { name: 'Can', role: 'Teknik', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face&q=80' },
-  ]
-  const initialMessages = [
-    { id: 1, text: 'Merhaba! 👋 Hoş geldiniz. Size nasıl yardımcı olabilirim? Fiyatlar, kurulum, özellikler veya herhangi bir konuda soru sorabilirsiniz.', sender: 'agent' as const, agentIdx: 0 },
-  ]
-  const [chatMessages, setChatMessages] = useState<Array<{id: number; text: string; sender: 'user' | 'agent'; agentIdx?: number}>>([])
-  const [chatInput, setChatInput] = useState('')
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const yearlyDiscount = 0.2
-  const msgCount = useRef(0)
-  const [showPreChat, setShowPreChat] = useState(true)
-  const [preName, setPreName] = useState('')
-  const [preEmail, setPreEmail] = useState('')
-  const [preAge, setPreAge] = useState('')
-  const [fileUploaded, setFileUploaded] = useState<string | null>(null)
-  const [translateMode, setTranslateMode] = useState(false)
-  const [locale, setLocale] = useState<'tr' | 'en'>('tr')
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -257,85 +221,30 @@ const agents = [
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Gerçek widget — sahte demo chat yerine canlı Gu Chat widget'ı
   useEffect(() => {
-    if (chatOpen && !showPreChat && chatMessages.length === 0) {
-      setChatMessages([initialMessages[0]])
-    }
-  }, [chatOpen, showPreChat])
+    const websiteId = process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID
+    if (!websiteId) return
 
-  const translateText = async (text: string, targetLang: string): Promise<string> => {
-    try {
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, toLang: targetLang }),
-      })
-      const data = await res.json()
-      return data.translatedText || text
-    } catch {
-      return text
+    const w = window as Window & {
+      GU_WIDGET_URL?: string
+      $gu?: { q?: unknown[][] } & ((...args: unknown[]) => void)
     }
-  }
 
-  const getReply = (msg: string): string => {
-    const lower = msg.toLowerCase()
-    if (lower.includes('ücret') || lower.includes('fiyat') || lower.includes('paket') || lower.includes('kaç tl')) {
-      return 'Ücretsiz, Başlangıç ₺199, Profesyonel ₺799 ve Kurumsal ₺1.499 olmak üzere 4 planımız var. 14 gün ücretsiz deneyebilirsiniz.'
+    w.GU_WIDGET_URL = window.location.origin
+    w.$gu = w.$gu || function (...args: unknown[]) {
+      (w.$gu!.q = w.$gu!.q || []).push(args)
     }
-    if (lower.includes('merhaba') || lower.includes('selam') || lower.includes('hey')) {
-      return 'Merhaba, hoş geldiniz! Size nasıl yardımcı olabilirim?'
-    }
-    if (lower.includes('kurulum') || lower.includes('nasıl') || lower.includes('widget') || lower.includes('ekle')) {
-      return 'Kurulum çok kolay. Tek satır kodu sitenize ekleyin, saniyeler içinde çalışmaya başlasın.'
-    }
-    if (lower.includes('whatsapp') || lower.includes('kanal') || lower.includes('entegrasyon')) {
-      return 'Whatsapp, Instagram, Messenger, Telegram gibi tüm kanalları tek panelden yönetebilirsiniz. Çok kanallı destek için uygun bir plan seçmeniz yeterli.'
-    }
-    if (lower.includes('özellik') || lower.includes('yapabilir') || lower.includes('neler')) {
-      return 'Canlı sohbet, chatbot, ziyaretçi takibi, bilgi bankası, bilet sistemi, otomasyon ve daha fazlası. Tüm özellikleri ücretsiz deneyebilirsiniz.'
-    }
-    return 'Teşekkürler, sorunuz için. Size en kısa sürede dönüş yapacağız. Başka bir sorunuz var mı?'
-  }
+    w.$gu('set', 'WEBSITE_ID', websiteId)
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim()) return
-    const userMsg = { id: Date.now() + 100, text: chatInput, sender: 'user' as const }
-    setChatMessages(prev => [...prev, userMsg])
-    const msgText = chatInput
-    setChatInput('')
-    let reply = getReply(msgText)
-    if (translateMode && locale === 'en') {
-      reply = await translateText(reply, 'en')
-    }
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { id: Date.now() + 200, text: reply, sender: 'agent' as const, agentIdx: 0 }])
-      playNotification()
-    }, 800 + Math.random() * 600)
-  }
+    if (document.querySelector('script[data-gu-widget]')) return
 
-  const handlePreChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!preName.trim() || !preEmail.trim()) return
-    setShowPreChat(false)
-    const welcomeMsg = { id: Date.now(), text: `Merhaba ${preName}, hoş geldiniz. Size nasıl yardımcı olabilirim?`, sender: 'agent' as const, agentIdx: 0 }
-    setChatMessages(prev => [...prev, welcomeMsg])
-    playNotification()
-  }
-
-  const handleToggleWidget = () => {
-    const opening = !chatOpen
-    setChatOpen(opening)
-    if (opening) { setShowPreChat(true); setChatMessages([]) }
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFileUploaded(file.name)
-      setChatMessages(prev => [...prev, { id: Date.now(), text: `📎 ${file.name} dosyasını gönderdiniz.`, sender: 'agent' as const, agentIdx: 0 }])
-      playNotification()
-    }
-  }
+    const script = document.createElement('script')
+    script.src = '/widget.js'
+    script.async = true
+    script.setAttribute('data-gu-widget', '1')
+    document.body.appendChild(script)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary selection:text-primary-foreground">
@@ -884,9 +793,9 @@ const agents = [
                 Ücretsiz Hesap Oluştur <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
-            <a href="#" className="px-8 py-4 border border-white/20 text-white font-semibold rounded-xl text-lg hover:bg-white/10 transition-all duration-200 flex items-center gap-2 hover:border-white/30">
+            <Link href="/register" className="px-8 py-4 border border-white/20 text-white font-semibold rounded-xl text-lg hover:bg-white/10 transition-all duration-200 flex items-center gap-2 hover:border-white/30">
               <Phone className="w-4 h-4" /> Bize Ulaşın
-            </a>
+            </Link>
           </FadeInView>
         </div>
       </section>
@@ -915,9 +824,21 @@ const agents = [
             </div>
 
             {[
-              { title: 'Ürün', links: ['Özellikler', 'Fiyatlandırma', 'Entegrasyonlar', 'Eklentiler', 'Changelog'] },
-              { title: 'Destek', links: ['Dokümantasyon', 'API Referansı', 'SSS', 'Durum Sayfası', 'İletişim'] },
-              { title: 'Şirket', links: ['Hakkımızda', 'Blog', 'Kariyer', 'Basın', 'Bize Ulaşın'] },
+              { title: 'Ürün', links: [
+                { label: 'Özellikler', href: '#features' },
+                { label: 'Fiyatlandırma', href: '#pricing' },
+                { label: 'Eklentiler', href: '#addons' },
+                { label: 'SSS', href: '#faq' },
+              ]},
+              { title: 'Destek', links: [
+                { label: 'SSS', href: '#faq' },
+                { label: 'Giriş Yap', href: '/login' },
+                { label: 'Kayıt Ol', href: '/register' },
+              ]},
+              { title: 'Şirket', links: [
+                { label: 'Kayıt Ol', href: '/register' },
+                { label: 'Demo Talep Et', href: '/register' },
+              ]},
               { title: 'Yasal', links: [
                 { label: 'Gizlilik Politikası', href: '/gizlilik' },
                 { label: 'Kullanım Şartları', href: '/kullanim-sartlari' },
@@ -959,96 +880,6 @@ const agents = [
           </div>
         </div>
       </footer>
-
-      <div id="gu-chat-widget" className="fixed right-0 bottom-0 z-[3000000000]">
-        {chatOpen && (
-          <div className="bg-white rounded-2xl shadow-[0_8px_36px_rgba(0,0,0,0.16)] flex flex-col overflow-hidden fixed right-5 bottom-24"
-            style={{ width: '380px', height: '560px', maxHeight: 'calc(100% - 120px)' }}>
-            <div className="bg-[#7C4DF6] px-5 py-4 flex items-center gap-3 shrink-0">
-              <div className="relative">
-                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face&q=80" alt="" className="w-10 h-10 rounded-full object-cover border-2 border-white/30" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-semibold text-sm">Selin</p>
-                <p className="text-white/70 text-xs flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />Çevrimiçi
-                </p>
-              </div>
-              <button onClick={() => setLocale(locale === 'tr' ? 'en' : 'tr')} className="text-white/60 hover:text-white text-sm p-1">{locale === 'tr' ? '🇬🇧' : '🇹🇷'}</button>
-              <button onClick={() => setChatOpen(false)} className="text-white/60 hover:text-white p-1"><X className="w-4 h-4" /></button>
-            </div>
-
-            {showPreChat ? (
-              <div className="flex-1 flex items-center justify-center p-6 bg-[#F8F7FF]">
-                <form onSubmit={handlePreChatSubmit} className="w-full max-w-xs space-y-3">
-                  <div className="text-center mb-2">
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face&q=80" alt="" className="w-16 h-16 rounded-full mx-auto object-cover border-[3px] border-[#7C4DF6]" />
-                    <p className="font-semibold text-[#1C1933] text-sm mt-2">Canlı Yardım</p>
-                    <p className="text-xs text-[#7A758E]">Size nasıl yardımcı olabiliriz?</p>
-                  </div>
-                  <input value={preName} onChange={e => setPreName(e.target.value)} placeholder="Adınız" required className="w-full px-3.5 py-2.5 border border-[#E4E2EE] rounded-xl text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors bg-white" />
-                  <input value={preEmail} onChange={e => setPreEmail(e.target.value)} type="email" placeholder="E-posta" required className="w-full px-3.5 py-2.5 border border-[#E4E2EE] rounded-xl text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors bg-white" />
-                  <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">Başlayalım</button>
-                </form>
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8F7FF]">
-                {chatMessages.map((msg, idx) => {
-                  const isLast = idx === chatMessages.length - 1
-                  if (msg.sender === 'user') return (
-                    <div key={msg.id} className="flex justify-end">
-                      <div className="bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[220px] text-sm leading-relaxed">{msg.text}</div>
-                    </div>
-                  )
-                  return (
-                    <div key={msg.id} className="flex gap-2 items-start">
-                      <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face&q=80" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-                      <div className="bg-white rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm max-w-[220px]">
-                        <p className="text-xs font-semibold text-[#7C4DF6] mb-0.5">Selin</p>
-                        <p className="text-sm text-[#1C1933] leading-relaxed">{msg.text}</p>
-                        <p className="text-[10px] text-[#9690AE] mt-1">{isLast ? 'Az önce' : '2 dk önce'}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-                {chatMessages.length > 0 && chatMessages[chatMessages.length - 1]?.sender !== 'agent' && (
-                  <div className="flex gap-2 items-center">
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face&q=80" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-                    <div className="flex gap-1 bg-white rounded-2xl px-3.5 py-2.5 shadow-sm">
-                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      <span className="w-1.5 h-1.5 bg-[#C4C0D4] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!showPreChat && (
-              <div className="p-3 border-t border-[#F0EFF5] bg-white shrink-0">
-                <div className="flex gap-2 items-center">
-                  <button onClick={() => fileInputRef.current?.click()} className="text-[#9690AE] hover:text-[#7C4DF6] p-1 transition-colors shrink-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-                  </button>
-                  <input ref={fileInputRef} type="file" onChange={handleFileSelect} className="hidden" />
-                  <button onClick={() => setTranslateMode(!translateMode)} className={`p-1 transition-colors shrink-0 ${translateMode ? 'text-[#7C4DF6]' : 'text-[#9690AE] hover:text-[#7C4DF6]'}`}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                  </button>
-                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} placeholder="Mesaj yazın..." className="flex-1 px-4 py-2 bg-[#F5F4FA] border border-[#E4E2EE] rounded-full text-sm text-[#1C1933] outline-none focus:border-[#7C4DF6] transition-colors" />
-                  <button onClick={handleSendMessage} disabled={!chatInput.trim()} className="w-9 h-9 bg-gradient-to-r from-[#7C4DF6] to-[#9B7CF6] text-white rounded-full flex items-center justify-center shrink-0 disabled:opacity-50">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        <button onClick={handleToggleWidget}
-          className="w-[60px] h-[60px] rounded-full bg-[#7C4DF6] text-white flex items-center justify-center shadow-[0_4px_20px_rgba(124,77,246,0.4)] hover:scale-105 transition-transform fixed right-6 bottom-6 z-[3000000000] border-0 cursor-pointer">
-          {chatOpen ? <X className="w-5 h-5" /> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
-        </button>
-      </div>
 
     </div>
   )

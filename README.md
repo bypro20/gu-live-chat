@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gu Live Chat
 
-## Getting Started
+Crisp benzeri Türkçe canlı destek platformu (Next.js 16 + Socket.io + Prisma).
 
-First, run the development server:
+## Yerel Geliştirme
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:push
+npm run dev          # Next.js + Socket.io (server.ts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Dashboard: http://localhost:3000/dashboard
+- Widget test: `public/demo.html` veya `public/test-site.html`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production: Vercel + Ayrı Socket Sunucusu
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Vercel serverless `server.ts` / Socket.io çalıştıramaz.** Canlı sohbet, ziyaretçi izleme ve ekran paylaşımı için Socket.io ayrı deploy edilmelidir.
 
-## Learn More
+### 1. Next.js → Vercel
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel ortam değişkenleri (`.env.example`):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Değişken | Açıklama |
+|----------|----------|
+| `DATABASE_URL` | Turso/Postgres |
+| `AUTH_SECRET` | NextAuth |
+| `NEXT_PUBLIC_APP_URL` | `https://guchat.org` |
+| `NEXT_PUBLIC_SOCKET_URL` | Ayrı socket sunucusu URL'si |
+| `NEXT_PUBLIC_MARKETING_WEBSITE_ID` | guchat.org widget WEBSITE_ID |
 
-## Deploy on Vercel
+### 2. Socket.io → Railway / Fly.io / VPS
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run start:socket   # socket-server.ts, port 3001
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Aynı `DATABASE_URL` kullanın. CORS için `NEXT_PUBLIC_APP_URL=https://guchat.org` ayarlayın.
+
+Vercel'de `NEXT_PUBLIC_SOCKET_URL=https://socket.guchat.org` (örnek) tanımlayın.
+
+### Socket yokken
+
+Mesajlar REST API ile kaydedilir; gelen kutusu 4 sn polling ile güncellenir (socket bağlıyken 30 sn).
+
+## Widget Embed
+
+```html
+<script>
+  window.GU_WIDGET_URL = 'https://guchat.org'; // opsiyonel, same-origin ise gerekmez
+  window.$gu = window.$gu || function() { (window.$gu.q = window.$gu.q || []).push(arguments); };
+  $gu('set', 'WEBSITE_ID', 'YOUR_WEBSITE_ID');
+</script>
+<script async src="https://guchat.org/widget.js"></script>
+```
