@@ -810,10 +810,10 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-2.5">
                 {[
-                  { icon: MessageCircle, href: '#' },
-                  { icon: Mail, href: '#' },
-                  { icon: Globe, href: '#' },
-                  { icon: MessageSquare, href: '#' },
+                  { icon: MessageCircle, href: 'https://guchat.org' },
+                  { icon: Mail, href: 'mailto:destek@guchat.org' },
+                  { icon: Globe, href: 'https://guchat.org' },
+                  { icon: MessageSquare, href: '/register' },
                 ].map((social, i) => (
                   <a key={i} href={social.href}
                     className="w-9 h-9 rounded-xl bg-muted hover:bg-primary-light text-muted-foreground hover:text-primary flex items-center justify-center transition-all duration-200 hover:shadow-xs">
