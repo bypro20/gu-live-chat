@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
+import { resolveWebsite } from '@/lib/website-resolve'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -59,14 +60,19 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
 
-  if (!websiteId) {
+  if (!websiteIdParam) {
     return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
   }
 
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) {
+    return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+  }
+
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
 
   if (!member) {
@@ -74,7 +80,7 @@ export async function GET(req: Request) {
   }
 
   const ratings = await prisma.conversationRating.findMany({
-    where: { websiteId },
+    where: { websiteId: website.id },
     include: {
       conversation: {
         select: {

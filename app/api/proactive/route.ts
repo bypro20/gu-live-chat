@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -9,14 +10,22 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
 
-  if (!websiteId) {
+  if (!websiteIdParam) {
     return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
   }
 
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: website.id, userId: session.user.id },
+  })
+  if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
   const messages = await prisma.proactiveMessage.findMany({
-    where: { websiteId, isActive: true },
+    where: { websiteId: website.id, isActive: true },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -30,15 +39,23 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json()
-  const { websiteId, title, message, triggerType, triggerValue, targetPages, isActive, delay, showOnce } = body
+  const { websiteId: websiteIdParam, title, message, triggerType, triggerValue, targetPages, isActive, delay, showOnce } = body
 
-  if (!websiteId || !title || !message || !triggerType) {
+  if (!websiteIdParam || !title || !message || !triggerType) {
     return NextResponse.json({ error: 'Eksik alanlar: websiteId, title, message, triggerType' }, { status: 400 })
   }
 
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+  })
+  if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
   const proactive = await prisma.proactiveMessage.create({
     data: {
-      websiteId,
+      websiteId: website.id,
       title,
       message,
       triggerType,

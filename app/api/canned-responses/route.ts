@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 import { z } from 'zod'
 
 const cannedResponseSchema = z.object({
@@ -18,16 +19,19 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
-  if (!websiteId) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+  const websiteIdParam = searchParams.get('websiteId')
+  if (!websiteIdParam) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
   const responses = await prisma.cannedResponse.findMany({
-    where: { websiteId },
+    where: { websiteId: website.id },
     orderBy: { title: 'asc' },
   })
 
@@ -44,12 +48,15 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = cannedResponseSchema.parse(body)
 
+    const website = await resolveWebsite(validated.websiteId)
+    if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
     const member = await prisma.teamMember.findFirst({
-      where: { websiteId: validated.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
+      where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-    const response = await prisma.cannedResponse.create({ data: validated })
+    const response = await prisma.cannedResponse.create({ data: { ...validated, websiteId: website.id } })
     return NextResponse.json(response, { status: 201 })
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -9,25 +10,30 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
   const search = searchParams.get('search') || ''
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '25')
 
-  if (!websiteId) {
+  if (!websiteIdParam) {
     return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+  }
+
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) {
+    return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
   }
 
   // Verify membership
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
 
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
-  const where: Record<string, unknown> = { websiteId }
+  const where: Record<string, unknown> = { websiteId: website.id }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },

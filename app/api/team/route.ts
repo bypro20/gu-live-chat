@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -9,15 +10,20 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
 
-  if (!websiteId) {
+  if (!websiteIdParam) {
     return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+  }
+
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) {
+    return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
   }
 
   // Verify membership
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
 
   if (!member) {
@@ -25,7 +31,7 @@ export async function GET(req: Request) {
   }
 
   const team = await prisma.teamMember.findMany({
-    where: { websiteId },
+    where: { websiteId: website.id },
     include: {
       user: { select: { id: true, name: true, email: true, image: true } },
     },
@@ -43,15 +49,20 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json()
-    const { websiteId, email, role } = body
+    const { websiteId: websiteIdParam, email, role } = body
 
-    if (!websiteId || !email || !role) {
+    if (!websiteIdParam || !email || !role) {
       return NextResponse.json({ error: 'Tüm alanlar gerekli' }, { status: 400 })
+    }
+
+    const website = await resolveWebsite(websiteIdParam)
+    if (!website) {
+      return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
     }
 
     // Check inviter permission
     const inviter = await prisma.teamMember.findFirst({
-      where: { websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+      where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
 
     if (!inviter) {
@@ -69,7 +80,7 @@ export async function POST(req: Request) {
 
     // Check if already member
     const existing = await prisma.teamMember.findUnique({
-      where: { userId_websiteId: { userId: invitedUser.id, websiteId } },
+      where: { userId_websiteId: { userId: invitedUser.id, websiteId: website.id } },
     })
 
     if (existing) {
@@ -77,12 +88,7 @@ export async function POST(req: Request) {
     }
 
     // Check plan limits
-    const website = await prisma.website.findUnique({ where: { id: websiteId } })
-    if (!website) {
-      return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
-    }
-
-    const memberCount = await prisma.teamMember.count({ where: { websiteId } })
+    const memberCount = await prisma.teamMember.count({ where: { websiteId: website.id } })
     const { PLAN_LIMITS } = await import('@/lib/constants')
     const limits = PLAN_LIMITS[website.plan as keyof typeof PLAN_LIMITS]
     if (memberCount >= limits.maxAgents) {
@@ -92,7 +98,7 @@ export async function POST(req: Request) {
     const teamMember = await prisma.teamMember.create({
       data: {
         userId: invitedUser.id,
-        websiteId,
+        websiteId: website.id,
         role,
         invitedBy: session.user.id,
         invitedAt: new Date(),
