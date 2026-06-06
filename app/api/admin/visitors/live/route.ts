@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getLiveVisitors } from '@/lib/socket'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // GET /api/admin/visitors/live?websiteId=xxx
 export async function GET(req: Request) {
   try {
-    const session = await auth()
-    if (!session?.user || (session.user as any).role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 })
-    }
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
 
     const { searchParams } = new URL(req.url)
     const websiteIdFilter = searchParams.get('websiteId')
@@ -61,8 +59,12 @@ export async function GET(req: Request) {
             browser: s.visitor.browser,
             os: s.visitor.os,
             device: s.visitor.device,
-            country: s.visitor.country,
-            city: s.visitor.city,
+            country: s.visitor.country || s.country,
+            city: s.visitor.city || s.city,
+            ipAddress: s.ipAddress,
+            region: s.region,
+            latitude: s.latitude,
+            longitude: s.longitude,
             currentPage: s.currentPage,
             currentTitle: s.currentTitle,
             landingPage: s.landingPage,
@@ -112,8 +114,12 @@ export async function GET(req: Request) {
       browser: s.visitor.browser,
       os: s.visitor.os,
       device: s.visitor.device,
-      country: s.visitor.country,
-      city: s.visitor.city,
+      country: s.visitor.country || s.country,
+      city: s.visitor.city || s.city,
+      ipAddress: s.ipAddress,
+      region: s.region,
+      latitude: s.latitude,
+      longitude: s.longitude,
       currentPage: s.currentPage,
       currentTitle: s.currentTitle,
       landingPage: s.landingPage,

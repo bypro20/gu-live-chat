@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { getDeviceLabel, getBrowserLabel, formatTimeAgo, formatDuration } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
+import { useToast } from '@/lib/toast'
 
 interface VisitorDetail extends LiveVisitor {
   visitorName?: string
@@ -152,6 +153,7 @@ function getCountryCounts(visitors: LiveVisitor[]): Record<string, { count: numb
 }
 
 export default function AdminVisitorsPage() {
+  const { toast } = useToast()
   const [visitors, setVisitors] = useState<LiveVisitor[]>([])
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
@@ -165,7 +167,7 @@ export default function AdminVisitorsPage() {
     try {
       const [liveRes, historyRes] = await Promise.all([
         fetch('/api/admin/visitors/live'),
-        fetch('/api/visitors/history?page=1&limit=50'),
+        fetch('/api/admin/visitors/history?page=1&limit=50'),
       ])
       if (liveRes.ok) {
         const data = await liveRes.json()
@@ -275,13 +277,23 @@ export default function AdminVisitorsPage() {
     }
   }
 
-  const handleBan = (ip?: string | null) => {
+  const handleBan = async (ip?: string | null) => {
     if (!ip || !confirm(`${ip} adresini engellemek istediğinize emin misiniz?`)) return
-    fetch('/api/admin/ip-bans', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ipAddress: ip }),
-    }).then(() => alert('IP adresi engellendi'))
+    try {
+      const res = await fetch('/api/admin/ip-bans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ipAddress: ip, reason: 'Ziyaretçi panelinden engellendi' }),
+      })
+      if (res.ok) {
+        toast({ title: 'IP engellendi', description: ip, variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'IP engellenemedi', variant: 'error' })
+      }
+    } catch {
+      toast({ title: 'İşlem başarısız', variant: 'error' })
+    }
   }
 
   return (

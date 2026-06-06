@@ -70,6 +70,7 @@ export default function AdminLayout({
     { href: '/admin', icon: 'dashboard', label: 'Genel Bakış' },
     { href: '/admin/visitors', icon: 'visitors', label: 'Ekran İzleme' },
     { href: '/admin/users', icon: 'users', label: 'Kullanıcılar' },
+    { href: '/admin/ip-bans', icon: 'ipbans', label: 'IP Engelleme' },
     { href: '/admin/websites', icon: 'websites', label: 'Siteler' },
     { href: '/admin/settings', icon: 'settings', label: 'Ayarlar' },
   ]
@@ -92,7 +93,7 @@ export default function AdminLayout({
               </svg>
             </div>
             <div>
-              <span className="text-white font-bold text-lg">Gu Admin</span>
+              <span className="text-white font-bold text-lg">Guchat Admin</span>
               <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded uppercase">Admin</span>
             </div>
           </Link>
@@ -137,7 +138,7 @@ export default function AdminLayout({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="font-bold text-gray-900 dark:text-white">Gu Admin</span>
+          <span className="font-bold text-gray-900 dark:text-white">Guchat Admin</span>
         </div>
         {children}
       </main>
@@ -177,6 +178,11 @@ function NavLink({ href, icon, label, active }: { href: string; icon: string; la
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    ipbans: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
       </svg>
     ),
   }

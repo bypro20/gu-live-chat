@@ -16,7 +16,7 @@ async function main() {
     where: { email },
     create: {
       email,
-      name: 'Platform Admin',
+      name: 'Guchat Platform Admin',
       passwordHash,
       role: 'ADMIN',
     },

@@ -19,6 +19,8 @@ interface AdminStats {
   totalRevenue: number
   paidWebsites: number
   trialWebsites: number
+  bannedUsers: number
+  totalIpBans: number
   planDistribution: { plan: string; count: number }[]
   recentUsers: Array<{ id: string; email: string; name: string | null; role: string; createdAt: string; _count: { websites: number } }>
   recentWebsites: Array<{ id: string; name: string; domain: string; plan: string; owner: { email: string } | null; createdAt: string }>
@@ -64,11 +66,11 @@ const statCards = [
   { key: 'activeVisitors', label: 'Aktif Ziyaretçi', icon: Eye, color: 'emerald', href: '/admin/visitors', highlight: true },
   { key: 'totalUsers', label: 'Toplam Kullanıcı', icon: Users, color: 'blue', href: '/admin/users' },
   { key: 'totalWebsites', label: 'Kayıtlı Site', icon: Globe, color: 'sky', href: '/admin/websites' },
+  { key: 'bannedUsers', label: 'Banlı Kullanıcı', icon: Shield, color: 'orange', href: '/admin/users' },
+  { key: 'totalIpBans', label: 'IP Engeli', icon: Shield, color: 'amber', href: '/admin/ip-bans' },
   { key: 'totalConversations', label: 'Toplam Sohbet', icon: MessageSquare, color: 'orange' },
   { key: 'totalMessages', label: 'Toplam Mesaj', icon: Mail, color: 'cyan' },
   { key: 'paidWebsites', label: 'Ücretli Site', icon: CreditCard, color: 'green' },
-  { key: 'trialWebsites', label: 'Deneme Sürecindeki', icon: Clock, color: 'amber' },
-  { key: 'addonPurchases', label: 'Eklenti Satın Alma', icon: Puzzle, color: 'teal' },
 ]
 
 const colorMap: Record<string, { bg: string; text: string; ring: string; bar: string }> = {
@@ -133,6 +135,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0, totalWebsites: 0, totalConversations: 0, totalMessages: 0,
     activeVisitors: 0, totalRevenue: 0, paidWebsites: 0, trialWebsites: 0,
+    bannedUsers: 0, totalIpBans: 0,
     planDistribution: [], recentUsers: [], recentWebsites: [],
     addonPurchases: 0, addonRevenue: 0,
   })
@@ -283,6 +286,10 @@ export default function AdminDashboardPage() {
                       <Link href="/admin/visitors" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors">
                         <Activity className="w-4 h-4 text-emerald-400" />
                         Canlı Ziyaretçiler
+                      </Link>
+                      <Link href="/admin/ip-bans" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors">
+                        <Shield className="w-4 h-4 text-amber-400" />
+                        IP Engelleme
                       </Link>
                       <div className="border-t border-white/10 my-1" />
                       <button onClick={() => { setDropdownOpen(false); loadStats() }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors w-full text-left">
@@ -523,6 +530,7 @@ export default function AdminDashboardPage() {
               <QuickActionButton href="/admin/websites" icon={Globe} label="Siteleri Yönet" color="sky" />
               <QuickActionButton href="/admin/settings" icon={Settings} label="Platform Ayarları" color="gray" />
               <QuickActionButton href="/admin/visitors" icon={Activity} label="Canlı Ziyaretçiler" color="emerald" />
+              <QuickActionButton href="/admin/ip-bans" icon={Shield} label="IP Engelleme" color="amber" />
             </div>
           </div>
 
@@ -620,6 +628,7 @@ function QuickActionButton({ href, icon: Icon, label, color }: {
     sky: 'text-sky-400 bg-sky-500/10 border-sky-500/20 hover:bg-sky-500/20',
     gray: 'text-gray-400 bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08]',
     emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20',
+    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20',
   }
   return (
     <Link

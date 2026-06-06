@@ -1,25 +1,16 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
-    }
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 })
-    }
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
 
     const [
       totalUsers, totalWebsites, totalConversations, totalMessages,
       paidWebsites, trialWebsites, addonPurchases,
-      invoices, addonInvoices,
+      invoices, bannedUsers, totalIpBans,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.website.count(),
@@ -29,7 +20,8 @@ export async function GET() {
       prisma.website.count({ where: { trialUsed: true } }),
       prisma.addonPurchase.count({ where: { isActive: true } }),
       prisma.invoice.findMany({ where: { status: 'PAID' }, select: { amount: true } }),
-      prisma.addonPurchase.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { isBanned: true } }),
+      prisma.ipBan.count(),
     ])
 
     const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amount, 0)
@@ -66,8 +58,13 @@ export async function GET() {
       totalRevenue: Math.round(totalRevenue / 100),
       paidWebsites,
       trialWebsites,
+      bannedUsers,
+      totalIpBans,
       planDistribution: planDistribution.map(p => ({ plan: p.plan, count: p._count.id })),
-      recentUsers,
+      recentUsers: recentUsers.map(u => ({
+        ...u,
+        _count: { websites: u._count.ownedWebsites },
+      })),
       recentWebsites,
       addonPurchases,
       addonRevenue: addonPurchases * 0,

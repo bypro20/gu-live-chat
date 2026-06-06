@@ -1,28 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { banIpAddress, unbanIpAddress } from '@/lib/ip-ban'
+import { requireAdmin } from '@/lib/admin-auth'
 import { z } from 'zod'
 
 const banSchema = z.object({
   ipAddress: z.string().min(7, 'Geçerli bir IP adresi girin'),
   reason: z.string().optional(),
+  expiresAt: z.string().datetime().optional().nullable(),
 })
-
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 }) }
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true, id: true },
-  })
-  if (!user || user.role !== 'ADMIN') {
-    return { error: NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 }) }
-  }
-  return { user }
-}
 
 export async function GET() {
   const check = await requireAdmin()
@@ -42,7 +28,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const validated = banSchema.parse(body)
-    const ban = await banIpAddress(validated.ipAddress, validated.reason, check.user.id)
+    const expiresAt = validated.expiresAt ? new Date(validated.expiresAt) : null
+    const ban = await banIpAddress(
+      validated.ipAddress.trim(),
+      validated.reason,
+      check.user.id,
+      expiresAt
+    )
     return NextResponse.json(ban, { status: 201 })
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {

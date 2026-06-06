@@ -58,7 +58,7 @@ export default function AdminSettingsPage() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="email"
-                  defaultValue="destek@gulive.com"
+                  defaultValue="destek@guchat.org"
                   className="w-full h-11 rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
                 />
               </div>

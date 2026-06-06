@@ -6,7 +6,14 @@ export async function isIpBanned(ip: string | null): Promise<boolean> {
   const ipBan = await prisma.ipBan.findUnique({
     where: { ipAddress: ip },
   })
-  if (ipBan) return true
+
+  if (ipBan) {
+    if (ipBan.expiresAt && ipBan.expiresAt < new Date()) {
+      await prisma.ipBan.delete({ where: { id: ipBan.id } }).catch(() => {})
+      return false
+    }
+    return true
+  }
 
   const userWithBannedIp = await prisma.user.findFirst({
     where: { bannedIp: ip, isBanned: true },
@@ -16,11 +23,25 @@ export async function isIpBanned(ip: string | null): Promise<boolean> {
   return !!userWithBannedIp
 }
 
-export async function banIpAddress(ip: string, reason?: string, bannedBy?: string) {
+export async function banIpAddress(
+  ip: string,
+  reason?: string,
+  bannedBy?: string,
+  expiresAt?: Date | null
+) {
   return prisma.ipBan.upsert({
     where: { ipAddress: ip },
-    create: { ipAddress: ip, reason: reason || null, bannedBy: bannedBy || null },
-    update: { reason: reason || null, bannedBy: bannedBy || null },
+    create: {
+      ipAddress: ip,
+      reason: reason || null,
+      bannedBy: bannedBy || null,
+      expiresAt: expiresAt || null,
+    },
+    update: {
+      reason: reason || null,
+      bannedBy: bannedBy || null,
+      expiresAt: expiresAt || null,
+    },
   })
 }
 

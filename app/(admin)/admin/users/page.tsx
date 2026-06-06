@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   Search, Shield, Ban, VolumeX, Trash2, UserPlus, Globe, Mail,
   Calendar, MoreHorizontal, X, Check, AlertTriangle, Filter,
-  ArrowUpDown, Clock, UserCheck, UserX, Hash, Loader2
+  ArrowUpDown, Clock, UserCheck, UserX, Hash, Loader2, MapPin
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -13,11 +13,20 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { useToast } from '@/lib/toast'
 
 interface Website {
   id: string
   name: string
   domain: string
+}
+
+interface GeoInfo {
+  country: string | null
+  countryCode: string | null
+  city: string | null
+  region: string | null
+  isp: string | null
 }
 
 interface User {
@@ -34,6 +43,7 @@ interface User {
   createdAt: string
   _count: { ownedWebsites: number }
   ownedWebsites?: Website[]
+  geo?: GeoInfo | null
 }
 
 interface BanModalData {
@@ -47,6 +57,7 @@ interface MuteModalData {
 }
 
 export default function AdminUsersPage() {
+  const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -75,11 +86,28 @@ export default function AdminUsersPage() {
   const loadUsers = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/users')
-      if (res.ok) setUsers(await res.json())
-    } catch (err) {
-      console.error('Failed to load users:', err)
+      if (res.ok) {
+        setUsers(await res.json())
+      } else {
+        toast({ title: 'Kullanıcılar yüklenemedi', variant: 'error' })
+      }
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setLoading(false)
+    }
+  }, [toast])
+
+  const loadUserDetail = useCallback(async (userId: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`)
+      if (res.ok) {
+        const detail = await res.json()
+        setSelectedUser(detail)
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...detail } : u))
+      }
+    } catch {
+      // Detail panel still works with list data
     }
   }, [])
 
@@ -115,9 +143,13 @@ export default function AdminUsersPage() {
         const updated = await res.json()
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updated } : u))
         if (selectedUser?.id === userId) setSelectedUser(prev => prev ? { ...prev, ...updated } : null)
+        toast({ title: 'İşlem başarılı', variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'İşlem başarısız', variant: 'error' })
       }
-    } catch (err) {
-      console.error(`Failed ${action}:`, err)
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -140,9 +172,13 @@ export default function AdminUsersPage() {
         setAddName('')
         setAddPassword('')
         setAddRole('USER')
+        toast({ title: 'Kullanıcı oluşturuldu', description: created.email, variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'Kullanıcı oluşturulamadı', variant: 'error' })
       }
-    } catch (err) {
-      console.error('Failed to create user:', err)
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -158,9 +194,13 @@ export default function AdminUsersPage() {
         setShowDeleteModal(false)
         setSelectedUser(null)
         setShowDetail(false)
+        toast({ title: 'Kullanıcı silindi', variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'Silme başarısız', variant: 'error' })
       }
-    } catch (err) {
-      console.error('Failed to delete user:', err)
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -183,9 +223,13 @@ export default function AdminUsersPage() {
         setBanReason('')
         setBanIpToo(false)
         setBanData(null)
+        toast({ title: 'Kullanıcı banlandı', variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'Ban işlemi başarısız', variant: 'error' })
       }
-    } catch (err) {
-      console.error('Failed to ban:', err)
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -210,9 +254,13 @@ export default function AdminUsersPage() {
         setShowMuteModal(false)
         setMuteData(null)
         setMuteDuration('1h')
+        toast({ title: 'Kullanıcı susturuldu', variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'Susturma başarısız', variant: 'error' })
       }
-    } catch (err) {
-      console.error('Failed to mute:', err)
+    } catch {
+      toast({ title: 'Bağlantı hatası', variant: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -327,7 +375,7 @@ export default function AdminUsersPage() {
                   return (
                     <tr
                       key={user.id}
-                      onClick={() => { setSelectedUser(user); setShowDetail(true) }}
+                      onClick={() => { setSelectedUser(user); setShowDetail(true); loadUserDetail(user.id) }}
                       className={cn(
                         'group cursor-pointer transition-all duration-300 hover:bg-accent/50',
                         'animate-in-up',
@@ -374,7 +422,7 @@ export default function AdminUsersPage() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            onClick={() => { setSelectedUser(user); setShowDetail(true) }}
+                            onClick={() => { setSelectedUser(user); setShowDetail(true); loadUserDetail(user.id) }}
                           >
                             <MoreHorizontal className="size-3.5" />
                           </Button>
@@ -452,6 +500,30 @@ export default function AdminUsersPage() {
                       : 'Hiç görülmedi'}
                   </p>
                 </div>
+                {selectedUser.lastIp && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">IP Adresi</p>
+                    <p className="text-sm font-mono">{selectedUser.lastIp}</p>
+                  </div>
+                )}
+                {selectedUser.geo && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">Konum</p>
+                    <p className="text-sm flex items-center gap-1.5">
+                      <MapPin className="size-3.5 text-primary" />
+                      {[selectedUser.geo.city, selectedUser.geo.region, selectedUser.geo.country].filter(Boolean).join(', ') || 'Bilinmiyor'}
+                      {selectedUser.geo.isp && (
+                        <span className="text-xs text-muted-foreground">({selectedUser.geo.isp})</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+                {selectedUser.banReason && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">Ban Sebebi</p>
+                    <p className="text-sm text-destructive">{selectedUser.banReason}</p>
+                  </div>
+                )}
               </div>
 
               <Separator />

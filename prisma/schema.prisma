@@ -114,11 +114,15 @@ model Website {
   avatarUrl     String?
   welcomeMessage String        @default("Merhaba! Size nasıl yardımcı olabiliriz?")
   offlineMessage String        @default("Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.")
+  showPreChatForm Boolean      @default(false)
+  requireName     Boolean      @default(true)
+  requireEmail    Boolean      @default(true)
 
   // Relations
   ownerId         String
   owner           User           @relation("WebsiteOwner", fields: [ownerId], references: [id])
   members         TeamMember[]
+  teamInvites     TeamInvite[]
   conversations   Conversation[]
   visitors        Visitor[]
   cannedResponses CannedResponse[]
@@ -176,6 +180,23 @@ model TeamMember {
 
   @@unique([userId, websiteId])
   @@map("team_members")
+}
+
+model TeamInvite {
+  id         String    @id @default(cuid())
+  email      String
+  role       TeamRole  @default(MEMBER)
+  token      String    @unique @default(cuid())
+  websiteId  String
+  invitedBy  String
+  invitedAt  DateTime  @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([email, websiteId])
+  @@map("team_invites")
 }
 
 enum TeamRole {
@@ -349,9 +370,13 @@ model Conversation {
   lastMessagePreview String?
   unreadCount       Int      @default(0)
 
-  // Chatbot
-  chatbotId    String?
-  chatbot      Chatbot?  @relation(fields: [chatbotId], references: [id])
+  // Chatbot flow state
+  chatbotId         String?
+  chatbot           Chatbot?  @relation(fields: [chatbotId], references: [id])
+  chatbotStepIndex  Int       @default(0)
+  chatbotCompleted  Boolean   @default(false)
+  chatbotHandedToAi Boolean   @default(false)
+  visitorLang       String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -397,6 +422,7 @@ model Message {
   content        String
   type           MessageType @default(TEXT)
   senderType     SenderType
+  sentiment      String?    // POSITIVE | NEUTRAL | NEGATIVE
 
   // For agent messages
   senderId       String?
@@ -531,7 +557,8 @@ model Chatbot {
   name        String
   description String?
   isActive    Boolean  @default(true)
-  trigger     ChatbotTrigger @default(ALL_CONVERSATIONS)
+  trigger       ChatbotTrigger @default(ALL_CONVERSATIONS)
+  triggerValue  String?        // KEYWORD: comma-separated keywords
 
   steps       ChatbotStep[]
   conversations Conversation[]
@@ -897,14 +924,29 @@ model StatusPage {
   twitterHandle String?
   showHistory   Boolean  @default(true)
 
-  website    Website            @relation(fields: [websiteId], references: [id], onDelete: Cascade)
-  components StatusPageComponent[]
-  incidents  Incident[]
+  website      Website                @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  components   StatusPageComponent[]
+  incidents    Incident[]
+  subscribers  StatusPageSubscriber[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("status_pages")
+}
+
+model StatusPageSubscriber {
+  id           String   @id @default(cuid())
+  statusPageId String
+  email        String
+  isActive     Boolean  @default(true)
+
+  statusPage StatusPage @relation(fields: [statusPageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([statusPageId, email])
+  @@map("status_page_subscribers")
 }
 
 model StatusPageComponent {
@@ -1231,11 +1273,12 @@ model DataRetentionPolicy {
 // ─── IP BAN LIST ────────────────────────────────────────────────
 
 model IpBan {
-  id        String   @id @default(cuid())
-  ipAddress String   @unique
+  id        String    @id @default(cuid())
+  ipAddress String    @unique
   reason    String?
   bannedBy  String?
-  createdAt DateTime @default(now())
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
 
   @@map("ip_bans")
 }

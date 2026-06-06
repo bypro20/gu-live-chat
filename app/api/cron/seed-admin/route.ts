@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12)
     const user = await prisma.user.upsert({
       where: { email },
-      create: { email, name: 'Platform Admin', passwordHash, role: 'ADMIN' },
+      create: { email, name: 'Guchat Platform Admin', passwordHash, role: 'ADMIN' },
       update: { passwordHash, role: 'ADMIN' },
     })
     return NextResponse.json({ message: 'Admin user ready', email: user.email, role: user.role })

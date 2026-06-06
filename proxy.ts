@@ -1,7 +1,46 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function proxy(req: NextRequest) {
+function getClientIp(req: NextRequest): string | null {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) {
+    const ip = forwarded.split(',')[0]?.trim()
+    if (ip) return ip
+  }
+  const realIp = req.headers.get('x-real-ip')
+  if (realIp) return realIp.trim()
+  return null
+}
+
+const IP_CHECK_PATHS = ['/register', '/api/register', '/api/widget', '/login', '/admin-login']
+
+async function checkIpBan(req: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = req.nextUrl
+  const shouldCheck = IP_CHECK_PATHS.some((p) => pathname.startsWith(p))
+  if (!shouldCheck) return null
+
+  const ip = getClientIp(req)
+  if (!ip) return null
+
+  try {
+    const { isIpBanned } = await import('@/lib/ip-ban')
+    if (await isIpBanned(ip)) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+      }
+      return new NextResponse('Erişim engellendi', { status: 403 })
+    }
+  } catch {
+    // Fail open if DB unavailable in edge context
+  }
+
+  return null
+}
+
+export async function proxy(req: NextRequest) {
+  const ipBlock = await checkIpBan(req)
+  if (ipBlock) return ipBlock
+
   const { pathname } = req.nextUrl
 
   // Legacy admin login URL alias

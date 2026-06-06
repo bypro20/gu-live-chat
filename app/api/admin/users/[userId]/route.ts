@@ -1,28 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 import { banIpAddress } from '@/lib/ip-ban'
-import { getClientIp } from '@/lib/ip-utils'
+import { lookupIpGeo } from '@/lib/geo'
+import { mapAdminUser } from '@/lib/admin-users'
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
+
+    const { userId } = await params
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isBanned: true,
+        isMuted: true,
+        bannedIp: true,
+        banReason: true,
+        bannedAt: true,
+        mutedUntil: true,
+        lastSeenAt: true,
+        lastIp: true,
+        createdAt: true,
+        _count: {
+          select: {
+            ownedWebsites: true,
+            assignedConversations: true,
+          },
+        },
+        ownedWebsites: {
+          select: { id: true, name: true, domain: true, plan: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 })
+    }
+
+    const geo = user.lastIp ? await lookupIpGeo(user.lastIp) : null
+
+    return NextResponse.json({
+      ...mapAdminUser(user),
+      geo,
+    })
+  } catch (error) {
+    console.error('Admin get user error:', error)
+    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+  }
+}
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
-    }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-
-    if (!currentUser || currentUser.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 })
-    }
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
+    const session = check.user
 
     const { userId } = await params
     const body = await req.json()
@@ -36,9 +81,14 @@ export async function PATCH(
 
     switch (action) {
       case 'ban': {
-        if (userId === session.user.id) {
+        if (userId === session.id) {
           return NextResponse.json({ error: 'Kendinizi yasaklayamazsınız' }, { status: 400 })
         }
+
+        const targetUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { lastIp: true },
+        })
 
         const data: Record<string, unknown> = {
           isBanned: true,
@@ -46,12 +96,9 @@ export async function PATCH(
           bannedAt: new Date(),
         }
 
-        if (body.banIp) {
-          const forwarded = req.headers.get('x-forwarded-for')
-          const ip = forwarded?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null
-          if (ip) {
-            data.bannedIp = ip
-          }
+        if (body.banIp && targetUser?.lastIp) {
+          data.bannedIp = targetUser.lastIp
+          await banIpAddress(targetUser.lastIp, body.reason || 'Admin tarafından engellendi', session.id)
         }
 
         updated = await prisma.user.update({
@@ -67,6 +114,11 @@ export async function PATCH(
             bannedIp: true,
             banReason: true,
             bannedAt: true,
+            mutedUntil: true,
+            lastSeenAt: true,
+            lastIp: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
@@ -91,18 +143,31 @@ export async function PATCH(
             bannedIp: true,
             banReason: true,
             bannedAt: true,
+            mutedUntil: true,
+            lastSeenAt: true,
+            lastIp: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
       }
 
       case 'mute': {
-        const duration = body.duration || 3600000
+        let mutedUntil: Date | null = new Date(Date.now() + 3600000)
+        if (body.durationSeconds === null) {
+          mutedUntil = null
+        } else if (body.durationSeconds != null) {
+          mutedUntil = new Date(Date.now() + body.durationSeconds * 1000)
+        } else if (body.duration != null) {
+          mutedUntil = new Date(Date.now() + body.duration)
+        }
+
         updated = await prisma.user.update({
           where: { id: userId },
           data: {
             isMuted: true,
-            mutedUntil: new Date(Date.now() + duration),
+            mutedUntil,
           },
           select: {
             id: true,
@@ -112,6 +177,10 @@ export async function PATCH(
             isBanned: true,
             isMuted: true,
             mutedUntil: true,
+            lastSeenAt: true,
+            lastIp: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
@@ -132,6 +201,10 @@ export async function PATCH(
             isBanned: true,
             isMuted: true,
             mutedUntil: true,
+            lastSeenAt: true,
+            lastIp: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
@@ -146,7 +219,7 @@ export async function PATCH(
         if (!ip) {
           return NextResponse.json({ error: 'Kullanıcının IP adresi bulunamadı' }, { status: 400 })
         }
-        await banIpAddress(ip, body.reason || 'Admin tarafından engellendi', session.user.id)
+        await banIpAddress(ip, body.reason || 'Admin tarafından engellendi', session.id, body.expiresAt ? new Date(body.expiresAt) : null)
         updated = await prisma.user.update({
           where: { id: userId },
           data: { bannedIp: ip },
@@ -161,6 +234,9 @@ export async function PATCH(
             banReason: true,
             bannedAt: true,
             lastIp: true,
+            lastSeenAt: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
@@ -173,7 +249,7 @@ export async function PATCH(
           return NextResponse.json({ error: 'Geçersiz rol' }, { status: 400 })
         }
 
-        if (userId === session.user.id && role !== 'ADMIN') {
+        if (userId === session.id && role !== 'ADMIN') {
           return NextResponse.json({ error: 'Kendi admin yetkinizi kaldıramazsınız' }, { status: 400 })
         }
 
@@ -187,6 +263,10 @@ export async function PATCH(
             role: true,
             isBanned: true,
             isMuted: true,
+            lastSeenAt: true,
+            lastIp: true,
+            createdAt: true,
+            _count: { select: { ownedWebsites: true } },
           },
         })
         break
@@ -196,7 +276,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'Geçersiz işlem' }, { status: 400 })
     }
 
-    return NextResponse.json(updated)
+    return NextResponse.json(mapAdminUser(updated as Parameters<typeof mapAdminUser>[0]))
   } catch (error) {
     console.error('Admin update user error:', error)
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
@@ -208,24 +288,12 @@ export async function DELETE(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
-    }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-
-    if (!currentUser || currentUser.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 })
-    }
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
 
     const { userId } = await params
 
-    if (userId === session.user.id) {
+    if (userId === check.user.id) {
       return NextResponse.json({ error: 'Kendinizi silemezsiniz' }, { status: 400 })
     }
 
