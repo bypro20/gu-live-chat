@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { canPerformAction } from '@/lib/subscription'
+import { websiteHasAiAssistant } from '@/lib/plan-features'
 
 // POST /api/ai/suggest
 // Body: { websiteId: string, context: string, visitorActivity?: string }
@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Bu siteye erişim izniniz yok' }, { status: 403 })
     }
 
-    // Check plan: AI Assistant requires PRO or BUSINESS
-    const hasAI = canPerformAction(website.plan, 'aiAssistant')
+    const hasAI = await websiteHasAiAssistant(website.id, website.plan)
     if (!hasAI) {
       return NextResponse.json({
         error: 'AI asistan profesyonel ve iş paketlerinde kullanılabilir',
@@ -52,10 +51,12 @@ export async function POST(req: NextRequest) {
       }, { status: 403 })
     }
 
-    // Check if AI config exists and is active
     const aiConfig = website.aiConfig
     if (!aiConfig || !aiConfig.isActive) {
       return NextResponse.json({ error: 'AI yapılandırması aktif değil' }, { status: 400 })
+    }
+    if (!aiConfig.autoSuggest) {
+      return NextResponse.json({ error: 'AI öneri özelliği kapalı' }, { status: 403 })
     }
 
     // Build system prompt

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { PLAN_LIMITS } from '@/lib/constants'
+import { websiteHasAutoTranslate } from '@/lib/plan-features'
 
 export async function POST(req: Request) {
   // Auth required — this endpoint uses server-side API keys
@@ -20,13 +20,16 @@ export async function POST(req: Request) {
   if (websiteId) {
     const website = await prisma.website.findUnique({
       where: { websiteId },
-      select: { plan: true },
+      select: { id: true, plan: true },
     })
-    if (website && !PLAN_LIMITS[website.plan].autoTranslate) {
-      return NextResponse.json(
-        { error: 'Otomatik çeviri bu plan kapsamında mevcut değil', translatedText: text },
-        { status: 403 }
-      )
+    if (website) {
+      const allowed = await websiteHasAutoTranslate(website.id, website.plan)
+      if (!allowed) {
+        return NextResponse.json(
+          { error: 'Otomatik çeviri bu plan kapsamında mevcut değil', upgradeRequired: true, translatedText: text },
+          { status: 403 }
+        )
+      }
     }
   }
 

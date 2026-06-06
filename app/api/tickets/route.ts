@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
+import { runWorkflows } from '@/lib/workflow-runner'
 import { z } from 'zod'
 
 const createTicketSchema = z.object({
@@ -41,12 +44,18 @@ export async function GET(req: Request) {
 
   if (!websiteId) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
 
+  const website = await resolveWebsite(websiteId)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-  const where: Record<string, unknown> = { websiteId }
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'ticketing')
+  if (planDenied) return planDenied
+
+  const where: Record<string, unknown> = { websiteId: website.id }
 
   if (status) where.status = status
   if (priority) where.priority = priority
@@ -91,14 +100,20 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = createTicketSchema.parse(body)
 
+    const website = await resolveWebsite(validated.websiteId)
+    if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
     const member = await prisma.teamMember.findFirst({
-      where: { websiteId: validated.websiteId, userId: session.user.id },
+      where: { websiteId: website.id, userId: session.user.id },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'ticketing')
+    if (planDenied) return planDenied
+
     const ticket = await prisma.ticket.create({
       data: {
-        websiteId: validated.websiteId,
+        websiteId: website.id,
         requesterEmail: validated.requesterEmail,
         requesterName: validated.requesterName,
         subject: validated.subject,
@@ -113,6 +128,12 @@ export async function POST(req: Request) {
         assignedTo: { select: { id: true, name: true, image: true } },
         tags: { include: { tag: true } },
       },
+    })
+
+    await runWorkflows('TICKET_CREATED', {
+      websiteDbId: website.id,
+      websitePublicId: website.websiteId,
+      ticketId: ticket.id,
     })
 
     return NextResponse.json(ticket, { status: 201 })
@@ -137,13 +158,19 @@ export async function PUT(req: Request) {
 
     const validated = updateTicketSchema.parse(data)
 
-    const ticket = await prisma.ticket.findUnique({ where: { id } })
+    const ticket = await prisma.ticket.findUnique({
+      where: { id },
+      include: { website: { select: { id: true, plan: true, websiteId: true } } },
+    })
     if (!ticket) return NextResponse.json({ error: 'Ticket bulunamadı' }, { status: 404 })
 
     const member = await prisma.teamMember.findFirst({
       where: { websiteId: ticket.websiteId, userId: session.user.id },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(ticket.website.id, ticket.website.plan, 'ticketing')
+    if (planDenied) return planDenied
 
     const updateData: Record<string, unknown> = {}
     if (validated.subject !== undefined) updateData.subject = validated.subject
@@ -172,6 +199,12 @@ export async function PUT(req: Request) {
         assignedTo: { select: { id: true, name: true, image: true } },
         tags: { include: { tag: true } },
       },
+    })
+
+    await runWorkflows('TICKET_UPDATED', {
+      websiteDbId: ticket.websiteId,
+      websitePublicId: ticket.website.websiteId,
+      ticketId: id,
     })
 
     return NextResponse.json(updated)

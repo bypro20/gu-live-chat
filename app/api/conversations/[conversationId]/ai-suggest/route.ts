@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateAiReply } from '@/lib/ai/provider'
 import { loadKnowledge, toChatMessages } from '@/lib/ai/knowledge'
+import { loadVisitorContext } from '@/lib/ai/visitor-context'
+import { websiteHasAiAssistant } from '@/lib/plan-features'
 
 const HISTORY_LIMIT = 12
 
@@ -29,7 +31,8 @@ export async function POST(
       select: {
         id: true,
         websiteId: true,
-        website: { select: { id: true, name: true, aiConfig: true } },
+        visitorId: true,
+        website: { select: { id: true, name: true, plan: true, aiConfig: true } },
       },
     })
 
@@ -59,14 +62,31 @@ export async function POST(
       })
     }
 
-    const knowledge = await loadKnowledge(conversation.websiteId)
+    const hasAi = await websiteHasAiAssistant(
+      conversation.website.id,
+      conversation.website.plan
+    )
+    if (!hasAi) {
+      return NextResponse.json(
+        { error: 'AI asistan bu plan kapsamında mevcut değil', upgradeRequired: true },
+        { status: 403 }
+      )
+    }
+
     const aiConfig = conversation.website.aiConfig
+    if (!aiConfig?.isActive || !aiConfig.autoSuggest) {
+      return NextResponse.json({ error: 'AI öneri özelliği kapalı' }, { status: 403 })
+    }
+
+    const knowledge = await loadKnowledge(conversation.websiteId)
+    const visitorContext = await loadVisitorContext(conversation.visitorId)
 
     const suggestion = await generateAiReply({
       siteName: conversation.website.name,
       messages,
       knowledge,
-      systemPrompt: aiConfig?.systemPrompt || undefined,
+      visitorContext,
+      systemPrompt: aiConfig.systemPrompt || undefined,
       dbConfig: aiConfig
         ? {
             provider: aiConfig.provider,

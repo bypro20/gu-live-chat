@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface ChannelIntegration {
   id: string
@@ -56,6 +58,7 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; type: string; 
 }
 
 export default function ChannelsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('multiChannel')
   const { activeWebsite } = useActiveWebsite()
   const [channels, setChannels] = useState<ChannelIntegration[]>([])
   const [loading, setLoading] = useState(true)
@@ -127,6 +130,10 @@ export default function ChannelsPage() {
     }
     setConfigModal(null)
     fetchChannels()
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="multiChannel" />
   }
 
   return (

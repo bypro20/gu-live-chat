@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
 import { sendEmail } from '@/lib/email'
-import { PLAN_LIMITS } from '@/lib/constants'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 // POST /api/campaigns/send — Send a campaign to its target audience
 // Supports EMAIL type campaigns only for now.
@@ -37,13 +37,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
     }
 
-    // Plan gate
-    if (!PLAN_LIMITS[campaign.website.plan].campaigns) {
-      return NextResponse.json(
-        { error: 'Kampanya gönderme bu plan kapsamında mevcut değil' },
-        { status: 403 }
-      )
-    }
+    const planDenied = await planFeatureDeniedAsync(campaign.website.id, campaign.website.plan, 'campaigns')
+    if (planDenied) return planDenied
 
     if (campaign.type !== 'EMAIL') {
       return NextResponse.json(

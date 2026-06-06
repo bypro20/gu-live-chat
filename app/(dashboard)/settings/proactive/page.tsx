@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface ProactiveMessage {
   id: string
@@ -34,6 +36,7 @@ const TRIGGER_PLACEHOLDERS: Record<string, string> = {
 }
 
 export default function ProactiveSettingsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('proactiveMessages')
   const { activeWebsite } = useActiveWebsite()
   const [messages, setMessages] = useState<ProactiveMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -150,6 +153,14 @@ export default function ProactiveSettingsPage() {
       })
       fetchMessages()
     } catch {}
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="proactiveMessages" />
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="proactiveMessages" />
   }
 
   return (

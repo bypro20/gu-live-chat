@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface Campaign {
   id: string
@@ -49,9 +51,11 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function CampaignsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('campaigns')
   const { activeWebsite } = useActiveWebsite()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
+  const [sendingId, setSendingId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({
     name: '', description: '', type: 'EMAIL' as Campaign['type'],
@@ -102,6 +106,33 @@ export default function CampaignsPage() {
     if (!confirm('Bu kampanyayı silmek istediğinize emin misiniz?')) return
     await fetch(`/api/campaigns?id=${id}`, { method: 'DELETE' })
     fetchCampaigns()
+  }
+
+  const sendCampaign = async (id: string) => {
+    if (!confirm('Bu kampanyayı şimdi göndermek istediğinize emin misiniz?')) return
+    setSendingId(id)
+    try {
+      const res = await fetch('/api/campaigns/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaignId: id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(data.error || 'Kampanya gönderilemedi')
+        return
+      }
+      alert(`Kampanya gönderildi: ${data.sent ?? 0} alıcı`)
+      fetchCampaigns()
+    } catch {
+      alert('Kampanya gönderilemedi')
+    } finally {
+      setSendingId(null)
+    }
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="campaigns" />
   }
 
   return (
@@ -249,6 +280,15 @@ export default function CampaignsPage() {
                           {c.status === 'DRAFT' && (
                             <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">Aktifleştir</button>
                           )}
+                          {c.status === 'ACTIVE' && c.type === 'EMAIL' && (
+                            <button
+                              onClick={() => sendCampaign(c.id)}
+                              disabled={sendingId === c.id}
+                              className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition disabled:opacity-50"
+                            >
+                              {sendingId === c.id ? 'Gönderiliyor...' : 'Gönder'}
+                            </button>
+                          )}
                           {c.status === 'ACTIVE' && (
                             <button onClick={() => updateStatus(c.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition">Duraklat</button>
                           )}
@@ -290,6 +330,15 @@ export default function CampaignsPage() {
                     <div className="flex items-center flex-wrap gap-2 mt-3">
                       {c.status === 'DRAFT' && (
                         <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">Aktifleştir</button>
+                      )}
+                      {c.status === 'ACTIVE' && c.type === 'EMAIL' && (
+                        <button
+                          onClick={() => sendCampaign(c.id)}
+                          disabled={sendingId === c.id}
+                          className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg transition disabled:opacity-50"
+                        >
+                          {sendingId === c.id ? 'Gönderiliyor...' : 'Gönder'}
+                        </button>
                       )}
                       {c.status === 'ACTIVE' && (
                         <button onClick={() => updateStatus(c.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg transition">Duraklat</button>

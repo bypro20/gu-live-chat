@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { getMarketingPlanCta, type PlanId } from '@/lib/plan-cta'
 import { Check, Minus, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
@@ -17,8 +19,6 @@ const PLANS = [
     yearlyMonthly: 0,
     desc: 'Tek girişimciler ve küçük ekipler için. İlk canlı destek deneyiminiz.',
     badge: null,
-    cta: 'Ücretsiz Başla',
-    ctaHref: '/register',
     highlighted: false,
     color: '#64748B',
   },
@@ -29,8 +29,6 @@ const PLANS = [
     yearlyMonthly: 1432,
     desc: 'Müşteri hizmetlerini geliştirmek isteyen büyüyen işletmeler için.',
     badge: null,
-    cta: '14 Gün Ücretsiz Dene',
-    ctaHref: '/register?plan=STARTER',
     highlighted: false,
     color: '#3B82F6',
   },
@@ -41,8 +39,6 @@ const PLANS = [
     yearlyMonthly: 3032,
     desc: 'Tam özellikli destek platformuna ihtiyaç duyan ekipler için. Tüm güçlü özellikler.',
     badge: 'En İyi Değer',
-    cta: '14 Gün Ücretsiz Dene',
-    ctaHref: '/register?plan=PRO',
     highlighted: true,
     color: '#1972F5',
   },
@@ -53,8 +49,6 @@ const PLANS = [
     yearlyMonthly: 9592,
     desc: 'Özel entegrasyon, white-label ve garantili SLA isteyen büyük şirketler için.',
     badge: null,
-    cta: 'Demo İsteyin',
-    ctaHref: '/contact',
     highlighted: false,
     color: '#7C3AED',
   },
@@ -254,8 +248,12 @@ function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
+  const { data: session } = useSession()
+  const isLoggedIn = !!session?.user
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  const planCta = (planId: PlanId) => getMarketingPlanCta(planId, { isLoggedIn })
 
   return (
     <>
@@ -349,14 +347,14 @@ export default function PricingPage() {
                       )}
                     </div>
                     <Link
-                      href={plan.ctaHref}
+                      href={planCta(plan.id as PlanId).href}
                       className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all ${
                         plan.highlighted
                           ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/25'
                           : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
                       }`}
                     >
-                      {plan.cta}
+                      {planCta(plan.id as PlanId).label}
                     </Link>
                     {plan.monthly > 0 && (
                       <p className="text-[10px] text-slate-400 text-center mt-2">
@@ -446,14 +444,14 @@ export default function PricingPage() {
                     {PLANS.map(plan => (
                       <td key={plan.id} className="px-4 py-4 text-center">
                         <Link
-                          href={plan.ctaHref}
+                          href={planCta(plan.id as PlanId).href}
                           className={`inline-block text-xs font-semibold px-4 py-2 rounded-lg transition-all ${
                             plan.highlighted
                               ? 'bg-blue-600 text-white hover:bg-blue-700'
                               : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                           }`}
                         >
-                          {plan.cta}
+                          {planCta(plan.id as PlanId).label}
                         </Link>
                       </td>
                     ))}
@@ -487,7 +485,7 @@ export default function PricingPage() {
                   href="/contact"
                   className="flex-shrink-0 inline-flex items-center gap-2 bg-violet-600 text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-violet-700 transition-colors shadow-md shadow-violet-500/20"
                 >
-                  Demo İsteyin <ArrowRight className="w-4 h-4" />
+                  İletişime Geç <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
@@ -526,7 +524,7 @@ export default function PricingPage() {
                   Ücretsiz Başla <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-200 transition-colors text-sm">
-                  Demo İsteyin
+                  İletişime Geç
                 </Link>
               </div>
             </div>

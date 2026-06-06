@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const workflowSchema = z.object({
@@ -45,6 +46,9 @@ export async function GET(req: Request) {
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'workflows')
+  if (planDenied) return planDenied
+
   const workflows = await prisma.workflow.findMany({
     where: { websiteId: website.id },
     include: { steps: { orderBy: { order: 'asc' } } },
@@ -71,6 +75,9 @@ export async function POST(req: Request) {
       where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'İş akışı oluşturma yetkiniz yok' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'workflows')
+    if (planDenied) return planDenied
 
     const { steps, ...workflowData } = validated
 
@@ -110,13 +117,19 @@ export async function PATCH(req: Request) {
     const { id, steps, ...updateData } = body
     if (!id) return NextResponse.json({ error: 'İş akışı ID gerekli' }, { status: 400 })
 
-    const workflow = await prisma.workflow.findUnique({ where: { id } })
+    const workflow = await prisma.workflow.findUnique({
+      where: { id },
+      include: { website: { select: { id: true, plan: true } } },
+    })
     if (!workflow) return NextResponse.json({ error: 'İş akışı bulunamadı' }, { status: 404 })
 
     const member = await prisma.teamMember.findFirst({
       where: { websiteId: workflow.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(workflow.website.id, workflow.website.plan, 'workflows')
+    if (planDenied) return planDenied
 
     const updated = await prisma.workflow.update({
       where: { id },
@@ -150,13 +163,19 @@ export async function DELETE(req: Request) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'İş akışı ID gerekli' }, { status: 400 })
 
-  const workflow = await prisma.workflow.findUnique({ where: { id } })
+  const workflow = await prisma.workflow.findUnique({
+    where: { id },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!workflow) return NextResponse.json({ error: 'İş akışı bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
     where: { websiteId: workflow.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(workflow.website.id, workflow.website.plan, 'workflows')
+  if (planDenied) return planDenied
 
   await prisma.workflow.delete({ where: { id } })
 

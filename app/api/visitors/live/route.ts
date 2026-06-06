@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { canPerformAction } from '@/lib/subscription'
+import { websiteHasFeature } from '@/lib/addon-features'
 import { getLiveVisitors } from '@/lib/socket'
 
 // GET /api/visitors/live?websiteId=xxx
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     }
 
     // Check plan: Ekran İzleme requires PRO or BUSINESS
-    const hasOverlayAI = canPerformAction(website.plan, 'overlayAI')
+    const hasOverlayAI = await websiteHasFeature(website.id, website.plan, 'overlayAI')
     if (!hasOverlayAI) {
       return NextResponse.json({
         error: 'Ekran İzleme profesyonel ve iş paketlerinde kullanılabilir',

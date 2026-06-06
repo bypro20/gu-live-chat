@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -23,6 +24,9 @@ export async function GET(req: Request) {
     where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'proactiveMessages')
+  if (planDenied) return planDenied
 
   const messages = await prisma.proactiveMessage.findMany({
     where: { websiteId: website.id, isActive: true },
@@ -52,6 +56,9 @@ export async function POST(req: Request) {
     where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'proactiveMessages')
+  if (planDenied) return planDenied
 
   const proactive = await prisma.proactiveMessage.create({
     data: {
@@ -83,7 +90,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'id gerekli' }, { status: 400 })
   }
 
-  const existing = await prisma.proactiveMessage.findUnique({ where: { id } })
+  const existing = await prisma.proactiveMessage.findUnique({
+    where: { id },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!existing) {
     return NextResponse.json({ error: 'Proaktif mesaj bulunamadı' }, { status: 404 })
   }
@@ -94,6 +104,9 @@ export async function PUT(req: Request) {
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
+
+  const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'proactiveMessages')
+  if (planDenied) return planDenied
 
   const proactive = await prisma.proactiveMessage.update({
     where: { id },
@@ -125,7 +138,10 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: 'id gerekli' }, { status: 400 })
   }
 
-  const existing = await prisma.proactiveMessage.findUnique({ where: { id } })
+  const existing = await prisma.proactiveMessage.findUnique({
+    where: { id },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!existing) {
     return NextResponse.json({ error: 'Proaktif mesaj bulunamadı' }, { status: 404 })
   }
@@ -136,6 +152,9 @@ export async function DELETE(req: Request) {
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
+
+  const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'proactiveMessages')
+  if (planDenied) return planDenied
 
   await prisma.proactiveMessage.delete({ where: { id } })
 

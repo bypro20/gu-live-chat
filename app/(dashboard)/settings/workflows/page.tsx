@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface WorkflowStep {
   id?: string
@@ -86,6 +88,7 @@ const AVAILABLE_ACTIONS = Object.keys(ACTION_LABELS).map((key) => ({
 }))
 
 export default function WorkflowsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('workflows')
   const { activeWebsite } = useActiveWebsite()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [loading, setLoading] = useState(true)
@@ -176,6 +179,14 @@ export default function WorkflowsPage() {
     setSteps(wf.steps.map((s) => ({ actionType: s.actionType, config: s.config || '', delayMs: s.delayMs?.toString() || '' })))
     setEditingId(wf.id)
     setShowCreate(true)
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="workflows" />
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="workflows" />
   }
 
   return (

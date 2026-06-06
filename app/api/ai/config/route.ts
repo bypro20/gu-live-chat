@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getEnvProviderStatus } from '@/lib/ai/provider'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
+import { websiteHasAiAssistant } from '@/lib/plan-features'
 
 // GET /api/ai/config?websiteId=xxx
 export async function GET(req: NextRequest) {
@@ -96,7 +98,7 @@ export async function PUT(req: NextRequest) {
     // Verify ownership (only owners can configure AI)
     const website = await prisma.website.findUnique({
       where: { websiteId },
-      select: { id: true, ownerId: true, members: { where: { userId: session.user.id } } },
+      select: { id: true, plan: true, ownerId: true, members: { where: { userId: session.user.id } } },
     })
 
     if (!website) {
@@ -107,6 +109,15 @@ export async function PUT(req: NextRequest) {
     const isMember = website.members.length > 0
     if (!isOwner && !isMember) {
       return NextResponse.json({ error: 'Bu siteye erişim izniniz yok' }, { status: 403 })
+    }
+
+    const enablingAi = isActive === true || autoReply === true || autoSuggest === true
+    if (enablingAi) {
+      const hasAi = await websiteHasAiAssistant(website.id, website.plan)
+      if (!hasAi) {
+        const denied = await planFeatureDeniedAsync(website.id, website.plan, 'aiAssistant')
+        if (denied) return denied
+      }
     }
 
     // Build update data — don't update apiKey if it's masked (contains '...')

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const articleSchema = z.object({
@@ -32,12 +34,18 @@ export async function GET(req: Request) {
 
   if (!websiteId) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
 
+  const website = await resolveWebsite(websiteId)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-  const where: Record<string, unknown> = { websiteId }
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'knowledgeBase')
+  if (planDenied) return planDenied
+
+  const where: Record<string, unknown> = { websiteId: website.id }
   if (categoryId) where.categoryId = categoryId
   if (status && status !== 'all') where.status = status
   if (search) {
@@ -71,19 +79,25 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = articleSchema.parse(body)
 
+    const website = await resolveWebsite(validated.websiteId)
+    if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
     const member = await prisma.teamMember.findFirst({
-      where: { websiteId: validated.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
+      where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'knowledgeBase')
+    if (planDenied) return planDenied
+
     const existing = await prisma.knowledgeArticle.findUnique({
-      where: { websiteId_slug: { websiteId: validated.websiteId, slug: validated.slug } },
+      where: { websiteId_slug: { websiteId: website.id, slug: validated.slug } },
     })
     if (existing) return NextResponse.json({ error: 'Bu slug ile zaten bir makale var' }, { status: 409 })
 
     const article = await prisma.knowledgeArticle.create({
       data: {
-        websiteId: validated.websiteId,
+        websiteId: website.id,
         title: validated.title,
         slug: validated.slug,
         content: validated.content,

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, use } from 'react'
 import { useWebsite } from '@/lib/hooks/use-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -41,6 +43,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export default function KnowledgeBasePage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('knowledgeBase')
   const { website } = useWebsite()
   const router = useRouter()
   const [articles, setArticles] = useState<Article[]>([])
@@ -73,6 +76,9 @@ export default function KnowledgeBasePage() {
   }
 
   if (!website) return null
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="knowledgeBase" />
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

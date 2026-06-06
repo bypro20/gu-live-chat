@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 export async function GET(
   _req: Request,
@@ -13,7 +14,10 @@ export async function GET(
 
   const { statusPageId } = await params
 
-  const page = await prisma.statusPage.findUnique({ where: { id: statusPageId } })
+  const page = await prisma.statusPage.findUnique({
+    where: { id: statusPageId },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!page) {
     return NextResponse.json({ error: 'Sayfa bulunamadı' }, { status: 404 })
   }
@@ -24,6 +28,9 @@ export async function GET(
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
+
+  const planDenied = await planFeatureDeniedAsync(page.website.id, page.website.plan, 'statusPage')
+  if (planDenied) return planDenied
 
   const incidents = await prisma.incident.findMany({
     where: { statusPageId },

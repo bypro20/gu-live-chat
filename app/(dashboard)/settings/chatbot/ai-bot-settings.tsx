@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface AiConfig {
   id: string | null
@@ -34,6 +36,7 @@ const DEFAULT_CONFIG: AiConfig = {
 }
 
 export default function AiBotSettings() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('aiAssistant')
   const { activeWebsite } = useActiveWebsite()
   const websiteId = activeWebsite?.websiteId
 
@@ -110,6 +113,10 @@ export default function AiBotSettings() {
 
   const envKeyDefined = config.provider === 'OPENAI' ? env.openai : env.anthropic
   const keyAvailable = envKeyDefined || config._hasApiKey
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="aiAssistant" />
+  }
 
   return (
     <div className="surface p-5 sm:p-6 mb-6">

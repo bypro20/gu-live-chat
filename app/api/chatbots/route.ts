@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const chatbotSchema = z.object({
@@ -9,6 +10,7 @@ const chatbotSchema = z.object({
   name: z.string().min(1, 'Chatbot adı gerekli'),
   description: z.string().optional(),
   trigger: z.enum(['ALL_CONVERSATIONS', 'OFFLINE_ONLY', 'KEYWORD', 'FIRST_VISIT']).default('ALL_CONVERSATIONS'),
+  triggerValue: z.string().optional(),
   steps: z.array(z.object({
     type: z.enum(['MESSAGE', 'CHOICE', 'COLLECT_EMAIL', 'COLLECT_NAME', 'ASSIGN_AGENT', 'END']),
     message: z.string().optional(),
@@ -34,6 +36,9 @@ export async function GET(req: Request) {
     where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'chatbot')
+  if (planDenied) return planDenied
 
   const chatbots = await prisma.chatbot.findMany({
     where: { websiteId: website.id },
@@ -62,12 +67,28 @@ export async function POST(req: Request) {
     })
     if (!member) return NextResponse.json({ error: 'Chatbot oluşturma yetkiniz yok' }, { status: 403 })
 
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'chatbot')
+    if (planDenied) return planDenied
+
     const { steps, ...chatbotData } = validated
     const chatbot = await prisma.chatbot.create({
       data: {
         ...chatbotData,
         websiteId: website.id,
-        steps: steps ? { create: steps } : undefined,
+        steps: steps
+          ? {
+              create: steps.map((step) => ({
+                type: step.type,
+                message: step.message,
+                order: step.order,
+                options: step.options
+                  ? typeof step.options === 'string'
+                    ? step.options
+                    : JSON.stringify(step.options)
+                  : undefined,
+              })),
+            }
+          : undefined,
       },
       include: { steps: { orderBy: { order: 'asc' } } },
     })

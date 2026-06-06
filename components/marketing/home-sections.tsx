@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { getMarketingPlanCta } from '@/lib/plan-cta'
 import {
   ArrowRight, Bot, BookOpen, BarChart3, MessageCircle, Users,
   Workflow, Mail, Smartphone, MessageSquare, Sparkles, Inbox, Zap,
@@ -76,10 +78,10 @@ const testimonials = [
 ]
 
 const plans = [
-  { name: 'Ücretsiz', monthly: 0, desc: 'Başlamak için ideal', features: ['2 Temsilci', '100 Sohbet / Ay', 'Temel Widget', 'E-posta Bildirimleri'], highlighted: false, cta: 'Ücretsiz Başla' },
-  { name: 'Başlangıç', monthly: 1790, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Chatbot', 'Ziyaretçi Takibi', 'Hazır Cevaplar', 'Dosya Yükleme', 'Bilgi Bankası'], highlighted: false, cta: 'Deneyi Başlat' },
-  { name: 'Profesyonel', monthly: 3790, desc: 'Profesyonel ekipler', features: ['25 Temsilci', 'Sınırsız Sohbet', 'AI Yardım & Otomatik Yanıt', '50+ Dil Çeviri', 'WhatsApp / E-posta / Messenger', 'API & Webhook', 'Analitik & Raporlar', 'Kampanyalar', 'Durum Sayfası'], highlighted: true, cta: 'Deneyi Başlat' },
-  { name: 'Kurumsal', monthly: 11990, desc: 'Büyük ölçekli çözüm', features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'Özel Marka (White-label)', 'SLA Garantisi (%99.9)', 'Özel Entegrasyon', '7/24 Öncelikli Destek', 'Gelişmiş API Limitleri'], highlighted: false, cta: 'İletişime Geç' },
+  { id: 'FREE' as const, name: 'Ücretsiz', monthly: 0, desc: 'Başlamak için ideal', features: ['2 Temsilci', '100 Sohbet / Ay', 'Temel Widget', 'E-posta Bildirimleri'], highlighted: false },
+  { id: 'STARTER' as const, name: 'Başlangıç', monthly: 1790, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Chatbot', 'Ziyaretçi Takibi', 'Hazır Cevaplar', 'Dosya Yükleme', 'Bilgi Bankası'], highlighted: false },
+  { id: 'PRO' as const, name: 'Profesyonel', monthly: 3790, desc: 'Profesyonel ekipler', features: ['25 Temsilci', 'Sınırsız Sohbet', 'AI Yardım & Otomatik Yanıt', '50+ Dil Çeviri', 'WhatsApp / E-posta / Messenger', 'API & Webhook', 'Analitik & Raporlar', 'Kampanyalar', 'Durum Sayfası'], highlighted: true },
+  { id: 'BUSINESS' as const, name: 'Kurumsal', monthly: 11990, desc: 'Büyük ölçekli çözüm', features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'Özel Marka (White-label)', 'SLA Garantisi (%99.9)', 'Özel Entegrasyon', '7/24 Öncelikli Destek', 'Gelişmiş API Limitleri'], highlighted: false },
 ]
 
 const faqs = [
@@ -89,12 +91,13 @@ const faqs = [
   { q: 'Verilerim güvende mi?', a: 'SSL/TLS şifreleme, KVKK uyumu ve düzenli yedekleme. %99.9 uptime garantisi.' },
 ]
 
-function PricingCard({ plan, billing, discount, idx }: {
-  plan: typeof plans[0]; billing: 'monthly' | 'yearly'; discount: number; idx: number
+function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
+  plan: typeof plans[0]; billing: 'monthly' | 'yearly'; discount: number; idx: number; isLoggedIn: boolean
 }) {
   const price = billing === 'yearly' && plan.monthly > 0
     ? Math.round(plan.monthly * (1 - discount))
     : plan.monthly
+  const cta = getMarketingPlanCta(plan.id, { isLoggedIn })
 
   return (
     <FadeIn delay={idx * 0.06} className="h-full">
@@ -114,11 +117,11 @@ function PricingCard({ plan, billing, discount, idx }: {
             </div>
           )}
         </div>
-        <Link href={plan.name === 'Kurumsal' ? '/contact' : '/register'}
+        <Link href={cta.href}
           className={`text-center py-2.5 rounded-lg font-semibold text-sm transition-colors ${
             plan.highlighted ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-primary-light text-primary hover:bg-primary hover:text-white'
           }`}>
-          {plan.cta}
+          {cta.label}
         </Link>
         <ul className="space-y-2.5 mt-6 flex-1">
           {plan.features.map((f) => (
@@ -499,6 +502,8 @@ export function UseCasesTabs() {
 
 export function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
+  const { data: session } = useSession()
+  const isLoggedIn = !!session?.user
 
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-muted/30">
@@ -522,7 +527,7 @@ export function PricingSection() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
           {plans.map((plan, i) => (
-            <PricingCard key={plan.name} plan={plan} billing={billing} discount={0.2} idx={i} />
+            <PricingCard key={plan.name} plan={plan} billing={billing} discount={0.2} idx={i} isLoggedIn={isLoggedIn} />
           ))}
         </div>
       </div>

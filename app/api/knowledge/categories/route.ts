@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const categorySchema = z.object({
@@ -19,17 +21,23 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
 
-  if (!websiteId) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+  if (!websiteIdParam) return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
+
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'knowledgeBase')
+  if (planDenied) return planDenied
+
   const categories = await prisma.knowledgeCategory.findMany({
-    where: { websiteId },
+    where: { websiteId: website.id },
     include: { _count: { select: { articles: true } } },
     orderBy: [{ order: 'asc' }, { name: 'asc' }],
   })
@@ -47,19 +55,25 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = categorySchema.parse(body)
 
+    const website = await resolveWebsite(validated.websiteId)
+    if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+
     const member = await prisma.teamMember.findFirst({
-      where: { websiteId: validated.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
+      where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'knowledgeBase')
+    if (planDenied) return planDenied
+
     const existing = await prisma.knowledgeCategory.findUnique({
-      where: { websiteId_slug: { websiteId: validated.websiteId, slug: validated.slug } },
+      where: { websiteId_slug: { websiteId: website.id, slug: validated.slug } },
     })
     if (existing) return NextResponse.json({ error: 'Bu slug ile zaten bir kategori var' }, { status: 409 })
 
     const category = await prisma.knowledgeCategory.create({
       data: {
-        websiteId: validated.websiteId,
+        websiteId: website.id,
         name: validated.name,
         slug: validated.slug,
         description: validated.description || null,
@@ -88,13 +102,19 @@ export async function PATCH(req: Request) {
     const { id, ...updates } = body
     if (!id) return NextResponse.json({ error: 'Kategori ID gerekli' }, { status: 400 })
 
-    const existing = await prisma.knowledgeCategory.findUnique({ where: { id } })
+    const existing = await prisma.knowledgeCategory.findUnique({
+      where: { id },
+      include: { website: { select: { id: true, plan: true } } },
+    })
     if (!existing) return NextResponse.json({ error: 'Kategori bulunamadı' }, { status: 404 })
 
     const member = await prisma.teamMember.findFirst({
       where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'knowledgeBase')
+    if (planDenied) return planDenied
 
     if (updates.slug && updates.slug !== existing.slug) {
       const slugExists = await prisma.knowledgeCategory.findUnique({
@@ -127,13 +147,19 @@ export async function DELETE(req: Request) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Kategori ID gerekli' }, { status: 400 })
 
-  const existing = await prisma.knowledgeCategory.findUnique({ where: { id } })
+  const existing = await prisma.knowledgeCategory.findUnique({
+    where: { id },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!existing) return NextResponse.json({ error: 'Kategori bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
     where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'knowledgeBase')
+  if (planDenied) return planDenied
 
   await prisma.knowledgeArticle.updateMany({
     where: { categoryId: id },

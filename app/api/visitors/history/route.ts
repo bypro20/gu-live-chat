@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 // GET /api/visitors/history?websiteId=xxx&visitorId=xxx&page=1&limit=20
 export async function GET(req: Request) {
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
     // Verify team membership
     const website = await prisma.website.findUnique({
       where: { websiteId },
-      select: { id: true, ownerId: true, members: { where: { userId: session.user.id } } },
+      select: { id: true, plan: true, ownerId: true, members: { where: { userId: session.user.id } } },
     })
 
     if (!website) {
@@ -35,6 +36,9 @@ export async function GET(req: Request) {
     if (!isOwner && !isMember) {
       return NextResponse.json({ error: 'Bu siteye erişim izniniz yok' }, { status: 403 })
     }
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'visitorTracking')
+    if (planDenied) return planDenied
 
     // Build where clause
     const where: any = {

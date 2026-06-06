@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
+import { planHasFeature } from '@/lib/plan-gate'
 
 async function authorizeWebhook(webhookId: string, userId: string) {
   const webhook = await prisma.webhook.findUnique({
     where: { id: webhookId },
-    include: { events: true },
+    include: { events: true, website: { select: { id: true, plan: true } } },
   })
   if (!webhook) return { error: 'Webhook bulunamadı', status: 404 as const }
 
@@ -14,6 +15,10 @@ async function authorizeWebhook(webhookId: string, userId: string) {
     where: { websiteId: webhook.websiteId, userId, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return { error: 'Erişim reddedildi', status: 403 as const }
+
+  if (!planHasFeature(webhook.website.plan, 'webhooks')) {
+    return { error: 'Webhook özelliği mevcut planınızda kullanılamaz', status: 403 as const }
+  }
 
   return { webhook }
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { translateText, isTranslationAvailable } from '@/lib/ai/translate'
-import { PLAN_LIMITS } from '@/lib/constants'
+import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
 // Public translation endpoint for the chat widget (visitors are NOT
@@ -52,8 +52,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Website bulunamadı', available: false }, { status: 404 })
     }
 
-    // Plan gate: autoTranslate feature required
-    if (!PLAN_LIMITS[website.plan].autoTranslate) {
+    const translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
+    if (!translateAllowed) {
       return NextResponse.json({ available: false, translatedText: parsed.data.text })
     }
 

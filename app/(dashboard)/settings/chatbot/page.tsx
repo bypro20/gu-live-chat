@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useChatbots } from '@/lib/hooks/use-chatbots'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import AiBotSettings from './ai-bot-settings'
 
 interface BotStep {
@@ -21,13 +24,52 @@ interface Chatbot {
 }
 
 export default function ChatbotPage() {
-  const [chatbots] = useState<Chatbot[]>([])
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('chatbot')
+  const { chatbots, isLoading, createChatbot, deleteChatbot, toggleChatbot } = useChatbots()
   const [showBuilder, setShowBuilder] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [botName, setBotName] = useState('')
   const [botTrigger, setBotTrigger] = useState('ALL_CONVERSATIONS')
+  const [botTriggerValue, setBotTriggerValue] = useState('')
   const [steps, setSteps] = useState<BotStep[]>([
     { type: 'MESSAGE', message: 'Merhaba! Size nasıl yardımcı olabiliriz?', order: 0 },
   ])
+
+  const handleCreate = async () => {
+    if (!botName.trim() || saving) return
+    setSaving(true)
+    try {
+      await createChatbot({
+        name: botName.trim(),
+        trigger: botTrigger,
+        triggerValue: botTrigger === 'KEYWORD' ? botTriggerValue.trim() : undefined,
+        steps: steps.map((s, i) => ({
+          type: s.type,
+          message: s.message || undefined,
+          order: i,
+          options: s.options?.length ? s.options : undefined,
+        })),
+      })
+      setShowBuilder(false)
+      setBotName('')
+      setBotTrigger('ALL_CONVERSATIONS')
+      setBotTriggerValue('')
+      setSteps([{ type: 'MESSAGE', message: 'Merhaba! Size nasıl yardımcı olabiliriz?', order: 0 }])
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Chatbot oluşturulamadı')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bu chatbotu silmek istediğinize emin misiniz?')) return
+    try {
+      await deleteChatbot(id)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Chatbot silinemedi')
+    }
+  }
 
   const addStep = (type: string) => {
     setSteps([...steps, { type, message: '', order: steps.length }])
@@ -41,6 +83,10 @@ export default function ChatbotPage() {
     const updated = [...steps]
     updated[index] = { ...updated[index], [field]: value }
     setSteps(updated)
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="chatbot" />
   }
 
   const stepTypes: Record<string, { label: string; icon: string; description: string }> = {
@@ -103,6 +149,18 @@ export default function ChatbotPage() {
                 ))}
               </select>
             </div>
+            {botTrigger === 'KEYWORD' && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Anahtar Kelimeler</label>
+                <input
+                  type="text"
+                  value={botTriggerValue}
+                  onChange={(e) => setBotTriggerValue(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  placeholder="fiyat, sipariş, destek (virgülle ayırın)"
+                />
+              </div>
+            )}
           </div>
 
           {/* Steps */}
@@ -203,8 +261,8 @@ export default function ChatbotPage() {
             <button onClick={() => setShowBuilder(false)} className="btn-secondary">
               İptal
             </button>
-            <button className="btn-primary">
-              Chatbot Oluştur
+            <button onClick={handleCreate} disabled={saving || !botName.trim()} className="btn-primary disabled:opacity-50">
+              {saving ? 'Kaydediliyor...' : 'Chatbot Oluştur'}
             </button>
           </div>
         </div>
@@ -212,7 +270,11 @@ export default function ChatbotPage() {
 
       {/* Existing Chatbots */}
       <div className="surface">
-        {chatbots.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : chatbots.length === 0 ? (
           <div className="p-10 sm:p-12 text-center">
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
               🤖
@@ -222,7 +284,7 @@ export default function ChatbotPage() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {chatbots.map((bot) => (
+            {chatbots.map((bot: Chatbot) => (
               <div key={bot.id} className="p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${bot.isActive ? 'bg-success-light' : 'bg-muted'}`}>
@@ -234,10 +296,13 @@ export default function ChatbotPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <button className={`px-3 py-1 text-xs font-medium rounded-full ${bot.isActive ? 'bg-success-light text-success' : 'bg-muted text-muted-foreground'}`}>
+                  <button
+                    onClick={() => toggleChatbot(bot.id, !bot.isActive).catch((e) => alert(e.message))}
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${bot.isActive ? 'bg-success-light text-success' : 'bg-muted text-muted-foreground'}`}
+                  >
                     {bot.isActive ? 'Aktif' : 'Pasif'}
                   </button>
-                  <button className="text-muted-foreground hover:text-destructive transition text-sm">Sil</button>
+                  <button onClick={() => handleDelete(bot.id)} className="text-muted-foreground hover:text-destructive transition text-sm">Sil</button>
                 </div>
               </div>
             ))}

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface WebhookEvent {
   id: string
@@ -31,6 +33,7 @@ const AVAILABLE_EVENTS = [
 ]
 
 export default function WebhooksPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('webhooks')
   const { activeWebsite } = useActiveWebsite()
   const [webhooks, setWebhooks] = useState<Webhook[]>([])
   const [loading, setLoading] = useState(true)
@@ -133,6 +136,10 @@ export default function WebhooksPage() {
     } finally {
       setBusyId(null)
     }
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="webhooks" />
   }
 
   return (

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import Link from 'next/link'
 
 interface Ticket {
@@ -47,6 +49,7 @@ const CHANNEL_LABELS: Record<string, string> = {
 const STATUS_TABS = ['NEW', 'OPEN', 'PENDING_CUSTOMER', 'PENDING_AGENT', 'ON_HOLD', 'RESOLVED', 'CLOSED']
 
 export default function TicketsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('ticketing')
   const { activeWebsite } = useActiveWebsite()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [total, setTotal] = useState(0)
@@ -89,6 +92,10 @@ export default function TicketsPage() {
     if (diff < 3600) return `${Math.floor(diff / 60)}dk`
     if (diff < 86400) return `${Math.floor(diff / 3600)}sa`
     return `${Math.floor(diff / 86400)}g`
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="ticketing" />
   }
 
   return (

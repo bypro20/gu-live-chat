@@ -3,7 +3,9 @@ import { prisma } from '@/lib/db'
 import { requireWebsiteAccess, isErrorResponse } from '@/lib/middleware'
 
 export async function GET(req: NextRequest) {
-  const access = await requireWebsiteAccess(req)
+  const access = await requireWebsiteAccess(req, {
+    planFeature: { feature: 'apiAccess' },
+  })
 
   if (isErrorResponse(access)) return access
 

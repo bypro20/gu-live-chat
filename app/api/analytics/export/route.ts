@@ -18,7 +18,9 @@ function toCsv(rows: Record<string, string | number>[]): string {
 }
 
 export async function GET(req: NextRequest) {
-  const access = await requireWebsiteAccess(req)
+  const access = await requireWebsiteAccess(req, {
+    planFeature: { feature: 'advancedAnalytics' },
+  })
   if (isErrorResponse(access)) return access
 
   const { website } = access

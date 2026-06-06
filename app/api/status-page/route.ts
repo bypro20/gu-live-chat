@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -46,15 +48,23 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
   }
 
+  const website = await resolveWebsite(websiteId)
+  if (!website) {
+    return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
+  }
+
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'statusPage')
+  if (planDenied) return planDenied
+
   const page = await prisma.statusPage.findUnique({
-    where: { websiteId },
+    where: { websiteId: website.id },
     include: {
       components: { orderBy: { order: 'asc' } },
       incidents: {
@@ -86,22 +96,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'websiteId ve subdomain gerekli' }, { status: 400 })
     }
 
+    const website = await resolveWebsite(websiteId)
+    if (!website) {
+      return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
+    }
+
     const member = await prisma.teamMember.findFirst({
-      where: { websiteId, userId: session.user.id },
+      where: { websiteId: website.id, userId: session.user.id },
     })
     if (!member) {
       return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
 
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'statusPage')
+    if (planDenied) return planDenied
+
     const existing = await prisma.statusPage.findUnique({ where: { subdomain } })
-    if (existing && existing.websiteId !== websiteId) {
+    if (existing && existing.websiteId !== website.id) {
       return NextResponse.json({ error: 'Bu alt alan adı zaten kullanılıyor' }, { status: 409 })
     }
 
     const page = await prisma.statusPage.upsert({
-      where: { websiteId },
+      where: { websiteId: website.id },
       create: {
-        websiteId,
+        websiteId: website.id,
         title: title || 'Service Status',
         description,
         subdomain,
@@ -145,9 +163,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'id veya websiteId gerekli' }, { status: 400 })
     }
 
+    const resolvedWebsiteId = websiteId
+      ? (await resolveWebsite(websiteId))?.id
+      : undefined
+
     let statusPage = id
       ? await prisma.statusPage.findUnique({ where: { id } })
-      : await prisma.statusPage.findUnique({ where: { websiteId } })
+      : resolvedWebsiteId
+      ? await prisma.statusPage.findUnique({ where: { websiteId: resolvedWebsiteId } })
+      : null
 
     if (!statusPage) {
       return NextResponse.json({ error: 'Sayfa bulunamadı' }, { status: 404 })

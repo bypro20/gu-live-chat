@@ -1,4 +1,5 @@
 import { prisma } from './db'
+import { planHasFeature } from './plan-gate'
 import { emitBotMessage } from './socket-events'
 import { notifyWebsiteMembers } from './notifications'
 import { dispatchWebhooks } from './webhook-dispatcher'
@@ -9,17 +10,30 @@ export type WorkflowTrigger =
   | 'CONVERSATION_RESOLVED'
   | 'CONVERSATION_CLOSED'
   | 'MESSAGE_RECEIVED'
+  | 'VISITOR_CREATED'
+  | 'VISITOR_SEEN_PAGE'
+  | 'TICKET_CREATED'
+  | 'TICKET_UPDATED'
 
 interface WorkflowContext {
   websiteDbId: string
   websitePublicId: string
-  conversationId: string
+  conversationId?: string
   visitorId?: string
   messageContent?: string
   senderType?: string
+  pageUrl?: string
+  pageTitle?: string
+  ticketId?: string
 }
 
 export async function runWorkflows(trigger: WorkflowTrigger, ctx: WorkflowContext) {
+  const website = await prisma.website.findUnique({
+    where: { id: ctx.websiteDbId },
+    select: { plan: true },
+  })
+  if (!website || !planHasFeature(website.plan, 'workflows')) return
+
   const workflows = await prisma.workflow.findMany({
     where: {
       websiteId: ctx.websiteDbId,
@@ -42,7 +56,6 @@ async function executeWorkflowStep(
   ctx: WorkflowContext
 ) {
   if (step.delayMs && step.delayMs > 0) {
-    // Serverless-safe: skip long delays; short delays acceptable for local/socket server
     if (step.delayMs > 5000) return
     await new Promise((r) => setTimeout(r, step.delayMs!))
   }
@@ -56,6 +69,7 @@ async function executeWorkflowStep(
 
   switch (step.actionType) {
     case 'SEND_MESSAGE': {
+      if (!ctx.conversationId) break
       const content = (config.message as string) || (config.content as string)
       if (!content?.trim()) break
       const message = await prisma.message.create({
@@ -80,6 +94,7 @@ async function executeWorkflowStep(
       break
     }
     case 'ASSIGN_AGENT': {
+      if (!ctx.conversationId) break
       const userId = config.userId as string | undefined
       const member = userId
         ? await prisma.teamMember.findFirst({
@@ -97,6 +112,7 @@ async function executeWorkflowStep(
       break
     }
     case 'CHANGE_STATUS': {
+      if (!ctx.conversationId) break
       const status = (config.status as string) || 'RESOLVED'
       await prisma.conversation.update({
         where: { id: ctx.conversationId },
@@ -108,6 +124,7 @@ async function executeWorkflowStep(
       break
     }
     case 'ADD_TAG': {
+      if (!ctx.conversationId) break
       const tagName = (config.tagName as string) || (config.name as string)
       if (!tagName) break
       let tag = await prisma.tag.findFirst({
@@ -138,7 +155,11 @@ async function executeWorkflowStep(
         type: 'NEW_MESSAGE',
         title,
         message,
-        data: { conversationId: ctx.conversationId },
+        data: {
+          conversationId: ctx.conversationId,
+          ticketId: ctx.ticketId,
+          visitorId: ctx.visitorId,
+        },
       })
       break
     }
@@ -147,11 +168,14 @@ async function executeWorkflowStep(
         conversationId: ctx.conversationId,
         content: ctx.messageContent,
         senderType: ctx.senderType,
+        pageUrl: ctx.pageUrl,
+        visitorId: ctx.visitorId,
+        ticketId: ctx.ticketId,
       })
       break
     }
     case 'TRIGGER_CHATBOT': {
-      if (ctx.visitorId) {
+      if (ctx.visitorId && ctx.conversationId) {
         await runChatbotForNewConversation({
           websiteDbId: ctx.websiteDbId,
           websitePublicId: ctx.websitePublicId,
@@ -162,6 +186,7 @@ async function executeWorkflowStep(
       break
     }
     case 'ADD_NOTE': {
+      if (!ctx.conversationId) break
       const content = (config.content as string) || (config.note as string)
       if (!content?.trim()) break
       const owner = await prisma.teamMember.findFirst({

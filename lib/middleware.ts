@@ -1,6 +1,6 @@
 import { auth } from './auth'
 import { prisma } from './db'
-import { canPerformAction } from './subscription'
+import { websiteHasFeature } from './addon-features'
 import { PLAN_LIMITS, PlanType } from './constants'
 import { Plan, TeamRole } from '../app/generated/prisma/client'
 import { NextRequest } from 'next/server'
@@ -233,7 +233,8 @@ export async function requireWebsiteAccess(
 
   // 7. Plan feature check
   if (planFeature) {
-    const allowed = canPerformAction(
+    const allowed = await websiteHasFeature(
+      website.id,
       website.plan,
       planFeature.feature,
       planFeature.currentCount

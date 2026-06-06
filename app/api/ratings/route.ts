@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -19,12 +20,22 @@ export async function POST(req: Request) {
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      select: { websiteId: true, status: true },
+      select: { websiteId: true, status: true, website: { select: { id: true, plan: true } } },
     })
 
     if (!conversation) {
       return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
     }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { websiteId: conversation.websiteId, userId: session.user.id },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+    }
+
+    const planDenied = await planFeatureDeniedAsync(conversation.website.id, conversation.website.plan, 'ratings')
+    if (planDenied) return planDenied
 
     if (conversation.status !== 'RESOLVED' && conversation.status !== 'CLOSED') {
       return NextResponse.json({ error: 'Yalnızca çözülen sohbetler puanlanabilir' }, { status: 400 })
@@ -78,6 +89,9 @@ export async function GET(req: Request) {
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
+
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'ratings')
+  if (planDenied) return planDenied
 
   const ratings = await prisma.conversationRating.findMany({
     where: { websiteId: website.id },

@@ -18,6 +18,9 @@ export const PLAN_LIMITS = {
     workflows: false,
     statusPage: false,
     autoTranslate: false,
+    ratings: false,
+    proactiveMessages: false,
+    advancedAnalytics: false,
   },
   STARTER: {
     maxAgents: 5,
@@ -38,6 +41,9 @@ export const PLAN_LIMITS = {
     workflows: false,
     statusPage: false,
     autoTranslate: false,
+    ratings: true,
+    proactiveMessages: true,
+    advancedAnalytics: false,
   },
   PRO: {
     maxAgents: 25,
@@ -58,6 +64,9 @@ export const PLAN_LIMITS = {
     workflows: true,
     statusPage: true,
     autoTranslate: true,
+    ratings: true,
+    proactiveMessages: true,
+    advancedAnalytics: true,
   },
   BUSINESS: {
     maxAgents: Infinity,
@@ -78,6 +87,9 @@ export const PLAN_LIMITS = {
     workflows: true,
     statusPage: true,
     autoTranslate: true,
+    ratings: true,
+    proactiveMessages: true,
+    advancedAnalytics: true,
   },
 } as const
 

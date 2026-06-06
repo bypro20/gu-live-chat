@@ -4,6 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { Download } from 'lucide-react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { useToast } from '@/lib/toast'
 
 async function fetcher(url: string) {
@@ -13,6 +14,7 @@ async function fetcher(url: string) {
 }
 
 export default function AnalyticsPage() {
+  const { allowed: hasAdvancedAnalytics } = usePlanFeature('apiAccess')
   const { activeWebsite } = useActiveWebsite()
   const { toast } = useToast()
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('7d')
@@ -54,7 +56,9 @@ export default function AnalyticsPage() {
   )
 
   const { data: teamData, isLoading: teamLoading } = useSWR(
-    websiteId ? `/api/analytics/team-performance?websiteId=${websiteId}` : null,
+    websiteId && hasAdvancedAnalytics
+      ? `/api/analytics/team-performance?websiteId=${websiteId}`
+      : null,
     fetcher
   )
 
@@ -73,7 +77,8 @@ export default function AnalyticsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative group">
             <button
-              disabled={!websiteId || exporting}
+              disabled={!websiteId || exporting || !hasAdvancedAnalytics}
+              title={!hasAdvancedAnalytics ? 'CSV dışa aktarma Profesyonel pakette' : undefined}
               className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-lg border border-border bg-card hover:bg-muted transition disabled:opacity-50"
             >
               <Download className="w-4 h-4" />

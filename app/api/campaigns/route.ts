@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const campaignSchema = z.object({
@@ -34,6 +35,9 @@ export async function GET(req: Request) {
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'campaigns')
+  if (planDenied) return planDenied
+
   const campaigns = await prisma.campaign.findMany({
     where: { websiteId: website.id },
     orderBy: { createdAt: 'desc' },
@@ -59,6 +63,9 @@ export async function POST(req: Request) {
       where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Kampanya oluşturma yetkiniz yok' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'campaigns')
+    if (planDenied) return planDenied
 
     const { scheduledAt, ...data } = validated
     const campaign = await prisma.campaign.create({
@@ -90,13 +97,19 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body
     if (!id) return NextResponse.json({ error: 'Kampanya ID gerekli' }, { status: 400 })
 
-    const campaign = await prisma.campaign.findUnique({ where: { id } })
+    const campaign = await prisma.campaign.findUnique({
+      where: { id },
+      include: { website: { select: { id: true, plan: true } } },
+    })
     if (!campaign) return NextResponse.json({ error: 'Kampanya bulunamadı' }, { status: 404 })
 
     const member = await prisma.teamMember.findFirst({
       where: { websiteId: campaign.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(campaign.website.id, campaign.website.plan, 'campaigns')
+    if (planDenied) return planDenied
 
     if (updateData.scheduledAt) {
       updateData.scheduledAt = new Date(updateData.scheduledAt)
@@ -127,13 +140,19 @@ export async function DELETE(req: Request) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Kampanya ID gerekli' }, { status: 400 })
 
-  const campaign = await prisma.campaign.findUnique({ where: { id } })
+  const campaign = await prisma.campaign.findUnique({
+    where: { id },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!campaign) return NextResponse.json({ error: 'Kampanya bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
     where: { websiteId: campaign.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(campaign.website.id, campaign.website.plan, 'campaigns')
+  if (planDenied) return planDenied
 
   await prisma.campaign.delete({ where: { id } })
 

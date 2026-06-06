@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 const COMPONENT_STATUSES = [
   { value: 'OPERATIONAL', label: 'Çalışıyor', color: 'text-success' },
@@ -60,7 +63,9 @@ interface Incident {
 }
 
 export default function StatusPageSettingsPage() {
+  const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('statusPage')
   const router = useRouter()
+  const { activeWebsite } = useActiveWebsite()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -82,37 +87,37 @@ export default function StatusPageSettingsPage() {
   const [newIncident, setNewIncident] = useState({ title: '', message: '', severity: 'MEDIUM' })
   const [newComponent, setNewComponent] = useState({ name: '', description: '', groupName: '' })
 
-  useEffect(() => {
-    fetchPageData()
-  }, [])
-
-  async function fetchPageData() {
+  const fetchPageData = useCallback(async () => {
+    if (!activeWebsite?.id) {
+      setLoading(false)
+      return
+    }
     try {
-      const res = await fetch('/api/websites')
-      const websites = await res.json()
-      if (!websites?.[0]) return
-
-      const statusRes = await fetch(`/api/status-page?websiteId=${websites[0].id}`)
+      const statusRes = await fetch(`/api/status-page?websiteId=${activeWebsite.id}`)
       if (!statusRes.ok) throw new Error('Not found')
       const data = await statusRes.json()
       setPageData(data.page)
       setComponents(data.components)
       setIncidents(data.incidents)
     } catch {
-      // Status page not created yet
+      setPageData((prev) => ({ ...prev, id: '' }))
+      setComponents([])
+      setIncidents([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeWebsite?.id])
+
+  useEffect(() => {
+    setLoading(true)
+    fetchPageData()
+  }, [fetchPageData])
 
   async function savePage() {
+    if (!activeWebsite?.id) return
     setSaving(true)
     try {
-      const res = await fetch('/api/websites')
-      const websites = await res.json()
-      if (!websites?.[0]) return
-
-      const body = { ...pageData, websiteId: websites[0].id }
+      const body = { ...pageData, websiteId: activeWebsite.id }
       await fetch('/api/status-page', {
         method: pageData.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -219,6 +224,10 @@ export default function StatusPageSettingsPage() {
         </div>
       </div>
     )
+  }
+
+  if (!planLoading && !planAllowed) {
+    return <PlanUpgradePrompt feature="statusPage" />
   }
 
   return (

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 import crypto from 'crypto'
 
@@ -30,6 +31,9 @@ export async function GET(req: Request) {
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'webhooks')
+  if (planDenied) return planDenied
+
   const webhooks = await prisma.webhook.findMany({
     where: { websiteId: website.id },
     include: { events: true },
@@ -56,6 +60,9 @@ export async function POST(req: Request) {
       where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Webhook oluşturma yetkiniz yok' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'webhooks')
+    if (planDenied) return planDenied
 
     const secret = crypto.randomBytes(32).toString('hex')
 

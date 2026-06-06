@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 
 const articleUpdateSchema = z.object({
@@ -25,7 +26,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ articleI
 
   const article = await prisma.knowledgeArticle.findUnique({
     where: { id: articleId },
-    include: { category: { select: { id: true, name: true, slug: true } }, author: { select: { id: true, name: true, image: true } } },
+    include: {
+      category: { select: { id: true, name: true, slug: true } },
+      author: { select: { id: true, name: true, image: true } },
+      website: { select: { id: true, plan: true } },
+    },
   })
   if (!article) return NextResponse.json({ error: 'Makale bulunamadı' }, { status: 404 })
 
@@ -33,6 +38,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ articleI
     where: { websiteId: article.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(article.website.id, article.website.plan, 'knowledgeBase')
+  if (planDenied) return planDenied
 
   return NextResponse.json(article)
 }
@@ -46,13 +54,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ articl
   const { articleId } = await params
 
   try {
-    const existing = await prisma.knowledgeArticle.findUnique({ where: { id: articleId } })
+    const existing = await prisma.knowledgeArticle.findUnique({
+      where: { id: articleId },
+      include: { website: { select: { id: true, plan: true } } },
+    })
     if (!existing) return NextResponse.json({ error: 'Makale bulunamadı' }, { status: 404 })
 
     const member = await prisma.teamMember.findFirst({
       where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'knowledgeBase')
+    if (planDenied) return planDenied
 
     const body = await req.json()
     const validated = articleUpdateSchema.parse(body)
@@ -92,13 +106,19 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ artic
 
   const { articleId } = await params
 
-  const existing = await prisma.knowledgeArticle.findUnique({ where: { id: articleId } })
+  const existing = await prisma.knowledgeArticle.findUnique({
+    where: { id: articleId },
+    include: { website: { select: { id: true, plan: true } } },
+  })
   if (!existing) return NextResponse.json({ error: 'Makale bulunamadı' }, { status: 404 })
 
   const member = await prisma.teamMember.findFirst({
     where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+  const planDenied = await planFeatureDeniedAsync(existing.website.id, existing.website.plan, 'knowledgeBase')
+  if (planDenied) return planDenied
 
   await prisma.knowledgeArticle.delete({ where: { id: articleId } })
   return NextResponse.json({ success: true })

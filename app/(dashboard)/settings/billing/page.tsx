@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { PLANS } from '@/lib/constants'
+import { getBillingPlanCta, type PlanId } from '@/lib/plan-cta'
 import { isPaytrEnabled } from '@/lib/paytr-client'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
@@ -122,7 +123,7 @@ export default function BillingPage() {
       setMessage({ type: 'error', text: 'Ödeme başarısız oldu. Lütfen tekrar deneyin.' })
       window.history.replaceState({}, '', '/settings/billing')
     }
-  }, [fetchSubscription, fetchInvoices])
+  }, [fetchSubscription, fetchInvoices, fetchTrialInfo])
 
   const handleUpgrade = async (planId: string) => {
     if (!paytrEnabled) {
@@ -194,8 +195,56 @@ export default function BillingPage() {
     setMessage({ type: 'error', text: reason || 'Ödeme başarısız oldu. Lütfen tekrar deneyin.' })
   }, [])
 
-  const currentPlan = (subscription?.plan || 'FREE') as string
+  const currentPlan = (subscription?.plan || 'FREE') as PlanId
   const planStatus = subscription?.status || 'NONE'
+
+  const startTrial = async () => {
+    if (!activeWebsite) return
+    try {
+      const res = await fetch('/api/trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId: activeWebsite.websiteId }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'PRO deneme süresi başlatıldı!' })
+        fetchSubscription()
+        fetchTrialInfo()
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Deneme başlatılamadı' })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Bağlantı hatası' })
+    }
+  }
+
+  const handlePlanAction = async (planId: PlanId) => {
+    if (planId === 'BUSINESS') {
+      window.location.href = '/contact'
+      return
+    }
+    if (planId === currentPlan || planId === 'FREE') return
+
+    if (currentPlan === 'FREE' && !trialInfo?.trialUsed && planId === 'PRO') {
+      await startTrial()
+      return
+    }
+
+    await handleUpgrade(planId)
+  }
+
+  // Deep link from pricing page: /settings/billing?plan=PRO
+  useEffect(() => {
+    if (!activeWebsite || loading) return
+    const params = new URLSearchParams(window.location.search)
+    const targetPlan = params.get('plan') as PlanId | null
+    if (!targetPlan || !['STARTER', 'PRO', 'BUSINESS'].includes(targetPlan)) return
+
+    window.history.replaceState({}, '', '/settings/billing')
+    void handlePlanAction(targetPlan)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWebsite, loading, trialInfo?.trialUsed, currentPlan])
 
   const getStatusBadge = () => {
     switch (planStatus) {
@@ -301,26 +350,7 @@ export default function BillingPage() {
                   </p>
                 </div>
                 <button
-                  onClick={async () => {
-                    if (!activeWebsite) return
-                    try {
-                      const res = await fetch('/api/trial', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ websiteId: activeWebsite.websiteId }),
-                      })
-                      const data = await res.json()
-                      if (res.ok) {
-                        setMessage({ type: 'success', text: 'PRO deneme süresi başlatıldı!' })
-                        fetchSubscription()
-                        fetchTrialInfo()
-                      } else {
-                        setMessage({ type: 'error', text: data.error || 'Deneme başlatılamadı' })
-                      }
-                    } catch {
-                      setMessage({ type: 'error', text: 'Bağlantı hatası' })
-                    }
-                  }}
+                  onClick={() => void startTrial()}
                   className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition"
                 >
                   Denemeyi Başlat
@@ -410,18 +440,28 @@ export default function BillingPage() {
               </ul>
               <button
                 onClick={() => {
-                  if (!paytrEnabled) {
+                  if (plan.id === 'BUSINESS') {
+                    void handlePlanAction('BUSINESS')
+                    return
+                  }
+                  if (!paytrEnabled && plan.price > 0 && plan.id !== 'FREE') {
                     setMessage({ type: 'error', text: 'Ödeme sistemi henüz aktif değil. PayTR API bilgileri girildiğinde ödeme yapabileceksiniz.' })
                     return
                   }
-                  if (plan.price > 0 && plan.id !== currentPlan) {
-                    handleUpgrade(plan.id)
+                  if (plan.id !== currentPlan && plan.id !== 'FREE') {
+                    void handlePlanAction(plan.id as PlanId)
                   }
                 }}
-                disabled={plan.id === currentPlan || checkoutLoading !== null}
+                disabled={
+                  plan.id === currentPlan ||
+                  plan.id === 'FREE' ||
+                  (checkoutLoading !== null && checkoutLoading !== plan.id)
+                }
                 className={`w-full mt-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  plan.id === currentPlan
+                  plan.id === currentPlan || plan.id === 'FREE'
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : plan.id === 'BUSINESS'
+                    ? 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
                     : !paytrEnabled
                     ? 'bg-primary text-primary-foreground opacity-60 cursor-pointer hover:opacity-80'
                     : checkoutLoading === plan.id
@@ -429,13 +469,14 @@ export default function BillingPage() {
                     : 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
                 }`}
               >
-                {plan.id === currentPlan
-                  ? '✓ Mevcut Plan'
-                  : !paytrEnabled
-                  ? 'Yakında'
-                  : checkoutLoading === plan.id
+                {checkoutLoading === plan.id
                   ? 'Yönlendiriliyor...'
-                  : '🚀 Yükselt'}
+                  : getBillingPlanCta(plan.id as PlanId, {
+                      isCurrentPlan: plan.id === currentPlan,
+                      trialUsed: trialInfo?.trialUsed,
+                      currentPlan,
+                      paytrEnabled,
+                    })}
               </button>
             </div>
           ))}
