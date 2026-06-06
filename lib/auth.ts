@@ -224,6 +224,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
   },
+  basePath: '/api/auth',
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
   debug: process.env.NODE_ENV === 'development',
