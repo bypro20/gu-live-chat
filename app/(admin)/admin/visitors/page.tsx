@@ -41,7 +41,7 @@ const browserColors: Record<string, string> = {
   firefox: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10 text-orange-400 border-orange-500/30',
   safari: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 text-blue-400 border-blue-500/30',
   edge: 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 text-cyan-400 border-cyan-500/30',
-  opera: 'bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 border-red-500/30',
+  opera: 'bg-red-500/15 text-red-400 border-red-500/30',
 }
 
 const countryMap: Record<string, { flag: string; x: number; y: number }> = {
@@ -357,17 +357,17 @@ export default function AdminVisitorsPage() {
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/40 to-transparent" />
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/[0.07] to-violet-500/[0.02] border border-violet-500/20 rounded-2xl p-4 lg:p-5">
+        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500/[0.07] to-sky-500/[0.02] border border-sky-500/20 rounded-2xl p-4 lg:p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-violet-400/80 tracking-wide">Toplam Oturum</p>
+              <p className="text-xs font-medium text-sky-400/80 tracking-wide">Toplam Oturum</p>
               <p className="text-2xl lg:text-3xl font-bold text-white mt-1 tabular-nums tracking-tight">{totalSessions}</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center text-violet-400 border border-violet-500/20">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center text-sky-400 border border-sky-500/20">
               <Activity className="w-5 h-5" />
             </div>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-400/40 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-400/40 to-transparent" />
         </div>
 
         <div className="relative overflow-hidden bg-gradient-to-br from-orange-500/[0.07] to-orange-500/[0.02] border border-orange-500/20 rounded-2xl p-4 lg:p-5">
@@ -477,7 +477,7 @@ export default function AdminVisitorsPage() {
                 const colors: Record<string, { bar: string; text: string; icon: any }> = {
                   Masaüstü: { bar: 'bg-gradient-to-r from-blue-500 to-blue-400', text: 'text-blue-400', icon: Monitor },
                   Mobil: { bar: 'bg-gradient-to-r from-emerald-500 to-emerald-400', text: 'text-emerald-400', icon: Smartphone },
-                  Tablet: { bar: 'bg-gradient-to-r from-violet-500 to-violet-400', text: 'text-violet-400', icon: Tablet },
+                  Tablet: { bar: 'bg-gradient-to-r from-sky-500 to-sky-400', text: 'text-sky-400', icon: Tablet },
                 }
                 const c = colors[type] || { bar: 'bg-gradient-to-r from-gray-500 to-gray-400', text: 'text-gray-400', icon: Monitor }
                 const Icon = c.icon

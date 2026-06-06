@@ -147,9 +147,9 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-5xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
         <div className="flex items-center justify-center h-64">
-          <div className="inline-block w-8 h-8 border-4 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -166,10 +166,10 @@ export default function BillingPage() {
         />
       )}
 
-      <div className="p-8 max-w-5xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Faturalama</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Planınızı yönetin ve fatura bilgilerinizi görüntüleyin</p>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Faturalama</h1>
+          <p className="text-sm text-muted-foreground mt-1">Planınızı yönetin ve fatura bilgilerinizi görüntüleyin</p>
         </div>
 
         {/* Message */}
@@ -195,7 +195,7 @@ export default function BillingPage() {
         )}
 
         {/* Current Plan */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-8">
+        <div className="surface p-5 sm:p-6 mb-8">
           {/* Trial Banner */}
           {planStatus === 'TRIALING' && subscription?.currentPeriodEnd && (
             <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-500/10 border border-blue-200 dark:border-blue-800">
@@ -258,20 +258,20 @@ export default function BillingPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mevcut Planınız</h2>
-                <span className="px-3 py-1 bg-[#1972F5]/10 text-[#1972F5] dark:bg-[#1972F5]/20 dark:text-[#60A5FA] text-xs font-semibold rounded-full">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+                <h2 className="text-lg font-semibold text-foreground">Mevcut Planınız</h2>
+                <span className="px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">
                   {PLANS.find(p => p.id === currentPlan)?.name || 'Ücretsiz'}
                 </span>
                 {getStatusBadge()}
               </div>
-              <p className="text-gray-500 dark:text-gray-300 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {PLANS.find(p => p.id === currentPlan)?.features.slice(0, 3).join(' • ') || 'Temel özellikler'}
               </p>
               {subscription?.currentPeriodEnd && planStatus === 'ACTIVE' && (
-                <p className="text-xs text-gray-400 dark:text-gray-300 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Yenileme tarihi: {new Date(subscription.currentPeriodEnd).toLocaleDateString('tr-TR')}
                 </p>
               )}
@@ -281,16 +281,16 @@ export default function BillingPage() {
                 </p>
               )}
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-right shrink-0">
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
                 ₺{PLANS.find(p => p.id === currentPlan)?.price || 0}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-300">/ay</p>
+              <p className="text-sm text-muted-foreground">/ay</p>
             </div>
           </div>
 
           {currentPlan !== 'FREE' && planStatus === 'ACTIVE' && (
-            <div className="mt-4 pt-4 border-t border-[#E5E7EB] dark:border-gray-700">
+            <div className="mt-4 pt-4 border-t border-border">
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
@@ -303,34 +303,34 @@ export default function BillingPage() {
         </div>
 
         {/* Plans */}
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plan Yükseltme</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Plan Yükseltme</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`rounded-2xl p-5 border-2 transition ${
+              className={`surface p-5 !border-2 transition ${
                 plan.id === currentPlan
-                  ? 'border-[#1972F5] bg-[#1972F5]/5'
+                  ? '!border-primary bg-primary/5'
                   : plan.id === 'PRO'
-                  ? 'border-[#1972F5]/30 hover:border-[#1972F5]/60'
-                  : 'border-[#E5E7EB] dark:border-gray-700 hover:border-[#1972F5]/30'
+                  ? '!border-primary/30 hover:!border-primary/60'
+                  : 'hover:!border-primary/30'
               }`}
             >
               {plan.id === 'PRO' && (
-                <span className="inline-block px-2 py-0.5 bg-[#1972F5] text-white text-xs font-semibold rounded-full mb-2">
+                <span className="inline-block px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full mb-2">
                   Popüler
                 </span>
               )}
-              <h3 className="font-bold text-gray-900 dark:text-white">{plan.name}</h3>
+              <h3 className="font-bold text-foreground">{plan.name}</h3>
               <div className="mt-2">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">₺{plan.price}</span>
-                {plan.price > 0 && <span className="text-gray-500 dark:text-gray-300 text-sm">/ay</span>}
+                <span className="text-2xl font-bold text-foreground">₺{plan.price}</span>
+                {plan.price > 0 && <span className="text-muted-foreground text-sm">/ay</span>}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">{plan.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
               <ul className="mt-4 space-y-1.5">
                 {plan.features.map((f) => (
-                  <li key={f} className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <li key={f} className="text-xs text-foreground flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     {f}
@@ -348,14 +348,14 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={plan.id === currentPlan || checkoutLoading !== null}
-                className={`w-full mt-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`w-full mt-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   plan.id === currentPlan
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
                     : !paytrEnabled
-                    ? 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white opacity-60 cursor-pointer hover:opacity-80'
+                    ? 'bg-primary text-primary-foreground opacity-60 cursor-pointer hover:opacity-80'
                     : checkoutLoading === plan.id
-                    ? 'bg-[#1972F5]/70 text-white cursor-wait'
-                    : 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] hover:from-[#1565DB] hover:to-[#7C3AED] text-white shadow-lg shadow-[#1972F5]/30 hover:shadow-[#1972F5]/50 hover:scale-[1.02]'
+                    ? 'bg-primary/70 text-primary-foreground cursor-wait'
+                    : 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
                 }`}
               >
                 {plan.id === currentPlan
@@ -388,22 +388,22 @@ export default function BillingPage() {
         )}
 
         {/* Billing History */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
+        <div className="mt-8 surface p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Fatura Geçmişi</h3>
+            <h3 className="text-lg font-semibold text-foreground">Fatura Geçmişi</h3>
             <Link
               href="/settings/billing/invoices"
-              className="text-sm text-[#1972F5] hover:text-[#1565DB] dark:text-[#60A5FA] dark:hover:text-[#C4B5FD] font-medium transition"
+              className="text-sm text-primary hover:text-primary-hover font-medium transition"
             >
               Tümünü Gör →
             </Link>
           </div>
-          <div className="text-center py-8 text-gray-500 dark:text-gray-300">
-            <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="text-center py-8 text-muted-foreground">
+            <svg className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <p>Henüz fatura bulunmuyor</p>
-            <p className="text-sm mt-1 text-gray-400 dark:text-gray-400">Ücretli bir plana geçtiğinizde faturalar burada görünecek</p>
+            <p className="text-sm mt-1 text-muted-foreground/70">Ücretli bir plana geçtiğinizde faturalar burada görünecek</p>
           </div>
         </div>
       </div>

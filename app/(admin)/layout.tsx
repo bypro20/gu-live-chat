@@ -75,7 +75,7 @@ export default function AdminLayout({
   ]
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#F0EDFF]">
+    <div className="h-screen flex overflow-hidden bg-[#0d0d1a]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />

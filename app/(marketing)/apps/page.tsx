@@ -22,9 +22,9 @@ export default function AppsPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Apps</p>
-        <h1 className="text-4xl font-bold tracking-tight">Eklenti mağazası</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Eklenti mağazası</h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Gu Chat\'i ihtiyacınıza göre genişletin. Tek tıkla etkinleştirin, anında kullanın.
+          Gu Chat’i ihtiyacınıza göre genişletin. Tek tıkla etkinleştirin, anında kullanın.
         </p>
       </div>
 

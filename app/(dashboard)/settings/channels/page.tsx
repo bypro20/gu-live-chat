@@ -130,10 +130,10 @@ export default function ChannelsPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kanallar</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Çoklu kanal iletişim entegrasyonlarını yönetin</p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Kanallar</h1>
+        <p className="text-sm text-muted-foreground mt-1">Çoklu kanal iletişim entegrasyonlarını yönetin</p>
       </div>
 
       {loading ? (
@@ -141,45 +141,45 @@ export default function ChannelsPage() {
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(CHANNEL_DEFS).map(([type, def]) => {
             const channel = getChannel(type)
             const connected = channel?.isActive ?? false
 
             return (
-              <div key={type} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-5 hover:shadow-md transition">
+              <div key={type} className="surface surface-hover p-5">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center text-2xl"
                       style={{ backgroundColor: `${def.color}15` }}
                     >
                       {def.icon}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{def.label}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{def.description}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{def.label}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{def.description}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-[#E5E7EB] dark:border-gray-700">
+                <div className="flex items-center justify-between pt-3 border-t border-border">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                    <span className={`text-xs font-medium ${connected ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
+                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-success' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                    <span className={`text-xs font-medium ${connected ? 'text-success' : 'text-muted-foreground'}`}>
                       {connected ? 'Bağlı' : 'Bağlı Değil'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => openConfig(channel, type)}
-                      className="px-3 py-1.5 text-xs font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg hover:bg-[#E5E7EB] dark:hover:bg-gray-600 transition"
+                      className="px-3 py-1.5 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-accent transition"
                     >
                       Yapılandır
                     </button>
                     <button
                       onClick={() => handleToggle(channel, type)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${connected ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${connected ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${connected ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -192,13 +192,13 @@ export default function ChannelsPage() {
       )}
 
       {configModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm" onClick={() => setConfigModal(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-[#E5E7EB] dark:border-gray-700 p-6 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4" onClick={() => setConfigModal(null)}>
+          <div className="surface shadow-xl p-5 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">
                 {CHANNEL_DEFS[configModal.type]?.label} Yapılandırma
               </h3>
-              <button onClick={() => setConfigModal(null)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+              <button onClick={() => setConfigModal(null)} className="p-1 text-muted-foreground hover:text-foreground transition shrink-0">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -208,21 +208,21 @@ export default function ChannelsPage() {
             <div className="space-y-4">
               {(CONFIG_FIELDS[configModal.type] || []).map((field) => (
                 <div key={field.key}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{field.label}</label>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">{field.label}</label>
                   <input
                     type={field.type}
                     value={configForm[field.key] || ''}
                     onChange={(e) => setConfigForm({ ...configForm, [field.key]: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder={field.placeholder}
                   />
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setConfigModal(null)} className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
-              <button onClick={saveConfig} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition">Kaydet</button>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
+              <button onClick={() => setConfigModal(null)} className="btn-secondary">İptal</button>
+              <button onClick={saveConfig} className="btn-primary">Kaydet</button>
             </div>
           </div>
         </div>

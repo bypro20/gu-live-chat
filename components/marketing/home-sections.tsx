@@ -236,7 +236,7 @@ export function AiShowcase() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <FadeIn>
             <span className="section-label mb-4">Yapay Zeka</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">AI asistanınız 4 adımda hazır</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">AI asistanınız 4 adımda hazır</h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               Bilgi bankanızı besleyin, akışları tanımlayın ve müşterilerinize 7/24 akıllı destek sunun.
             </p>
@@ -328,9 +328,9 @@ export function SharedInbox() {
           </FadeIn>
           <FadeIn>
             <span className="section-label mb-4">Birleşik Inbox</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">Tüm kanallar, tek panel</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Tüm kanallar, tek panel</h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
-              Widget, e-posta ve WhatsApp mesajlarını aynı inbox\'ta yönetin.
+              Widget, e-posta ve WhatsApp mesajlarını aynı inbox’ta yönetin.
               Kanal fark etmeksizin tutarlı müşteri deneyimi sunun.
             </p>
             <Link href="/integrations" className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-6 hover:text-primary-hover">
@@ -349,7 +349,7 @@ export function KnowledgeBaseSection() {
       <div className="max-w-6xl mx-auto text-center">
         <FadeIn>
           <span className="section-label mb-4">Bilgi Bankası</span>
-          <h2 className="text-3xl font-bold tracking-tight mt-4">Müşteriler kendi kendine çözsün</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Müşteriler kendi kendine çözsün</h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
             Makaleler, kategoriler ve arama ile self-servis destek merkezi oluşturun.
             Tekrarlayan soruları azaltın, ekibinize zaman kazandırın.
@@ -383,7 +383,7 @@ export function AiAutomationSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <FadeIn>
             <span className="section-label mb-4">Otomasyon</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">Tekrarlayan işleri otomatikleştirin</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Tekrarlayan işleri otomatikleştirin</h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               Workflow editörü ile tetikleyici ve aksiyon tabanlı akışlar oluşturun.
               Karşılama mesajları, etiketleme, yönlendirme ve webhook tetikleyicileri.
@@ -429,7 +429,7 @@ export function ProductDeepDive() {
         <FadeIn>
           <div className="text-center mb-12">
             <span className="section-label mb-4">Ürünler</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">İşletmeniz için modüler çözümler</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">İşletmeniz için modüler çözümler</h2>
           </div>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -463,7 +463,7 @@ export function UseCasesTabs() {
         <FadeIn>
           <div className="text-center mb-10">
             <span className="section-label mb-4">Kullanım Alanları</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">Her ekip için Gu Chat</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Her ekip için Gu Chat</h2>
           </div>
         </FadeIn>
         <div className="flex flex-wrap justify-center gap-2 mb-10">
@@ -506,7 +506,7 @@ export function PricingSection() {
         <FadeIn>
           <div className="text-center mb-10">
             <span className="section-label mb-4">Fiyatlandırma</span>
-            <h2 className="text-3xl font-bold tracking-tight mt-4">Basit, şeffaf fiyatlandırma</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Basit, şeffaf fiyatlandırma</h2>
             <p className="mt-3 text-muted-foreground">Gizli ücret yok. İşletmenizin büyüklüğüne uygun paketi seçin.</p>
           </div>
         </FadeIn>
@@ -536,7 +536,7 @@ export function TestimonialsSection() {
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight">Müşterilerimiz ne diyor?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Müşterilerimiz ne diyor?</h2>
           </div>
         </FadeIn>
         <div className="grid md:grid-cols-3 gap-5">
@@ -570,7 +570,7 @@ export function FaqSection() {
       <div className="max-w-2xl mx-auto">
         <FadeIn>
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold tracking-tight">Sık sorulan sorular</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Sık sorulan sorular</h2>
           </div>
         </FadeIn>
         <div className="space-y-2">

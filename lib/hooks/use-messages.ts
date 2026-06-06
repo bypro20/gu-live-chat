@@ -2,7 +2,12 @@
 
 import useSWR from 'swr'
 import { useState, useCallback, useEffect } from 'react'
-import { connectSocket, isSocketConnected } from '@/lib/socket-client'
+import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
+
+// Poll fast (~2s) when relying on REST polling; back off to a safety-net
+// interval when a live socket connection is carrying realtime updates.
+const POLL_FAST_MS = 2000
+const POLL_IDLE_MS = 30000
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -44,22 +49,35 @@ async function fetcher(url: string) {
 
 export function useMessages(conversationId: string | null) {
   const [sending, setSending] = useState(false)
-  const [pollInterval, setPollInterval] = useState(30000)
+  const [pollInterval, setPollInterval] = useState(
+    isSocketEnabled() ? POLL_IDLE_MS : POLL_FAST_MS
+  )
 
   useEffect(() => {
+    // No socket server configured → always rely on fast polling.
+    if (!isSocketEnabled()) {
+      setPollInterval(POLL_FAST_MS)
+      return
+    }
     connectSocket()
-    const update = () => setPollInterval(isSocketConnected() ? 30000 : 4000)
+    const update = () =>
+      setPollInterval(isSocketConnected() ? POLL_IDLE_MS : POLL_FAST_MS)
     update()
     const id = setInterval(update, 5000)
     return () => clearInterval(id)
   }, [])
 
   const { data, error, mutate, isLoading } = useSWR<MessagesResponse>(
+    // Key is null for unselected conversations, so SWR only polls the
+    // active/selected conversation — background ones are not fetched.
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
     fetcher,
     {
       refreshInterval: pollInterval,
+      // Pause polling while the tab is hidden/unfocused; refetch on return.
+      refreshWhenHidden: false,
       revalidateOnFocus: true,
+      dedupingInterval: 1000,
     }
   )
 

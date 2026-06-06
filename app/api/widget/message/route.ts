@@ -6,6 +6,7 @@ import { notifyNewConversation, notifyWebsiteMembers } from '@/lib/notifications
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { runChatbotForNewConversation } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
+import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 
@@ -186,6 +187,15 @@ export async function POST(req: Request) {
       visitorId: visitor.id,
       messageContent: message.content,
       senderType: 'VISITOR',
+    })
+
+    // Automatic AI bot reply (Crisp-style): only when enabled and the
+    // conversation hasn't been taken over by a human agent. Internally
+    // guarded and never throws, so it can't break message delivery.
+    await maybeRunAiAutoReply({
+      websiteDbId: website.id,
+      websitePublicId: website.websiteId,
+      conversationId,
     })
 
     return NextResponse.json({

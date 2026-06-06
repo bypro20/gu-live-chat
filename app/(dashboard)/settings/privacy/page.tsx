@@ -102,7 +102,7 @@ export default function PrivacySettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <div className="flex items-center justify-center py-16">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
@@ -111,126 +111,126 @@ export default function PrivacySettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gizlilik & KVKK/GDPR</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Gizlilik & KVKK/GDPR</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Gizlilik politikası, veri saklama ve onay ayarlarını yönetin
         </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Consent Banner */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">KVKK/GDPR Onay Bannerı</h3>
+        <div className="surface p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold text-foreground">KVKK/GDPR Onay Bannerı</h3>
             <button
               onClick={() => setSettings({ ...settings, showConsentBanner: !settings.showConsentBanner })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${settings.showConsentBanner ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${settings.showConsentBanner ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${settings.showConsentBanner ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Ziyaretçilere veri işleme ve çerez politikası hakkında bilgi veren onay bannerı gösterin
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Metni</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Banner Metni</label>
             <textarea
               value={settings.consentBannerText}
               onChange={(e) => setSettings({ ...settings, consentBannerText: e.target.value })}
-              className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
               rows={3}
             />
           </div>
         </div>
 
         {/* Cookie Consent */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Çerez Onayı</h3>
+        <div className="surface p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Çerez Onayı</h3>
             <button
               onClick={() => setSettings({ ...settings, cookieConsentEnabled: !settings.cookieConsentEnabled })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${settings.cookieConsentEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${settings.cookieConsentEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${settings.cookieConsentEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Çerez Açıklaması</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Çerez Açıklaması</label>
             <textarea
               value={settings.cookieConsentText}
               onChange={(e) => setSettings({ ...settings, cookieConsentText: e.target.value })}
-              className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
               rows={2}
             />
           </div>
         </div>
 
         {/* Privacy Policy URL */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gizlilik Politikası</h3>
+        <div className="surface p-5 sm:p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Gizlilik Politikası</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gizlilik Politikası URL</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Gizlilik Politikası URL</label>
             <input
               type="url"
               value={settings.privacyPolicyUrl}
               onChange={(e) => setSettings({ ...settings, privacyPolicyUrl: e.target.value })}
-              className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               placeholder="https://ornek.com/gizlilik-politikasi"
             />
           </div>
         </div>
 
         {/* Data Retention Policy */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Veri Saklama Politikası</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <div className="surface p-5 sm:p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Veri Saklama Politikası</h3>
+          <p className="text-sm text-muted-foreground mb-6">
             Veri türlerine göre saklama sürelerini belirleyin. Süresi dolan veriler otomatik olarak temizlenir.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ziyaretçi Verileri (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Ziyaretçi Verileri (gün)</label>
               <input
                 type="number"
                 min={1}
                 max={3650}
                 value={settings.visitorDataDays}
                 onChange={(e) => setSettings({ ...settings, visitorDataDays: parseInt(e.target.value) || 365 })}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Oturum Verileri (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Oturum Verileri (gün)</label>
               <input
                 type="number"
                 min={1}
                 max={3650}
                 value={settings.sessionDataDays}
                 onChange={(e) => setSettings({ ...settings, sessionDataDays: parseInt(e.target.value) || 90 })}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sohbet Geçmişi (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Sohbet Geçmişi (gün)</label>
               <input
                 type="number"
                 min={1}
                 max={3650}
                 value={settings.chatHistoryDays}
                 onChange={(e) => setSettings({ ...settings, chatHistoryDays: parseInt(e.target.value) || 730 })}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               />
             </div>
           </div>
-          <div className="flex items-center justify-between pt-3 border-t border-[#E5E7EB] dark:border-gray-700">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-border">
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Otomatik Silme</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Süresi dolan verileri otomatik olarak temizle</p>
+              <p className="text-sm font-medium text-foreground">Otomatik Silme</p>
+              <p className="text-xs text-muted-foreground">Süresi dolan verileri otomatik olarak temizle</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, autoDelete: !settings.autoDelete })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${settings.autoDelete ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${settings.autoDelete ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${settings.autoDelete ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
@@ -238,14 +238,14 @@ export default function PrivacySettingsPage() {
         </div>
 
         {/* Data Processing Agreement */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Veri İşleme Sözleşmesi (DPA)</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            KVKK ve GDPR uyumlu Veri İşleme Sözleşmesi'ni indirin
+        <div className="surface p-5 sm:p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Veri İşleme Sözleşmesi (DPA)</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            KVKK ve GDPR uyumlu Veri İşleme Sözleşmesi’ni indirin
           </p>
           <button
             onClick={handleDownloadDPA}
-            className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl hover:bg-[#E5E7EB] dark:hover:bg-gray-600 transition"
+            className="btn-secondary"
           >
             DPA Sözleşmesini İndir
           </button>
@@ -255,11 +255,7 @@ export default function PrivacySettingsPage() {
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            className={`px-6 py-3 rounded-xl font-semibold transition ${
-              saved
-                ? 'bg-green-500 text-white'
-                : 'bg-primary hover:bg-primary/90 text-white'
-            }`}
+            className={`btn-primary w-full sm:w-auto ${saved ? '!bg-success' : ''}`}
           >
             {saved ? '✓ Kaydedildi' : 'Kaydet'}
           </button>

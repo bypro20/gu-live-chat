@@ -179,44 +179,44 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Otomasyonlar</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Tekrarlayan işleri otomatikleştirin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Otomasyonlar</h1>
+          <p className="text-sm text-muted-foreground mt-1">Tekrarlayan işleri otomatikleştirin</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowCreate(true) }}
-          className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition"
+          className="btn-primary w-full sm:w-auto"
         >
           + İş Akışı Oluştur
         </button>
       </div>
 
       {showCreate && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="surface p-5 sm:p-6 mb-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             {editingId ? 'İş Akışını Düzenle' : 'Yeni İş Akışı'}
           </h3>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">İş Akışı Adı</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">İş Akışı Adı</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="İş akışı adı"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tetikleyici</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici</label>
                 <select
                   value={form.triggerType}
                   onChange={(e) => setForm({ ...form, triggerType: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
                   {Object.entries(TRIGGER_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -225,49 +225,56 @@ export default function WorkflowsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Açıklama</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Açıklama</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Açıklama"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Adımlar</label>
-                <button onClick={addStep} className="text-xs font-medium text-primary hover:text-primary/80 transition">+ Adım Ekle</button>
+                <label className="text-sm font-medium text-foreground">Adımlar</label>
+                <button onClick={addStep} className="text-xs font-medium text-primary hover:text-primary-hover transition">+ Adım Ekle</button>
               </div>
               <div className="space-y-2">
                 {steps.map((step, index) => (
-                  <div key={index} className="flex items-center gap-2 p-3 bg-[#EFF6FF] dark:bg-gray-750 rounded-xl border border-[#E5E7EB] dark:border-gray-700">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-xs font-bold shrink-0">{index + 1}</span>
-                    <select
-                      value={step.actionType}
-                      onChange={(e) => updateStep(index, 'actionType', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                    >
-                      {AVAILABLE_ACTIONS.map((a) => (
-                        <option key={a.value} value={a.value}>{a.label}</option>
-                      ))}
-                    </select>
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-muted rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">{index + 1}</span>
+                      <select
+                        value={step.actionType}
+                        onChange={(e) => updateStep(index, 'actionType', e.target.value)}
+                        className="flex-1 sm:flex-initial sm:w-auto px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      >
+                        {AVAILABLE_ACTIONS.map((a) => (
+                          <option key={a.value} value={a.value}>{a.label}</option>
+                        ))}
+                      </select>
+                      <button onClick={() => removeStep(index)} className="p-1.5 text-muted-foreground hover:text-destructive transition shrink-0 sm:hidden ml-auto">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={step.config}
                       onChange={(e) => updateStep(index, 'config', e.target.value)}
-                      className="w-32 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       placeholder="Yapılandırma"
                     />
                     <input
                       type="number"
                       value={step.delayMs}
                       onChange={(e) => updateStep(index, 'delayMs', e.target.value)}
-                      className="w-24 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="w-full sm:w-28 px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       placeholder="Gecikme ms"
                     />
-                    <button onClick={() => removeStep(index)} className="p-1.5 text-red-400 hover:text-red-600 transition shrink-0">
+                    <button onClick={() => removeStep(index)} className="p-1.5 text-muted-foreground hover:text-destructive transition shrink-0 hidden sm:block">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -275,68 +282,68 @@ export default function WorkflowsPage() {
                   </div>
                 ))}
                 {steps.length === 0 && (
-                  <p className="text-sm text-gray-400 italic">Henüz adım eklenmedi</p>
+                  <p className="text-sm text-muted-foreground italic">Henüz adım eklenmedi</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <button onClick={resetForm} className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
-            <button onClick={handleCreate} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
+            <button onClick={resetForm} className="btn-secondary">İptal</button>
+            <button onClick={handleCreate} className="btn-primary">
               {editingId ? 'Güncelle' : 'Oluştur'}
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700">
+      <div className="surface">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : workflows.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="p-10 sm:p-12 text-center">
+            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="font-medium text-gray-900 dark:text-white">Henüz iş akışı yok</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">İlk otomasyonunuzu oluşturun</p>
+            <h3 className="font-medium text-foreground">Henüz iş akışı yok</h3>
+            <p className="text-sm text-muted-foreground mt-1">İlk otomasyonunuzu oluşturun</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
+          <div className="divide-y divide-border">
             {workflows.map((wf) => (
               <div key={wf.id} className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{wf.name}</h3>
-                      <span className={`px-2.5 py-0.5 text-xs rounded-full ${TRIGGER_COLORS[wf.triggerType] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <h3 className="font-semibold text-foreground">{wf.name}</h3>
+                      <span className={`px-2.5 py-0.5 text-xs rounded-full ${TRIGGER_COLORS[wf.triggerType] || 'bg-muted text-muted-foreground'}`}>
                         {TRIGGER_LABELS[wf.triggerType] || wf.triggerType}
                       </span>
                     </div>
                     {wf.description && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{wf.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{wf.description}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{wf.isActive ? 'Aktif' : 'Pasif'}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">{wf.isActive ? 'Aktif' : 'Pasif'}</span>
                       <button
                         onClick={() => toggleActive(wf)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${wf.isActive ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${wf.isActive ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
                       >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${wf.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </label>
-                    <button onClick={() => startEdit(wf)} className="p-1.5 text-gray-400 hover:text-primary transition">
+                    <button onClick={() => startEdit(wf)} className="p-1.5 text-muted-foreground hover:text-primary transition">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
-                    <button onClick={() => deleteWorkflow(wf.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition">
+                    <button onClick={() => deleteWorkflow(wf.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -348,14 +355,14 @@ export default function WorkflowsPage() {
                   <div className="flex items-center gap-2 flex-wrap mt-2">
                     {wf.steps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-1.5">
-                        <span className={`px-2.5 py-1 text-xs rounded-lg ${ACTION_COLORS[step.actionType] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                        <span className={`px-2.5 py-1 text-xs rounded-lg ${ACTION_COLORS[step.actionType] || 'bg-muted text-muted-foreground'}`}>
                           {ACTION_LABELS[step.actionType] || step.actionType}
                         </span>
                         {step.delayMs && (
-                          <span className="text-xs text-gray-400">({step.delayMs}ms)</span>
+                          <span className="text-xs text-muted-foreground">({step.delayMs}ms)</span>
                         )}
                         {idx < wf.steps.length - 1 && (
-                          <svg className="w-4 h-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-4 h-4 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         )}

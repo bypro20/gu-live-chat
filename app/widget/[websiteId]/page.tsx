@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { connectSocket, getSocket, retainSocket, releaseSocket } from '@/lib/socket-client'
+import { connectSocket, getSocket, retainSocket, releaseSocket, isSocketEnabled } from '@/lib/socket-client'
 import type { Socket } from 'socket.io-client'
 
 interface WidgetConfig {
@@ -34,6 +34,30 @@ interface KBArticle {
 const formatTime = (date: string) => {
   const d = new Date(date)
   return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+}
+
+/**
+ * Merge server-fetched messages (source of truth) into the local list,
+ * idempotently by id. Optimistic visitor messages (temp_*) that the server
+ * hasn't persisted yet are preserved so the UI never flickers or loses text.
+ * Returns the previous array reference unchanged when nothing differs, to
+ * avoid needless re-renders / scroll jumps while polling.
+ */
+function mergeWidgetMessages(prev: Message[], incoming: Message[]): Message[] {
+  const serverKeys = new Set(incoming.map((m) => `${m.senderType}|${m.content}`))
+  const pendingTemps = prev.filter(
+    (m) => m.id.startsWith('temp_') && !serverKeys.has(`${m.senderType}|${m.content}`)
+  )
+
+  const merged = [...incoming, ...pendingTemps].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  )
+
+  // Bail out if the resulting list is identical (same ids, same order).
+  if (merged.length === prev.length && merged.every((m, i) => m.id === prev[i].id)) {
+    return prev
+  }
+  return merged
 }
 
 const AGENT = {
@@ -286,6 +310,10 @@ export default function WidgetPage() {
     if (!isInitialized || !visitorTokenRef.current) return
 
     const socket = retainSocket()
+    // No socket server configured (e.g. Vercel) → rely on REST polling.
+    if (!socket) {
+      return () => { releaseSocket() }
+    }
 
     socket.on('connect', () => {
       setSocketConnected(true)
@@ -384,6 +412,7 @@ export default function WidgetPage() {
     if (!conversationId) return
 
     const socket = getSocket() || connectSocket()
+    if (!socket) return
     const join = () => {
       socket.emit('visitor:join-conversation', { conversationId })
     }
@@ -398,6 +427,61 @@ export default function WidgetPage() {
       socket.off('connect', join)
     }
   }, [conversationId])
+
+  // REST polling fallback: pull conversation messages (~2s) whenever a live
+  // socket isn't carrying updates. Idempotent merge by id prevents duplicates
+  // when socket + polling briefly overlap.
+  useEffect(() => {
+    if (!conversationId) return
+    if (isSocketEnabled() && socketConnected) return
+
+    let active = true
+
+    const poll = async () => {
+      if (document.hidden) return
+      try {
+        const fp = getFingerprint()
+        const res = await fetch(
+          `/api/widget/messages?conversationId=${encodeURIComponent(conversationId)}&fingerprint=${encodeURIComponent(fp)}`
+        )
+        if (!res.ok) return
+        const data = await res.json()
+        if (!active) return
+
+        if (Array.isArray(data.messages)) {
+          const incoming: Message[] = data.messages.map((m: {
+            id: string
+            content: string
+            type: string
+            senderType: string
+            senderName?: string | null
+            createdAt: string
+          }) => ({
+            id: m.id,
+            content: m.content,
+            type: m.type || 'TEXT',
+            senderType: m.senderType as Message['senderType'],
+            senderName: m.senderName || undefined,
+            createdAt: m.createdAt,
+          }))
+          setMessages((prev) => mergeWidgetMessages(prev, incoming))
+        }
+
+        if (data.status) {
+          setConversationStatus((prev) => (prev === data.status ? prev : data.status))
+        }
+      } catch {
+        // Silent — polling will retry on the next tick.
+      }
+    }
+
+    poll()
+    const id = setInterval(poll, 2000)
+    return () => {
+      active = false
+      clearInterval(id)
+    }
+  }, [conversationId, socketConnected])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

@@ -26,7 +26,7 @@ export default function ContactPage() {
     <MarketingPageShell>
       <div className="mb-10">
         <p className="section-label mb-4">İletişim</p>
-        <h1 className="text-4xl font-bold tracking-tight">Bize ulaşın</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Bize ulaşın</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Sorularınız, demo talepleri veya kurumsal çözümler için ekibimizle iletişime geçin.
         </p>

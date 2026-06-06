@@ -72,13 +72,13 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="max-w-5xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">{websiteName} - Bilgi Bankası</h1>
-              <p className="text-muted-foreground mt-1">Sık sorulan sorular ve yardım dokümanları</p>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{websiteName} - Bilgi Bankası</h1>
+              <p className="text-sm text-muted-foreground mt-1">Sık sorulan sorular ve yardım dokümanları</p>
             </div>
-            <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition">
+            <Link href="/" className="shrink-0 text-sm text-muted-foreground hover:text-primary transition">
               Ana Sayfa
             </Link>
           </div>
@@ -91,24 +91,24 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Makale ara..."
-              className="w-full pl-12 pr-4 py-3.5 border border-border rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-lg"
+              className="w-full pl-12 pr-4 py-3 sm:py-3.5 border border-border rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-base sm:text-lg"
             />
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="flex gap-8">
-            <aside className="w-56 shrink-0">
-              <nav className="space-y-1 sticky top-8">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            <aside className="w-full lg:w-56 lg:shrink-0">
+              <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible lg:sticky lg:top-8 -mx-4 px-4 lg:mx-0 lg:px-0 pb-1 lg:pb-0">
                 <button
                   onClick={() => { setSelectedCategory(null); setSelectedArticle(null) }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${!selectedCategory && !selectedArticle ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
+                  className={`shrink-0 lg:shrink lg:w-full whitespace-nowrap text-left px-3 py-2 rounded-lg text-sm transition ${!selectedCategory && !selectedArticle ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
                 >
                   Tüm Makaleler
                 </button>
@@ -116,7 +116,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                   <button
                     key={cat.id}
                     onClick={() => { setSelectedCategory(cat.id); setSelectedArticle(null) }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === cat.id ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
+                    className={`shrink-0 lg:shrink lg:w-full whitespace-nowrap text-left px-3 py-2 rounded-lg text-sm transition ${selectedCategory === cat.id ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
                   >
                     {cat.icon && <span className="mr-2">{cat.icon}</span>}
                     {cat.name}
@@ -134,18 +134,18 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                     </svg>
                     Geri
                   </button>
-                  <div className="surface p-8">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                  <div className="surface p-5 sm:p-8">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
                       {selectedArticle.category && (
                         <span className="px-2 py-0.5 bg-primary-light text-primary rounded-full">{selectedArticle.category.name}</span>
                       )}
                       {selectedArticle.viewCount > 0 && <span>{selectedArticle.viewCount} görüntülenme</span>}
                     </div>
-                    <h1 className="text-3xl font-bold text-foreground mb-4">{selectedArticle.title}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{selectedArticle.title}</h1>
                     {selectedArticle.excerpt && (
                       <p className="text-lg text-muted-foreground mb-8 leading-relaxed">{selectedArticle.excerpt}</p>
                     )}
-                    <div className="prose prose-gray dark:prose-invert max-w-none leading-relaxed whitespace-pre-wrap text-foreground">
+                    <div className="prose prose-gray dark:prose-invert max-w-none leading-relaxed whitespace-pre-wrap break-words text-foreground">
                       {selectedArticle.content}
                     </div>
                   </div>

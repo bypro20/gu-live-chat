@@ -133,20 +133,20 @@ export default function CategoriesPage() {
   if (!website) return null
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Link href="/settings/knowledge" className="hover:text-primary">Bilgi Bankası</Link>
             <span>/</span>
             <span className="text-foreground">Kategoriler</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Kategoriler</h1>
-          <p className="text-muted-foreground mt-1">Makale kategorilerini yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Kategoriler</h1>
+          <p className="text-sm text-muted-foreground mt-1">Makale kategorilerini yönetin</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
+          className="w-full sm:w-auto px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
         >
           + Yeni Kategori
         </button>
@@ -163,10 +163,10 @@ export default function CategoriesPage() {
       )}
 
       {showForm && (
-        <div className="surface p-6 mb-6 animate-in">
+        <div className="surface p-5 sm:p-6 mb-6 animate-in">
           <h3 className="text-lg font-semibold text-foreground mb-4">{editingId ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Ad</label>
                 <input
@@ -215,7 +215,7 @@ export default function CategoriesPage() {
               />
             </div>
           </div>
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
             <button onClick={resetForm} className="px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-accent transition">
               İptal
             </button>
@@ -244,17 +244,17 @@ export default function CategoriesPage() {
         ) : (
           <div className="divide-y divide-border">
             {categories.map(cat => (
-              <div key={cat.id} className="p-4 flex items-center justify-between surface-hover">
-                <div className="flex items-center gap-4">
-                  {cat.icon && <span className="text-2xl">{cat.icon}</span>}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">{cat.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+              <div key={cat.id} className="p-4 flex items-center justify-between gap-3 surface-hover">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  {cat.icon && <span className="text-2xl shrink-0">{cat.icon}</span>}
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-foreground truncate">{cat.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
                       /{cat.slug} • {cat._count.articles} makale{cat.description ? ` • ${cat.description}` : ''}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => handleEdit(cat)} className="p-2 text-muted-foreground hover:text-primary transition">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

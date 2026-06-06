@@ -311,24 +311,21 @@ export default function VisitorsPage() {
   })
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-[#F8F7FC] dark:bg-[#0a0a12]">
+    <div className="h-[calc(100dvh-3.5rem)] lg:h-screen flex flex-col bg-background text-foreground">
       {upgradeRequired ? (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#1972F5]/10 to-[#2563EB]/10 flex items-center justify-center">
-              <svg className="w-10 h-10 text-[#1972F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary-light flex items-center justify-center">
+              <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Ekran İzleme</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <h2 className="text-xl font-bold mb-2">Ekran İzleme</h2>
+            <p className="text-muted-foreground mb-4">
               Canlı ziyaretçi izleme, cursor takibi ve ekran önizlemesi profesyonel ve iş paketlerinde kullanılabilir.
             </p>
-            <Link
-              href="/settings/billing"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white font-semibold rounded-xl shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 transition-all hover:scale-[1.02]"
-            >
+            <Link href="/settings/billing" className="btn-primary">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -337,24 +334,24 @@ export default function VisitorsPage() {
           </div>
         </div>
       ) : (
-      <div className="flex-1 flex flex-col lg:flex-row">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
       {/* Left Panel — Visitor List */}
-      <div className="w-full lg:w-[380px] xl:w-[420px] border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-[#12121f]">
+      <div className={`w-full lg:w-[380px] xl:w-[420px] border-r border-border flex-col bg-card min-h-0 ${selectedVisitor ? 'hidden lg:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">Ekran İzleme</h1>
-              <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-sm">
+              <h1 className="text-lg font-bold">Ekran İzleme</h1>
+              <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-success-light text-success tabular-nums">
                 {visitors.size}
               </span>
             </div>
             <button
               onClick={fetchLiveVisitors}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               title="Yenile"
             >
-              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -362,7 +359,7 @@ export default function VisitorsPage() {
 
           {/* Search */}
           <div className="relative mb-2">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -370,7 +367,7 @@ export default function VisitorsPage() {
               placeholder="İsim, email veya sayfa ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0a0a12] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1972F5]/30 focus:border-[#1972F5] transition-all"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-border bg-muted text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
           </div>
 
@@ -384,10 +381,10 @@ export default function VisitorsPage() {
               <button
                 key={f.key}
                 onClick={() => setFilterDevice(f.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
                   filterDevice === f.key
-                    ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/25'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-primary text-primary-foreground shadow-brand'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {f.label}
@@ -397,44 +394,44 @@ export default function VisitorsPage() {
         </div>
 
         {/* Visitor List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {loading && visitors.size === 0 ? (
             <div className="flex items-center justify-center h-40">
-              <div className="w-8 h-8 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filteredVisitors.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center px-6">
               <span className="text-4xl mb-3">👁️</span>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-foreground">
                 {visitors.size === 0 ? 'Henüz ziyaretçi yok' : 'Sonuç bulunamadı'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {visitors.size === 0
                   ? 'Sitenize gelen ziyaretçiler burada görünecek'
                   : 'Farklı anahtar kelimeler deneyin'}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
+            <div className="divide-y divide-border">
               {filteredVisitors.map((visitor) => (
                 <button
                   key={visitor.visitorId}
                   onClick={() => selectVisitor(visitor.visitorId)}
-                  className={`w-full text-left p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all ${
+                  className={`w-full text-left p-3.5 hover:bg-muted/60 transition-all ${
                     selectedVisitorId === visitor.visitorId
-                      ? 'bg-[#1972F5]/5 dark:bg-[#1972F5]/10 border-l-2 border-l-[#1972F5]'
+                      ? 'bg-primary-light border-l-2 border-l-primary'
                       : 'border-l-2 border-l-transparent'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1972F5] to-[#2563EB] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shadow-brand">
                         {(visitor.name || 'A')[0].toUpperCase()}
                       </div>
                       {visitor.isLive && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-[#12121f] rounded-full">
-                          <div className="w-full h-full bg-emerald-500 rounded-full animate-ping opacity-75" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success border-2 border-card rounded-full">
+                          <div className="w-full h-full bg-success rounded-full animate-ping opacity-75" />
                         </div>
                       )}
                     </div>
@@ -442,16 +439,16 @@ export default function VisitorsPage() {
                     {/* Info */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {visitor.name || 'Anonim'}
                         </p>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                        <span className="text-[10px] text-muted-foreground shrink-0">
                           {visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt) : ''}
                         </span>
                       </div>
 
                       {/* Current page */}
-                      <p className="text-xs text-[#1972F5] dark:text-[#60A5FA] truncate mt-0.5" title={visitor.currentTitle || visitor.currentPage}>
+                      <p className="text-xs text-primary truncate mt-0.5" title={visitor.currentTitle || visitor.currentPage}>
                         {visitor.currentTitle || visitor.currentPage || '—'}
                       </p>
 
@@ -460,7 +457,7 @@ export default function VisitorsPage() {
                         <BrowserIcon browser={visitor.browser} />
                         <DeviceIcon device={visitor.device} />
                         {visitor.country && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500">{visitor.country}{visitor.city ? `, ${visitor.city}` : ''}</span>
+                          <span className="text-[10px] text-muted-foreground">{visitor.country}{visitor.city ? `, ${visitor.city}` : ''}</span>
                         )}
                       </div>
                     </div>
@@ -473,7 +470,19 @@ export default function VisitorsPage() {
       </div>
 
       {/* Right Panel — Live Screen Viewer (dominant, full height) */}
-      <div className="flex-1 flex flex-col min-h-0 p-2">
+      <div className={`flex-1 flex-col min-h-0 ${selectedVisitor ? 'flex' : 'hidden lg:flex'}`}>
+        {selectedVisitor && (
+          <button
+            onClick={() => selectVisitor(null)}
+            className="lg:hidden flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground border-b border-border bg-card shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Ziyaretçi listesine dön
+          </button>
+        )}
+        <div className="flex-1 flex flex-col min-h-0 p-2">
         {selectedVisitor ? (
           <>
             {/* WebRTC viewer — manages peer connection */}
@@ -505,26 +514,27 @@ export default function VisitorsPage() {
           /* Empty State */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center px-6">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#1972F5]/10 to-[#2563EB]/10 flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#1972F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-primary-light flex items-center justify-center">
+                <svg className="w-12 h-12 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-bold text-foreground mb-2">
                 Ekran İzleme
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+              <p className="text-sm text-muted-foreground max-w-sm">
                 Ziyaretçi ekranını gerçek zamanlı izleyin. Kredi kartı ve şifre gibi hassas bilgiler otomatik olarak gizlenir.
               </p>
               {visitors.size > 0 && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">
+                <p className="text-xs text-success mt-3 font-medium">
                   ● Şu anda {visitors.size} ziyaretçi çevrimiçi
                 </p>
               )}
             </div>
           </div>
         )}
+        </div>
       </div>
       </div>
       )}

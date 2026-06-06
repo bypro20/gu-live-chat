@@ -283,7 +283,7 @@ export function OverlayPreview({
             title={interventionMode ? 'Müdahale modunu kapat' : 'Fare ile müdahale et'}
             className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-[11px] font-semibold transition-all ${
               interventionMode
-                ? 'bg-violet-500/30 text-violet-300 ring-1 ring-violet-400/60 shadow-sm shadow-violet-500/20'
+                ? 'bg-sky-500/30 text-sky-200 ring-1 ring-sky-400/60 shadow-sm shadow-sky-500/20'
                 : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70'
             }`}
           >
@@ -404,7 +404,7 @@ export function OverlayPreview({
     >
       {/* Intervention mode banner */}
       {interventionMode && isActive && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600/95 backdrop-blur-sm text-white text-[12px] font-semibold shadow-xl shadow-violet-600/40 pointer-events-none animate-pulse">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600/95 backdrop-blur-sm text-white text-[12px] font-semibold shadow-xl shadow-sky-600/40 pointer-events-none animate-pulse">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 13l6 6" />
@@ -508,8 +508,8 @@ export function OverlayPreview({
                   transform: 'translate(-50%, -50%)',
                 }}
               >
-                <div className="w-8 h-8 rounded-full bg-violet-500/50 animate-ping" />
-                <div className="absolute inset-0 w-8 h-8 rounded-full border-2 border-violet-400" />
+                <div className="w-8 h-8 rounded-full bg-sky-500/50 animate-ping" />
+                <div className="absolute inset-0 w-8 h-8 rounded-full border-2 border-sky-400" />
               </div>
             )
           })}

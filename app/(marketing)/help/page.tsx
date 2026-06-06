@@ -40,7 +40,7 @@ export default function HelpPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Yardım</p>
-        <h1 className="text-4xl font-bold tracking-tight">Yardım Merkezi</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Yardım Merkezi</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Kurulum, kullanım ve sorun giderme rehberleri.
         </p>

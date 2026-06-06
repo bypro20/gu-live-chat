@@ -27,7 +27,7 @@ export default function AiPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Yapay Zeka</p>
-        <h1 className="text-4xl font-bold tracking-tight">Akıllı destek, gerçek sonuçlar</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Akıllı destek, gerçek sonuçlar</h1>
         <p className="mt-4 text-lg text-muted-foreground leading-relaxed max-w-2xl">
           Gu Chat AI asistanı tekrarlayan soruları otomatik yanıtlar, ekibinize zaman kazandırır
           ve müşterilerinize 7/24 kesintisiz destek sunar.

@@ -70,7 +70,7 @@ export default function StatusPageSettingsPage() {
     description: '',
     subdomain: '',
     logoUrl: '',
-    primaryColor: '#6D28D9',
+    primaryColor: '#1972F5',
     twitterHandle: '',
     isActive: true,
     isPublic: true,
@@ -211,7 +211,7 @@ export default function StatusPageSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-48 bg-muted rounded-lg" />
           <div className="h-4 w-72 bg-muted rounded-lg" />
@@ -222,11 +222,11 @@ export default function StatusPageSettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Durum Sayfası</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Durum Sayfası</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Sistem durumunuzu müşterilerinizle paylaşın
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function StatusPageSettingsPage() {
             <a
               href={`/${pageData.subdomain}`}
               target="_blank"
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-muted text-foreground font-medium rounded-xl hover:bg-accent transition text-sm"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-muted text-foreground font-medium rounded-xl hover:bg-accent transition text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -246,7 +246,7 @@ export default function StatusPageSettingsPage() {
           <button
             onClick={savePage}
             disabled={saving}
-            className={`px-6 py-2.5 rounded-xl font-semibold transition text-sm ${
+            className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl font-semibold transition text-sm ${
               saved
                 ? 'bg-success text-success-foreground'
                 : 'bg-primary hover:bg-primary-hover text-primary-foreground'
@@ -259,7 +259,7 @@ export default function StatusPageSettingsPage() {
 
       <div className="space-y-6">
         {/* Settings Card */}
-        <div className="surface p-6">
+        <div className="surface p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Sayfa Ayarları</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -330,7 +330,7 @@ export default function StatusPageSettingsPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-border">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -353,8 +353,8 @@ export default function StatusPageSettingsPage() {
         </div>
 
         {/* Components Card */}
-        <div className="surface p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="surface p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-foreground">Bileşenler</h2>
             {pageData.id && (
               <div className="flex gap-2">
@@ -362,12 +362,12 @@ export default function StatusPageSettingsPage() {
                   type="text"
                   value={newComponent.name}
                   onChange={(e) => setNewComponent({ ...newComponent, name: e.target.value })}
-                  className="px-3 py-2 border border-border rounded-xl bg-muted text-sm text-foreground focus:ring-2 focus:ring-ring outline-none"
+                  className="flex-1 sm:flex-initial px-3 py-2 border border-border rounded-xl bg-muted text-sm text-foreground focus:ring-2 focus:ring-ring outline-none"
                   placeholder="Bileşen adı"
                 />
                 <button
                   onClick={addComponent}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground font-medium rounded-xl text-sm transition"
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground font-medium rounded-xl text-sm transition shrink-0"
                 >
                   Ekle
                 </button>
@@ -381,14 +381,14 @@ export default function StatusPageSettingsPage() {
               </p>
             )}
             {components.map((comp) => (
-              <div key={comp.id} className="flex items-center justify-between p-3 bg-muted rounded-xl">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{comp.name}</p>
+              <div key={comp.id} className="flex items-center justify-between gap-3 p-3 bg-muted rounded-xl">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{comp.name}</p>
                   {comp.description && (
-                    <p className="text-xs text-muted-foreground">{comp.description}</p>
+                    <p className="text-xs text-muted-foreground truncate">{comp.description}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <select
                     value={comp.status}
                     onChange={(e) => updateComponentStatus(comp.id, e.target.value)}
@@ -413,13 +413,13 @@ export default function StatusPageSettingsPage() {
         </div>
 
         {/* Incidents Card */}
-        <div className="surface p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="surface p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-lg font-semibold text-foreground">Olaylar</h2>
             {pageData.id && (
               <button
                 onClick={() => setShowNewIncident(!showNewIncident)}
-                className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium rounded-xl text-sm transition"
+                className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium rounded-xl text-sm transition shrink-0"
               >
                 + Olay Bildir
               </button>
@@ -442,7 +442,7 @@ export default function StatusPageSettingsPage() {
                 rows={3}
                 placeholder="Olay açıklaması"
               />
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <select
                   value={newIncident.severity}
                   onChange={(e) => setNewIncident({ ...newIncident, severity: e.target.value })}
@@ -461,7 +461,7 @@ export default function StatusPageSettingsPage() {
                 </button>
                 <button
                   onClick={() => setShowNewIncident(false)}
-                  className="px-4 py-2 bg-muted text-foreground font-medium rounded-xl text-sm transition"
+                  className="px-4 py-2 bg-muted text-foreground font-medium rounded-xl text-sm transition border border-border"
                 >
                   İptal
                 </button>
@@ -478,9 +478,9 @@ export default function StatusPageSettingsPage() {
           <div className="space-y-3">
             {incidents.map((inc) => (
               <div key={inc.id} className="border border-border rounded-xl p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2">
                       <h3 className="font-semibold text-foreground text-sm">{inc.title}</h3>
                       <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                         inc.status === 'RESOLVED'
@@ -504,7 +504,7 @@ export default function StatusPageSettingsPage() {
                   <select
                     value={inc.status}
                     onChange={(e) => updateIncidentStatus(inc.id, e.target.value)}
-                    className="px-3 py-1.5 border border-border rounded-lg text-xs font-medium bg-background text-foreground focus:ring-2 focus:ring-ring outline-none"
+                    className="px-3 py-1.5 border border-border rounded-lg text-xs font-medium bg-background text-foreground focus:ring-2 focus:ring-ring outline-none shrink-0"
                   >
                     {INCIDENT_STATUSES.map((s) => (
                       <option key={s.value} value={s.value}>{s.label}</option>

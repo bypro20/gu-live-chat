@@ -2,8 +2,13 @@
 
 import useSWR from 'swr'
 import { useEffect, useState } from 'react'
-import { connectSocket, isSocketConnected } from '@/lib/socket-client'
+import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
 import { useActiveWebsite } from './use-active-website'
+
+// Conversation list refresh cadence: ~5s while polling, backing off when a
+// live socket connection is already streaming new conversations/messages.
+const POLL_LIST_MS = 5000
+const POLL_IDLE_MS = 30000
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -76,11 +81,19 @@ export function useConversations(options?: {
   limit?: number
 }) {
   const { activeWebsite } = useActiveWebsite()
-  const [pollInterval, setPollInterval] = useState(30000)
+  const [pollInterval, setPollInterval] = useState(
+    isSocketEnabled() ? POLL_IDLE_MS : POLL_LIST_MS
+  )
 
   useEffect(() => {
+    // No socket server configured → always rely on list polling.
+    if (!isSocketEnabled()) {
+      setPollInterval(POLL_LIST_MS)
+      return
+    }
     connectSocket()
-    const update = () => setPollInterval(isSocketConnected() ? 30000 : 4000)
+    const update = () =>
+      setPollInterval(isSocketConnected() ? POLL_IDLE_MS : POLL_LIST_MS)
     update()
     const id = setInterval(update, 5000)
     return () => clearInterval(id)
@@ -102,7 +115,10 @@ export function useConversations(options?: {
     fetcher,
     {
       refreshInterval: pollInterval,
+      // Pause list polling while the tab is hidden; refetch on return.
+      refreshWhenHidden: false,
       revalidateOnFocus: true,
+      dedupingInterval: 2000,
     }
   )
 

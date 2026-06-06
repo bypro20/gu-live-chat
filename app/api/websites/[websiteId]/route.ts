@@ -16,7 +16,7 @@ export async function GET(
 
   const website = await prisma.website.findFirst({
     where: {
-      id: websiteId,
+      OR: [{ id: websiteId }, { websiteId }],
       members: {
         some: { userId: session.user.id },
       },
@@ -51,10 +51,18 @@ export async function PATCH(
     const body = await req.json()
     const validated = updateWebsiteSchema.parse(body)
 
+    const target = await prisma.website.findFirst({
+      where: { OR: [{ id: websiteId }, { websiteId }] },
+      select: { id: true },
+    })
+    if (!target) {
+      return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+    }
+
     // Check permission
     const member = await prisma.teamMember.findFirst({
       where: {
-        websiteId,
+        websiteId: target.id,
         userId: session.user.id,
         role: { in: ['OWNER', 'ADMIN'] },
       },
@@ -65,7 +73,7 @@ export async function PATCH(
     }
 
     const website = await prisma.website.update({
-      where: { id: websiteId },
+      where: { id: target.id },
       data: validated,
     })
 
@@ -93,10 +101,18 @@ export async function DELETE(
 
   const { websiteId } = await params
 
+  const target = await prisma.website.findFirst({
+    where: { OR: [{ id: websiteId }, { websiteId }] },
+    select: { id: true },
+  })
+  if (!target) {
+    return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+  }
+
   // Only OWNER can delete
   const member = await prisma.teamMember.findFirst({
     where: {
-      websiteId,
+      websiteId: target.id,
       userId: session.user.id,
       role: 'OWNER',
     },
@@ -106,7 +122,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
   }
 
-  await prisma.website.delete({ where: { id: websiteId } })
+  await prisma.website.delete({ where: { id: target.id } })
 
   return NextResponse.json({ success: true })
 }

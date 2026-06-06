@@ -153,54 +153,53 @@ export default function ProactiveSettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hedefli Mesajlar</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Ziyaretçilere belirli tetikleyicilere göre otomatik mesaj gösterin</p>
-      </div>
-
-      <div className="flex justify-end mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hedefli Mesajlar</h1>
+          <p className="text-sm text-muted-foreground mt-1">Ziyaretçilere belirli tetikleyicilere göre otomatik mesaj gösterin</p>
+        </div>
         <button
           onClick={() => { resetForm(); setShowForm(!showForm) }}
-          className="px-4 py-2 bg-[#1972F5] hover:bg-[#5B2FC5] text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30 text-sm"
+          className="btn-primary w-full sm:w-auto"
         >
           {showForm ? 'İptal' : 'Yeni Mesaj Ekle'}
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="surface p-5 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             {editing ? 'Mesajı Düzenle' : 'Yeni Hedefli Mesaj'}
           </h2>
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Başlık</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Başlık</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Mesaj başlığı"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mesaj</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Mesaj</label>
               <textarea
                 value={form.message}
                 onChange={(e) => setForm(prev => ({ ...prev, message: e.target.value }))}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                 rows={3}
                 placeholder="Mesaj içeriği"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tetikleyici Tipi</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici Tipi</label>
                 <select
                   value={form.triggerType}
                   onChange={(e) => setForm(prev => ({ ...prev, triggerType: e.target.value, triggerValue: '' }))}
-                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
                   {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -209,72 +208,72 @@ export default function ProactiveSettingsPage() {
               </div>
               {form.triggerType !== 'EXIT_INTENT' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tetikleyici Değeri</label>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici Değeri</label>
                   <input
                     type="text"
                     value={form.triggerValue}
                     onChange={(e) => setForm(prev => ({ ...prev, triggerValue: e.target.value }))}
-                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder={TRIGGER_PLACEHOLDERS[form.triggerType]}
                   />
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hedef Sayfalar (JSON dizi veya *, boş bırakılırsa tüm sayfalar)</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Hedef Sayfalar (JSON dizi veya *, boş bırakılırsa tüm sayfalar)</label>
               <input
                 type="text"
                 value={form.targetPages}
                 onChange={(e) => setForm(prev => ({ ...prev, targetPages: e.target.value }))}
-                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder='["/fiyat", "/iletisim"] veya *'
               />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gecikme (saniye)</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Gecikme (saniye)</label>
                 <input
                   type="number"
                   value={form.delay}
                   onChange={(e) => setForm(prev => ({ ...prev, delay: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   min={0}
                 />
               </div>
-              <div className="flex items-end pb-3">
+              <div className="flex items-center sm:items-end sm:pb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.showOnce}
                     onChange={(e) => setForm(prev => ({ ...prev, showOnce: e.target.checked }))}
-                    className="w-4 h-4 text-[#1972F5] rounded border-gray-300 focus:ring-[#1972F5]"
+                    className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Bir kere göster</span>
+                  <span className="text-sm text-foreground">Bir kere göster</span>
                 </label>
               </div>
-              <div className="flex items-end pb-3">
+              <div className="flex items-center sm:items-end sm:pb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.isActive}
                     onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                    className="w-4 h-4 text-[#1972F5] rounded border-gray-300 focus:ring-[#1972F5]"
+                    className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Aktif</span>
+                  <span className="text-sm text-foreground">Aktif</span>
                 </label>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <button
                 onClick={handleSave}
                 disabled={saving || !form.title.trim() || !form.message.trim()}
-                className="px-6 py-2.5 bg-[#1972F5] hover:bg-[#5B2FC5] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Kaydediliyor...' : editing ? 'Güncelle' : 'Oluştur'}
               </button>
               <button
                 onClick={resetForm}
-                className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition"
+                className="btn-secondary"
               >
                 İptal
               </button>
@@ -285,36 +284,36 @@ export default function ProactiveSettingsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : messages.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-12 text-center">
-          <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        <div className="surface p-10 sm:p-12 text-center">
+          <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
           </div>
-          <h3 className="font-medium text-gray-900 dark:text-white">Henüz hedefli mesaj yok</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Yeni bir mesaj oluşturmak için yukarıdaki butonu kullanın</p>
+          <h3 className="font-medium text-foreground">Henüz hedefli mesaj yok</h3>
+          <p className="text-sm text-muted-foreground mt-1">Yeni bir mesaj oluşturmak için yukarıdaki butonu kullanın</p>
         </div>
       ) : (
         <div className="space-y-4">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-5">
+            <div key={msg.id} className="surface p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">{msg.title}</h3>
-                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                    <h3 className="font-semibold text-foreground truncate">{msg.title}</h3>
+                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0 ${
                       msg.isActive
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                        ? 'bg-success-light text-success'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       {msg.isActive ? 'Aktif' : 'Pasif'}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{msg.message}</p>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{msg.message}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>{TRIGGER_LABELS[msg.triggerType] || msg.triggerType}</span>
                     {msg.triggerValue && <span>Değer: {msg.triggerValue}</span>}
                     {msg.delay > 0 && <span>Gecikme: {msg.delay}s</span>}

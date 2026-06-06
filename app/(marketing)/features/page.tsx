@@ -24,7 +24,7 @@ export default function FeaturesPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Özellikler</p>
-        <h1 className="text-4xl font-bold tracking-tight">Gu Chat ile neler yapabilirsiniz?</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Gu Chat ile neler yapabilirsiniz?</h1>
         <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
           Müşteri destek sürecinizi uçtan uca yönetmek için ihtiyacınız olan tüm araçlar.
         </p>

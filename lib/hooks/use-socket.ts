@@ -20,12 +20,14 @@ export function useSocket() {
 
   const emit = useCallback((event: string, ...args: unknown[]) => {
     const s = socketRef.current || getSocket() || connectSocket()
+    if (!s) return
     if (!s.connected) s.connect()
     s.emit(event, ...args)
   }, [])
 
   const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
     const s = socketRef.current || getSocket() || connectSocket()
+    if (!s) return () => {}
     s.on(event, handler)
     return () => {
       s.off(event, handler)

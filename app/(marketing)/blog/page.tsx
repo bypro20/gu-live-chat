@@ -19,7 +19,7 @@ export default function BlogPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Blog</p>
-        <h1 className="text-4xl font-bold tracking-tight">Haberler ve rehberler</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Haberler ve rehberler</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Canlı destek, müşteri deneyimi ve ürün güncellemeleri hakkında yazılar.
         </p>

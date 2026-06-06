@@ -182,17 +182,17 @@ export default function TicketDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!ticket) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ticket bulunamadı</h2>
-        <button onClick={() => router.back()} className="mt-4 text-[#1972F5] hover:underline text-sm">
+      <div className="p-4 sm:p-6 lg:p-8 text-center">
+        <h2 className="text-lg font-medium text-foreground">Ticket bulunamadı</h2>
+        <button onClick={() => router.back()} className="mt-4 text-primary hover:underline text-sm">
           Geri dön
         </button>
       </div>
@@ -203,11 +203,11 @@ export default function TicketDetailPage() {
   const internalMessages = messages.filter((m) => m.isInternal)
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
       {/* Back */}
       <button
         onClick={() => router.push('/settings/tickets')}
-        className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 transition"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -216,31 +216,31 @@ export default function TicketDetailPage() {
       </button>
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{ticket.subject}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      <div className="surface p-5 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-foreground break-words">{ticket.subject}</h1>
+            <p className="text-sm text-muted-foreground mt-1 break-words">
               #{ticket.id.slice(0, 8)} &middot; {ticket.requesterName || ticket.requesterEmail} &middot; {CHANNEL_LABELS[ticket.channel] || ticket.channel}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-2 shrink-0">
             <span className={`px-3 py-1.5 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
               {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
             </span>
-            <span className="px-3 py-1.5 text-xs font-medium rounded-full bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300">
+            <span className="px-3 py-1.5 text-xs font-medium rounded-full bg-muted text-foreground">
               {STATUS_LABELS[ticket.status] || ticket.status}
             </span>
           </div>
         </div>
 
         {ticket.description && (
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 p-4 bg-[#EFF6FF] dark:bg-gray-700/50 rounded-xl">
+          <p className="text-sm text-foreground mb-4 p-4 bg-muted rounded-xl whitespace-pre-wrap">
             {ticket.description}
           </p>
         )}
 
-        <div className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="text-xs text-muted-foreground">
           Oluşturulma: {formatDate(ticket.createdAt)}
           {ticket.firstResponseAt && <> &middot; İlk yanıt: {formatDate(ticket.firstResponseAt)}</>}
           {ticket.resolvedAt && <> &middot; Çözüm: {formatDate(ticket.resolvedAt)}</>}
@@ -249,13 +249,13 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Actions Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Durum</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Durum</label>
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); handleUpdate({ status: e.target.value }) }}
-            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           >
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <option key={key} value={key}>{label}</option>
@@ -263,11 +263,11 @@ export default function TicketDetailPage() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Öncelik</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Öncelik</label>
           <select
             value={priority}
             onChange={(e) => { setPriority(e.target.value); handleUpdate({ priority: e.target.value }) }}
-            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           >
             {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
               <option key={key} value={key}>{config.label}</option>
@@ -275,11 +275,11 @@ export default function TicketDetailPage() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Atanan Temsilci</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Atanan Temsilci</label>
           <select
             value={assignedToId}
             onChange={(e) => { setAssignedToId(e.target.value); handleUpdate({ assignedToId: e.target.value || null }) }}
-            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           >
             <option value="">Atanmamış</option>
             {teamMembers.map((member) => (
@@ -292,28 +292,28 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Message Thread */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 mb-6">
-        <div className="p-6">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Mesajlar</h2>
+      <div className="surface mb-6">
+        <div className="p-5 sm:p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Mesajlar</h2>
 
           {publicMessages.length === 0 && !showInternal && (
-            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Henüz mesaj yok</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Henüz mesaj yok</p>
           )}
 
           <div className="space-y-4">
             {publicMessages.map((msg) => (
               <div key={msg.id} className="flex gap-3">
-                <div className="w-8 h-8 bg-[#1972F5]/10 rounded-full flex items-center justify-center text-[#1972F5] text-xs font-bold shrink-0">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs font-bold shrink-0">
                   {msg.sender?.name?.[0]?.toUpperCase() || msg.sender?.id?.[0]?.toUpperCase() || 'T'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-foreground">
                       {msg.sender?.name || 'Temsilci'}
                     </span>
-                    <span className="text-xs text-gray-400">{timeAgo(msg.createdAt)}</span>
+                    <span className="text-xs text-muted-foreground">{timeAgo(msg.createdAt)}</span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap break-words">{msg.content}</p>
                   {msg.attachments.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {msg.attachments.map((att) => (
@@ -322,7 +322,7 @@ export default function TicketDetailPage() {
                           href={att.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-[#EFF6FF] dark:bg-gray-700 rounded-lg text-xs text-[#1972F5] hover:underline"
+                          className="px-3 py-1.5 bg-muted rounded-lg text-xs text-primary hover:underline"
                         >
                           {att.fileName}
                         </a>
@@ -372,14 +372,14 @@ export default function TicketDetailPage() {
         </div>
 
         {/* Reply Input */}
-        <div className="border-t border-[#E5E7EB] dark:border-gray-700 p-6">
+        <div className="border-t border-border p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => setIsInternal(false)}
               className={`px-3 py-1 text-xs font-medium rounded-full transition ${
                 !isInternal
-                  ? 'bg-[#1972F5] text-white'
-                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
               }`}
             >
               Yanıtla
@@ -389,7 +389,7 @@ export default function TicketDetailPage() {
               className={`px-3 py-1 text-xs font-medium rounded-full transition ${
                 isInternal
                   ? 'bg-yellow-500 text-white'
-                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300'
+                  : 'bg-muted text-muted-foreground'
               }`}
             >
               İç Not
@@ -407,17 +407,17 @@ export default function TicketDetailPage() {
               }}
               placeholder={isInternal ? 'İç not ekleyin...' : 'Yanıtınızı yazın...'}
               rows={3}
-              className="flex-1 px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition resize-none text-sm"
+              className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none text-sm"
             />
           </div>
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-xs text-gray-400">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
+            <span className="text-xs text-muted-foreground">
               {isInternal ? 'Sadece temsilciler görebilir' : 'Müşteriye gönderilecek'} &middot; Cmd/Ctrl+Enter
             </span>
             <button
               onClick={handleSendReply}
               disabled={!reply.trim() || sending}
-              className="px-5 py-2 bg-[#1972F5] hover:bg-[#1565DB] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
+              className="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? 'Gönderiliyor...' : isInternal ? 'Not Ekle' : 'Gönder'}
             </button>

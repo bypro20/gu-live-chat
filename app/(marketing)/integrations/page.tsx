@@ -22,7 +22,7 @@ export default function IntegrationsPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Entegrasyonlar</p>
-        <h1 className="text-4xl font-bold tracking-tight">Mevcut araçlarınızla bağlantı kurun</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Mevcut araçlarınızla bağlantı kurun</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Gu Chat, iş akışınıza sorunsuz entegre olur.
         </p>

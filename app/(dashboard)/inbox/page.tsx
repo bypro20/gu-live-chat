@@ -34,10 +34,10 @@ function ConversationItem({ conversation, selected, onClick }: {
   }
 
   const statusColor: Record<string, string> = {
-    OPEN: 'bg-green-500',
-    PENDING: 'bg-yellow-500',
-    RESOLVED: 'bg-gray-400',
-    CLOSED: 'bg-gray-300',
+    OPEN: 'bg-success',
+    PENDING: 'bg-warning',
+    RESOLVED: 'bg-muted-foreground',
+    CLOSED: 'bg-border-strong',
   }
 
   const name = conversation.visitor.name || conversation.visitor.email?.split('@')[0] || 'Anonim'
@@ -46,31 +46,31 @@ function ConversationItem({ conversation, selected, onClick }: {
   return (
     <button
       onClick={onClick}
-      className={`w-full p-3 flex items-start gap-3 border-b border-[#E5E7EB] dark:border-gray-700/50 hover:bg-[#F9FAFB] dark:hover:bg-gray-700/50 transition text-left ${
-        selected ? 'bg-[#2563EB]/5 dark:bg-[#2563EB]/10 border-l-2 border-l-[#2563EB]' : ''
+      className={`w-full p-3 flex items-start gap-3 border-b border-border hover:bg-muted/60 transition text-left ${
+        selected ? 'bg-primary-light border-l-2 border-l-primary' : 'border-l-2 border-l-transparent'
       }`}
     >
       <div className="relative shrink-0">
         {conversation.visitor.avatarUrl ? (
           <img src={conversation.visitor.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB]/20 to-[#3B82F6]/20 flex items-center justify-center text-sm font-semibold text-[#2563EB] dark:text-[#60A5FA]">
+          <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-sm font-semibold text-primary">
             {initial}
           </div>
         )}
-        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${statusColor[conversation.status] || 'bg-gray-400'}`} />
+        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${statusColor[conversation.status] || 'bg-muted-foreground'}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{name}</span>
-          <span className="text-[11px] text-gray-400 shrink-0">{timeAgo(conversation.lastMessageAt)}</span>
+          <span className="font-medium text-sm text-foreground truncate">{name}</span>
+          <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">{timeAgo(conversation.lastMessageAt)}</span>
         </div>
-        <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+        <p className="text-[13px] text-muted-foreground truncate mt-0.5">
           {conversation.lastMessagePreview || 'Henüz mesaj yok'}
         </p>
       </div>
       {conversation.unreadCount > 0 && (
-        <span className="w-5 h-5 bg-[#2563EB] text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0 shadow-md shadow-[#2563EB]/30">
+        <span className="w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center shrink-0 shadow-brand tabular-nums">
           {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
         </span>
       )}
@@ -131,7 +131,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
   if (isSystem) {
     return (
       <div className="flex justify-center">
-        <span className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-800 px-3 py-1 rounded-full">
+        <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
           {message.content}
         </span>
       </div>
@@ -140,32 +140,32 @@ function MessageBubble({ message, autoTranslate }: { message: {
 
   return (
     <div className={`flex ${isVisitor ? 'justify-start' : 'justify-end'}`}>
-      <div className={`max-w-[70%] ${isVisitor ? 'order-1' : 'order-2'}`}>
+      <div className={`max-w-[80%] sm:max-w-[70%] ${isVisitor ? 'order-1' : 'order-2'}`}>
         {(isBot) && (
-          <span className="text-[10px] text-gray-400 ml-1 mb-0.5 block">
+          <span className="text-[10px] text-muted-foreground ml-1 mb-0.5 block">
             🤖 Bot
           </span>
         )}
         <div className={`px-4 py-2.5 rounded-2xl text-sm ${
           isVisitor
-            ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-sm border border-[#E5E7EB] dark:border-gray-700'
-            : 'bg-gradient-to-br from-[#2563EB] to-[#3B82F6] text-white rounded-br-sm shadow-md shadow-[#2563EB]/20'
+            ? 'bg-card text-foreground rounded-bl-sm border border-border'
+            : 'bg-primary text-primary-foreground rounded-br-sm shadow-brand'
         }`}>
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
           {showTranslate && translatedText && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 pt-1.5 border-t border-[#E5E7EB] dark:border-gray-600 italic">
+            <p className={`text-xs mt-1.5 pt-1.5 border-t italic ${isVisitor ? 'text-muted-foreground border-border' : 'text-primary-foreground/80 border-primary-foreground/20'}`}>
               🌐 {translatedText}
             </p>
           )}
         </div>
         <div className={`flex items-center gap-1 mt-0.5 ${isVisitor ? 'ml-1' : 'mr-1 justify-end'}`}>
-          <span className="text-[10px] text-gray-400">{formatTime(message.createdAt)}</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">{formatTime(message.createdAt)}</span>
           {isVisitor && (
             <button
               onClick={handleTranslate}
               disabled={translating}
-              className="text-[10px] text-gray-400 hover:text-[#2563EB] transition disabled:opacity-50"
-              title="Türkçe'ye çevir"
+              className="text-[10px] text-muted-foreground hover:text-primary transition disabled:opacity-50"
+              title="Türkçe’ye çevir"
             >
               {translating ? '⏳' : '🌐'}
             </button>
@@ -187,6 +187,8 @@ export default function InboxPage() {
   const [messageText, setMessageText] = useState('')
   const [typingPreview, setTypingPreview] = useState<{ conversationId: string; content: string } | null>(null)
   const [autoTranslate, setAutoTranslate] = useState(false)
+  const [aiSuggesting, setAiSuggesting] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { conversations, total, isLoading, error, mutate: mutateConversations } = useConversations({
@@ -208,6 +210,7 @@ export default function InboxPage() {
     if (!session?.user?.id || !activeWebsite?.websiteId) return
 
     const socket = retainSocket()
+    if (!socket) return
 
     const onTypingPreview = (data: { conversationId: string; content: string }) => {
       setTypingPreview(data)
@@ -299,6 +302,7 @@ export default function InboxPage() {
     if (!selectedId || !session?.user?.id) return
 
     const socket = retainSocket()
+    if (!socket) return
     const join = () => {
       socket.emit('agent:join-conversation', { conversationId: selectedId })
     }
@@ -328,23 +332,46 @@ export default function InboxPage() {
     }
   }
 
+  const handleAiSuggest = async () => {
+    if (!selectedId || aiSuggesting) return
+    setAiSuggesting(true)
+    setAiError(null)
+    try {
+      const res = await fetch(`/api/conversations/${selectedId}/ai-suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error || 'AI önerisi alınamadı')
+      }
+      if (data.suggestion) {
+        setMessageText(data.suggestion)
+      }
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI önerisi alınamadı')
+    } finally {
+      setAiSuggesting(false)
+    }
+  }
+
   const selectedConversation = conversations.find(c => c.id === selectedId)
 
   return (
-    <div className="h-screen flex">
+    <div className="h-[calc(100dvh-3.5rem)] lg:h-screen flex bg-background text-foreground">
       {/* Conversation List */}
-      <div className="w-96 border-r border-[#E5E7EB] dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
+      <div className={`w-full lg:w-96 border-r border-border flex-col bg-card ${selectedConversation ? 'hidden lg:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="p-4 border-b border-[#E5E7EB] dark:border-gray-700">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Gelen Kutusu</h1>
+            <h1 className="text-lg font-bold">Gelen Kutusu</h1>
             {total > 0 && (
-              <span className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full tabular-nums">
                 {total} sohbet
               </span>
             )}
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-0.5">
             {([
               { key: 'all' as const, label: 'Tümü' },
               { key: 'OPEN' as const, label: 'Açık' },
@@ -354,10 +381,10 @@ export default function InboxPage() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition whitespace-nowrap ${
                   filter === f.key
-                    ? 'bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/30'
-                    : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#DDD6FE] dark:hover:bg-gray-600'
+                    ? 'bg-primary text-primary-foreground shadow-brand'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {f.label}
@@ -370,9 +397,9 @@ export default function InboxPage() {
                 type="checkbox"
                 checked={autoTranslate}
                 onChange={(e) => setAutoTranslate(e.target.checked)}
-                className="w-3.5 h-3.5 text-[#2563EB] rounded border-gray-300 focus:ring-[#2563EB]"
+                className="w-3.5 h-3.5 accent-primary rounded border-border"
               />
-              <span className="text-xs text-gray-500 dark:text-gray-400">Otomatik Çeviri</span>
+              <span className="text-xs text-muted-foreground">Otomatik Çeviri</span>
             </label>
           </div>
         </div>
@@ -380,7 +407,7 @@ export default function InboxPage() {
         {/* Search */}
         <div className="p-3">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -388,7 +415,7 @@ export default function InboxPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Sohbet ara..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F9FAFB] dark:bg-gray-900 border border-[#E5E7EB] dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
             />
           </div>
         </div>
@@ -397,21 +424,21 @@ export default function InboxPage() {
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="w-6 h-6 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-32 text-center px-6">
-              <p className="text-sm text-red-500">Hata: {error.message}</p>
+              <p className="text-sm text-destructive">Hata: {error.message}</p>
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-6">
-              <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Henüz sohbet yok</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <h3 className="font-semibold text-foreground">Henüz sohbet yok</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Yeni ziyaretçi mesajları burada görünecek
               </p>
             </div>
@@ -429,48 +456,57 @@ export default function InboxPage() {
       </div>
 
       {/* Conversation Detail / Empty State */}
-      <div className="flex-1 flex flex-col bg-[#F9FAFB] dark:bg-gray-900">
+      <div className={`flex-1 flex-col bg-muted/40 dark:bg-background min-w-0 ${selectedConversation ? 'flex' : 'hidden lg:flex'}`}>
         {!selectedConversation ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-[#EFF6FF] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-center px-6">
+              <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Sohbet seçin</h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">Detayları görmek için bir sohbet seçin</p>
+              <h2 className="text-xl font-semibold text-foreground">Sohbet seçin</h2>
+              <p className="text-muted-foreground mt-1">Detayları görmek için bir sohbet seçin</p>
             </div>
           </div>
         ) : (
           <>
             {/* Conversation header */}
-            <div className="p-4 border-b border-[#E5E7EB] dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB]/20 to-[#3B82F6]/20 flex items-center justify-center text-sm font-semibold text-[#2563EB] dark:text-[#60A5FA]">
+            <div className="p-4 border-b border-border bg-card flex items-center gap-3">
+              <button
+                onClick={() => setSelectedId(null)}
+                className="lg:hidden -ml-1 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition shrink-0"
+                aria-label="Geri"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-sm font-semibold text-primary shrink-0">
                 {(selectedConversation.visitor.name || selectedConversation.visitor.email || 'A')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-gray-900 dark:text-white truncate">
+                <h2 className="font-semibold text-foreground truncate">
                   {selectedConversation.visitor.name || selectedConversation.visitor.email?.split('@')[0] || 'Anonim'}
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
-                    selectedConversation.status === 'OPEN' ? 'bg-green-500' :
-                    selectedConversation.status === 'PENDING' ? 'bg-yellow-500' :
-                    'bg-gray-400'
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                    selectedConversation.status === 'OPEN' ? 'bg-success' :
+                    selectedConversation.status === 'PENDING' ? 'bg-warning' :
+                    'bg-muted-foreground'
                   }`} />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-muted-foreground shrink-0">
                     {selectedConversation.status === 'OPEN' ? 'Açık' :
                      selectedConversation.status === 'PENDING' ? 'Bekliyor' :
                      selectedConversation.status === 'RESOLVED' ? 'Çözüldü' : 'Kapalı'}
                   </span>
                   {selectedConversation.visitor.email && (
-                    <span className="text-xs text-gray-400">· {selectedConversation.visitor.email}</span>
+                    <span className="text-xs text-muted-foreground/70 truncate hidden sm:inline">· {selectedConversation.visitor.email}</span>
                   )}
                 </div>
               </div>
               {selectedConversation.assignedTo && (
-                <div className="text-xs text-gray-400 bg-[#EFF6FF] dark:bg-gray-700 px-2 py-1 rounded-lg">
+                <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-lg shrink-0 hidden sm:block">
                   {selectedConversation.assignedTo.name || 'Temsilci'}
                 </div>
               )}
@@ -480,10 +516,10 @@ export default function InboxPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messagesLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="w-6 h-6 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="text-center text-sm text-gray-400 mt-8">
+                <div className="text-center text-sm text-muted-foreground mt-8">
                   Henüz mesaj yok
                 </div>
               ) : (
@@ -493,8 +529,8 @@ export default function InboxPage() {
               )}
               {typingPreview && typingPreview.conversationId === selectedId && (
                 <div className="flex justify-start">
-                  <div className="max-w-[70%]">
-                    <div className="px-4 py-2.5 rounded-2xl text-sm bg-white dark:bg-gray-800 text-gray-400 italic border border-[#E5E7EB] dark:border-gray-700 rounded-bl-sm">
+                  <div className="max-w-[80%] sm:max-w-[70%]">
+                    <div className="px-4 py-2.5 rounded-2xl text-sm bg-card text-muted-foreground italic border border-border rounded-bl-sm">
                       {typingPreview.content}
                     </div>
                   </div>
@@ -504,15 +540,35 @@ export default function InboxPage() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-[#E5E7EB] dark:border-gray-700 bg-white dark:bg-gray-800">
-              <div className="flex items-end gap-3">
+            <div className="p-3 sm:p-4 border-t border-border bg-card">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <button
+                  onClick={handleAiSuggest}
+                  disabled={aiSuggesting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary-light text-primary hover:bg-primary/15 disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  title="Yapay zekâdan yanıt önerisi al"
+                >
+                  {aiSuggesting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      Öneri hazırlanıyor...
+                    </>
+                  ) : (
+                    <>✨ AI ile yanıtla</>
+                  )}
+                </button>
+                {aiError && (
+                  <span className="text-[11px] text-destructive truncate">{aiError}</span>
+                )}
+              </div>
+              <div className="flex items-end gap-2 sm:gap-3">
                 <div className="flex-1 relative">
                   <textarea
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Mesaj yazın..."
-                    className="w-full px-4 py-3 bg-[#F9FAFB] dark:bg-gray-900 border border-[#E5E7EB] dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition text-sm"
+                    className="w-full px-4 py-3 bg-muted border border-border rounded-xl resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
                     rows={1}
                     disabled={sending}
                   />
@@ -520,7 +576,7 @@ export default function InboxPage() {
                 <button
                   onClick={handleSend}
                   disabled={!messageText.trim() || sending}
-                  className="w-10 h-10 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition shrink-0 shadow-md shadow-[#2563EB]/30"
+                  className="w-11 h-11 bg-primary hover:bg-primary-hover disabled:bg-muted-foreground/30 disabled:cursor-not-allowed text-primary-foreground rounded-xl flex items-center justify-center transition shrink-0 shadow-brand"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

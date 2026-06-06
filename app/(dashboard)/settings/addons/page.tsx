@@ -190,7 +190,7 @@ export default function AddonsPage() {
 
   if (loading || websiteLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-center h-80">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
@@ -208,10 +208,10 @@ export default function AddonsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto p-6 lg:p-8 space-y-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
 
         {/* HEADER */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)]/5 via-transparent to-[var(--primary)]/5 border border-[var(--border)] p-8">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)]/5 via-transparent to-[var(--primary)]/5 border border-[var(--border)] p-5 sm:p-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[var(--primary)]/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[var(--primary)]/8 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -318,7 +318,7 @@ export default function AddonsPage() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center flex-wrap gap-2 mt-2">
                           <button
                             onClick={() => router.push(`/settings/addons/${addon.id}`)}
                             className="px-3 py-1.5 text-xs font-medium bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg hover:bg-[var(--primary)]/20 transition flex items-center gap-1"
@@ -474,7 +474,7 @@ export default function AddonsPage() {
                       <span className="text-[10px] text-[var(--muted-foreground)]">{addon.developer}</span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
+                    <div className="flex items-center justify-between gap-2 flex-wrap pt-4 border-t border-[var(--border)]">
                       <div>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-[var(--foreground)]">

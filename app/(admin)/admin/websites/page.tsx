@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Globe, Search, MessageSquare, Users, Calendar } from 'lucide-react'
 
 interface Website {
   id: string
@@ -11,6 +12,13 @@ interface Website {
   owner: { id: string; email: string; name: string | null }
   _count: { conversations: number; members: number }
   createdAt: string
+}
+
+const planBadge: Record<string, string> = {
+  FREE: 'bg-white/[0.06] text-gray-400 border-white/[0.06]',
+  STARTER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  PRO: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+  BUSINESS: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 }
 
 export default function AdminWebsitesPage() {
@@ -55,87 +63,102 @@ export default function AdminWebsitesPage() {
     }
   }
 
-  const planLabels: Record<string, string> = {
-    FREE: 'Ücretsiz',
-    STARTER: 'Başlangıç',
-    PRO: 'Profesyonel',
-    BUSINESS: 'İş',
-  }
-
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Site Yönetimi</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Tüm siteleri görüntüleyin ve planlarını yönetin</p>
+    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1440px] mx-auto">
+      {/* Header */}
+      <div className="mb-6 lg:mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Site Yönetimi</h1>
+          <Globe className="w-5 h-5 text-gray-500" />
+        </div>
+        <p className="text-gray-500 text-sm">Tüm siteleri görüntüleyin ve planlarını yönetin · {websites.length} site</p>
       </div>
 
       {/* Search */}
-      <div className="mb-6">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Site adı veya domain ara..."
-          className="w-full max-w-md px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-        />
+      <div className="mb-5">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Site adı veya domain ara..."
+            className="w-full h-11 rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
       </div>
 
       {/* Websites Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Yükleniyor...</div>
+          <div className="flex items-center justify-center py-16 gap-3 text-gray-500 text-sm">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            Yükleniyor...
+          </div>
         ) : filteredWebsites.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Site bulunamadı</div>
+          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+            <Globe className="w-8 h-8 mb-2 opacity-40" />
+            <p className="text-sm">Site bulunamadı</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Site</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Sahip</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Sohbet</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Üye</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">İşlemler</th>
+            <table className="w-full min-w-[760px]">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {['Site', 'Sahip', 'Plan', 'Sohbet', 'Üye', 'Kayıt'].map(h => (
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredWebsites.map(website => (
-                  <tr key={website.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{website.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{website.domain}</p>
+                  <tr key={website.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0 border border-white/10">
+                          {website.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{website.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{website.domain}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm text-gray-900 dark:text-white">{website.owner?.name || 'İsimsiz'}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{website.owner?.email}</p>
-                      </div>
+                    <td className="px-5 py-4">
+                      <p className="text-sm text-white truncate">{website.owner?.name || 'İsimsiz'}</p>
+                      <p className="text-xs text-gray-500 truncate">{website.owner?.email}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <select
                         value={website.plan}
                         onChange={e => changePlan(website.id, e.target.value)}
-                        className="px-2 py-1 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border outline-none cursor-pointer transition-colors ${planBadge[website.plan] || planBadge.FREE}`}
                       >
-                        <option value="FREE">Ücretsiz</option>
-                        <option value="STARTER">Başlangıç</option>
-                        <option value="PRO">Profesyonel</option>
-                        <option value="BUSINESS">İş</option>
+                        <option value="FREE" className="bg-[#14142A] text-white">Ücretsiz</option>
+                        <option value="STARTER" className="bg-[#14142A] text-white">Başlangıç</option>
+                        <option value="PRO" className="bg-[#14142A] text-white">Profesyonel</option>
+                        <option value="BUSINESS" className="bg-[#14142A] text-white">İş</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {website._count?.conversations || 0}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                        <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
+                        {website._count?.conversations || 0}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {website._count?.members || 0}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                        <Users className="w-3.5 h-3.5 text-gray-500" />
+                        {website._count?.members || 0}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
+                        <Calendar className="w-3.5 h-3.5" />
                         {new Date(website.createdAt).toLocaleDateString('tr-TR')}
-                      </span>
+                      </div>
                     </td>
                   </tr>
                 ))}

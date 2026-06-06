@@ -75,30 +75,30 @@ export default function KnowledgeBasePage() {
   if (!website) return null
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Bilgi Bankası</h1>
-          <p className="text-muted-foreground mt-1">Makale ve kategorileri yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bilgi Bankası</h1>
+          <p className="text-sm text-muted-foreground mt-1">Makale ve kategorileri yönetin</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/settings/knowledge/categories"
-            className="px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl transition hover:bg-accent"
+            className="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl transition hover:bg-accent"
           >
             Kategoriler
           </Link>
           <Link
             href="/settings/knowledge/new"
-            className="px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
+            className="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
           >
             + Yeni Makale
           </Link>
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <div className="w-64 shrink-0">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-64 shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 lg:content-start">
           <div className="surface p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3">Kategoriler</h3>
             <div className="space-y-1">
@@ -122,7 +122,7 @@ export default function KnowledgeBasePage() {
             </div>
           </div>
 
-          <div className="surface p-4 mt-4">
+          <div className="surface p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3">Durum</h3>
             <div className="space-y-1">
               {[

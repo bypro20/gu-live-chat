@@ -63,12 +63,12 @@ function useCounter(end: number, duration = 1500) {
 const statCards = [
   { key: 'activeVisitors', label: 'Aktif Ziyaretçi', icon: Eye, color: 'emerald', href: '/admin/visitors', highlight: true },
   { key: 'totalUsers', label: 'Toplam Kullanıcı', icon: Users, color: 'blue', href: '/admin/users' },
-  { key: 'totalWebsites', label: 'Kayıtlı Site', icon: Globe, color: 'violet', href: '/admin/websites' },
+  { key: 'totalWebsites', label: 'Kayıtlı Site', icon: Globe, color: 'sky', href: '/admin/websites' },
   { key: 'totalConversations', label: 'Toplam Sohbet', icon: MessageSquare, color: 'orange' },
   { key: 'totalMessages', label: 'Toplam Mesaj', icon: Mail, color: 'cyan' },
   { key: 'paidWebsites', label: 'Ücretli Site', icon: CreditCard, color: 'green' },
   { key: 'trialWebsites', label: 'Deneme Sürecindeki', icon: Clock, color: 'amber' },
-  { key: 'addonPurchases', label: 'Eklenti Satın Alma', icon: Puzzle, color: 'pink' },
+  { key: 'addonPurchases', label: 'Eklenti Satın Alma', icon: Puzzle, color: 'teal' },
 ]
 
 const colorMap: Record<string, { bg: string; text: string; ring: string; bar: string }> = {
@@ -84,11 +84,11 @@ const colorMap: Record<string, { bg: string; text: string; ring: string; bar: st
     ring: 'ring-blue-200 dark:ring-blue-800',
     bar: 'bg-gradient-to-r from-blue-400 to-blue-500',
   },
-  violet: {
-    bg: 'bg-violet-50 dark:bg-violet-900/20',
-    text: 'text-violet-600 dark:text-violet-400',
-    ring: 'ring-violet-200 dark:ring-violet-800',
-    bar: 'bg-gradient-to-r from-violet-400 to-violet-500',
+  sky: {
+    bg: 'bg-sky-50 dark:bg-sky-900/20',
+    text: 'text-sky-600 dark:text-sky-400',
+    ring: 'ring-sky-200 dark:ring-sky-800',
+    bar: 'bg-gradient-to-r from-sky-400 to-sky-500',
   },
   orange: {
     bg: 'bg-orange-50 dark:bg-orange-900/20',
@@ -114,18 +114,18 @@ const colorMap: Record<string, { bg: string; text: string; ring: string; bar: st
     ring: 'ring-amber-200 dark:ring-amber-800',
     bar: 'bg-gradient-to-r from-amber-400 to-amber-500',
   },
-  pink: {
-    bg: 'bg-pink-50 dark:bg-pink-900/20',
-    text: 'text-pink-600 dark:text-pink-400',
-    ring: 'ring-pink-200 dark:ring-pink-800',
-    bar: 'bg-gradient-to-r from-pink-400 to-pink-500',
+  teal: {
+    bg: 'bg-teal-50 dark:bg-teal-900/20',
+    text: 'text-teal-600 dark:text-teal-400',
+    ring: 'ring-teal-200 dark:ring-teal-800',
+    bar: 'bg-gradient-to-r from-teal-400 to-teal-500',
   },
 }
 
 const planColors: Record<string, { bg: string; text: string; bar: string }> = {
   FREE: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400', bar: 'bg-gray-400 dark:bg-gray-500' },
   STARTER: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', bar: 'bg-gradient-to-r from-blue-400 to-blue-500' },
-  PRO: { bg: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-600 dark:text-violet-400', bar: 'bg-gradient-to-r from-violet-400 to-violet-500' },
+  PRO: { bg: 'bg-sky-50 dark:bg-sky-900/20', text: 'text-sky-600 dark:text-sky-400', bar: 'bg-gradient-to-r from-sky-400 to-sky-500' },
   BUSINESS: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-gradient-to-r from-emerald-400 to-emerald-500' },
 }
 
@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-rose-500 to-red-500 text-white rounded-md tracking-[0.08em] shadow-lg shadow-red-500/25">
+                  <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white rounded-md tracking-[0.08em] shadow-lg shadow-[#1972F5]/30">
                     ADMIN
                   </span>
                   <span className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
                 </button>
                 <button className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all duration-200 relative">
                   <Bell className="w-4 h-4" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[#0d0d1a]" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-[#0d0d1a]" />
                 </button>
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -273,7 +273,7 @@ export default function AdminDashboardPage() {
                         Kullanıcıları Yönet
                       </Link>
                       <Link href="/admin/websites" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors">
-                        <LayoutGrid className="w-4 h-4 text-violet-400" />
+                        <LayoutGrid className="w-4 h-4 text-sky-400" />
                         Siteleri Yönet
                       </Link>
                       <Link href="/admin/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors">
@@ -382,8 +382,8 @@ export default function AdminDashboardPage() {
                     ₺{stats.totalRevenue.toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-gradient-to-br from-violet-500/10 to-violet-500/[0.02] border border-violet-500/20 rounded-xl p-5">
-                  <p className="text-xs text-violet-400/70 font-medium mb-1 flex items-center gap-1.5">
+                <div className="bg-gradient-to-br from-sky-500/10 to-sky-500/[0.02] border border-sky-500/20 rounded-xl p-5">
+                  <p className="text-xs text-sky-400/70 font-medium mb-1 flex items-center gap-1.5">
                     <Puzzle className="w-3.5 h-3.5" />
                     Eklenti Geliri
                   </p>
@@ -437,7 +437,7 @@ export default function AdminDashboardPage() {
                         <span className="text-xs text-gray-500">{user._count.websites} site</span>
                         <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${
                           user.role === 'ADMIN'
-                            ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                            ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
                             : 'bg-white/[0.06] text-gray-400 border border-white/[0.06]'
                         }`}>
                           {user.role === 'ADMIN' ? 'Admin' : 'Kullanıcı'}
@@ -453,7 +453,7 @@ export default function AdminDashboardPage() {
               <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-violet-400" />
+                    <Globe className="w-4 h-4 text-sky-400" />
                     Son Siteler
                   </h2>
                 </div>
@@ -520,7 +520,7 @@ export default function AdminDashboardPage() {
             </h3>
             <div className="space-y-2">
               <QuickActionButton href="/admin/users" icon={Users} label="Kullanıcıları Yönet" color="blue" />
-              <QuickActionButton href="/admin/websites" icon={Globe} label="Siteleri Yönet" color="violet" />
+              <QuickActionButton href="/admin/websites" icon={Globe} label="Siteleri Yönet" color="sky" />
               <QuickActionButton href="/admin/settings" icon={Settings} label="Platform Ayarları" color="gray" />
               <QuickActionButton href="/admin/visitors" icon={Activity} label="Canlı Ziyaretçiler" color="emerald" />
             </div>
@@ -617,7 +617,7 @@ function QuickActionButton({ href, icon: Icon, label, color }: {
 }) {
   const colorClasses: Record<string, string> = {
     blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20',
-    violet: 'text-violet-400 bg-violet-500/10 border-violet-500/20 hover:bg-violet-500/20',
+    sky: 'text-sky-400 bg-sky-500/10 border-sky-500/20 hover:bg-sky-500/20',
     gray: 'text-gray-400 bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08]',
     emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20',
   }

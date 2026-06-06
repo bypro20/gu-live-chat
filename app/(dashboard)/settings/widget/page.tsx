@@ -1,8 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
+
+function buildInstallSnippet(websiteId: string) {
+  return `<script>
+  window.$gu = window.$gu || function() {
+    (window.$gu.q = window.$gu.q || []).push(arguments);
+  };
+  window.GU_WIDGET_URL = '${APP_URL}';
+  $gu('set', 'WEBSITE_ID', '${websiteId || 'WEBSITE_ID'}');
+</script>
+<script async src="${APP_URL}/widget.js"></script>`
+}
 
 export default function WidgetSettingsPage() {
+  const { activeWebsite } = useActiveWebsite()
   const [config, setConfig] = useState({
     primaryColor: '#1972F5',
     position: 'BOTTOM_RIGHT',
@@ -18,70 +33,100 @@ export default function WidgetSettingsPage() {
   })
 
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
-  const [websiteId, setWebsiteId] = useState('')
-  const [livePreviewOpen, setLivePreviewOpen] = useState(false)
-  const [previewMessage, setPreviewMessage] = useState('')
+
+  const websiteId = activeWebsite?.websiteId || ''
 
   useEffect(() => {
-    fetch('/api/websites')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.websites?.[0]?.websiteId) {
-          setWebsiteId(data.websites[0].websiteId)
-        }
-      })
-      .catch(() => {})
-  }, [])
+    if (!activeWebsite) return
+    setConfig((prev) => ({
+      ...prev,
+      primaryColor: activeWebsite.primaryColor || prev.primaryColor,
+      position: activeWebsite.position || prev.position,
+      welcomeMessage: activeWebsite.welcomeMessage || prev.welcomeMessage,
+      offlineMessage: activeWebsite.offlineMessage || prev.offlineMessage,
+      avatarUrl: activeWebsite.avatarUrl || prev.avatarUrl,
+    }))
+  }, [activeWebsite])
 
   const handleSave = async () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    if (!activeWebsite) {
+      setSaveError('Aktif web sitesi bulunamadı')
+      return
+    }
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const res = await fetch(`/api/websites/${activeWebsite.websiteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          primaryColor: config.primaryColor,
+          position: config.position,
+          welcomeMessage: config.welcomeMessage,
+          offlineMessage: config.offlineMessage,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Kaydetme başarısız')
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Kaydetme başarısız')
+    } finally {
+      setSaving(false)
+    }
   }
 
+  const installSnippet = buildInstallSnippet(websiteId)
+
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Widget Ayarları</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Chat widget görünümünü ve davranışını özelleştirin</p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Widget Ayarları</h1>
+        <p className="text-sm text-muted-foreground mt-1">Chat widget görünümünü ve davranışını özelleştirin</p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Preview + Settings Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Settings */}
           <div className="space-y-6">
             {/* Color */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Görünüm</h3>
+            <div className="surface p-5 sm:p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Görünüm</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ana Renk</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Ana Renk</label>
                   <div className="flex items-center gap-3">
                     <input
                       type="color"
                       value={config.primaryColor}
                       onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                      className="w-12 h-12 rounded-xl border-2 border-[#E5E7EB] dark:border-gray-600 cursor-pointer"
+                      className="w-12 h-12 shrink-0 rounded-xl border-2 border-border cursor-pointer"
                     />
                     <input
                       type="text"
                       value={config.primaryColor}
                       onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                      className="flex-1 px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pozisyon</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Pozisyon</label>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setConfig({ ...config, position: 'BOTTOM_RIGHT' })}
                       className={`flex-1 py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                         config.position === 'BOTTOM_RIGHT'
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-[#E5E7EB] dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                          : 'border-border text-muted-foreground hover:border-border-strong'
                       }`}
                     >
                       ↓ Sağ Alt
@@ -91,7 +136,7 @@ export default function WidgetSettingsPage() {
                       className={`flex-1 py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                         config.position === 'BOTTOM_LEFT'
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-[#E5E7EB] dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                          : 'border-border text-muted-foreground hover:border-border-strong'
                       }`}
                     >
                       ↓ Sol Alt
@@ -102,24 +147,24 @@ export default function WidgetSettingsPage() {
             </div>
 
             {/* Messages */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Mesajlar</h3>
+            <div className="surface p-5 sm:p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Mesajlar</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hoş Geldin Mesajı</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Hoş Geldin Mesajı</label>
                   <textarea
                     value={config.welcomeMessage}
                     onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                     rows={2}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Çevrimdışı Mesajı</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Çevrimdışı Mesajı</label>
                   <textarea
                     value={config.offlineMessage}
                     onChange={(e) => setConfig({ ...config, offlineMessage: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                     rows={2}
                   />
                 </div>
@@ -127,8 +172,8 @@ export default function WidgetSettingsPage() {
             </div>
 
             {/* Behavior */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Davranış</h3>
+            <div className="surface p-5 sm:p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Davranış</h3>
               <div className="space-y-4">
                 <ToggleField
                   label="Sohbet öncesi form"
@@ -155,9 +200,9 @@ export default function WidgetSettingsPage() {
           {/* Live Preview */}
           <div className="hidden lg:block">
             <div className="sticky top-8">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Canlı Önizleme</h3>
-              <div className="bg-[#EFF6FF] dark:bg-gray-700 rounded-2xl p-8 min-h-[500px] flex items-end justify-end relative">
-                <div className="absolute top-4 left-4 text-xs text-gray-400">orneksite.com</div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Canlı Önizleme</h3>
+              <div className="bg-muted rounded-2xl p-8 min-h-[500px] flex items-end justify-end relative">
+                <div className="absolute top-4 left-4 text-xs text-muted-foreground">orneksite.com</div>
 
                 {/* Chat Widget Preview */}
                 <div className="w-[340px] rounded-2xl overflow-hidden shadow-xl" style={{ marginBottom: '20px' }}>
@@ -217,22 +262,15 @@ export default function WidgetSettingsPage() {
         </div>
 
         {/* Installation Code */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Widget Kurulumu</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Aşağıdaki kodu sitenizin <code className="bg-[#EFF6FF] dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs">&lt;head&gt;</code> etiketinden önce ekleyin.
+        <div className="surface p-5 sm:p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Widget Kurulumu</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Aşağıdaki kodu sitenizin <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">&lt;head&gt;</code> etiketinden önce ekleyin.
           </p>
           <div className="relative">
             <button
               onClick={() => {
-                const code = `<script>
-  window.$gu = window.$gu || function() {
-    (window.$gu.q = window.$gu.q || []).push(arguments);
-  };
-  $gu('set', 'WEBSITE_ID', '${websiteId || 'YOUR_WEBSITE_ID'}');
-</script>
-<script async src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js"></script>`;
-                navigator.clipboard.writeText(code).then(() => {
+                navigator.clipboard.writeText(installSnippet).then(() => {
                   setCopiedCode(true);
                   setTimeout(() => setCopiedCode(false), 2000);
                 });
@@ -256,28 +294,27 @@ export default function WidgetSettingsPage() {
               )}
             </button>
             <div className="bg-[#1A1D2E] rounded-xl p-4 overflow-x-auto">
-              <pre className="text-sm text-green-400">{`<script>
-  window.$gu = window.$gu || function() {
-    (window.$gu.q = window.$gu.q || []).push(arguments);
-  };
-  $gu('set', 'WEBSITE_ID', '${websiteId || 'YOUR_WEBSITE_ID'}');
-</script>
-<script async src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js"></script>`}</pre>
+              <pre className="text-sm text-green-400 whitespace-pre">{installSnippet}</pre>
             </div>
           </div>
+          {!websiteId && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Web sitesi kimliği yükleniyor… Kod hazır olduğunda <code className="bg-muted px-1 rounded font-mono">WEBSITE_ID</code> otomatik dolacaktır.
+            </p>
+          )}
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+          {saveError && (
+            <p className="text-sm text-destructive sm:mr-auto">{saveError}</p>
+          )}
           <button
             onClick={handleSave}
-            className={`px-6 py-3 rounded-xl font-semibold transition ${
-              saved
-                ? 'bg-green-500 text-white'
-                : 'bg-primary hover:bg-primary/90 text-white'
-            }`}
+            disabled={saving}
+            className={`btn-primary w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed ${saved ? '!bg-success' : ''}`}
           >
-            {saved ? '✓ Kaydedildi' : 'Kaydet'}
+            {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
           </button>
         </div>
       </div>
@@ -289,19 +326,17 @@ function ToggleField({ label, description, checked, onChange }: {
   label: string; description: string; checked: boolean; onChange: (checked: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`w-12 h-6 rounded-full transition relative ${checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+        className={`w-12 h-6 shrink-0 rounded-full transition-colors relative ${checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
       >
         <span
-          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition ${
-            checked ? 'left-6.5' : 'left-0.5'
-          }`}
+          className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
           style={{ left: checked ? '26px' : '2px' }}
         />
       </button>

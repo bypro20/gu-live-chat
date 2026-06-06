@@ -92,17 +92,17 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ticket Yönetimi</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Müşteri taleplerini yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ticket Yönetimi</h1>
+          <p className="text-sm text-muted-foreground mt-1">Müşteri taleplerini yönetin</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">{total} ticket</span>
+        <div className="flex items-center justify-between sm:justify-end gap-3">
+          <span className="text-sm text-muted-foreground">{total} ticket</span>
           <Link
             href="/settings/tickets/yeni"
-            className="px-4 py-2.5 bg-[#1972F5] hover:bg-[#1565DB] text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
+            className="btn-primary"
           >
             + Ticket Oluştur
           </Link>
@@ -116,18 +116,18 @@ export default function TicketsPage() {
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           placeholder="Ticket ara (konu, e-posta, isim)..."
-          className="w-full max-w-md px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
+          className="w-full sm:max-w-md px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
         />
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-nowrap sm:flex-wrap gap-2 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => { setStatusFilter(null); setPage(1) }}
-          className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
+          className={`px-4 py-1.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${
             !statusFilter
-              ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/30'
-              : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
+              ? 'bg-primary text-primary-foreground shadow-brand'
+              : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
           Tümü
@@ -136,10 +136,10 @@ export default function TicketsPage() {
           <button
             key={s}
             onClick={() => { setStatusFilter(s); setPage(1) }}
-            className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
+            className={`px-4 py-1.5 text-sm font-medium rounded-full transition whitespace-nowrap shrink-0 ${
               statusFilter === s
-                ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/30'
-                : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
+                ? 'bg-primary text-primary-foreground shadow-brand'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {STATUS_LABELS[s]}
@@ -148,93 +148,123 @@ export default function TicketsPage() {
       </div>
 
       {/* Ticket Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 overflow-hidden">
+      <div className="surface overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : tickets.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <div className="p-10 sm:p-12 text-center">
+            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="font-medium text-gray-900 dark:text-white">Henüz ticket yok</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <h3 className="font-medium text-foreground">Henüz ticket yok</h3>
+            <p className="text-sm text-muted-foreground mt-1">
               {statusFilter ? 'Bu durumda ticket bulunamadı' : 'Yeni bir ticket oluşturun'}
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#E5E7EB] dark:border-gray-700">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Konu</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Durum</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Öncelik</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kanal</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atanan</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tarih</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mesaj</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
-                {tickets.map((ticket) => (
-                  <tr
-                    key={ticket.id}
-                    className="hover:bg-[#EFF6FF] dark:hover:bg-gray-700/50 transition cursor-pointer"
-                    onClick={() => window.location.href = `/settings/tickets/${ticket.id}`}
-                  >
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                      #{ticket.id.slice(0, 8)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{ticket.subject}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{ticket.requesterName || ticket.requesterEmail}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300">
-                        {STATUS_LABELS[ticket.status] || ticket.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
-                        {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                      {CHANNEL_LABELS[ticket.channel] || ticket.channel}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {ticket.assignedTo ? (
-                        <span className="text-gray-900 dark:text-white">{ticket.assignedTo.name || ticket.assignedTo.id.slice(0, 8)}</span>
-                      ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {timeAgo(ticket.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-500 dark:text-gray-400">
-                      {ticket._count.messages}
-                    </td>
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Konu</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Durum</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Öncelik</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Kanal</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Atanan</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tarih</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Mesaj</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {tickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      className="hover:bg-muted transition cursor-pointer"
+                      onClick={() => window.location.href = `/settings/tickets/${ticket.id}`}
+                    >
+                      <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
+                        #{ticket.id.slice(0, 8)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-foreground">{ticket.subject}</p>
+                        <p className="text-xs text-muted-foreground">{ticket.requesterName || ticket.requesterEmail}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-muted text-foreground">
+                          {STATUS_LABELS[ticket.status] || ticket.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
+                          {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground">
+                        {CHANNEL_LABELS[ticket.channel] || ticket.channel}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {ticket.assignedTo ? (
+                          <span className="text-foreground">{ticket.assignedTo.name || ticket.assignedTo.id.slice(0, 8)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                        {timeAgo(ticket.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-muted-foreground">
+                        {ticket._count.messages}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-border">
+              {tickets.map((ticket) => (
+                <button
+                  key={ticket.id}
+                  onClick={() => window.location.href = `/settings/tickets/${ticket.id}`}
+                  className="w-full text-left p-4 hover:bg-muted transition"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm font-medium text-foreground min-w-0 break-words">{ticket.subject}</p>
+                    <span className="text-xs text-muted-foreground font-mono shrink-0">#{ticket.id.slice(0, 8)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{ticket.requesterName || ticket.requesterEmail}</p>
+                  <div className="flex items-center flex-wrap gap-2 mt-2">
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-muted text-foreground">
+                      {STATUS_LABELS[ticket.status] || ticket.status}
+                    </span>
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
+                      {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{CHANNEL_LABELS[ticket.channel] || ticket.channel}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">{timeAgo(ticket.createdAt)} · {ticket._count.messages} mesaj</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
+        <div className="flex items-center justify-center flex-wrap gap-2 mt-6">
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="px-3 py-1.5 text-sm font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1972F5]/20 transition"
+            className="px-3 py-1.5 text-sm font-medium bg-muted text-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent transition"
           >
             Önceki
           </button>
@@ -244,8 +274,8 @@ export default function TicketsPage() {
               onClick={() => setPage(p)}
               className={`w-8 h-8 text-sm font-medium rounded-lg transition ${
                 p === page
-                  ? 'bg-[#1972F5] text-white'
-                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground hover:bg-accent'
               }`}
             >
               {p}
@@ -254,7 +284,7 @@ export default function TicketsPage() {
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1972F5]/20 transition"
+            className="px-3 py-1.5 text-sm font-medium bg-muted text-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent transition"
           >
             Sonraki
           </button>

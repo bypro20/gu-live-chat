@@ -60,7 +60,7 @@ export default function PublicStatusPage() {
         setPageData(data.page)
         setComponents(data.components || [])
         setIncidents(data.incidents || [])
-        document.documentElement.style.setProperty('--status-primary', data.page.primaryColor || '#6D28D9')
+        document.documentElement.style.setProperty('--status-primary', data.page.primaryColor || '#1972F5')
       })
       .catch(() => setError('Durum sayfası bulunamadı'))
       .finally(() => setLoading(false))
@@ -101,7 +101,7 @@ export default function PublicStatusPage() {
     )
   }
 
-  const primaryColor = pageData?.primaryColor || '#6D28D9'
+  const primaryColor = pageData?.primaryColor || '#1972F5'
   const uptime = getUptimeStatus(components)
 
   return (
@@ -221,7 +221,7 @@ export default function PublicStatusPage() {
           <p className="text-sm text-gray-500 mb-4">
             Yeni bir olay bildirildiğinde veya bir bileşen durumu değiştiğinde size haber verelim.
           </p>
-          <form onSubmit={handleSubscribe} className="flex gap-2 max-w-md mx-auto">
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
             <input
               type="email"
               value={email}
@@ -232,7 +232,7 @@ export default function PublicStatusPage() {
             />
             <button
               type="submit"
-              className="px-5 py-2.5 text-white font-medium rounded-xl text-sm transition hover:opacity-90"
+              className="px-5 py-2.5 text-white font-medium rounded-xl text-sm transition hover:opacity-90 shrink-0"
               style={{ background: primaryColor }}
             >
               {subscribed ? 'Abone Olundu ✓' : 'Abone Ol'}

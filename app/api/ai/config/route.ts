@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { getEnvProviderStatus } from '@/lib/ai/provider'
 
 // GET /api/ai/config?websiteId=xxx
 export async function GET(req: NextRequest) {
@@ -36,9 +37,13 @@ export async function GET(req: NextRequest) {
       where: { websiteId: website.id },
     })
 
+    // Whether server-side env API keys are defined (value never exposed).
+    const env = getEnvProviderStatus()
+
     if (!aiConfig) {
       // Return default config
       return NextResponse.json({
+        env,
         aiConfig: {
           id: null,
           isActive: false,
@@ -59,6 +64,7 @@ export async function GET(req: NextRequest) {
       : ''
 
     return NextResponse.json({
+      env,
       aiConfig: {
         ...aiConfig,
         apiKey: maskedKey,
