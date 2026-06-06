@@ -280,6 +280,8 @@ export default function InboxPage() {
   const [messageText, setMessageText] = useState('')
   const [typingPreview, setTypingPreview] = useState<{ conversationId: string; content: string } | null>(null)
   const [autoTranslate, setAutoTranslate] = useState(false)
+  const [detectedVisitorLang, setDetectedVisitorLang] = useState<string | null>(null)
+  const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [aiSuggesting, setAiSuggesting] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -412,9 +414,67 @@ export default function InboxPage() {
     }
   }, [selectedId, session?.user?.id])
 
+  // Reset detected language when conversation changes
+  useEffect(() => {
+    setDetectedVisitorLang(null)
+  }, [selectedId])
+
+  // Detect visitor language from recent messages when auto-translate is on
+  useEffect(() => {
+    if (!autoTranslate || !canTranslate || !activeWebsite) return
+    const visitorText = messages
+      .filter((m) => m.senderType === 'VISITOR')
+      .slice(-3)
+      .map((m) => m.content)
+      .join(' ')
+      .trim()
+      .slice(0, 300)
+    if (!visitorText) return
+
+    fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: visitorText, toLang: 'tr', websiteId: activeWebsite.websiteId }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const lang = data.detectedLanguage as string | undefined
+        if (lang && lang !== 'tr') setDetectedVisitorLang(lang)
+        else setDetectedVisitorLang(null)
+      })
+      .catch(() => {})
+  }, [autoTranslate, messages, canTranslate, activeWebsite])
+
   const handleSend = async () => {
     if (!messageText.trim() || sending) return
-    await sendMessage(messageText.trim())
+    let textToSend = messageText.trim()
+
+    // Translate outgoing message to visitor's language when auto-translate is active
+    if (autoTranslate && canTranslate && detectedVisitorLang) {
+      setTranslatingOutgoing(true)
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: textToSend,
+            toLang: detectedVisitorLang,
+            fromLang: 'tr',
+            websiteId: activeWebsite?.websiteId,
+          }),
+        })
+        const data = await res.json()
+        if (data.translatedText && data.translatedText !== textToSend) {
+          textToSend = data.translatedText
+        }
+      } catch {
+        // Send original on error
+      } finally {
+        setTranslatingOutgoing(false)
+      }
+    }
+
+    await sendMessage(textToSend)
     setMessageText('')
   }
 
@@ -483,21 +543,6 @@ export default function InboxPage() {
                 {f.label}
               </button>
             ))}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <label className={`flex items-center gap-2 ${canTranslate ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
-              <input
-                type="checkbox"
-                checked={autoTranslate}
-                onChange={(e) => canTranslate && setAutoTranslate(e.target.checked)}
-                disabled={!canTranslate}
-                className="w-3.5 h-3.5 accent-primary rounded border-border"
-              />
-              <span className="text-xs text-muted-foreground">
-                Otomatik Çeviri
-                {!canTranslate && <span className="ml-1 text-[10px] text-amber-500">(PRO)</span>}
-              </span>
-            </label>
           </div>
         </div>
 
@@ -607,6 +652,34 @@ export default function InboxPage() {
                   {selectedConversation.assignedTo.name || 'Temsilci'}
                 </div>
               )}
+              {/* Translate toggle in chat header */}
+              <button
+                onClick={() => canTranslate && setAutoTranslate((v) => !v)}
+                title={
+                  !canTranslate
+                    ? 'Otomatik çeviri PRO plana dahildir'
+                    : autoTranslate
+                    ? 'Çeviriyi kapat'
+                    : 'Otomatik çeviriyi aç'
+                }
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
+                  !canTranslate
+                    ? 'opacity-40 cursor-not-allowed bg-muted text-muted-foreground'
+                    : autoTranslate
+                    ? 'bg-primary text-primary-foreground shadow-brand'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                <span className="hidden sm:inline">
+                  {autoTranslate && detectedVisitorLang
+                    ? detectedVisitorLang.toUpperCase() + ' ↔ TR'
+                    : 'Çeviri'}
+                </span>
+                {!canTranslate && <span className="text-[10px] text-amber-400 hidden sm:inline">(PRO)</span>}
+              </button>
             </div>
 
             {/* Messages */}
@@ -658,13 +731,25 @@ export default function InboxPage() {
                   <span className="text-[11px] text-destructive truncate">{aiError}</span>
                 )}
               </div>
+              {autoTranslate && canTranslate && detectedVisitorLang && (
+                <div className="flex items-center gap-1.5 mb-1.5 text-[11px] text-primary/70">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                  Gelen mesajlar TR&apos;ye çevriliyor · Giden mesajlar {detectedVisitorLang.toUpperCase()}&apos;ye çevriliyor
+                </div>
+              )}
               <div className="flex items-end gap-2 sm:gap-3">
                 <div className="flex-1 relative">
                   <textarea
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Mesaj yazın..."
+                    placeholder={
+                      autoTranslate && canTranslate && detectedVisitorLang
+                        ? `Türkçe yazın — ${detectedVisitorLang.toUpperCase()}'ye çevrilerek gönderilecek`
+                        : 'Mesaj yazın...'
+                    }
                     className="w-full px-4 py-3 bg-muted border border-border rounded-xl resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
                     rows={1}
                     disabled={sending}
@@ -672,12 +757,17 @@ export default function InboxPage() {
                 </div>
                 <button
                   onClick={handleSend}
-                  disabled={!messageText.trim() || sending}
+                  disabled={!messageText.trim() || sending || translatingOutgoing}
                   className="w-11 h-11 bg-primary hover:bg-primary-hover disabled:bg-muted-foreground/30 disabled:cursor-not-allowed text-primary-foreground rounded-xl flex items-center justify-center transition shrink-0 shadow-brand"
+                  title={translatingOutgoing ? 'Çevriliyor...' : 'Gönder'}
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                  {translatingOutgoing ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
