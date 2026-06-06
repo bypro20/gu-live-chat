@@ -197,6 +197,7 @@ export async function POST(req: Request) {
         welcomeMessage: website.welcomeMessage,
         offlineMessage: website.offlineMessage,
         avatarUrl: website.avatarUrl,
+        websiteName: website.name,
         agentsOnline: 0, // Will be updated via Socket.io
       },
     })

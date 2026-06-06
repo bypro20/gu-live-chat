@@ -12,6 +12,7 @@ interface WidgetConfig {
   welcomeMessage: string
   offlineMessage: string
   avatarUrl: string | null
+  websiteName: string | null
   agentsOnline: number
 }
 
@@ -229,10 +230,12 @@ function mergeWidgetMessages(prev: Message[], incoming: Message[]): Message[] {
   return merged
 }
 
-const AGENT = {
-  name: 'Elif',
-  role: 'Destek',
-  photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face&q=80',
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('')
 }
 
 export default function WidgetPage() {
@@ -317,6 +320,7 @@ export default function WidgetPage() {
             welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
             offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
             avatarUrl: null,
+            websiteName: null,
             agentsOnline: 1,
           })
           setIsInitialized(true)
@@ -339,6 +343,7 @@ export default function WidgetPage() {
           welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
           offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
           avatarUrl: null,
+          websiteName: null,
           agentsOnline: 1,
         })
         setIsInitialized(true)
@@ -997,9 +1002,10 @@ export default function WidgetPage() {
   }, [translations, websiteId, lang])
 
   const primaryColor = config?.primaryColor || '#1972F5'
-  const gradientStart = '#1972F5'
-  const gradientEnd = '#3B82F6'
   const agentsOnline = config?.agentsOnline ?? 3
+  const agentName = config?.websiteName || 'Destek'
+  const agentInitials = getInitials(agentName)
+  const agentAvatar = config?.avatarUrl || null
 
   const renderAttachments = (msg: Message, onDark: boolean) => {
     if (!msg.attachments || msg.attachments.length === 0) return null
@@ -1071,10 +1077,8 @@ export default function WidgetPage() {
   if (!isInitialized || !config) {
     const loadingWidget = (
       <div style={{ width: '100vw', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', margin: '0 auto', border: '3px solid rgba(25,114,245,0.15)', borderTopColor: gradientStart, borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }}></div>
-          <style>{`@keyframes gwSpin { to { transform: rotate(360deg) } }`}</style>
-        </div>
+        <div style={{ width: '36px', height: '36px', border: '3px solid rgba(25,114,245,0.15)', borderTopColor: '#1972F5', borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }} />
+        <style>{`@keyframes gwSpin { to { transform: rotate(360deg) } }`}</style>
       </div>
     )
     if (typeof window !== 'undefined' && mounted) {
@@ -1083,10 +1087,16 @@ export default function WidgetPage() {
     return loadingWidget
   }
 
+  const avatarEl = (size: number) => (
+    agentAvatar
+      ? <img src={agentAvatar} alt={agentName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+      : <span style={{ fontSize: size * 0.38, fontWeight: 700, color: 'white', letterSpacing: '-0.5px', userSelect: 'none' }}>{agentInitials || '?'}</span>
+  )
+
   const mainWidget = (
     <div style={{
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      color: '#111827',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
+      color: '#0F172A',
       colorScheme: 'light',
       position: 'fixed',
       bottom: '24px',
@@ -1098,961 +1108,771 @@ export default function WidgetPage() {
     }}>
       <style>{`
         @keyframes gwSlideUp {
-          from { opacity: 0; transform: translateY(24px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(20px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
         }
         @keyframes gwFadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes gwPulse {
-          0% { box-shadow: 0 8px 32px rgba(25,114,245,0.35); }
-          50% { box-shadow: 0 8px 48px rgba(25,114,245,0.55); }
-          100% { box-shadow: 0 8px 32px rgba(25,114,245,0.35); }
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0);   }
         }
         @keyframes gwBounce {
-          0%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-6px); }
-        }
-        @keyframes gwRing {
-          0% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(1.8); opacity: 0; }
+          0%, 60%, 100% { transform: translateY(0);    }
+          30%            { transform: translateY(-5px); }
         }
         @keyframes gwCheckIn {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.3); }
-          100% { transform: scale(1); opacity: 1; }
+          0%   { transform: scale(0); opacity: 0; }
+          60%  { transform: scale(1.2);            }
+          100% { transform: scale(1); opacity: 1;  }
         }
         @keyframes gwSpin { to { transform: rotate(360deg); } }
-        .gw-scroll::-webkit-scrollbar { width: 4px; }
+        @keyframes gwPop {
+          0%   { transform: scale(1);    }
+          50%  { transform: scale(1.06); }
+          100% { transform: scale(1);    }
+        }
+        .gw-scroll::-webkit-scrollbar       { width: 3px; }
         .gw-scroll::-webkit-scrollbar-track { background: transparent; }
-        .gw-scroll::-webkit-scrollbar-thumb { background: #DDDCE5; border-radius: 4px; }
-        .gw-scroll::-webkit-scrollbar-thumb:hover { background: #C5C5D5; }
-        .gw-input::placeholder { color: #B0B0C5 !important; opacity: 1; }
+        .gw-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .gw-input::placeholder { color: #94A3B8 !important; opacity: 1; }
+        .gw-msg-btn:hover { opacity: 1 !important; }
         @media (max-width: 480px) {
-          .gw-panel { width: 100vw !important; max-height: 100dvh !important; height: 100dvh !important; border-radius: 0 !important; bottom: 0 !important; right: 0 !important; }
-          .gw-wrapper { bottom: 0 !important; right: 0 !important; padding: 0 !important; }
-          .gw-button { bottom: 16px !important; right: 16px !important; }
+          .gw-panel   { width: 100vw !important; max-height: 100dvh !important; height: 100dvh !important; border-radius: 0 !important; }
+          .gw-wrapper { bottom: 0 !important; right: 0 !important; }
+          .gw-button  { bottom: 16px !important; right: 16px !important; }
         }
       `}</style>
 
       {isOpen ? (
         <div className="gw-panel" style={{
-          width: '380px',
-          maxHeight: '600px',
-          height: 'calc(100dvh - 80px)',
+          width: '390px',
+          maxHeight: '620px',
+          height: 'calc(100dvh - 72px)',
           background: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '20px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.15)',
-          animation: 'gwSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          position: 'relative',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.14), 0 4px 20px rgba(0,0,0,0.07)',
+          animation: 'gwSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
-          <div style={{
-            background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -30)} 100%)`,
-            padding: '20px 20px 16px',
-            flexShrink: 0,
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', top: '-50px', right: '-40px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ position: 'absolute', bottom: '-60px', left: '-30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
-            <div style={{ position: 'absolute', top: '6px', right: '70px', width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <div style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '2px solid rgba(255,255,255,0.5)',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-                  background: 'rgba(255,255,255,0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                  <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', background: '#22C55E', border: '2px solid white', zIndex: 2 }} />
-                </div>
+          {/* ─── HEADER ─────────────────────────────────────────────────────── */}
+          <div style={{
+            padding: '18px 18px 16px',
+            background: '#ffffff',
+            borderBottom: '1px solid #F1F5F9',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: '46px', height: '46px', borderRadius: '14px',
+                background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', boxShadow: `0 4px 14px ${primaryColor}40`,
+              }}>
+                {avatarEl(46)}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ color: 'white', fontWeight: 700, fontSize: '15px', margin: 0, letterSpacing: '-0.01em' }}>{AGENT.name}</p>
-                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', margin: '2px 0 0', fontWeight: 400, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#86efac', boxShadow: '0 0 0 2px rgba(134,239,172,0.3)' }} />
-                  {t.online} • {t.typicalReply}
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <svg
-                    width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"
-                    style={{ position: 'absolute', left: '8px', pointerEvents: 'none', opacity: 0.9 }}
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                  <select
-                    value={lang}
-                    onChange={(e) => setLang(e.target.value)}
-                    aria-label="Çeviri dili / Translation language"
-                    title="Çeviri dili"
-                    style={{
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                      background: 'rgba(255,255,255,0.18)',
-                      color: 'white',
-                      border: '1px solid rgba(255,255,255,0.25)',
-                      borderRadius: '9px',
-                      padding: '5px 22px 5px 26px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      outline: 'none',
-                      maxWidth: '120px',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {WIDGET_LANGUAGES.map((l) => (
-                      <option key={l.code} value={l.code} style={{ color: '#111827', background: '#ffffff' }}>
-                        {l.name} ({l.code.toUpperCase()})
-                      </option>
-                    ))}
-                  </select>
-                  <svg
-                    width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"
-                    style={{ position: 'absolute', right: '7px', pointerEvents: 'none', opacity: 0.9 }}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-                  </svg>
-                </div>
-                <button
-                  onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
-                  aria-label={t.close}
+              <div style={{
+                position: 'absolute', bottom: '-1px', right: '-1px',
+                width: '13px', height: '13px', borderRadius: '50%',
+                background: '#22C55E', border: '2.5px solid white',
+              }} />
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0F172A', letterSpacing: '-0.02em' }}>
+                {agentName}
+              </p>
+              <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
+                {t.online} · {t.typicalReply}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"
+                  style={{ position: 'absolute', left: '8px', pointerEvents: 'none' }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  aria-label="Dil seçin"
                   style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    borderRadius: '10px',
-                    padding: '7px',
-                    cursor: 'pointer',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s',
-                    flexShrink: 0,
-                    lineHeight: 0,
+                    appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+                    background: '#F8FAFC', color: '#475569',
+                    border: '1px solid #E2E8F0', borderRadius: '10px',
+                    padding: '5px 22px 5px 26px',
+                    fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', outline: 'none', maxWidth: '110px', lineHeight: 1.3,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; e.currentTarget.style.transform = 'scale(1.08)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'scale(1)' }}
                 >
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  {WIDGET_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code} style={{ color: '#0F172A', background: '#fff' }}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5"
+                  style={{ position: 'absolute', right: '6px', pointerEvents: 'none' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                </svg>
               </div>
+              <button
+                onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
+                aria-label={t.close}
+                style={{
+                  width: '34px', height: '34px', background: '#F1F5F9',
+                  border: 'none', borderRadius: '10px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#64748B', transition: 'all 0.15s', flexShrink: 0, lineHeight: 0,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#E2E8F0'; e.currentTarget.style.color = '#0F172A' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#64748B' }}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
 
+          {/* ─── KNOWLEDGE BASE VIEW ─────────────────────────────────────────── */}
           {showKnowledgeBase ? (
             <div className="gw-scroll" style={{
               flex: 1, overflowY: 'auto', overflowX: 'hidden',
-              padding: '16px', background: '#F9FAFB',
+              padding: '16px', background: '#F8FAFC',
               display: 'flex', flexDirection: 'column', gap: '8px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', flexShrink: 0 }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#111827' }}>{t.help}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0F172A' }}>{t.help}</p>
                 <button
                   onClick={() => { setShowKnowledgeBase(false); setSelectedArticle(null) }}
                   style={{
-                    background: '#F3F4F6', border: 'none', borderRadius: '10px',
-                    padding: '6px 12px', fontSize: '12px', cursor: 'pointer',
-                    color: '#76728A', fontWeight: 600, fontFamily: 'inherit',
-                    transition: 'all 0.2s',
+                    background: '#E2E8F0', border: 'none', borderRadius: '8px',
+                    padding: '5px 12px', fontSize: '12px', cursor: 'pointer',
+                    color: '#64748B', fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#E0DFEF' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#F3F4F6' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#CBD5E1' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#E2E8F0' }}
                 >
                   {t.backToChat}
                 </button>
               </div>
               {kbLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>{t.loading}</div>
+                <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8', fontSize: '14px' }}>{t.loading}</div>
               ) : selectedArticle ? (
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                <div>
                   <button
                     onClick={() => setSelectedArticle(null)}
                     style={{
-                      background: 'none', border: 'none', padding: '4px 0 12px',
-                      cursor: 'pointer', color: '#1972F5', fontWeight: 600,
+                      background: 'none', border: 'none', padding: '4px 0 14px',
+                      cursor: 'pointer', color: primaryColor, fontWeight: 600,
                       fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px',
                       fontFamily: 'inherit',
                     }}
-                  >
-                    {t.back}
-                  </button>
-                  <h3 style={{ margin: '0 0 12px', fontSize: '16px', color: '#111827', lineHeight: '1.4' }}>{selectedArticle.title}</h3>
-                  <div style={{ fontSize: '14px', color: '#111827', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{selectedArticle.content}</div>
+                  >{t.back}</button>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '16px', color: '#0F172A', lineHeight: 1.4 }}>{selectedArticle.title}</h3>
+                  <div style={{ fontSize: '14px', color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{selectedArticle.content}</div>
                 </div>
               ) : kbArticles.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>
-                  {t.noArticles}
-                </div>
+                <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8', fontSize: '14px' }}>{t.noArticles}</div>
               ) : (
                 kbArticles.map((article) => (
                   <button
                     key={article.id}
                     onClick={() => setSelectedArticle(article)}
                     style={{
-                      background: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '12px',
+                      background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '14px',
                       padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
-                      transition: 'all 0.2s', fontFamily: 'inherit',
-                      width: '100%',
+                      transition: 'all 0.15s', fontFamily: 'inherit', width: '100%',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(25,114,245,0.1)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.boxShadow = `0 2px 12px ${primaryColor}18` }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.boxShadow = 'none' }}
                   >
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#111827' }}>{article.title}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>
-                      {article.content?.slice(0, 80)}{article.content?.length > 80 ? '...' : ''}
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#0F172A' }}>{article.title}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748B', lineHeight: 1.5 }}>
+                      {article.content?.slice(0, 90)}{article.content?.length > 90 ? '...' : ''}
                     </p>
                   </button>
                 ))
               )}
             </div>
+
           ) : (
             <>
-            {proactiveMessage && (
-              <div style={{
-                background: '#1972F5',
-                padding: '10px 16px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
-                flexShrink: 0,
-                animation: 'gwSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'white' }}>{proactiveMessage.title}</p>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.4' }}>{proactiveMessage.message}</p>
-                </div>
-                <button
-                  onClick={() => setProactiveMessage(null)}
-                  style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '4px 10px',
-                    color: 'white',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  {t.close}
-                </button>
-              </div>
-            )}
-          <div className="gw-scroll" style={{
-            flex: 1,
-            overflowY: 'auto',
-              overflowX: 'hidden',
-              padding: '20px 16px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-              background: '#F9FAFB',
-            }}>
-              <div style={{ textAlign: 'center', margin: '0 0 12px', flexShrink: 0 }}>
-                <span style={{
-                  fontSize: '11px',
-                  color: '#76728A',
-                  background: '#F3F4F6',
-                  padding: '4px 14px',
-                  borderRadius: '20px',
-                  fontWeight: 600,
-                  letterSpacing: '0.02em',
-                }}>
-                  {t.today}
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '4px', animation: 'gwFadeIn 0.3s ease-out' }}>
+              {/* ─── PROACTIVE BANNER ───────────────────────────────────────── */}
+              {proactiveMessage && (
                 <div style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
+                  background: primaryColor,
+                  padding: '10px 16px',
+                  display: 'flex', alignItems: 'flex-start', gap: '10px',
                   flexShrink: 0,
-                  border: '2px solid #E5E7EB',
+                  animation: 'gwSlideUp 0.25s cubic-bezier(0.16,1,0.3,1)',
                 }}>
-                  <img
-                    src={AGENT.photo}
-                    alt={AGENT.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#fff' }}>{proactiveMessage.title}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.88)', lineHeight: 1.4 }}>{proactiveMessage.message}</p>
+                  </div>
+                  <button
+                    onClick={() => setProactiveMessage(null)}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px',
+                      padding: '3px 10px', color: '#fff', fontSize: '11px',
+                      cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >{t.close}</button>
                 </div>
-                <div style={{ maxWidth: '270px' }}>
-                  <p style={{ margin: '0 0 3px 4px', fontSize: '11px', fontWeight: 600, color: '#76728A' }}>
-                    {AGENT.name}
-                  </p>
+              )}
+
+              {/* ─── MESSAGES AREA ──────────────────────────────────────────── */}
+              <div className="gw-scroll" style={{
+                flex: 1, overflowY: 'auto', overflowX: 'hidden',
+                padding: '20px 16px 8px',
+                display: 'flex', flexDirection: 'column', gap: '4px',
+                background: '#F8FAFC',
+              }}>
+                {/* Date pill */}
+                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                  <span style={{
+                    fontSize: '11px', color: '#94A3B8',
+                    background: '#E2E8F0', padding: '3px 12px',
+                    borderRadius: '20px', fontWeight: 600,
+                  }}>{t.today}</span>
+                </div>
+
+                {/* Welcome bubble */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '4px', animation: 'gwFadeIn 0.3s ease-out' }}>
                   <div style={{
-                    background: '#ffffff',
-                    borderRadius: '12px 12px 12px 4px',
-                    padding: '12px 16px',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0,
+                    background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', boxShadow: `0 2px 8px ${primaryColor}30`,
                   }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#111827', lineHeight: '1.6' }}>
-                      {config.welcomeMessage || t.welcomeFallback}
+                    {avatarEl(32)}
+                  </div>
+                  <div style={{ maxWidth: '280px' }}>
+                    <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
+                      {agentName}
+                    </p>
+                    <div style={{
+                      background: '#ffffff', borderRadius: '4px 16px 16px 16px',
+                      padding: '12px 16px',
+                      boxShadow: '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+                    }}>
+                      <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', lineHeight: 1.65 }}>
+                        {config.welcomeMessage || t.welcomeFallback}
+                      </p>
+                    </div>
+                    <p style={{ margin: '4px 0 0 2px', fontSize: '10px', color: '#CBD5E1' }}>
+                      {new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <p style={{ margin: '4px 0 0 4px', fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
-                    {new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
                 </div>
-              </div>
 
-              {messages.length === 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', marginLeft: '40px' }}>
-                  {[
-                    { key: 'chat', label: t.quickChat },
-                    { key: 'pricing', label: t.quickPricing },
-                    { key: 'support', label: t.quickSupport },
-                  ].map(({ key, label }) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        if (key === 'chat') {
-                          if (visitorInfo.name && visitorInfo.email) {
-                            setShowPreChat(false)
-                            setTimeout(() => inputRef.current?.focus(), 100)
-                          }
-                        }
-                        setInputMessage(label.replace(/^[^\s]+\s/, ''))
-                        inputRef.current?.focus()
-                      }}
-                      style={{
-                        background: '#ffffff',
-                        border: '1px solid rgba(25,114,245,0.12)',
-                        borderRadius: '20px',
-                        padding: '9px 16px',
-                        fontSize: '13px',
-                        color: '#111827',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        fontWeight: 500,
-                        maxWidth: 'fit-content',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#1972F5'
-                        e.currentTarget.style.background = 'rgba(25,114,245,0.04)'
-                        e.currentTarget.style.transform = 'translateX(4px)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(25,114,245,0.12)'
-                        e.currentTarget.style.background = '#ffffff'
-                        e.currentTarget.style.transform = 'translateX(0)'
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {messages.map((msg, idx) => (
-                <div key={msg.id} style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  marginTop: '2px',
-                  animation: 'gwFadeIn 0.3s ease-out',
-                }}>
-                  {msg.senderType === 'VISITOR' ? (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div style={{ maxWidth: '270px' }}>
-                        {!(msg.attachments?.length && /^(🖼️|📎)\s/u.test(msg.content)) && (
-                          <div style={{
-                            background: '#1972F5',
-                            color: 'white',
-                            borderRadius: '12px 12px 4px 12px',
-                            padding: '11px 16px',
-                            fontSize: '14px',
-                            lineHeight: '1.6',
-                            boxShadow: '0 2px 8px rgba(25,114,245,0.25)',
-                          }}>
-                            {msg.content}
-                          </div>
-                        )}
-                        {renderAttachments(msg, true)}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', margin: '4px 4px 0 0' }}>
-                          <span style={{ fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
-                            {formatTime(msg.createdAt)}
-                          </span>
-                          {idx === messages.length - 1 && (
-                            <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: 'gwCheckIn 0.3s ease-out' }}>
-                              <path d="M3 6l2 2 4-4" stroke="#1972F5" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                      <div style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        border: '2px solid #E5E7EB',
-                      }}>
-                        <img
-                          src={AGENT.photo}
-                          alt=""
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <div style={{ maxWidth: '270px' }}>
-                        {msg.senderName && (
-                          <p style={{ margin: '0 0 3px 4px', fontSize: '11px', fontWeight: 600, color: '#76728A' }}>{msg.senderName}</p>
-                        )}
-                        <div style={{
-                          background: '#ffffff',
-                          borderRadius: '12px 12px 12px 4px',
-                          padding: '11px 16px',
-                          fontSize: '14px',
-                          lineHeight: '1.6',
-                          color: '#111827',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                        }}>
-                          {msg.content}
-                          {translations[msg.id] && (
-                            <span style={{ display: 'block', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #EEF0F4', fontSize: '13px', color: '#4B5563', fontStyle: 'italic' }}>
-                              🌐 {translations[msg.id]}
-                            </span>
-                          )}
-                        </div>
-                        {renderAttachments(msg, false)}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 0 4px' }}>
-                          <span style={{ fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
-                            {formatTime(msg.createdAt)}
-                          </span>
-                          {aiTranslateAvailable && msg.content?.trim() && (
-                            <button
-                              onClick={() => handleTranslateMessage(msg)}
-                              disabled={translatingId === msg.id}
-                              aria-label={translations[msg.id] ? t.showOriginal : t.translate}
-                              title={translations[msg.id] ? t.showOriginal : t.translate}
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                padding: 0, fontSize: '10px', fontWeight: 600,
-                                color: translations[msg.id] ? primaryColor : '#9CA3AF',
-                                display: 'flex', alignItems: 'center', gap: '3px',
-                                fontFamily: 'inherit', lineHeight: 1,
-                              }}
-                            >
-                              <span style={{ fontSize: '11px' }}>🌐</span>
-                              {translatingId === msg.id ? t.translating : (translations[msg.id] ? t.showOriginal : t.translate)}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {isTyping && (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginTop: '4px', animation: 'gwFadeIn 0.2s ease-out' }}>
-                  <div style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    border: '2px solid #E5E7EB',
-                  }}>
-                    <img src={AGENT.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <div style={{
-                    background: '#ffffff',
-                    borderRadius: '12px 12px 12px 4px',
-                    padding: '14px 18px',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                  }}>
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                      <span style={{ width: '7px', height: '7px', background: '#76728A', borderRadius: '50%', animation: 'gwBounce 1.4s infinite ease-in-out' }}></span>
-                      <span style={{ width: '7px', height: '7px', background: '#76728A', borderRadius: '50%', animation: 'gwBounce 1.4s infinite ease-in-out 0.2s' }}></span>
-                      <span style={{ width: '7px', height: '7px', background: '#76728A', borderRadius: '50%', animation: 'gwBounce 1.4s infinite ease-in-out 0.4s' }}></span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {(conversationStatus === 'RESOLVED' || conversationStatus === 'CLOSED') && messages.length > 0 && !ratingSubmitted && (
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>{t.rateChat}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginBottom: '10px' }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
+                {/* Quick-reply chips */}
+                {messages.length === 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', marginLeft: '42px' }}>
+                    {[
+                      { key: 'chat', label: t.quickChat },
+                      { key: 'pricing', label: t.quickPricing },
+                      { key: 'support', label: t.quickSupport },
+                    ].map(({ key, label }) => (
                       <button
-                        key={star}
-                        onClick={() => setRating(star)}
-                        onMouseEnter={(e) => {
-                          const stars = e.currentTarget.parentElement?.children
-                          if (stars) {
-                            for (let i = 0; i < stars.length; i++) {
-                              const s = stars[i] as HTMLElement
-                              if (i < star) s.style.transform = 'scale(1.2)'
-                            }
+                        key={key}
+                        onClick={() => {
+                          if (key === 'chat' && visitorInfo.name && visitorInfo.email) {
+                            setShowPreChat(false)
+                            setTimeout(() => inputRef.current?.focus(), 80)
                           }
-                        }}
-                        onMouseLeave={(e) => {
-                          const stars = e.currentTarget.parentElement?.children
-                          if (stars) {
-                            for (let i = 0; i < stars.length; i++) {
-                              (stars[i] as HTMLElement).style.transform = 'scale(1)'
-                            }
-                          }
+                          setInputMessage(label.replace(/^[\S]+\s/, ''))
+                          inputRef.current?.focus()
                         }}
                         style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '2px',
-                          fontSize: '28px',
-                          lineHeight: 1,
-                          transition: 'transform 0.15s ease',
-                          filter: star <= rating ? 'none' : 'grayscale(1)',
-                          opacity: star <= rating ? 1 : 0.3,
+                          background: '#ffffff', border: `1.5px solid ${primaryColor}22`,
+                          borderRadius: '22px', padding: '8px 16px',
+                          fontSize: '13px', color: '#334155',
+                          cursor: 'pointer', textAlign: 'left',
+                          transition: 'all 0.15s', fontWeight: 500,
+                          maxWidth: 'fit-content', fontFamily: 'inherit',
                         }}
-                      >
-                        ★
-                      </button>
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = primaryColor
+                          e.currentTarget.style.background = `${primaryColor}08`
+                          e.currentTarget.style.color = '#0F172A'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = `${primaryColor}22`
+                          e.currentTarget.style.background = '#ffffff'
+                          e.currentTarget.style.color = '#334155'
+                        }}
+                      >{label}</button>
                     ))}
                   </div>
-                  <input
-                    type="text"
-                    value={ratingComment}
-                    onChange={(e) => setRatingComment(e.target.value)}
-                    placeholder={t.commentPlaceholder}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '12px',
-                      fontSize: '13px',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box',
-                      background: '#ffffff',
-                      color: '#111827',
-                      marginBottom: '10px',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-                  />
-                  <button
-                    onClick={async () => {
-                      if (rating === 0 || ratingSending) return
-                      setRatingSending(true)
-                      try {
-                        await fetch('/api/ratings', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            conversationId,
-                            rating,
-                            comment: ratingComment || null,
-                          }),
-                        })
-                        setRatingSubmitted(true)
-                      } catch {
-                        // silent
-                      } finally {
-                        setRatingSending(false)
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '11px',
-                      background: rating === 0 ? '#E5E7EB' : '#1972F5',
-                      color: rating === 0 ? '#B0B0C5' : 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      cursor: rating === 0 ? 'default' : 'pointer',
-                      fontFamily: 'inherit',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {ratingSending ? t.sending : t.send}
-                  </button>
-                </div>
-              )}
+                )}
 
-              {ratingSubmitted && (
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#111827' }}>{t.thanksRating}</p>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>{t.thanksRatingSub}</p>
-                </div>
-              )}
+                {/* Message list */}
+                {messages.map((msg, idx) => (
+                  <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', marginTop: '6px', animation: 'gwFadeIn 0.25s ease-out' }}>
+                    {msg.senderType === 'VISITOR' ? (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ maxWidth: '280px' }}>
+                          {!(msg.attachments?.length && /^(🖼️|📎)\s/u.test(msg.content)) && (
+                            <div style={{
+                              background: primaryColor,
+                              color: '#ffffff',
+                              borderRadius: '16px 4px 16px 16px',
+                              padding: '11px 16px',
+                              fontSize: '14px', lineHeight: 1.65,
+                              boxShadow: `0 2px 10px ${primaryColor}35`,
+                            }}>
+                              {msg.content}
+                            </div>
+                          )}
+                          {renderAttachments(msg, true)}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', margin: '4px 2px 0 0' }}>
+                            <span style={{ fontSize: '10px', color: '#CBD5E1' }}>{formatTime(msg.createdAt)}</span>
+                            {idx === messages.length - 1 && (
+                              <svg width="13" height="13" viewBox="0 0 13 13" style={{ animation: 'gwCheckIn 0.3s ease-out' }}>
+                                <path d="M2 7l3 3 6-6" stroke={primaryColor} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        <div style={{
+                          width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+                          background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}>
+                          {avatarEl(30)}
+                        </div>
+                        <div style={{ maxWidth: '280px' }}>
+                          {msg.senderName && (
+                            <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
+                              {msg.senderName}
+                            </p>
+                          )}
+                          <div style={{
+                            background: '#ffffff',
+                            borderRadius: '4px 16px 16px 16px',
+                            padding: '11px 16px',
+                            fontSize: '14px', lineHeight: 1.65, color: '#0F172A',
+                            boxShadow: '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+                          }}>
+                            {msg.content}
+                            {translations[msg.id] && (
+                              <span style={{
+                                display: 'block', marginTop: '8px', paddingTop: '8px',
+                                borderTop: '1px solid #F1F5F9',
+                                fontSize: '13px', color: '#475569', fontStyle: 'italic', lineHeight: 1.5,
+                              }}>
+                                <span style={{ fontSize: '12px' }}>🌐</span> {translations[msg.id]}
+                              </span>
+                            )}
+                          </div>
+                          {renderAttachments(msg, false)}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 0 2px' }}>
+                            <span style={{ fontSize: '10px', color: '#CBD5E1' }}>{formatTime(msg.createdAt)}</span>
+                            {aiTranslateAvailable && msg.content?.trim() && (
+                              <button
+                                className="gw-msg-btn"
+                                onClick={() => handleTranslateMessage(msg)}
+                                disabled={translatingId === msg.id}
+                                aria-label={translations[msg.id] ? t.showOriginal : t.translate}
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  padding: 0, fontSize: '10px', fontWeight: 600,
+                                  color: translations[msg.id] ? primaryColor : '#94A3B8',
+                                  display: 'flex', alignItems: 'center', gap: '3px',
+                                  fontFamily: 'inherit', lineHeight: 1, opacity: 0.7,
+                                  transition: 'opacity 0.15s',
+                                }}
+                              >
+                                <span style={{ fontSize: '11px' }}>🌐</span>
+                                {translatingId === msg.id ? t.translating : (translations[msg.id] ? t.showOriginal : t.translate)}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
 
-              <div ref={messagesEndRef} />
-            </div>
+                {/* Typing indicator */}
+                {isTyping && (
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginTop: '6px', animation: 'gwFadeIn 0.2s ease-out' }}>
+                    <div style={{
+                      width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+                      background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}>
+                      {avatarEl(30)}
+                    </div>
+                    <div style={{
+                      background: '#ffffff', borderRadius: '4px 16px 16px 16px',
+                      padding: '14px 18px',
+                      boxShadow: '0 1px 3px rgba(15,23,42,0.06)',
+                    }}>
+                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        {[0, 0.18, 0.36].map((delay, i) => (
+                          <span key={i} style={{
+                            width: '7px', height: '7px',
+                            background: '#94A3B8', borderRadius: '50%',
+                            display: 'inline-block',
+                            animation: `gwBounce 1.2s ${delay}s infinite ease-in-out`,
+                          }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rating form */}
+                {(conversationStatus === 'RESOLVED' || conversationStatus === 'CLOSED') && messages.length > 0 && !ratingSubmitted && (
+                  <div style={{
+                    marginTop: '20px', padding: '20px 16px',
+                    background: '#ffffff', borderRadius: '16px',
+                    boxShadow: '0 1px 4px rgba(15,23,42,0.06)',
+                    textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out',
+                  }}>
+                    <p style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{t.rateChat}</p>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px' }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setRating(star)}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                            fontSize: '26px', lineHeight: 1, transition: 'transform 0.15s',
+                            filter: star <= rating ? 'none' : 'grayscale(1)',
+                            opacity: star <= rating ? 1 : 0.25,
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
+                        >★</button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={ratingComment}
+                      onChange={(e) => setRatingComment(e.target.value)}
+                      placeholder={t.commentPlaceholder}
+                      style={{
+                        width: '100%', padding: '10px 14px',
+                        border: '1.5px solid #E2E8F0', borderRadius: '12px',
+                        fontSize: '13px', outline: 'none', fontFamily: 'inherit',
+                        boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A', marginBottom: '10px',
+                        transition: 'border-color 0.15s',
+                      }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0' }}
+                    />
+                    <button
+                      onClick={async () => {
+                        if (rating === 0 || ratingSending) return
+                        setRatingSending(true)
+                        try {
+                          await fetch('/api/ratings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ conversationId, rating, comment: ratingComment || null }),
+                          })
+                          setRatingSubmitted(true)
+                        } catch { /* silent */ } finally {
+                          setRatingSending(false)
+                        }
+                      }}
+                      style={{
+                        width: '100%', padding: '11px',
+                        background: rating === 0 ? '#E2E8F0' : primaryColor,
+                        color: rating === 0 ? '#94A3B8' : '#fff',
+                        border: 'none', borderRadius: '12px',
+                        fontSize: '14px', fontWeight: 600, cursor: rating === 0 ? 'default' : 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.15s',
+                      }}
+                    >{ratingSending ? t.sending : t.send}</button>
+                  </div>
+                )}
+                {ratingSubmitted && (
+                  <div style={{ marginTop: '16px', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out', padding: '16px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{t.thanksRating}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748B' }}>{t.thanksRatingSub}</p>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
             </>
           )}
 
-          {showPreChat ? (
+          {/* ─── PRE-CHAT FORM ───────────────────────────────────────────────── */}
+          {!showKnowledgeBase && showPreChat && (
             <div style={{
-              padding: '24px 20px 20px',
-              borderTop: '1px solid #E5E7EB',
-              background: '#ffffff',
-              flexShrink: 0,
+              padding: '20px 20px 16px',
+              borderTop: '1px solid #F1F5F9',
+              background: '#ffffff', flexShrink: 0,
             }}>
-              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <div style={{
-                  width: '48px', height: '48px', margin: '0 auto 12px',
-                  borderRadius: '50%', overflow: 'hidden',
-                  border: '2px solid #E5E7EB',
-                }}>
-                  <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <p style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{t.preChatHi}</p>
-                <p style={{ fontSize: '13px', color: '#76728A', margin: 0, lineHeight: '1.5' }}>
-                  {t.preChatSub}
-                </p>
-              </div>
+              <p style={{ margin: '0 0 14px', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{t.preChatHi}</p>
+              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748B', lineHeight: 1.5 }}>{t.preChatSub}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '14px', top: '13px', color: '#B0B0C5' }} width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <input
-                    type="text"
-                    placeholder={t.namePlaceholder}
-                    value={visitorInfo.name}
+                  <input type="text" placeholder={t.namePlaceholder} value={visitorInfo.name}
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, name: e.target.value }))}
                     style={{
-                      width: '100%', padding: '12px 14px 12px 40px',
-                      border: '1px solid #E5E7EB', borderRadius: '12px',
+                      width: '100%', padding: '11px 14px 11px 38px',
+                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
                       fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F9FAFB', color: '#111827',
-                      transition: 'all 0.2s',
+                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A', transition: 'all 0.15s',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '14px', top: '13px', color: '#B0B0C5' }} width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <input
-                    type="email"
-                    placeholder={t.emailPlaceholder}
-                    value={visitorInfo.email}
+                  <input type="email" placeholder={t.emailPlaceholder} value={visitorInfo.email}
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, email: e.target.value }))}
                     style={{
-                      width: '100%', padding: '12px 14px 12px 40px',
-                      border: '1px solid #E5E7EB', borderRadius: '12px',
+                      width: '100%', padding: '11px 14px 11px 38px',
+                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
                       fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F9FAFB', color: '#111827',
-                      transition: 'all 0.2s',
+                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A', transition: 'all 0.15s',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
                 <button
                   onClick={() => {
                     if (visitorInfo.name && visitorInfo.email) {
                       setShowPreChat(false)
-                      setTimeout(() => inputRef.current?.focus(), 100)
+                      setTimeout(() => inputRef.current?.focus(), 80)
                     }
                   }}
                   style={{
-                    width: '100%', padding: '13px',
-                    background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`,
-                    color: 'white', border: 'none', borderRadius: '12px',
-                    fontSize: '15px', fontWeight: 600, cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.2s',
-                    opacity: visitorInfo.name && visitorInfo.email ? 1 : 0.5,
+                    width: '100%', padding: '12px',
+                    background: visitorInfo.name && visitorInfo.email ? primaryColor : '#E2E8F0',
+                    color: visitorInfo.name && visitorInfo.email ? '#fff' : '#94A3B8',
+                    border: 'none', borderRadius: '12px',
+                    fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.15s',
+                    boxShadow: visitorInfo.name && visitorInfo.email ? `0 4px 14px ${primaryColor}35` : 'none',
                   }}
-                  onMouseEnter={(e) => {
-                    if (visitorInfo.name && visitorInfo.email) {
-                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(25,114,245,0.35)'
-                      e.currentTarget.style.transform = 'translateY(-1px)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.transform = 'translateY(0)'
-                  }}
+                  onMouseEnter={(e) => { if (visitorInfo.name && visitorInfo.email) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px ${primaryColor}45` } }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = visitorInfo.name && visitorInfo.email ? `0 4px 14px ${primaryColor}35` : 'none' }}
                 >
                   {t.startChat}
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '4px' }}>
-                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#C5C5D5" strokeWidth="2">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
+                  <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <p style={{ textAlign: 'center', fontSize: '11px', color: '#B0B0C5', margin: 0, fontWeight: 500 }}>
-                    {t.sslNote}
-                  </p>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#CBD5E1', fontWeight: 500 }}>{t.sslNote}</p>
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* ─── MESSAGE INPUT ───────────────────────────────────────────────── */}
+          {!showKnowledgeBase && !showPreChat && (
             <div style={{
-              padding: '12px 16px 14px',
-              borderTop: '1px solid #E5E7EB',
-              background: '#ffffff',
-              flexShrink: 0,
-              position: 'relative',
+              padding: '10px 14px 12px',
+              borderTop: '1px solid #F1F5F9',
+              background: '#ffffff', flexShrink: 0, position: 'relative',
             }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
                 {showEmojiPicker && (
-                  <div
-                    ref={emojiPickerRef}
-                    style={{
-                      position: 'absolute', bottom: '100%', left: '0',
-                      marginBottom: '8px', background: '#ffffff',
-                      borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                      padding: '8px', zIndex: 2147483646,
-                      display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)',
-                      gap: '2px', width: '240px',
-                    }}
-                  >
+                  <div ref={emojiPickerRef} style={{
+                    position: 'absolute', bottom: '100%', left: 0, marginBottom: '8px',
+                    background: '#fff', borderRadius: '14px',
+                    boxShadow: '0 8px 32px rgba(15,23,42,0.14)',
+                    padding: '10px', zIndex: 2147483646,
+                    display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '236px',
+                  }}>
                     {EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => handleInsertEmoji(emoji)}
+                      <button key={emoji} onClick={() => handleInsertEmoji(emoji)}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
-                          fontSize: '22px', padding: '4px', lineHeight: 1,
-                          borderRadius: '6px', transition: 'all 0.15s',
+                          fontSize: '21px', padding: '5px', lineHeight: 1,
+                          borderRadius: '8px', transition: 'all 0.12s',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.25)'; e.currentTarget.style.background = '#F0EFF5' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.3)'; e.currentTarget.style.background = '#F1F5F9' }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'none' }}
-                      >
-                        {emoji}
-                      </button>
+                      >{emoji}</button>
                     ))}
                   </div>
                 )}
                 {showGifPicker && (
-                  <div
-                    ref={gifPickerRef}
-                    style={{
-                      position: 'absolute', bottom: '100%', left: '0',
-                      marginBottom: '8px', background: '#ffffff',
-                      borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                      padding: '8px', zIndex: 2147483646,
-                      display: 'flex', flexDirection: 'column', gap: '4px',
-                      width: '220px',
-                    }}
-                  >
+                  <div ref={gifPickerRef} style={{
+                    position: 'absolute', bottom: '100%', left: 0, marginBottom: '8px',
+                    background: '#fff', borderRadius: '14px',
+                    boxShadow: '0 8px 32px rgba(15,23,42,0.14)',
+                    padding: '8px', zIndex: 2147483646,
+                    display: 'flex', flexDirection: 'column', gap: '4px', width: '210px',
+                  }}>
                     {GIF_LABELS.map((label) => (
-                      <button
-                        key={label}
-                        onClick={() => handleGifClick(label)}
+                      <button key={label} onClick={() => handleGifClick(label)}
                         style={{
-                          background: '#F9FAFB', border: '1px solid #E5E7EB',
-                          borderRadius: '10px', padding: '10px 14px',
-                          cursor: 'pointer', fontSize: '14px',
-                          textAlign: 'left', fontFamily: 'inherit',
-                          color: '#111827', transition: 'all 0.15s',
+                          background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px',
+                          padding: '9px 14px', cursor: 'pointer', fontSize: '13px',
+                          textAlign: 'left', fontFamily: 'inherit', color: '#0F172A', transition: 'all 0.12s',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.borderColor = '#1972F5' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.borderColor = '#E5E7EB' }}
-                      >
-                        {label}
-                      </button>
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = `${primaryColor}08` }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC' }}
+                      >{label}</button>
                     ))}
                   </div>
                 )}
-                <button
-                  ref={emojiBtnRef}
+
+                <button ref={emojiBtnRef}
                   onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false) }}
                   style={{
-                    width: '36px', height: '36px',
-                    background: showEmojiPicker ? '#F0EFF5' : 'transparent',
-                    border: 'none', borderRadius: '50%', cursor: 'pointer',
+                    width: '34px', height: '34px',
+                    background: showEmojiPicker ? '#F1F5F9' : 'transparent',
+                    border: 'none', borderRadius: '9px', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, fontSize: '18px', lineHeight: 1,
-                    transition: 'all 0.2s',
+                    flexShrink: 0, fontSize: '18px', lineHeight: 1, transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { if (!showEmojiPicker) { e.currentTarget.style.background = '#F0EFF5' } }}
-                  onMouseLeave={(e) => { if (!showEmojiPicker) { e.currentTarget.style.background = 'transparent' } }}
-                >
-                  😊
-                </button>
-                <button
-                  ref={gifBtnRef}
+                  onMouseEnter={(e) => { if (!showEmojiPicker) e.currentTarget.style.background = '#F1F5F9' }}
+                  onMouseLeave={(e) => { if (!showEmojiPicker) e.currentTarget.style.background = 'transparent' }}
+                >😊</button>
+
+                <button ref={gifBtnRef}
                   onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false) }}
                   style={{
-                    width: '36px', height: '36px',
-                    background: showGifPicker ? '#F0EFF5' : 'transparent',
-                    border: 'none', borderRadius: '50%', cursor: 'pointer',
+                    width: '34px', height: '34px',
+                    background: showGifPicker ? '#F1F5F9' : 'transparent',
+                    border: 'none', borderRadius: '9px', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, fontSize: '18px', lineHeight: 1,
-                    transition: 'all 0.2s',
+                    flexShrink: 0, fontSize: '17px', lineHeight: 1, transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { if (!showGifPicker) { e.currentTarget.style.background = '#F0EFF5' } }}
-                  onMouseLeave={(e) => { if (!showGifPicker) { e.currentTarget.style.background = 'transparent' } }}
-                >
-                  🎬
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPTED_UPLOAD}
-                  onChange={handleFileSelected}
-                  style={{ display: 'none' }}
-                  aria-hidden="true"
-                  tabIndex={-1}
-                />
+                  onMouseEnter={(e) => { if (!showGifPicker) e.currentTarget.style.background = '#F1F5F9' }}
+                  onMouseLeave={(e) => { if (!showGifPicker) e.currentTarget.style.background = 'transparent' }}
+                >🎬</button>
+
+                <input ref={fileInputRef} type="file" accept={ACCEPTED_UPLOAD} onChange={handleFileSelected}
+                  style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} />
                 <button
-                  onClick={handlePickFile}
-                  disabled={uploading}
-                  aria-label={t.attachFile}
-                  title={t.attachFile}
+                  onClick={handlePickFile} disabled={uploading} aria-label={t.attachFile}
                   style={{
-                    width: '36px', height: '36px',
-                    background: 'transparent',
-                    border: 'none', borderRadius: '50%',
+                    width: '34px', height: '34px', background: 'transparent',
+                    border: 'none', borderRadius: '9px',
                     cursor: uploading ? 'wait' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, lineHeight: 0, color: '#76728A',
-                    transition: 'all 0.2s',
+                    flexShrink: 0, lineHeight: 0, color: '#94A3B8', transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { if (!uploading) e.currentTarget.style.background = '#F0EFF5' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                  onMouseEnter={(e) => { if (!uploading) { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#475569' } }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94A3B8' }}
                 >
-                  {uploading ? (
-                    <span style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid rgba(25,114,245,0.25)', borderTopColor: '#1972F5', borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }} />
-                  ) : (
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                  )}
+                  {uploading
+                    ? <span style={{ width: '16px', height: '16px', border: `2px solid ${primaryColor}30`, borderTopColor: primaryColor, borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite', display: 'inline-block' }} />
+                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>}
                 </button>
+
                 <textarea
-                  ref={inputRef}
-                  value={inputMessage}
+                  ref={inputRef} value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      handleStartChat()
-                    }
-                  }}
-                  placeholder={t.inputPlaceholder}
-                  rows={1}
-                  className="gw-input"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStartChat() } }}
+                  placeholder={t.inputPlaceholder} rows={1} className="gw-input"
                   style={{
-                    flex: 1,
-                    padding: '10px 14px',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    resize: 'none',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    lineHeight: '1.5',
-                    boxSizing: 'border-box',
-                    background: '#F9FAFB',
-                    color: '#111827',
-                    transition: 'all 0.2s',
-                    maxHeight: '120px',
+                    flex: 1, padding: '9px 14px',
+                    border: '1.5px solid #E2E8F0', borderRadius: '14px',
+                    fontSize: '14px', resize: 'none', outline: 'none',
+                    fontFamily: 'inherit', lineHeight: 1.55, boxSizing: 'border-box',
+                    background: '#F8FAFC', color: '#0F172A',
+                    transition: 'all 0.15s', maxHeight: '120px',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#1972F5'; e.currentTarget.style.background = 'white'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25,114,245,0.12)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.boxShadow = 'none' }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                 />
+
                 <button
                   onClick={() => { setShowEmojiPicker(false); setShowGifPicker(false); if (!showKnowledgeBase) handleOpenKB(); else { setShowKnowledgeBase(false); setSelectedArticle(null) } }}
                   style={{
-                    width: '36px', height: '36px',
-                    background: showKnowledgeBase ? '#F0EFF5' : 'transparent',
-                    border: 'none', borderRadius: '50%', cursor: 'pointer',
+                    width: '34px', height: '34px',
+                    background: showKnowledgeBase ? '#F1F5F9' : 'transparent',
+                    border: 'none', borderRadius: '9px', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, fontSize: '18px', lineHeight: 1,
-                    transition: 'all 0.2s',
+                    flexShrink: 0, fontSize: '17px', lineHeight: 1, transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { if (!showKnowledgeBase) { e.currentTarget.style.background = '#F0EFF5' } }}
-                  onMouseLeave={(e) => { if (!showKnowledgeBase) { e.currentTarget.style.background = 'transparent' } }}
-                >
-                  📚
-                </button>
+                  onMouseEnter={(e) => { if (!showKnowledgeBase) e.currentTarget.style.background = '#F1F5F9' }}
+                  onMouseLeave={(e) => { if (!showKnowledgeBase) e.currentTarget.style.background = 'transparent' }}
+                >📚</button>
+
                 <button
-                  onClick={handleStartChat}
-                  disabled={!inputMessage.trim()}
+                  onClick={handleStartChat} disabled={!inputMessage.trim()}
                   style={{
-                    width: '38px',
-                    height: '38px',
-                    background: inputMessage.trim() ? '#1972F5' : '#E5E7EB',
-                    color: inputMessage.trim() ? 'white' : '#B0B0C5',
-                    border: 'none',
-                    borderRadius: '50%',
+                    width: '36px', height: '36px',
+                    background: inputMessage.trim() ? primaryColor : '#E2E8F0',
+                    color: inputMessage.trim() ? '#fff' : '#94A3B8',
+                    border: 'none', borderRadius: '11px',
                     cursor: inputMessage.trim() ? 'pointer' : 'default',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    transition: 'all 0.2s',
-                    boxShadow: inputMessage.trim() ? '0 2px 8px rgba(25,114,245,0.3)' : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, transition: 'all 0.15s',
+                    boxShadow: inputMessage.trim() ? `0 2px 10px ${primaryColor}40` : 'none',
                   }}
+                  onMouseEnter={(e) => { if (inputMessage.trim()) { e.currentTarget.style.transform = 'scale(1.06)'; e.currentTarget.style.boxShadow = `0 4px 16px ${primaryColor}50` } }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = inputMessage.trim() ? `0 2px 10px ${primaryColor}40` : 'none' }}
                 >
-                  ➤
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
                 </button>
               </div>
+
               {uploadError && (
-                <p style={{ margin: '8px 4px 0', fontSize: '11px', color: '#DC2626', fontWeight: 500 }}>
-                  {uploadError}
-                </p>
+                <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#EF4444', fontWeight: 500 }}>{uploadError}</p>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', margin: '8px 0 0' }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C5C5D5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '8px' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
                 </svg>
-                <p style={{ textAlign: 'center', fontSize: '10px', color: '#C5C5D5', margin: 0, fontWeight: 600, letterSpacing: '0.02em' }}>
+                <p style={{ margin: 0, fontSize: '10px', color: '#CBD5E1', fontWeight: 600, letterSpacing: '0.02em' }}>
                   {t.poweredBy}
                 </p>
               </div>
             </div>
           )}
+
         </div>
       ) : (
+        /* ─── FLOATING BUTTON ─────────────────────────────────────────────── */
         <button
           onClick={() => { setIsOpen(true); sendResizeToParent(true) }}
           className="gw-button"
           style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: '#1972F5',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(25,114,245,0.35)',
-            animation: 'gwPulse 2.5s ease-in-out infinite',
-            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-            position: 'relative',
+            width: '58px', height: '58px', borderRadius: '18px',
+            background: primaryColor,
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 8px 28px ${primaryColor}50`,
+            animation: 'gwPop 3s ease-in-out infinite',
+            transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(25,114,245,0.5)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(25,114,245,0.35)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08) rotate(-4deg)'; e.currentTarget.style.boxShadow = `0 12px 36px ${primaryColor}65` }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; e.currentTarget.style.boxShadow = `0 8px 28px ${primaryColor}50` }}
         >
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </button>

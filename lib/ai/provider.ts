@@ -118,15 +118,19 @@ function knowledgeToText(knowledge?: KnowledgeEntry[]): string {
 function buildSystemPrompt(siteName: string, knowledge?: KnowledgeEntry[], custom?: string): string {
   const base =
     custom?.trim() ||
-    `Sen ${siteName} için çalışan yardımcı, kibar ve profesyonel bir müşteri destek asistanısın. ` +
-      `Ziyaretçilere her zaman Türkçe, kısa ve net yanıt ver. Samimi ama profesyonel bir dil kullan. ` +
-      `Emin olmadığın ya da bilgi tabanında bulunmayan konularda bilgi uydurma; konuyu bir insan ` +
-      `müşteri temsilcisine aktarabileceğini nazikçe belirt.`
+    `Sen ${siteName} destek ekibinin bir üyesisin. İnsan gibi, sıcak ve samimi bir dille yazıyorsun — ` +
+      `robotik veya yapay zeka gibi hissettirme. Türkçe konuş, kısa ve anlaşılır cümleler kur. ` +
+      `Gerçekten yardım etmek istediğini hissettir; empati kur, kibarca sor, net cevap ver. ` +
+      `Bilmediğin bir şeyi asla uydurma; "biraz araştırayım" ya da "bu konuda sizi yönlendireyim" ` +
+      `gibi doğal bir geçiş yap. Asla "yapay zeka", "bot" veya "asistan" kelimelerini kullanma.`
 
   const kb = knowledgeToText(knowledge)
   if (kb) {
-    return `${base}\n\nAşağıda ${siteName} hakkında bilgi tabanı/SSS içeriği yer alıyor. ` +
-      `Soru bu içerikle ilgiliyse yanıtını buradaki bilgilere dayandır:\n\n${kb}`
+    return (
+      `${base}\n\n` +
+      `Aşağıda ${siteName} hakkında bilgi tabanı var. Soruyla ilgiliyse bu bilgilere dayan, ` +
+      `ama metni aynen kopyalama — kendi cümlelenle akıcı biçimde aktarmanı bekliyoruz:\n\n${kb}`
+    )
   }
   return base
 }
@@ -164,15 +168,15 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim() || ''
 
   if (!lastUser) {
-    return `Merhaba! Ben ${siteName} yapay zekâ destek asistanıyım. Size nasıl yardımcı olabilirim?`
+    return `Merhaba! ${siteName} destek ekibine hoş geldiniz. Size nasıl yardımcı olabilirim?`
   }
 
   if (GREETING_RE.test(lastUser) && lastUser.length < 40) {
-    return `Merhaba! Ben ${siteName} destek asistanıyım. Size nasıl yardımcı olabilirim?`
+    return `Merhaba, hoş geldiniz! ${siteName} olarak buradayız. Size nasıl yardımcı olabilirim?`
   }
 
   if (THANKS_RE.test(lastUser) && lastUser.length < 40) {
-    return `Rica ederim! Başka bir konuda yardımcı olabileceğim bir şey varsa buradayım. 🙂`
+    return `Rica ederim! Başka bir sorunuz olursa buradayım, yardımcı olmaktan memnuniyet duyarım.`
   }
 
   // Try to match the question against knowledge base entries.
@@ -193,8 +197,8 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
   }
 
   return (
-    `Mesajınız için teşekkürler! Sorunuzu not aldım ve en kısa sürede bir müşteri ` +
-    `temsilcimiz size dönüş yapacaktır. Bu sırada yardımcı olabileceğim başka bir konu var mı?`
+    `Mesajınızı aldım, teşekkür ederim. En kısa sürede size dönüş yapacağız. ` +
+    `Beklerken yardımcı olabileceğim başka bir şey var mı?`
   )
 }
 

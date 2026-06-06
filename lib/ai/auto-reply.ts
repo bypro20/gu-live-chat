@@ -3,7 +3,8 @@ import { emitBotMessage } from '../socket-events'
 import { generateAiReply } from './provider'
 import { loadKnowledge, toChatMessages } from './knowledge'
 
-const BOT_SENDER_NAME = 'AI Asistan'
+// Bot sender name uses the website name so it reads as the support team,
+// not as a generic "AI assistant". Falls back to 'Destek' if name is empty.
 const HISTORY_LIMIT = 12
 
 interface AutoReplyParams {
@@ -98,13 +99,14 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       },
     })
 
+    const senderName = (conversation.website.name || 'Destek').trim()
     emitBotMessage({
       conversationId: params.conversationId,
       websiteId: params.websitePublicId,
       message: {
         id: botMessage.id,
         content: botMessage.content,
-        senderName: BOT_SENDER_NAME,
+        senderName,
         createdAt: botMessage.createdAt,
       },
     })
