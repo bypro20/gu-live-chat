@@ -9,7 +9,8 @@ const columns = [
       { label: 'Özellikler', href: '/features' },
       { label: 'Entegrasyonlar', href: '/integrations' },
       { label: 'Fiyatlandırma', href: '/#pricing' },
-      { label: 'Eklentiler', href: '/#addons' },
+      { label: 'Apps & Eklentiler', href: '/apps' },
+      { label: 'Yapay Zeka', href: '/ai' },
     ],
   },
   {

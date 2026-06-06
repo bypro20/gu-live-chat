@@ -6,8 +6,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     '',
     '/features',
+    '/ai',
+    '/apps',
     '/integrations',
     '/blog',
+    '/blog/canli-destek-neden-onemli',
+    '/blog/chatbot-kurulum-rehberi',
+    '/blog/musteri-deneyimi-ipuclari',
     '/contact',
     '/help',
     '/login',

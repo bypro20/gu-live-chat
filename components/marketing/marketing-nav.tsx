@@ -7,8 +7,10 @@ import { Logo } from '@/components/marketing/logo'
 
 const navLinks = [
   { label: 'Özellikler', href: '/features' },
-  { label: 'Entegrasyonlar', href: '/integrations' },
+  { label: 'Yapay Zeka', href: '/ai' },
+  { label: 'Apps', href: '/apps' },
   { label: 'Fiyatlandırma', href: '/#pricing' },
+  { label: 'Entegrasyonlar', href: '/integrations' },
   { label: 'Yardım', href: '/help' },
 ]
 
@@ -30,20 +32,20 @@ export function MarketingNav() {
         <div className="flex items-center justify-between h-16">
           <Logo boyut="default" linkOlsun animasyonlu={false} />
 
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
               >
                 {item.label}
               </Link>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-4 py-2 transition-colors">
+          <div className="hidden lg:flex items-center gap-3">
+            <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">
               Giriş Yap
             </Link>
             <Link href="/register" className="btn-primary">
@@ -53,7 +55,7 @@ export function MarketingNav() {
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
             aria-label="Menü"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -62,7 +64,7 @@ export function MarketingNav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-1">
+        <div className="lg:hidden border-t border-border bg-background px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
           {navLinks.map((item) => (
             <Link
               key={item.href}

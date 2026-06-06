@@ -145,7 +145,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       >
         <div className="h-[68px] flex items-center px-5 border-b border-[var(--sidebar-border)] shrink-0">
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 group-hover:scale-105" style={{ background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)', boxShadow: '0 8px 24px -6px rgba(108,60,225,0.45)' }}>
+            <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 group-hover:scale-105 bg-primary shadow-brand">
               <svg className="w-[20px] h-[20px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
@@ -153,7 +153,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-white font-bold text-[15px] tracking-tight">Gu Live Chat</span>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#6C3CE1', boxShadow: '0 0 6px rgba(108,60,225,0.6)' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--primary-glow)]" />
               </div>
               <p className="text-[10px] tracking-wide" style={{ color: 'var(--sidebar-foreground)' }}>Canlı Destek Platformu</p>
             </div>
@@ -168,7 +168,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.035)' }}
             >
-              <div className="w-7 h-7 rounded-md flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(108,60,225,0.85), rgba(139,91,246,0.85))' }}>
+              <div className="w-7 h-7 rounded-md flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-sm bg-primary/90">
                 {activeWebsite.name?.charAt(0)?.toUpperCase() || 'W'}
               </div>
               <div className="flex-1 min-w-0 text-left">
@@ -190,11 +190,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                         setWebsiteDropdownOpen(false)
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2.5 transition-all text-left`}
-                      style={w.websiteId === activeWebsite.websiteId ? { background: 'rgba(108,60,225,0.12)' } : undefined}
+                      style={w.websiteId === activeWebsite.websiteId ? { background: 'var(--sidebar-active)' } : undefined}
                       onMouseEnter={(e) => { if (w.websiteId !== activeWebsite.websiteId) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
                       onMouseLeave={(e) => { if (w.websiteId !== activeWebsite.websiteId) e.currentTarget.style.background = '' }}
                     >
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg, rgba(108,60,225,0.6), rgba(139,91,246,0.6))' }}>
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0 bg-primary/70">
                         {w.name?.charAt(0)?.toUpperCase() || 'W'}
                       </div>
                       <div className="flex-1 min-w-0 text-left">
@@ -202,7 +202,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                         <p className="text-[9px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{w.domain || 'domain yok'}</p>
                       </div>
                       {w.websiteId === activeWebsite.websiteId && (
-                        <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#6C3CE1' }}>
+                        <svg className="w-3.5 h-3.5 shrink-0 text-primary" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
@@ -288,7 +288,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.035)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = '' }}
           >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)', boxShadow: '0 4px 16px -4px rgba(108,60,225,0.4)' }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-primary shadow-brand">
               {userInitial}
             </div>
             <div className="flex-1 min-w-0">
@@ -328,7 +328,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm bg-primary">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
@@ -457,25 +457,24 @@ function SidebarLink({ href, icon, label, badge, active }: {
       className="flex items-center gap-3 px-3 py-[10px] rounded-xl transition-all duration-200 group relative"
       style={active
         ? {
-            background: 'linear-gradient(135deg, rgba(108,60,225,0.2), rgba(139,91,246,0.08))',
+            background: 'var(--sidebar-active)',
             color: '#FFFFFF',
-            textShadow: '0 0 20px rgba(139,107,246,0.5), 0 0 40px rgba(108,60,225,0.3)',
-            border: '1px solid rgba(139,107,246,0.15)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
           }
         : { color: '#A8A5BA' }}
-      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#F0EFFF'; e.currentTarget.style.textShadow = '0 0 12px rgba(139,107,246,0.3)' }}}
-      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#A8A5BA'; e.currentTarget.style.textShadow = '' }}}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#F0EFFF' }}}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#A8A5BA' }}}
     >
       {active && (
         <>
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full transition-all duration-200" style={{ background: 'var(--sidebar-active-border)', boxShadow: '0 0 16px var(--primary-glow), 0 0 32px var(--primary-glow)' }} />
-          <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(108,60,225,0.08), transparent)', pointerEvents: 'none' }} />
+          <div className="absolute inset-0 rounded-xl bg-primary/5 pointer-events-none" />
         </>
       )}
-      <span className="shrink-0" style={active ? { filter: 'drop-shadow(0 0 8px rgba(139,107,246,0.6))' } : undefined}>{icons[icon]}</span>
-      <span className="flex-1 text-[14px] font-semibold tracking-wide" style={active ? { textShadow: '0 0 20px rgba(139,107,246,0.5)' } : undefined}>{label}</span>
+      <span className="shrink-0">{icons[icon]}</span>
+      <span className="flex-1 text-[14px] font-semibold tracking-wide">{label}</span>
       {badge && (
-        <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full min-w-[20px] text-center" style={{ background: 'linear-gradient(135deg, #6C3CE1, #8B5CF6)', boxShadow: '0 4px 16px -4px rgba(108,60,225,0.6)' }}>
+        <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full min-w-[20px] text-center bg-primary shadow-brand">
           {badge}
         </span>
       )}
