@@ -33,6 +33,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { setMounted(true) }, [])
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetch('/api/user/track-ip', { method: 'POST' }).catch(() => {})
+    }
+  }, [status])
+
   const isAdmin = session?.user?.role === 'ADMIN'
 
   const navGroups: NavGroup[] = [

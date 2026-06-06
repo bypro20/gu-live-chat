@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { emitVisitorMessage } from '@/lib/socket-events'
-import { notifyWebsiteMembers } from '@/lib/notifications'
+import { notifyNewConversation, notifyWebsiteMembers } from '@/lib/notifications'
+import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
+import { runChatbotForNewConversation } from '@/lib/chatbot-runner'
+import { runWorkflows } from '@/lib/workflow-runner'
+import { getClientIp } from '@/lib/ip-utils'
+import { isIpBanned } from '@/lib/ip-ban'
 
 const widgetMessageSchema = z.object({
   websiteId: z.string(),
@@ -16,6 +21,11 @@ const widgetMessageSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req)
+    if (await isIpBanned(clientIp)) {
+      return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+    }
+
     const body = await req.json()
     const validated = widgetMessageSchema.parse(body)
 
@@ -126,12 +136,56 @@ export async function POST(req: Request) {
     })
 
     const visitorName = visitor.name || visitor.email?.split('@')[0] || 'Ziyaretçi'
-    await notifyWebsiteMembers({
-      websiteId: website.id,
-      type: 'NEW_MESSAGE',
-      title: 'Yeni mesaj',
-      message: `${visitorName} bir mesaj gönderdi`,
-      data: { conversationId },
+
+    if (isNewConversation) {
+      await notifyNewConversation(website.id, visitorName, conversationId)
+      await dispatchWebhooks(website.id, 'conversation.created', {
+        conversationId,
+        visitorId: visitor.id,
+        visitorName,
+        source: 'WIDGET',
+      })
+      await runWorkflows('CONVERSATION_CREATED', {
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+      })
+      const priorConversations = await prisma.conversation.count({
+        where: { visitorId: visitor.id, websiteId: website.id },
+      })
+      await runChatbotForNewConversation({
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+        isFirstVisit: priorConversations <= 1,
+      })
+    } else {
+      await notifyWebsiteMembers({
+        websiteId: website.id,
+        type: 'NEW_MESSAGE',
+        title: 'Yeni mesaj',
+        message: `${visitorName} bir mesaj gönderdi`,
+        data: { conversationId },
+      })
+    }
+
+    await dispatchWebhooks(website.id, 'message.received', {
+      conversationId,
+      messageId: message.id,
+      content: message.content,
+      visitorId: visitor.id,
+      visitorName,
+    })
+
+    await runWorkflows('MESSAGE_RECEIVED', {
+      websiteDbId: website.id,
+      websitePublicId: website.websiteId,
+      conversationId,
+      visitorId: visitor.id,
+      messageContent: message.content,
+      senderType: 'VISITOR',
     })
 
     return NextResponse.json({

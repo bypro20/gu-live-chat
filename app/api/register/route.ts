@@ -3,9 +3,16 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { registerSchema } from '@/lib/validators/auth'
 import { generateWebsiteId } from '@/lib/utils'
+import { getClientIp } from '@/lib/ip-utils'
+import { isIpBanned } from '@/lib/ip-ban'
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req)
+    if (await isIpBanned(clientIp)) {
+      return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+    }
+
     const body = await req.json()
     const validated = registerSchema.parse(body)
 
@@ -31,6 +38,7 @@ export async function POST(req: Request) {
           email: validated.email,
           name: validated.name,
           passwordHash,
+          lastIp: clientIp,
         },
       })
 

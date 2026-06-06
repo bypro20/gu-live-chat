@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
         bannedAt: true,
         mutedUntil: true,
         lastSeenAt: true,
+        lastIp: true,
         createdAt: true,
         _count: {
           select: {

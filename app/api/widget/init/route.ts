@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getClientIp } from '@/lib/ip-utils'
+import { isIpBanned } from '@/lib/ip-ban'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -62,6 +64,11 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req)
+    if (await isIpBanned(clientIp)) {
+      return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+    }
+
     const body = await req.json()
     const validated = widgetInitSchema.parse(body)
 

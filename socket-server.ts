@@ -19,8 +19,13 @@ const server = createServer((req, res) => {
   if (req.url?.startsWith('/socket.io')) {
     return
   }
-  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' })
-  res.end('Gu Live Chat Socket Server — OK\n')
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify({ status: 'ok', service: 'gu-live-chat-socket' }))
+    return
+  }
+  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
+  res.end('Not Found\n')
 })
 
 initSocketServer(server)

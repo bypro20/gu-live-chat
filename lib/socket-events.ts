@@ -90,3 +90,36 @@ export function emitVisitorMessage(params: {
     })
   }
 }
+
+export function emitBotMessage(params: {
+  conversationId: string
+  websiteId: string
+  message: {
+    id: string
+    content: string
+    senderName: string
+    createdAt: Date | string
+  }
+}) {
+  const io = getIO()
+  if (!io) return
+
+  const createdAt =
+    typeof params.message.createdAt === 'string'
+      ? params.message.createdAt
+      : params.message.createdAt.toISOString()
+
+  io.to(`conversation:${params.conversationId}`).emit('visitor:message', {
+    id: params.message.id,
+    content: params.message.content,
+    type: 'TEXT',
+    senderType: 'BOT',
+    senderName: params.message.senderName,
+    createdAt,
+  })
+
+  io.to(`website:${params.websiteId}`).emit('agent:conversation:updated', {
+    conversationId: params.conversationId,
+    lastMessage: params.message.content.substring(0, 100),
+  })
+}

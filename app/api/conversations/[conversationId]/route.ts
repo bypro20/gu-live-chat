@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getIO } from '@/lib/socket'
 import { updateConversationSchema } from '@/lib/validators/conversation'
+import {
+  notifyConversationAssigned,
+  notifyConversationResolved,
+} from '@/lib/notifications'
+import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
+import { runWorkflows } from '@/lib/workflow-runner'
 
 export async function GET(
   req: Request,
@@ -75,6 +80,22 @@ export async function PATCH(
     const body = await req.json()
     const validated = updateConversationSchema.parse(body)
 
+    const existing = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { website: { select: { id: true, websiteId: true } } },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
+    }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { websiteId: existing.websiteId, userId: session.user.id },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+    }
+
     const conversation = await prisma.conversation.update({
       where: { id: conversationId },
       data: {
@@ -84,6 +105,53 @@ export async function PATCH(
           : undefined,
       },
     })
+
+    const agent = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true },
+    })
+    const agentName = agent?.name || 'Temsilci'
+
+    if (validated.assignedToId && validated.assignedToId !== existing.assignedToId) {
+      await notifyConversationAssigned(
+        existing.websiteId,
+        conversationId,
+        validated.assignedToId,
+        agentName
+      )
+    }
+
+    if (validated.status === 'RESOLVED' && existing.status !== 'RESOLVED') {
+      await notifyConversationResolved(
+        existing.websiteId,
+        conversationId,
+        agentName,
+        session.user.id
+      )
+      await dispatchWebhooks(existing.websiteId, 'conversation.resolved', {
+        conversationId,
+        resolvedBy: session.user.id,
+      })
+      await runWorkflows('CONVERSATION_RESOLVED', {
+        websiteDbId: existing.websiteId,
+        websitePublicId: existing.website.websiteId,
+        conversationId,
+        visitorId: existing.visitorId,
+      })
+    }
+
+    if (validated.status === 'CLOSED' && existing.status !== 'CLOSED') {
+      await dispatchWebhooks(existing.websiteId, 'conversation.closed', {
+        conversationId,
+        closedBy: session.user.id,
+      })
+      await runWorkflows('CONVERSATION_CLOSED', {
+        websiteDbId: existing.websiteId,
+        websitePublicId: existing.website.websiteId,
+        conversationId,
+        visitorId: existing.visitorId,
+      })
+    }
 
     return NextResponse.json(conversation)
   } catch (error: unknown) {

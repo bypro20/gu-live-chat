@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { banIpAddress } from '@/lib/ip-ban'
+import { getClientIp } from '@/lib/ip-utils'
 
 export async function PATCH(
   req: NextRequest,
@@ -130,6 +132,35 @@ export async function PATCH(
             isBanned: true,
             isMuted: true,
             mutedUntil: true,
+          },
+        })
+        break
+      }
+
+      case 'banIp': {
+        const targetUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { lastIp: true, bannedIp: true },
+        })
+        const ip = body.ip || targetUser?.lastIp || targetUser?.bannedIp
+        if (!ip) {
+          return NextResponse.json({ error: 'Kullanıcının IP adresi bulunamadı' }, { status: 400 })
+        }
+        await banIpAddress(ip, body.reason || 'Admin tarafından engellendi', session.user.id)
+        updated = await prisma.user.update({
+          where: { id: userId },
+          data: { bannedIp: ip },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isBanned: true,
+            isMuted: true,
+            bannedIp: true,
+            banReason: true,
+            bannedAt: true,
+            lastIp: true,
           },
         })
         break

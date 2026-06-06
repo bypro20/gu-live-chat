@@ -26,6 +26,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        if (user.isBanned) {
+          return null
+        }
+
         const isValid = await bcrypt.compare(
           credentials.password as string,
           user.passwordHash
@@ -69,6 +73,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
+      if (user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: { isBanned: true },
+        })
+        if (dbUser?.isBanned) {
+          return false
+        }
+      }
+
       // For Google OAuth, create or link user
       if (account?.provider === 'google') {
         if (!user.email) {

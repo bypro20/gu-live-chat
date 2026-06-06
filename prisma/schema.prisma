@@ -25,6 +25,7 @@ model User {
   banReason     String?
   bannedAt      DateTime?
   mutedUntil    DateTime?
+  lastIp        String?
 
   memberships        TeamMember[]
   ownedWebsites      Website[]  @relation("WebsiteOwner")
@@ -1225,4 +1226,16 @@ model DataRetentionPolicy {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   @@map("data_retention_policies")
+}
+
+// ─── IP BAN LIST ────────────────────────────────────────────────
+
+model IpBan {
+  id        String   @id @default(cuid())
+  ipAddress String   @unique
+  reason    String?
+  bannedBy  String?
+  createdAt DateTime @default(now())
+
+  @@map("ip_bans")
 }

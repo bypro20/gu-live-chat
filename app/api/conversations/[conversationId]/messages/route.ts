@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { sendMessageSchema } from '@/lib/validators/message'
 import { emitAgentMessage } from '@/lib/socket-events'
+import { notifyWebsiteMembers } from '@/lib/notifications'
+import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
+import { runWorkflows } from '@/lib/workflow-runner'
 
 export async function GET(
   req: Request,
@@ -105,6 +108,32 @@ export async function POST(
         senderName: message.sender?.name || 'Temsilci',
         createdAt: message.createdAt,
       },
+    })
+
+    const agentName = message.sender?.name || 'Temsilci'
+    await notifyWebsiteMembers({
+      websiteId: conversation.websiteId,
+      type: 'NEW_MESSAGE',
+      title: 'Yeni mesaj',
+      message: `${agentName} bir mesaj gönderdi`,
+      data: { conversationId },
+      excludeUserId: session.user.id,
+    })
+
+    await dispatchWebhooks(conversation.websiteId, 'message.sent', {
+      conversationId,
+      messageId: message.id,
+      content: message.content,
+      senderId: session.user.id,
+      senderName: agentName,
+    })
+
+    await runWorkflows('MESSAGE_RECEIVED', {
+      websiteDbId: conversation.websiteId,
+      websitePublicId: conversation.website.websiteId,
+      conversationId,
+      messageContent: message.content,
+      senderType: 'AGENT',
     })
 
     return NextResponse.json(message, { status: 201 })
