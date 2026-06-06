@@ -134,36 +134,43 @@ function PricingCard({ plan, billing, discount, idx }: {
 
 export function HomeHero() {
   return (
-    <section className="relative pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
       <div className="absolute inset-0 bg-mesh pointer-events-none" />
       <div className="relative max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-            {['Tek platform', 'Yapay zeka', 'Şeffaf fiyat'].map((badge) => (
-              <span key={badge} className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full">
-                <Check className="w-3 h-3" />{badge}
-              </span>
-            ))}
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08] text-foreground">
-            Müşterilerinize{' '}
-            <span className="text-gradient-brand">üst düzey</span>{' '}
-            destek deneyimi sunun
-          </h1>
-          <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Gu Chat; yapay zeka asistanı ve canlı temsilcileri bir araya getirerek
-            müşteri iletişiminizi tek platformdan yönetmenizi sağlar.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/register" className="btn-primary px-7 py-3 text-base">
-              Ücretsiz Başla <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/contact" className="btn-secondary px-7 py-3 text-base">
-              Demo Talep Et
-            </Link>
-          </div>
+          <FadeIn>
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-8 bg-primary-light text-primary border border-primary/10">
+              <Sparkles className="w-3.5 h-3.5" />
+              Yapay zeka destekli canlı sohbet platformu
+            </span>
+          </FadeIn>
+          <FadeIn delay={0.06}>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.06] text-foreground">
+              Müşteri deneyiminizi{' '}
+              <span className="text-primary">güçlendirin</span>
+            </h1>
+          </FadeIn>
+          <FadeIn delay={0.12}>
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Canlı sohbet, AI asistan ve birleşik inbox — ekibiniz ve müşterileriniz için
+              tek, sade platform.
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.18}>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/register" className="btn-primary px-8 py-3.5 text-base shadow-brand-lg">
+                Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href="/ai" className="btn-secondary px-8 py-3.5 text-base">
+                AI özelliklerini keşfet
+              </Link>
+            </div>
+            <p className="mt-5 text-sm text-muted-foreground">
+              14 gün ücretsiz · Kredi kartı gerekmez · Kurulum 30 saniye
+            </p>
+          </FadeIn>
         </div>
-        <FadeIn delay={0.15} className="mt-14">
+        <FadeIn delay={0.22} className="mt-16 sm:mt-20">
           <HeroPreview />
         </FadeIn>
       </div>

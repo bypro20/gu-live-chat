@@ -8,8 +8,12 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'),
-  title: 'Gu Chat — Canlı Destek Sistemi',
-  description: 'Web sitenize ekleyebileceğiniz profesyonel canlı destek sistemi. Türk yapımı.',
+  title: {
+    default: 'Gu Chat — Profesyonel Canlı Destek Platformu',
+    template: '%s | Gu Chat',
+  },
+  description:
+    'Web sitenize ekleyebileceğiniz profesyonel canlı destek sistemi. Gerçek zamanlı mesajlaşma, AI asistan ve analitik — Türk yapımı.',
 }
 
 export default function RootLayout({

@@ -207,16 +207,16 @@ body {
     transform: translateY(-1px);
   }
   .text-gradient-brand {
-    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #7C3AED 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
   }
   .bg-gradient-brand-subtle {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+    background: linear-gradient(135deg, var(--primary-light) 0%, #F8FAFC 100%);
   }
   .bg-gradient-dark {
     background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-end) 100%);
@@ -229,8 +229,8 @@ body {
   }
   .bg-mesh {
     background-image:
-      radial-gradient(at 90% 0%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
-      radial-gradient(at 0% 60%, rgba(124, 58, 237, 0.04) 0px, transparent 50%);
+      radial-gradient(at 50% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 55%),
+      radial-gradient(at 100% 80%, rgba(59, 130, 246, 0.03) 0px, transparent 45%);
   }
 
   .animate-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }

@@ -29,9 +29,12 @@ npm run dev:full     # next dev + server.ts paralel
 
 ### 1. Next.js → Vercel
 
-1. GitHub `master` branch'ini Vercel'e bağlayın
-2. Build: `npm run build`
+1. GitHub `master` branch'ini Vercel'e bağlayın (Production Branch: **master**)
+2. Build Command: `npm run build` · Output: Next.js default · Install: `npm install`
 3. Ortam değişkenlerini ayarlayın (aşağıdaki tablo)
+4. Site güncellenmiyorsa: Vercel Dashboard → **Deployments** → son commit'i kontrol edin → **Redeploy** (Clear cache ile)
+
+> Canlı site eski tasarımı gösteriyorsa genelde Vercel son GitHub commit'ini deploy etmemiştir. GitHub `master` SHA'sı ile Vercel Production deployment SHA'sını karşılaştırın.
 
 ### 2. Socket.io → Railway / Fly.io / VPS
 
