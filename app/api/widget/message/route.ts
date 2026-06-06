@@ -9,6 +9,7 @@ import { runWorkflows } from '@/lib/workflow-runner'
 import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
+import { canCreateConversation } from '@/lib/plan-limits'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -112,6 +113,19 @@ export async function POST(req: Request) {
       if (existing) {
         conversationId = existing.id
       } else {
+        // Plan limit check before creating a new conversation
+        const limitCheck = await canCreateConversation(website.websiteId)
+        if (!limitCheck.allowed) {
+          return NextResponse.json(
+            {
+              error: 'Aylık konuşma limitine ulaşıldı',
+              limit: limitCheck.limit,
+              current: limitCheck.current,
+            },
+            { status: 429 }
+          )
+        }
+
         // Create new conversation
         const conversation = await prisma.conversation.create({
           data: {

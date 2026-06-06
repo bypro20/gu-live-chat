@@ -204,6 +204,9 @@ export default function BillingPage() {
       case 'PAST_DUE':
         return <span className="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-semibold rounded-full">Ödeme Bekliyor</span>
       case 'CANCELED':
+        if (trialInfo?.trialUsed && !trialInfo.isTrialing) {
+          return <span className="px-2 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 text-xs font-semibold rounded-full">Deneme Bitti</span>
+        }
         return <span className="px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-semibold rounded-full">İptal Edildi</span>
       case 'TRIALING':
         return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-semibold rounded-full">Deneme</span>

@@ -6,6 +6,7 @@ import { useConversations } from '@/lib/hooks/use-conversations'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { retainSocket, releaseSocket } from '@/lib/socket-client'
+import { PLAN_LIMITS } from '@/lib/constants'
 
 // ─── Conversation List Item ─────────────────────────────────────────
 
@@ -159,7 +160,7 @@ function AttachmentList({ attachments, onDark }: { attachments: InboxAttachment[
 
 // ─── Message Bubble ─────────────────────────────────────────────────
 
-function MessageBubble({ message, autoTranslate }: { message: {
+function MessageBubble({ message, autoTranslate, canTranslate }: { message: {
   id: string
   content: string
   type: string
@@ -168,6 +169,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
   attachments?: InboxAttachment[]
 }
   autoTranslate: boolean
+  canTranslate: boolean
 }) {
   const isVisitor = message.senderType === 'VISITOR'
   const isSystem = message.senderType === 'SYSTEM' || message.type === 'SYSTEM'
@@ -248,7 +250,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
         })()}
         <div className={`flex items-center gap-1 mt-0.5 ${isVisitor ? 'ml-1' : 'mr-1 justify-end'}`}>
           <span className="text-[10px] text-muted-foreground tabular-nums">{formatTime(message.createdAt)}</span>
-          {isVisitor && (
+          {isVisitor && canTranslate && (
             <button
               onClick={handleTranslate}
               disabled={translating}
@@ -269,6 +271,9 @@ function MessageBubble({ message, autoTranslate }: { message: {
 export default function InboxPage() {
   const { data: session } = useSession()
   const { activeWebsite } = useActiveWebsite()
+  const canTranslate = activeWebsite
+    ? (PLAN_LIMITS[activeWebsite.plan as keyof typeof PLAN_LIMITS]?.autoTranslate ?? false)
+    : false
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'OPEN' | 'PENDING' | 'RESOLVED'>('all')
   const [search, setSearch] = useState('')
@@ -480,14 +485,18 @@ export default function InboxPage() {
             ))}
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className={`flex items-center gap-2 ${canTranslate ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
               <input
                 type="checkbox"
                 checked={autoTranslate}
-                onChange={(e) => setAutoTranslate(e.target.checked)}
+                onChange={(e) => canTranslate && setAutoTranslate(e.target.checked)}
+                disabled={!canTranslate}
                 className="w-3.5 h-3.5 accent-primary rounded border-border"
               />
-              <span className="text-xs text-muted-foreground">Otomatik Çeviri</span>
+              <span className="text-xs text-muted-foreground">
+                Otomatik Çeviri
+                {!canTranslate && <span className="ml-1 text-[10px] text-amber-500">(PRO)</span>}
+              </span>
             </label>
           </div>
         </div>
@@ -612,7 +621,7 @@ export default function InboxPage() {
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <MessageBubble key={msg.id} message={msg} autoTranslate={autoTranslate} />
+                  <MessageBubble key={msg.id} message={msg} autoTranslate={autoTranslate} canTranslate={canTranslate} />
                 ))
               )}
               {typingPreview && typingPreview.conversationId === selectedId && (
