@@ -14,7 +14,7 @@ interface ChannelIntegration {
 
 const CHANNEL_DEFS: Record<string, { label: string; icon: string; color: string; description: string }> = {
   WHATSAPP: { label: 'WhatsApp', icon: '💬', color: '#25D366', description: 'WhatsApp Business API entegrasyonu' },
-  EMAIL: { label: 'E-posta', icon: '✉️', color: '#6C3CE1', description: 'E-posta kanalı (SMTP/IMAP)' },
+  EMAIL: { label: 'E-posta', icon: '✉️', color: '#1972F5', description: 'E-posta kanalı (SMTP/IMAP)' },
   MESSENGER: { label: 'Facebook Messenger', icon: '💠', color: '#0084FF', description: 'Facebook Messenger entegrasyonu' },
   INSTAGRAM: { label: 'Instagram', icon: '📷', color: '#E4405F', description: 'Instagram DM entegrasyonu' },
   TELEGRAM: { label: 'Telegram', icon: '✈️', color: '#0088CC', description: 'Telegram Bot entegrasyonu' },
@@ -147,7 +147,7 @@ export default function ChannelsPage() {
             const connected = channel?.isActive ?? false
 
             return (
-              <div key={type} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-5 hover:shadow-md transition">
+              <div key={type} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-5 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div
@@ -163,7 +163,7 @@ export default function ChannelsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-[#E5E0F0] dark:border-gray-700">
+                <div className="flex items-center justify-between pt-3 border-t border-[#E5E7EB] dark:border-gray-700">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
                     <span className={`text-xs font-medium ${connected ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
@@ -173,7 +173,7 @@ export default function ChannelsPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => openConfig(channel, type)}
-                      className="px-3 py-1.5 text-xs font-medium bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 rounded-lg hover:bg-[#E5E0F0] dark:hover:bg-gray-600 transition"
+                      className="px-3 py-1.5 text-xs font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg hover:bg-[#E5E7EB] dark:hover:bg-gray-600 transition"
                     >
                       Yapılandır
                     </button>
@@ -193,7 +193,7 @@ export default function ChannelsPage() {
 
       {configModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm" onClick={() => setConfigModal(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-[#E5E0F0] dark:border-gray-700 p-6 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-[#E5E7EB] dark:border-gray-700 p-6 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {CHANNEL_DEFS[configModal.type]?.label} Yapılandırma
@@ -213,7 +213,7 @@ export default function ChannelsPage() {
                     type={field.type}
                     value={configForm[field.key] || ''}
                     onChange={(e) => setConfigForm({ ...configForm, [field.key]: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     placeholder={field.placeholder}
                   />
                 </div>
@@ -221,7 +221,7 @@ export default function ChannelsPage() {
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setConfigModal(null)} className="px-4 py-2.5 bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
+              <button onClick={() => setConfigModal(null)} className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
               <button onClick={saveConfig} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition">Kaydet</button>
             </div>
           </div>

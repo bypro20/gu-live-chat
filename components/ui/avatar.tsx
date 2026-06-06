@@ -36,7 +36,7 @@ export function Avatar({ src, alt, fallback, size = 'md', status, className, ...
       <div
         className={cn(
           'inline-flex items-center justify-center rounded-full overflow-hidden font-semibold text-white shadow-sm',
-          'bg-gradient-to-br from-primary to-[#A78BFA]',
+          'bg-gradient-to-br from-primary to-[#60A5FA]',
           sizes[size]
         )}
       >

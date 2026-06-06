@@ -119,7 +119,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-500 rounded-full"
                   style={{ width: `${activity.scrollPercentage}%` }}
                 />
               </div>

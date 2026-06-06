@@ -19,9 +19,9 @@ export default function TeamPage() {
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   const roleLabels: Record<string, { label: string; color: string }> = {
-    OWNER: { label: 'Sahip', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-    ADMIN: { label: 'Yönetici', color: 'bg-[#6C3CE1]/10 text-[#4A2080] dark:bg-purple-900/30 dark:text-purple-400' },
-    MEMBER: { label: 'Temsilci', color: 'bg-[#EDE9FE] text-[#4A2080] dark:bg-gray-700 dark:text-gray-300' },
+    OWNER: { label: 'Sahip', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+    ADMIN: { label: 'Yönetici', color: 'bg-[#1972F5]/10 text-[#1E40AF] dark:bg-blue-900/30 dark:text-blue-400' },
+    MEMBER: { label: 'Temsilci', color: 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-gray-700 dark:text-gray-300' },
   }
 
   const handleInvite = async () => {
@@ -63,7 +63,7 @@ export default function TeamPage() {
         </div>
         <button
           onClick={() => setShowInvite(!showInvite)}
-          className="px-4 py-2.5 bg-[#6C3CE1] hover:bg-[#5B2CC4] text-white font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+          className="px-4 py-2.5 bg-[#1972F5] hover:bg-[#1565DB] text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
         >
           + Üye Davet Et
         </button>
@@ -81,7 +81,7 @@ export default function TeamPage() {
 
       {/* Invite Form */}
       {showInvite && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Yeni Üye Davet Et</h3>
           <div className="flex gap-3">
             <input
@@ -90,19 +90,19 @@ export default function TeamPage() {
               onChange={(e) => setInviteEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
               placeholder="E-posta adresi"
-              className="flex-1 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+              className="flex-1 px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
             />
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
-              className="px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+              className="px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
             >
               <option value="MEMBER">Temsilci</option>
               <option value="ADMIN">Yönetici</option>
             </select>
             <button
               onClick={handleInvite}
-              className="px-6 py-3 bg-[#6C3CE1] hover:bg-[#5B2CC4] text-white font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+              className="px-6 py-3 bg-[#1972F5] hover:bg-[#1565DB] text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
             >
               Davet Gönder
             </button>
@@ -111,14 +111,14 @@ export default function TeamPage() {
       )}
 
       {/* Team Members List */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : members.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
@@ -127,11 +127,11 @@ export default function TeamPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Yukarıdaki butonu kullanarak üye davet edin</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+          <div className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
             {(members as unknown as TeamMember[]).map((member) => (
               <div key={member.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#6C3CE1]/10 rounded-full flex items-center justify-center text-[#6C3CE1] font-medium text-sm">
+                  <div className="w-10 h-10 bg-[#1972F5]/10 rounded-full flex items-center justify-center text-[#1972F5] font-medium text-sm">
                     {member.user?.name?.[0]?.toUpperCase() || member.user?.email?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div>
@@ -160,13 +160,13 @@ export default function TeamPage() {
       </div>
 
       {/* Plan Limits */}
-      <div className="mt-6 bg-[#6C3CE1]/10 dark:bg-purple-900/20 rounded-2xl p-4 flex items-start gap-3">
-        <svg className="w-5 h-5 text-[#6C3CE1] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="mt-6 bg-[#1972F5]/10 dark:bg-blue-900/20 rounded-2xl p-4 flex items-start gap-3">
+        <svg className="w-5 h-5 text-[#1972F5] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-[#4A2080] dark:text-purple-400">Plan Limitleri</p>
-          <p className="text-xs text-[#4A2080]/80 dark:text-purple-400/70 mt-0.5">Ücretsiz plan en fazla 2 temsilci destekler. Daha fazla temsilci için planınızı yükseltin.</p>
+          <p className="text-sm font-medium text-[#1E40AF] dark:text-blue-400">Plan Limitleri</p>
+          <p className="text-xs text-[#1E40AF]/80 dark:text-blue-400/70 mt-0.5">Ücretsiz plan en fazla 2 temsilci destekler. Daha fazla temsilci için planınızı yükseltin.</p>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import Google from '@auth/core/providers/google'
+import Google from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'

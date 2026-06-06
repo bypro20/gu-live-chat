@@ -183,7 +183,7 @@ export default function TicketDetailPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -192,7 +192,7 @@ export default function TicketDetailPage() {
     return (
       <div className="p-8 text-center">
         <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ticket bulunamadı</h2>
-        <button onClick={() => router.back()} className="mt-4 text-[#6C3CE1] hover:underline text-sm">
+        <button onClick={() => router.back()} className="mt-4 text-[#1972F5] hover:underline text-sm">
           Geri dön
         </button>
       </div>
@@ -216,7 +216,7 @@ export default function TicketDetailPage() {
       </button>
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{ticket.subject}</h1>
@@ -228,14 +228,14 @@ export default function TicketDetailPage() {
             <span className={`px-3 py-1.5 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
               {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
             </span>
-            <span className="px-3 py-1.5 text-xs font-medium rounded-full bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300">
+            <span className="px-3 py-1.5 text-xs font-medium rounded-full bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300">
               {STATUS_LABELS[ticket.status] || ticket.status}
             </span>
           </div>
         </div>
 
         {ticket.description && (
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 p-4 bg-[#F5F3FF] dark:bg-gray-700/50 rounded-xl">
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 p-4 bg-[#EFF6FF] dark:bg-gray-700/50 rounded-xl">
             {ticket.description}
           </p>
         )}
@@ -255,7 +255,7 @@ export default function TicketDetailPage() {
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); handleUpdate({ status: e.target.value }) }}
-            className="w-full px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
           >
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <option key={key} value={key}>{label}</option>
@@ -267,7 +267,7 @@ export default function TicketDetailPage() {
           <select
             value={priority}
             onChange={(e) => { setPriority(e.target.value); handleUpdate({ priority: e.target.value }) }}
-            className="w-full px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
           >
             {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
               <option key={key} value={key}>{config.label}</option>
@@ -279,7 +279,7 @@ export default function TicketDetailPage() {
           <select
             value={assignedToId}
             onChange={(e) => { setAssignedToId(e.target.value); handleUpdate({ assignedToId: e.target.value || null }) }}
-            className="w-full px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+            className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
           >
             <option value="">Atanmamış</option>
             {teamMembers.map((member) => (
@@ -292,7 +292,7 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Message Thread */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 mb-6">
         <div className="p-6">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Mesajlar</h2>
 
@@ -303,7 +303,7 @@ export default function TicketDetailPage() {
           <div className="space-y-4">
             {publicMessages.map((msg) => (
               <div key={msg.id} className="flex gap-3">
-                <div className="w-8 h-8 bg-[#6C3CE1]/10 rounded-full flex items-center justify-center text-[#6C3CE1] text-xs font-bold shrink-0">
+                <div className="w-8 h-8 bg-[#1972F5]/10 rounded-full flex items-center justify-center text-[#1972F5] text-xs font-bold shrink-0">
                   {msg.sender?.name?.[0]?.toUpperCase() || msg.sender?.id?.[0]?.toUpperCase() || 'T'}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -322,7 +322,7 @@ export default function TicketDetailPage() {
                           href={att.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-[#F5F3FF] dark:bg-gray-700 rounded-lg text-xs text-[#6C3CE1] hover:underline"
+                          className="px-3 py-1.5 bg-[#EFF6FF] dark:bg-gray-700 rounded-lg text-xs text-[#1972F5] hover:underline"
                         >
                           {att.fileName}
                         </a>
@@ -372,14 +372,14 @@ export default function TicketDetailPage() {
         </div>
 
         {/* Reply Input */}
-        <div className="border-t border-[#E5E0F0] dark:border-gray-700 p-6">
+        <div className="border-t border-[#E5E7EB] dark:border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => setIsInternal(false)}
               className={`px-3 py-1 text-xs font-medium rounded-full transition ${
                 !isInternal
-                  ? 'bg-[#6C3CE1] text-white'
-                  : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300'
+                  ? 'bg-[#1972F5] text-white'
+                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300'
               }`}
             >
               Yanıtla
@@ -389,7 +389,7 @@ export default function TicketDetailPage() {
               className={`px-3 py-1 text-xs font-medium rounded-full transition ${
                 isInternal
                   ? 'bg-yellow-500 text-white'
-                  : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300'
+                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300'
               }`}
             >
               İç Not
@@ -407,7 +407,7 @@ export default function TicketDetailPage() {
               }}
               placeholder={isInternal ? 'İç not ekleyin...' : 'Yanıtınızı yazın...'}
               rows={3}
-              className="flex-1 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition resize-none text-sm"
+              className="flex-1 px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition resize-none text-sm"
             />
           </div>
           <div className="flex items-center justify-between mt-3">
@@ -417,7 +417,7 @@ export default function TicketDetailPage() {
             <button
               onClick={handleSendReply}
               disabled={!reply.trim() || sending}
-              className="px-5 py-2 bg-[#6C3CE1] hover:bg-[#5B2CC4] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+              className="px-5 py-2 bg-[#1972F5] hover:bg-[#1565DB] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
             >
               {sending ? 'Gönderiliyor...' : isInternal ? 'Not Ekle' : 'Gönder'}
             </button>

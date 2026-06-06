@@ -239,21 +239,21 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           {isAdmin && (
             <div>
               <div className="flex items-center gap-2 px-2.5 mb-1.5">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.12em]" style={{ color: 'rgba(251,113,133,0.6)' }}>Yönetim</span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(251,113,133,0.08)' }} />
+                <span className="text-[9px] font-semibold uppercase tracking-[0.12em]" style={{ color: 'rgba(96,165,250,0.7)' }}>Yönetim</span>
+                <div className="flex-1 h-px" style={{ background: 'rgba(96,165,250,0.1)' }} />
               </div>
               <a
                 href="/admin"
                 className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all duration-200 group relative"
-                style={{ color: '#FB7185' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(251,113,133,0.1)' }}
+                style={{ color: '#60A5FA' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,0.1)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '' }}
               >
                 <svg className="w-[20px] h-[20px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285zm0 0A11.959 11.959 0 0112 2.25zm0 0c0 1.232-.21 2.413-.598 3.5m0 0c0 0 0 0 0 0m0 0l.187.188c.528.528 1.194.83 1.88.888m0 0A11.938 11.938 0 0012 2.25zm0 0L12 2.25zm0 0c.756 0 1.492.069 2.203.2" />
                 </svg>
-                <span className="flex-1 text-[14px] font-semibold tracking-wide" style={{ color: '#FCA5A5', textShadow: '0 0 16px rgba(239,68,68,0.4)' }}>Admin Paneli</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-md shadow-lg" style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)', boxShadow: '0 4px 16px -4px rgba(239,68,68,0.5)' }}>ADMIN</span>
+                <span className="flex-1 text-[14px] font-semibold tracking-wide" style={{ color: '#93C5FD' }}>Admin Paneli</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-md bg-primary shadow-brand">ADMIN</span>
               </a>
             </div>
           )}

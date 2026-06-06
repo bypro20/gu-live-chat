@@ -98,8 +98,8 @@ export default function AnalyticsPage() {
               onClick={() => setPeriod(p)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                 period === p
-                  ? 'bg-[#6C3CE1] text-white shadow-md shadow-[#6C3CE1]/30'
-                  : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 hover:bg-[#DDD6FE] dark:hover:bg-gray-600'
+                  ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/30'
+                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#DDD6FE] dark:hover:bg-gray-600'
               }`}
             >
               {periodLabels[p]}
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
         <StatCard
           title="Toplam Sohbet"
           value={convLoading ? '-' : String(convData?.totalConversations ?? 0)}
-          color="purple"
+          color="primary"
           icon={
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -155,11 +155,11 @@ export default function AnalyticsPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Daily Conversations Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E0F0] dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-6">
           <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4">Günlük Sohbet Trafiği</h2>
           {convLoading ? (
             <div className="flex items-center justify-center h-48">
-              <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : convData?.dailyConversations?.length > 0 ? (
             <div className="space-y-2">
@@ -168,9 +168,9 @@ export default function AnalyticsPage() {
                   <span className="text-xs text-gray-400 w-20 shrink-0">
                     {new Date(day.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                   </span>
-                  <div className="flex-1 bg-[#F5F3FF] dark:bg-gray-700 rounded-full h-6 overflow-hidden">
+                  <div className="flex-1 bg-[#EFF6FF] dark:bg-gray-700 rounded-full h-6 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] h-full rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-[#1972F5] to-[#2563EB] h-full rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, (day.count / Math.max(...convData.dailyConversations.slice(-7).map((d: { count: number }) => d.count), 1)) * 100)}%` }}
                     />
                   </div>
@@ -186,17 +186,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Top Pages */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E0F0] dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-6">
           <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4">En Çok Ziyaret Edilen Sayfalar</h2>
           {visitorLoading ? (
             <div className="flex items-center justify-center h-48">
-              <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : visitorData?.topPages?.length > 0 ? (
             <div className="space-y-3">
               {visitorData.topPages.map((page: { url: string; views: number }, i: number) => (
                 <div key={page.url} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-[#6C3CE1] w-6">{i + 1}.</span>
+                  <span className="text-xs font-bold text-[#1972F5] w-6">{i + 1}.</span>
                   <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">{page.url}</span>
                   <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{page.views}</span>
                 </div>
@@ -211,17 +211,17 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Team Performance */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E0F0] dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-6">
         <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4">Takım Performansı</h2>
         {teamLoading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : teamData?.agents?.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#E5E0F0] dark:border-gray-700">
+                <tr className="border-b border-[#E5E7EB] dark:border-gray-700">
                   <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase pb-3">Temsilci</th>
                   <th className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase pb-3">Rol</th>
                   <th className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase pb-3">Atanan</th>
@@ -230,7 +230,7 @@ export default function AnalyticsPage() {
                   <th className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase pb-3">Çözülme %</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+              <tbody className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
                 {teamData.agents.map((agent: {
                   userId: string; name: string; email: string; role: string;
                   assignedConversations: number; resolvedConversations: number;
@@ -239,7 +239,7 @@ export default function AnalyticsPage() {
                   <tr key={agent.userId}>
                     <td className="py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6C3CE1]/20 to-[#8B5CF6]/20 flex items-center justify-center text-xs font-bold text-[#6C3CE1] dark:text-[#A78BFA]">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1972F5]/20 to-[#2563EB]/20 flex items-center justify-center text-xs font-bold text-[#1972F5] dark:text-[#60A5FA]">
                           {agent.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div>
@@ -250,9 +250,9 @@ export default function AnalyticsPage() {
                     </td>
                     <td className="text-center py-3">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        agent.role === 'OWNER' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-                        agent.role === 'ADMIN' ? 'bg-[#6C3CE1]/10 text-[#4A2080] dark:bg-purple-900/30 dark:text-purple-400' :
-                        'bg-[#EDE9FE] text-[#4A2080] dark:bg-gray-700 dark:text-gray-300'
+                        agent.role === 'OWNER' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                        agent.role === 'ADMIN' ? 'bg-[#1972F5]/10 text-[#1E40AF] dark:bg-blue-900/30 dark:text-blue-400' :
+                        'bg-[#EFF6FF] text-[#1E40AF] dark:bg-gray-700 dark:text-gray-300'
                       }`}>
                         {agent.role === 'OWNER' ? 'Sahip' : agent.role === 'ADMIN' ? 'Yönetici' : 'Temsilci'}
                       </span>
@@ -285,23 +285,23 @@ export default function AnalyticsPage() {
 }
 
 function StatCard({ title, value, color, icon }: {
-  title: string; value: string; color: 'purple' | 'blue' | 'green' | 'orange'; icon: React.ReactNode
+  title: string; value: string; color: 'primary' | 'blue' | 'green' | 'orange'; icon: React.ReactNode
 }) {
   const gradients = {
-    purple: 'from-[#6C3CE1] to-[#8B5CF6]',
+    primary: 'from-[#1972F5] to-[#2563EB]',
     blue: 'from-[#3B82F6] to-[#6366F1]',
     green: 'from-emerald-500 to-emerald-600',
     orange: 'from-orange-500 to-amber-500',
   }
   const shadows = {
-    purple: 'shadow-[#6C3CE1]/25',
+    primary: 'shadow-[#1972F5]/25',
     blue: 'shadow-blue-500/25',
     green: 'shadow-emerald-500/25',
     orange: 'shadow-orange-500/25',
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E0F0] dark:border-gray-700 p-5 hover:shadow-lg hover:shadow-gray-200/50 transition-all">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-5 hover:shadow-lg hover:shadow-gray-200/50 transition-all">
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-11 h-11 bg-gradient-to-br ${gradients[color]} rounded-xl flex items-center justify-center shadow-md ${shadows[color]} text-white`}>
           {icon}

@@ -53,7 +53,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const ACTION_COLORS: Record<string, string> = {
   SEND_MESSAGE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  SEND_EMAIL: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  SEND_EMAIL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   ASSIGN_AGENT: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   CHANGE_STATUS: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   SET_PRIORITY: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
@@ -71,7 +71,7 @@ const TRIGGER_COLORS: Record<string, string> = {
   CONVERSATION_CREATED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   CONVERSATION_RESOLVED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   CONVERSATION_CLOSED: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-  MESSAGE_RECEIVED: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  MESSAGE_RECEIVED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   VISITOR_CREATED: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
   VISITOR_SEEN_PAGE: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   TICKET_CREATED: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
@@ -194,7 +194,7 @@ export default function WorkflowsPage() {
       </div>
 
       {showCreate && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {editingId ? 'İş Akışını Düzenle' : 'Yeni İş Akışı'}
           </h3>
@@ -207,7 +207,7 @@ export default function WorkflowsPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="İş akışı adı"
                 />
               </div>
@@ -216,7 +216,7 @@ export default function WorkflowsPage() {
                 <select
                   value={form.triggerType}
                   onChange={(e) => setForm({ ...form, triggerType: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
                   {Object.entries(TRIGGER_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -230,7 +230,7 @@ export default function WorkflowsPage() {
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Açıklama"
               />
             </div>
@@ -242,12 +242,12 @@ export default function WorkflowsPage() {
               </div>
               <div className="space-y-2">
                 {steps.map((step, index) => (
-                  <div key={index} className="flex items-center gap-2 p-3 bg-[#F5F3FF] dark:bg-gray-750 rounded-xl border border-[#E5E0F0] dark:border-gray-700">
+                  <div key={index} className="flex items-center gap-2 p-3 bg-[#EFF6FF] dark:bg-gray-750 rounded-xl border border-[#E5E7EB] dark:border-gray-700">
                     <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-xs font-bold shrink-0">{index + 1}</span>
                     <select
                       value={step.actionType}
                       onChange={(e) => updateStep(index, 'actionType', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="flex-1 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     >
                       {AVAILABLE_ACTIONS.map((a) => (
                         <option key={a.value} value={a.value}>{a.label}</option>
@@ -257,14 +257,14 @@ export default function WorkflowsPage() {
                       type="text"
                       value={step.config}
                       onChange={(e) => updateStep(index, 'config', e.target.value)}
-                      className="w-32 px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="w-32 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       placeholder="Yapılandırma"
                     />
                     <input
                       type="number"
                       value={step.delayMs}
                       onChange={(e) => updateStep(index, 'delayMs', e.target.value)}
-                      className="w-24 px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="w-24 px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       placeholder="Gecikme ms"
                     />
                     <button onClick={() => removeStep(index)} className="p-1.5 text-red-400 hover:text-red-600 transition shrink-0">
@@ -282,7 +282,7 @@ export default function WorkflowsPage() {
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
-            <button onClick={resetForm} className="px-4 py-2.5 bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
+            <button onClick={resetForm} className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl transition">İptal</button>
             <button onClick={handleCreate} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition">
               {editingId ? 'Güncelle' : 'Oluştur'}
             </button>
@@ -290,14 +290,14 @@ export default function WorkflowsPage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : workflows.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -306,7 +306,7 @@ export default function WorkflowsPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">İlk otomasyonunuzu oluşturun</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+          <div className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
             {workflows.map((wf) => (
               <div key={wf.id} className="p-5">
                 <div className="flex items-start justify-between mb-3">

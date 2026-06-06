@@ -65,7 +65,7 @@ export default function InvoicesPage() {
 
       {/* Invoices Table */}
       {invoices.length === 0 ? (
-        <div className="bg-white dark:bg-[#1a1d2e] rounded-xl border border-[#E5E0F0] dark:border-gray-700 p-12 text-center">
+        <div className="bg-white dark:bg-[#1a1d2e] rounded-xl border border-[#E5E7EB] dark:border-gray-700 p-12 text-center">
           <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -73,12 +73,12 @@ export default function InvoicesPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Bir ödeme yaptığınızda faturalar burada görünecek</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-[#1a1d2e] rounded-xl border border-[#E5E0F0] dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-[#1a1d2e] rounded-xl border border-[#E5E7EB] dark:border-gray-700 overflow-hidden">
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#E5E0F0] dark:border-gray-700">
+                <tr className="border-b border-[#E5E7EB] dark:border-gray-700">
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fatura</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dönem</th>
@@ -86,9 +86,9 @@ export default function InvoicesPage() {
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Durum</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+              <tbody className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
                 {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-[#F5F3FF] dark:hover:bg-white/[0.02] transition">
+                  <tr key={invoice.id} className="hover:bg-[#EFF6FF] dark:hover:bg-white/[0.02] transition">
                     <td className="px-6 py-4">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         #{invoice.id.slice(-8).toUpperCase()}
@@ -124,7 +124,7 @@ export default function InvoicesPage() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden divide-y divide-[#E5E0F0] dark:divide-gray-700">
+          <div className="md:hidden divide-y divide-[#E5E7EB] dark:divide-gray-700">
             {invoices.map((invoice) => (
               <div key={invoice.id} className="p-4">
                 <div className="flex items-center justify-between mb-2">

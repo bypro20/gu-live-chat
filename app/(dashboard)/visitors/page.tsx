@@ -315,8 +315,8 @@ export default function VisitorsPage() {
       {upgradeRequired ? (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#6C3CE1]/10 to-[#EC4899]/10 flex items-center justify-center">
-              <svg className="w-10 h-10 text-[#6C3CE1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#1972F5]/10 to-[#2563EB]/10 flex items-center justify-center">
+              <svg className="w-10 h-10 text-[#1972F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -327,7 +327,7 @@ export default function VisitorsPage() {
             </p>
             <Link
               href="/settings/billing"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#6C3CE1] to-[#EC4899] text-white font-semibold rounded-xl shadow-lg shadow-[#6C3CE1]/25 hover:shadow-[#6C3CE1]/40 transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white font-semibold rounded-xl shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 transition-all hover:scale-[1.02]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -370,7 +370,7 @@ export default function VisitorsPage() {
               placeholder="İsim, email veya sayfa ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0a0a12] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6C3CE1]/30 focus:border-[#6C3CE1] transition-all"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0a0a12] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1972F5]/30 focus:border-[#1972F5] transition-all"
             />
           </div>
 
@@ -386,7 +386,7 @@ export default function VisitorsPage() {
                 onClick={() => setFilterDevice(f.key)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                   filterDevice === f.key
-                    ? 'bg-[#6C3CE1] text-white shadow-md shadow-[#6C3CE1]/25'
+                    ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/25'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
@@ -400,7 +400,7 @@ export default function VisitorsPage() {
         <div className="flex-1 overflow-y-auto">
           {loading && visitors.size === 0 ? (
             <div className="flex items-center justify-center h-40">
-              <div className="w-8 h-8 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filteredVisitors.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center px-6">
@@ -422,14 +422,14 @@ export default function VisitorsPage() {
                   onClick={() => selectVisitor(visitor.visitorId)}
                   className={`w-full text-left p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all ${
                     selectedVisitorId === visitor.visitorId
-                      ? 'bg-[#6C3CE1]/5 dark:bg-[#6C3CE1]/10 border-l-2 border-l-[#6C3CE1]'
+                      ? 'bg-[#1972F5]/5 dark:bg-[#1972F5]/10 border-l-2 border-l-[#1972F5]'
                       : 'border-l-2 border-l-transparent'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C3CE1] to-[#EC4899] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1972F5] to-[#2563EB] flex items-center justify-center text-white font-bold text-sm shadow-md">
                         {(visitor.name || 'A')[0].toUpperCase()}
                       </div>
                       {visitor.isLive && (
@@ -451,7 +451,7 @@ export default function VisitorsPage() {
                       </div>
 
                       {/* Current page */}
-                      <p className="text-xs text-[#6C3CE1] dark:text-[#A78BFA] truncate mt-0.5" title={visitor.currentTitle || visitor.currentPage}>
+                      <p className="text-xs text-[#1972F5] dark:text-[#60A5FA] truncate mt-0.5" title={visitor.currentTitle || visitor.currentPage}>
                         {visitor.currentTitle || visitor.currentPage || '—'}
                       </p>
 
@@ -505,8 +505,8 @@ export default function VisitorsPage() {
           /* Empty State */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center px-6">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#6C3CE1]/10 to-[#EC4899]/10 flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#6C3CE1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#1972F5]/10 to-[#2563EB]/10 flex items-center justify-center">
+                <svg className="w-12 h-12 text-[#1972F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>

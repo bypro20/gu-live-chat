@@ -75,7 +75,7 @@ export default function ChatbotPage() {
 
       {/* Chatbot Builder */}
       {showBuilder && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <div className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chatbot Adı</label>
@@ -83,7 +83,7 @@ export default function ChatbotPage() {
                 type="text"
                 value={botName}
                 onChange={(e) => setBotName(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 placeholder="Örn: Hoş Geldin Bot"
               />
             </div>
@@ -92,7 +92,7 @@ export default function ChatbotPage() {
               <select
                 value={botTrigger}
                 onChange={(e) => setBotTrigger(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               >
                 {Object.entries(triggerLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
@@ -105,7 +105,7 @@ export default function ChatbotPage() {
           <div className="space-y-3 mb-6">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Akış Adımları</h3>
             {steps.map((step, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-[#F5F3FF] dark:bg-gray-900 rounded-xl border border-[#E5E0F0] dark:border-gray-700">
+              <div key={index} className="flex items-start gap-3 p-4 bg-[#EFF6FF] dark:bg-gray-900 rounded-xl border border-[#E5E7EB] dark:border-gray-700">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-sm font-bold text-primary shrink-0">
                   {index + 1}
                 </div>
@@ -119,7 +119,7 @@ export default function ChatbotPage() {
                       type="text"
                       value={step.message}
                       onChange={(e) => updateStep(index, 'message', e.target.value)}
-                      className="w-full px-3 py-2 border border-[#E5E0F0] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                      className="w-full px-3 py-2 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                       placeholder={step.type === 'MESSAGE' ? 'Mesaj metni...' : step.type === 'ASSIGN_AGENT' ? 'Aktarım mesajı...' : 'İstem mesajı...'}
                     />
                   )}
@@ -140,7 +140,7 @@ export default function ChatbotPage() {
                               updated[index] = { ...updated[index], options }
                               setSteps(updated)
                             }}
-                            className="flex-1 px-3 py-1.5 border border-[#E5E0F0] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                            className="flex-1 px-3 py-1.5 border border-[#E5E7EB] dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
                             placeholder="Seçenek metni"
                           />
                           <button
@@ -187,7 +187,7 @@ export default function ChatbotPage() {
               <button
                 key={type}
                 onClick={() => addStep(type)}
-                className="px-3 py-2 bg-[#EDE9FE] dark:bg-gray-700 hover:bg-[#DDD6FE] dark:hover:bg-gray-600 rounded-lg text-sm transition flex items-center gap-1.5 text-[#4A2080] dark:text-gray-300"
+                className="px-3 py-2 bg-[#EFF6FF] dark:bg-gray-700 hover:bg-[#DDD6FE] dark:hover:bg-gray-600 rounded-lg text-sm transition flex items-center gap-1.5 text-[#1E40AF] dark:text-gray-300"
               >
                 <span>{info.icon}</span>
                 <span>{info.label}</span>
@@ -196,7 +196,7 @@ export default function ChatbotPage() {
           </div>
 
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowBuilder(false)} className="px-4 py-2.5 bg-[#EDE9FE] dark:bg-gray-700 hover:bg-[#DDD6FE] dark:hover:bg-gray-600 text-[#4A2080] dark:text-gray-300 font-medium rounded-xl transition">
+            <button onClick={() => setShowBuilder(false)} className="px-4 py-2.5 bg-[#EFF6FF] dark:bg-gray-700 hover:bg-[#DDD6FE] dark:hover:bg-gray-600 text-[#1E40AF] dark:text-gray-300 font-medium rounded-xl transition">
               İptal
             </button>
             <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition">
@@ -207,21 +207,21 @@ export default function ChatbotPage() {
       )}
 
       {/* Existing Chatbots */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700">
         {chatbots.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
               🤖
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white">Henüz chatbot yok</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Yukarıdaki butonu kullanarak ilk chatbotunuzu oluşturun</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+          <div className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
             {chatbots.map((bot) => (
               <div key={bot.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bot.isActive ? 'bg-green-100 dark:bg-green-900/30' : 'bg-[#EDE9FE] dark:bg-gray-700'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bot.isActive ? 'bg-green-100 dark:bg-green-900/30' : 'bg-[#EFF6FF] dark:bg-gray-700'}`}>
                     🤖
                   </div>
                   <div>
@@ -230,7 +230,7 @@ export default function ChatbotPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className={`px-3 py-1 text-xs font-medium rounded-full ${bot.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-[#EDE9FE] text-[#4A2080] dark:bg-gray-700 dark:text-gray-400'}`}>
+                  <button className={`px-3 py-1 text-xs font-medium rounded-full ${bot.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-gray-700 dark:text-gray-400'}`}>
                     {bot.isActive ? 'Aktif' : 'Pasif'}
                   </button>
                   <button className="text-gray-400 hover:text-red-500 transition">Sil</button>

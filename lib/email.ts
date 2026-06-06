@@ -156,14 +156,14 @@ export function newConversationEmail(data: {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9fafb;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #6C3CE1; font-size: 20px; margin: 0;">GU Live Chat</h1>
+            <h1 style="color: #1972F5; font-size: 20px; margin: 0;">GU Live Chat</h1>
           </div>
           <h2 style="color: #111827; font-size: 18px; margin-bottom: 8px;">Yeni konuşma başlatıldı</h2>
           <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
             <strong style="color: #111827;">${data.visitorName}</strong>, <strong>${data.websiteName}</strong> sitesinde yeni bir konuşma başlattı.
           </p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${data.conversationUrl}" style="background: #6C3CE1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${data.conversationUrl}" style="background: #1972F5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Konuşmayı Aç
             </a>
           </div>
@@ -189,14 +189,14 @@ export function teamInviteEmail(data: {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9fafb;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #6C3CE1; font-size: 20px; margin: 0;">GU Live Chat</h1>
+            <h1 style="color: #1972F5; font-size: 20px; margin: 0;">GU Live Chat</h1>
           </div>
           <h2 style="color: #111827; font-size: 18px; margin-bottom: 8px;">Takım Daveti</h2>
           <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
             <strong style="color: #111827;">${data.inviterName}</strong> sizi <strong>${data.websiteName}</strong> sitesinin canlı destek takımına davet etti.
           </p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${data.acceptUrl}" style="background: #6C3CE1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${data.acceptUrl}" style="background: #1972F5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Daveti Kabul Et
             </a>
           </div>
@@ -222,7 +222,7 @@ export function trialExpiringEmail(data: {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9fafb;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #6C3CE1; font-size: 20px; margin: 0;">GU Live Chat</h1>
+            <h1 style="color: #1972F5; font-size: 20px; margin: 0;">GU Live Chat</h1>
           </div>
           <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
             <p style="color: #92400e; font-size: 16px; font-weight: 600; margin: 0;">⏰ Deneme sürenizin dolmasına ${data.daysLeft} gün kaldı!</p>
@@ -234,7 +234,7 @@ export function trialExpiringEmail(data: {
             Tüm PRO özelliklerini kaybetmemek için şimdi yükseltin:
           </p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${data.billingUrl}" style="background: #6C3CE1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${data.billingUrl}" style="background: #1972F5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Planı Yükselt
             </a>
           </div>
@@ -262,7 +262,7 @@ export function paymentSuccessEmail(data: {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9fafb;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #6C3CE1; font-size: 20px; margin: 0;">GU Live Chat</h1>
+            <h1 style="color: #1972F5; font-size: 20px; margin: 0;">GU Live Chat</h1>
           </div>
           <div style="background: #d1fae5; border: 1px solid #34d399; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
             <p style="color: #065f46; font-size: 16px; font-weight: 600; margin: 0;">✅ Ödeme başarıyla tamamlandı!</p>
@@ -275,7 +275,7 @@ export function paymentSuccessEmail(data: {
             <tr><td style="padding: 8px 0; font-weight: 500; color: #111827;">Site:</td><td style="padding: 8px 0;">${data.websiteName}</td></tr>
           </table>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${data.billingUrl}" style="background: #6C3CE1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${data.billingUrl}" style="background: #1972F5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Faturalandırma Sayfası
             </a>
           </div>
@@ -300,7 +300,7 @@ export function paymentFailedEmail(data: {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9fafb;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #6C3CE1; font-size: 20px; margin: 0;">GU Live Chat</h1>
+            <h1 style="color: #1972F5; font-size: 20px; margin: 0;">GU Live Chat</h1>
           </div>
           <div style="background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
             <p style="color: #991b1b; font-size: 16px; font-weight: 600; margin: 0;">⚠️ Ödeme alınamadı</p>
@@ -312,7 +312,7 @@ export function paymentFailedEmail(data: {
             3 başarısız ödeme denemesinden sonra hesabınız ücretsiz plana dönecektir.
           </p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${data.billingUrl}" style="background: #6C3CE1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${data.billingUrl}" style="background: #1972F5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Ödeme Bilgilerini Güncelle
             </a>
           </div>

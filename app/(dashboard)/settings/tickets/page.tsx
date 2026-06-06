@@ -102,7 +102,7 @@ export default function TicketsPage() {
           <span className="text-sm text-gray-500 dark:text-gray-400">{total} ticket</span>
           <Link
             href="/settings/tickets/yeni"
-            className="px-4 py-2.5 bg-[#6C3CE1] hover:bg-[#5B2CC4] text-white font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+            className="px-4 py-2.5 bg-[#1972F5] hover:bg-[#1565DB] text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
           >
             + Ticket Oluştur
           </Link>
@@ -116,7 +116,7 @@ export default function TicketsPage() {
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           placeholder="Ticket ara (konu, e-posta, isim)..."
-          className="w-full max-w-md px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+          className="w-full max-w-md px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
         />
       </div>
 
@@ -126,8 +126,8 @@ export default function TicketsPage() {
           onClick={() => { setStatusFilter(null); setPage(1) }}
           className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
             !statusFilter
-              ? 'bg-[#6C3CE1] text-white shadow-md shadow-[#6C3CE1]/30'
-              : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 hover:bg-[#6C3CE1]/20'
+              ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/30'
+              : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
           }`}
         >
           Tümü
@@ -138,8 +138,8 @@ export default function TicketsPage() {
             onClick={() => { setStatusFilter(s); setPage(1) }}
             className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
               statusFilter === s
-                ? 'bg-[#6C3CE1] text-white shadow-md shadow-[#6C3CE1]/30'
-                : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 hover:bg-[#6C3CE1]/20'
+                ? 'bg-[#1972F5] text-white shadow-md shadow-[#1972F5]/30'
+                : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
             }`}
           >
             {STATUS_LABELS[s]}
@@ -148,14 +148,14 @@ export default function TicketsPage() {
       </div>
 
       {/* Ticket Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : tickets.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -169,7 +169,7 @@ export default function TicketsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#E5E0F0] dark:border-gray-700">
+                <tr className="border-b border-[#E5E7EB] dark:border-gray-700">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Konu</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Durum</th>
@@ -180,11 +180,11 @@ export default function TicketsPage() {
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mesaj</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+              <tbody className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
                 {tickets.map((ticket) => (
                   <tr
                     key={ticket.id}
-                    className="hover:bg-[#F5F3FF] dark:hover:bg-gray-700/50 transition cursor-pointer"
+                    className="hover:bg-[#EFF6FF] dark:hover:bg-gray-700/50 transition cursor-pointer"
                     onClick={() => window.location.href = `/settings/tickets/${ticket.id}`}
                   >
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">
@@ -195,7 +195,7 @@ export default function TicketsPage() {
                       <p className="text-xs text-gray-500 dark:text-gray-400">{ticket.requesterName || ticket.requesterEmail}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300">
+                      <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300">
                         {STATUS_LABELS[ticket.status] || ticket.status}
                       </span>
                     </td>
@@ -234,7 +234,7 @@ export default function TicketsPage() {
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="px-3 py-1.5 text-sm font-medium bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6C3CE1]/20 transition"
+            className="px-3 py-1.5 text-sm font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1972F5]/20 transition"
           >
             Önceki
           </button>
@@ -244,8 +244,8 @@ export default function TicketsPage() {
               onClick={() => setPage(p)}
               className={`w-8 h-8 text-sm font-medium rounded-lg transition ${
                 p === page
-                  ? 'bg-[#6C3CE1] text-white'
-                  : 'bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 hover:bg-[#6C3CE1]/20'
+                  ? 'bg-[#1972F5] text-white'
+                  : 'bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 hover:bg-[#1972F5]/20'
               }`}
             >
               {p}
@@ -254,7 +254,7 @@ export default function TicketsPage() {
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm font-medium bg-[#EDE9FE] dark:bg-gray-700 text-[#4A2080] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6C3CE1]/20 transition"
+            className="px-3 py-1.5 text-sm font-medium bg-[#EFF6FF] dark:bg-gray-700 text-[#1E40AF] dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1972F5]/20 transition"
           >
             Sonraki
           </button>

@@ -40,12 +40,12 @@ export default function SettingsPage() {
     <div className="p-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Ayarlar</h1>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Genel Ayarlar</h2>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="space-y-6">
@@ -57,7 +57,7 @@ export default function SettingsPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
                 placeholder="Web sitenizin adı"
               />
             </div>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
                 type="text"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
-                className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none transition"
                 placeholder="orneksite.com"
               />
             </div>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-[#6C3CE1] hover:bg-[#5B2CC4] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+              className="px-6 py-2.5 bg-[#1972F5] hover:bg-[#1565DB] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
             >
               {saving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>

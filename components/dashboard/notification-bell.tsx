@@ -34,7 +34,7 @@ function getNotificationIcon(type: string) {
       )
     case 'CONVERSATION_ASSIGNED':
       return (
-        <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       )
@@ -120,7 +120,7 @@ export default function NotificationBell() {
               <button
                 onClick={() => markAllAsRead()}
                 disabled={markingAsRead}
-                className="text-[11px] text-[#A78BFA] hover:text-[#C4B5FD] transition disabled:opacity-50"
+                className="text-[11px] text-[#60A5FA] hover:text-[#C4B5FD] transition disabled:opacity-50"
               >
                 Tümünü okundu işaretle
               </button>
@@ -141,7 +141,7 @@ export default function NotificationBell() {
                 <div
                   key={notification.id}
                   className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] transition group ${
-                    !notification.readAt ? 'bg-[#6C3CE1]/5' : ''
+                    !notification.readAt ? 'bg-[#1972F5]/5' : ''
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>

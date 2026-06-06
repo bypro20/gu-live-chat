@@ -115,7 +115,7 @@ async function executeWorkflowStep(
       })
       if (!tag) {
         tag = await prisma.tag.create({
-          data: { websiteId: ctx.websiteDbId, name: tagName, color: '#6C3CE1' },
+          data: { websiteId: ctx.websiteDbId, name: tagName, color: '#1972F5' },
         })
       }
       await prisma.conversationTag.upsert({

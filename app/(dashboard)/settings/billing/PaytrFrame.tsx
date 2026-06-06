@@ -61,7 +61,7 @@ export default function PaytrFrame({ token, onSuccess, onFailure, onClose }: Pay
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white rounded-xl z-10">
             <div className="text-center">
-              <div className="inline-block w-8 h-8 border-4 border-[#6C3CE1] border-t-transparent rounded-full animate-spin mb-3" />
+              <div className="inline-block w-8 h-8 border-4 border-[#1972F5] border-t-transparent rounded-full animate-spin mb-3" />
               <p className="text-sm text-gray-600">Ödeme sayfası yükleniyor...</p>
             </div>
           </div>

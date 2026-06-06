@@ -193,7 +193,7 @@ export default function AddonDetailPage() {
     return (
       <div className="p-8 max-w-4xl">
         <div className="flex items-center justify-center h-64">
-          <div className="inline-block w-8 h-8 border-4 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -202,7 +202,7 @@ export default function AddonDetailPage() {
   if (!addon) {
     return (
       <div className="p-8 max-w-4xl">
-        <button onClick={() => router.back()} className="text-sm text-[#6C3CE1] hover:underline mb-4 inline-flex items-center gap-1">
+        <button onClick={() => router.back()} className="text-sm text-[#1972F5] hover:underline mb-4 inline-flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -220,7 +220,7 @@ export default function AddonDetailPage() {
     <div className="p-8 max-w-4xl">
       <button
         onClick={() => router.push('/settings/addons')}
-        className="text-sm text-[#6C3CE1] dark:text-[#A78BFA] hover:underline mb-6 inline-flex items-center gap-1 font-medium"
+        className="text-sm text-[#1972F5] dark:text-[#60A5FA] hover:underline mb-6 inline-flex items-center gap-1 font-medium"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -249,12 +249,12 @@ export default function AddonDetailPage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
         <div className="flex items-start gap-5">
           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl ${
             addon.isFeatured
-              ? 'bg-gradient-to-br from-[#6C3CE1]/20 to-[#8B5CF6]/20'
-              : 'bg-[#F5F3FF] dark:bg-gray-700'
+              ? 'bg-gradient-to-br from-[#1972F5]/20 to-[#2563EB]/20'
+              : 'bg-[#EFF6FF] dark:bg-gray-700'
           }`}>
             {addon.icon || '🧩'}
           </div>
@@ -264,7 +264,7 @@ export default function AddonDetailPage() {
                 <div className="flex items-center gap-3">
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white">{addon.name}</h1>
                   {addon.isFeatured && (
-                    <span className="px-2 py-0.5 text-[11px] font-bold bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] text-white rounded-full">
+                    <span className="px-2 py-0.5 text-[11px] font-bold bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white rounded-full">
                       Öne Çıkan
                     </span>
                   )}
@@ -283,7 +283,7 @@ export default function AddonDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-3 mt-3">
-              <span className="px-2.5 py-0.5 bg-[#F5F3FF] dark:bg-gray-700 text-[#6C3CE1] dark:text-[#A78BFA] text-xs font-medium rounded-md">
+              <span className="px-2.5 py-0.5 bg-[#EFF6FF] dark:bg-gray-700 text-[#1972F5] dark:text-[#60A5FA] text-xs font-medium rounded-md">
                 {CATEGORY_LABELS[addon.category] || addon.category}
               </span>
               <span className="text-xs text-gray-400">v{addon.version}</span>
@@ -294,7 +294,7 @@ export default function AddonDetailPage() {
       </div>
 
       {purchase && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Durum</h2>
             <div className="flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function AddonDetailPage() {
                 onClick={handleToggle}
                 disabled={saving}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  purchase.isActive ? 'bg-[#6C3CE1]' : 'bg-gray-300 dark:bg-gray-600'
+                  purchase.isActive ? 'bg-[#1972F5]' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -351,21 +351,21 @@ export default function AddonDetailPage() {
       )}
 
       {addon.longDescription && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Açıklama</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">{addon.longDescription}</p>
         </div>
       )}
 
       {addon.setupGuide && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Kurulum Kılavuzu</h2>
           <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">{addon.setupGuide}</div>
         </div>
       )}
 
       {propertyKeys.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Yapılandırma</h2>
           <div className="space-y-4">
             {propertyKeys.map(key => {
@@ -381,7 +381,7 @@ export default function AddonDetailPage() {
                         type="checkbox"
                         checked={!!value}
                         onChange={(e) => updateConfigValue(key, e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-[#6C3CE1] focus:ring-[#6C3CE1]"
+                        className="w-4 h-4 rounded border-gray-300 text-[#1972F5] focus:ring-[#1972F5]"
                       />
                       <span className="text-sm text-gray-600 dark:text-gray-400">{prop.title || key}</span>
                     </label>
@@ -389,7 +389,7 @@ export default function AddonDetailPage() {
                     <select
                       value={value}
                       onChange={(e) => updateConfigValue(key, e.target.value)}
-                      className="w-full px-4 py-2.5 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none"
+                      className="w-full px-4 py-2.5 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none"
                     >
                       <option value="">Seçiniz</option>
                       {prop.enum.map((opt: string) => (
@@ -401,7 +401,7 @@ export default function AddonDetailPage() {
                       type={prop.type === 'number' ? 'number' : 'text'}
                       value={value}
                       onChange={(e) => updateConfigValue(key, prop.type === 'number' ? Number(e.target.value) : e.target.value)}
-                      className="w-full px-4 py-2.5 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#6C3CE1] focus:border-transparent outline-none"
+                      className="w-full px-4 py-2.5 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#1972F5] focus:border-transparent outline-none"
                       placeholder={prop.title || key}
                     />
                   )}
@@ -413,7 +413,7 @@ export default function AddonDetailPage() {
             <button
               onClick={handleSaveConfig}
               disabled={saving}
-              className="px-6 py-2.5 bg-[#6C3CE1] hover:bg-[#5B2CC4] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition shadow-md shadow-[#6C3CE1]/30"
+              className="px-6 py-2.5 bg-[#1972F5] hover:bg-[#1565DB] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition shadow-md shadow-[#1972F5]/30"
             >
               {saving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
@@ -422,11 +422,11 @@ export default function AddonDetailPage() {
       )}
 
       {addon.permissions && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">İzinler</h2>
           <div className="flex flex-wrap gap-2">
             {(JSON.parse(addon.permissions) as string[]).map(perm => (
-              <span key={perm} className="px-2.5 py-1 bg-[#F5F3FF] dark:bg-gray-700 text-[#6C3CE1] dark:text-[#A78BFA] text-xs font-mono rounded-md">
+              <span key={perm} className="px-2.5 py-1 bg-[#EFF6FF] dark:bg-gray-700 text-[#1972F5] dark:text-[#60A5FA] text-xs font-mono rounded-md">
                 {perm}
               </span>
             ))}

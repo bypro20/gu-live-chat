@@ -52,7 +52,7 @@ export default function WidgetSettingsPage() {
           {/* Settings */}
           <div className="space-y-6">
             {/* Color */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Görünüm</h3>
               <div className="space-y-4">
                 <div>
@@ -62,13 +62,13 @@ export default function WidgetSettingsPage() {
                       type="color"
                       value={config.primaryColor}
                       onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                      className="w-12 h-12 rounded-xl border-2 border-[#E5E0F0] dark:border-gray-600 cursor-pointer"
+                      className="w-12 h-12 rounded-xl border-2 border-[#E5E7EB] dark:border-gray-600 cursor-pointer"
                     />
                     <input
                       type="text"
                       value={config.primaryColor}
                       onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                      className="flex-1 px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      className="flex-1 px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export default function WidgetSettingsPage() {
                       className={`flex-1 py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                         config.position === 'BOTTOM_RIGHT'
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-[#E5E0F0] dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                          : 'border-[#E5E7EB] dark:border-gray-600 text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       ↓ Sağ Alt
@@ -91,7 +91,7 @@ export default function WidgetSettingsPage() {
                       className={`flex-1 py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                         config.position === 'BOTTOM_LEFT'
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-[#E5E0F0] dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                          : 'border-[#E5E7EB] dark:border-gray-600 text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       ↓ Sol Alt
@@ -102,7 +102,7 @@ export default function WidgetSettingsPage() {
             </div>
 
             {/* Messages */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Mesajlar</h3>
               <div className="space-y-4">
                 <div>
@@ -110,7 +110,7 @@ export default function WidgetSettingsPage() {
                   <textarea
                     value={config.welcomeMessage}
                     onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                     rows={2}
                   />
                 </div>
@@ -119,7 +119,7 @@ export default function WidgetSettingsPage() {
                   <textarea
                     value={config.offlineMessage}
                     onChange={(e) => setConfig({ ...config, offlineMessage: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#E5E0F0] dark:border-gray-600 rounded-xl bg-[#F5F3FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                    className="w-full px-4 py-3 border border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-[#EFF6FF] dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                     rows={2}
                   />
                 </div>
@@ -127,7 +127,7 @@ export default function WidgetSettingsPage() {
             </div>
 
             {/* Behavior */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Davranış</h3>
               <div className="space-y-4">
                 <ToggleField
@@ -156,7 +156,7 @@ export default function WidgetSettingsPage() {
           <div className="hidden lg:block">
             <div className="sticky top-8">
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Canlı Önizleme</h3>
-              <div className="bg-[#EDE9FE] dark:bg-gray-700 rounded-2xl p-8 min-h-[500px] flex items-end justify-end relative">
+              <div className="bg-[#EFF6FF] dark:bg-gray-700 rounded-2xl p-8 min-h-[500px] flex items-end justify-end relative">
                 <div className="absolute top-4 left-4 text-xs text-gray-400">orneksite.com</div>
 
                 {/* Chat Widget Preview */}
@@ -177,7 +177,7 @@ export default function WidgetSettingsPage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="bg-[#F5F3FF] dark:bg-gray-800 p-4 space-y-3">
+                  <div className="bg-[#EFF6FF] dark:bg-gray-800 p-4 space-y-3">
                     <div className="flex items-start gap-2">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: config.primaryColor + '15' }}>
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke={config.primaryColor} strokeWidth={2}>
@@ -191,9 +191,9 @@ export default function WidgetSettingsPage() {
                   </div>
 
                   {/* Input */}
-                  <div className="p-3 bg-white dark:bg-gray-900 border-t border-[#E5E0F0] dark:border-gray-700">
+                  <div className="p-3 bg-white dark:bg-gray-900 border-t border-[#E5E7EB] dark:border-gray-700">
                     <div className="flex gap-2">
-                      <div className="flex-1 px-3 py-2 bg-[#F5F3FF] dark:bg-gray-800 rounded-lg text-xs text-gray-400">Mesajınızı yazın...</div>
+                      <div className="flex-1 px-3 py-2 bg-[#EFF6FF] dark:bg-gray-800 rounded-lg text-xs text-gray-400">Mesajınızı yazın...</div>
                       <button className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: config.primaryColor }}>
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2z" />
@@ -217,10 +217,10 @@ export default function WidgetSettingsPage() {
         </div>
 
         {/* Installation Code */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Widget Kurulumu</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Aşağıdaki kodu sitenizin <code className="bg-[#EDE9FE] dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs">&lt;head&gt;</code> etiketinden önce ekleyin.
+            Aşağıdaki kodu sitenizin <code className="bg-[#EFF6FF] dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs">&lt;head&gt;</code> etiketinden önce ekleyin.
           </p>
           <div className="relative">
             <button

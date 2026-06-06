@@ -149,7 +149,7 @@ export default function BillingPage() {
     return (
       <div className="p-8 max-w-5xl">
         <div className="flex items-center justify-center h-64">
-          <div className="inline-block w-8 h-8 border-4 border-[#6C3CE1] border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-4 border-[#1972F5] border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -195,10 +195,10 @@ export default function BillingPage() {
         )}
 
         {/* Current Plan */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6 mb-8">
           {/* Trial Banner */}
           {planStatus === 'TRIALING' && subscription?.currentPeriodEnd && (
-            <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800">
+            <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-500/10 border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -262,7 +262,7 @@ export default function BillingPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mevcut Planınız</h2>
-                <span className="px-3 py-1 bg-[#6C3CE1]/10 text-[#6C3CE1] dark:bg-[#6C3CE1]/20 dark:text-[#A78BFA] text-xs font-semibold rounded-full">
+                <span className="px-3 py-1 bg-[#1972F5]/10 text-[#1972F5] dark:bg-[#1972F5]/20 dark:text-[#60A5FA] text-xs font-semibold rounded-full">
                   {PLANS.find(p => p.id === currentPlan)?.name || 'Ücretsiz'}
                 </span>
                 {getStatusBadge()}
@@ -290,7 +290,7 @@ export default function BillingPage() {
           </div>
 
           {currentPlan !== 'FREE' && planStatus === 'ACTIVE' && (
-            <div className="mt-4 pt-4 border-t border-[#E5E0F0] dark:border-gray-700">
+            <div className="mt-4 pt-4 border-t border-[#E5E7EB] dark:border-gray-700">
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
@@ -310,14 +310,14 @@ export default function BillingPage() {
               key={plan.id}
               className={`rounded-2xl p-5 border-2 transition ${
                 plan.id === currentPlan
-                  ? 'border-[#6C3CE1] bg-[#6C3CE1]/5'
+                  ? 'border-[#1972F5] bg-[#1972F5]/5'
                   : plan.id === 'PRO'
-                  ? 'border-[#6C3CE1]/30 hover:border-[#6C3CE1]/60'
-                  : 'border-[#E5E0F0] dark:border-gray-700 hover:border-[#6C3CE1]/30'
+                  ? 'border-[#1972F5]/30 hover:border-[#1972F5]/60'
+                  : 'border-[#E5E7EB] dark:border-gray-700 hover:border-[#1972F5]/30'
               }`}
             >
               {plan.id === 'PRO' && (
-                <span className="inline-block px-2 py-0.5 bg-[#6C3CE1] text-white text-xs font-semibold rounded-full mb-2">
+                <span className="inline-block px-2 py-0.5 bg-[#1972F5] text-white text-xs font-semibold rounded-full mb-2">
                   Popüler
                 </span>
               )}
@@ -352,10 +352,10 @@ export default function BillingPage() {
                   plan.id === currentPlan
                     ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     : !paytrEnabled
-                    ? 'bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] text-white opacity-60 cursor-pointer hover:opacity-80'
+                    ? 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white opacity-60 cursor-pointer hover:opacity-80'
                     : checkoutLoading === plan.id
-                    ? 'bg-[#6C3CE1]/70 text-white cursor-wait'
-                    : 'bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] hover:from-[#5B2CC4] hover:to-[#7C3AED] text-white shadow-lg shadow-[#6C3CE1]/30 hover:shadow-[#6C3CE1]/50 hover:scale-[1.02]'
+                    ? 'bg-[#1972F5]/70 text-white cursor-wait'
+                    : 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] hover:from-[#1565DB] hover:to-[#7C3AED] text-white shadow-lg shadow-[#1972F5]/30 hover:shadow-[#1972F5]/50 hover:scale-[1.02]'
                 }`}
               >
                 {plan.id === currentPlan
@@ -388,12 +388,12 @@ export default function BillingPage() {
         )}
 
         {/* Billing History */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 p-6">
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Fatura Geçmişi</h3>
             <Link
               href="/settings/billing/invoices"
-              className="text-sm text-[#6C3CE1] hover:text-[#5B2CC4] dark:text-[#A78BFA] dark:hover:text-[#C4B5FD] font-medium transition"
+              className="text-sm text-[#1972F5] hover:text-[#1565DB] dark:text-[#60A5FA] dark:hover:text-[#C4B5FD] font-medium transition"
             >
               Tümünü Gör →
             </Link>

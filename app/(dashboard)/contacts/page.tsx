@@ -39,16 +39,16 @@ export default function ContactsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="İsim veya e-posta ara..."
-            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-[#E5E0F0] dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-[#E5E7EB] dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           />
         </div>
       </div>
 
       {/* Contacts Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E0F0] dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E5E7EB] dark:border-gray-700 overflow-hidden">
         {contacts.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#EDE9FE] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -60,7 +60,7 @@ export default function ContactsPage() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-[#F5F3FF] dark:bg-gray-900">
+            <thead className="bg-[#EFF6FF] dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kişi</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Konum</th>
@@ -69,9 +69,9 @@ export default function ContactsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Son Aktivite</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E5E0F0] dark:divide-gray-700">
+            <tbody className="divide-y divide-[#E5E7EB] dark:divide-gray-700">
               {contacts.map((contact) => (
-                <tr key={contact.id} className="hover:bg-[#F5F3FF] dark:hover:bg-gray-700/50 transition cursor-pointer">
+                <tr key={contact.id} className="hover:bg-[#EFF6FF] dark:hover:bg-gray-700/50 transition cursor-pointer">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-medium">

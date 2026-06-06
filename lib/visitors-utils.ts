@@ -138,15 +138,15 @@ export function getAccent(theme: VisitorTheme) {
     }
   }
   return {
-    avatar: 'from-[#6C3CE1] to-[#EC4899] shadow-[#6C3CE1]/25',
-    border: 'border-l-[#6C3CE1]',
-    borderFull: 'border-[#6C3CE1]/20',
-    text: 'text-[#6C3CE1] dark:text-[#A78BFA]',
-    textDark: 'text-[#6C3CE1]',
-    badge: 'bg-[#6C3CE1]/5 dark:bg-[#6C3CE1]/10',
-    gradient: 'from-purple-50 to-pink-50 dark:from-[#6C3CE1]/5 dark:to-[#EC4899]/5',
-    gradientText: 'text-[#6C3CE1] dark:text-[#A78BFA]',
-    button: 'bg-[#6C3CE1] hover:bg-[#7C4CE1]',
-    ring: 'ring-[#6C3CE1]/20',
+    avatar: 'from-[#1972F5] to-[#2563EB] shadow-[#1972F5]/25',
+    border: 'border-l-[#1972F5]',
+    borderFull: 'border-[#1972F5]/20',
+    text: 'text-[#1972F5] dark:text-[#60A5FA]',
+    textDark: 'text-[#1972F5]',
+    badge: 'bg-[#1972F5]/5 dark:bg-[#1972F5]/10',
+    gradient: 'from-blue-50 to-sky-50 dark:from-[#1972F5]/5 dark:to-[#2563EB]/5',
+    gradientText: 'text-[#1972F5] dark:text-[#60A5FA]',
+    button: 'bg-[#1972F5] hover:bg-[#1565DB]',
+    ring: 'ring-[#1972F5]/20',
   }
 }

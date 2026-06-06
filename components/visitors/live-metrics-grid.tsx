@@ -23,7 +23,7 @@ export function LiveMetricsGrid({ visitor, recentClicks, theme = 'dashboard' }: 
       {/* Cursor */}
       <div className={cardClass}>
         <div className="flex items-center gap-1.5 mb-1">
-          <svg className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
           </svg>
           <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Cursor</p>
@@ -34,7 +34,7 @@ export function LiveMetricsGrid({ visitor, recentClicks, theme = 'dashboard' }: 
         {hasCursor && (
           <div className="mt-1.5 relative w-full h-1 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
             <div
-              className="absolute top-0 left-0 h-full bg-purple-500 rounded-full transition-all duration-150"
+              className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-150"
               style={{ width: `${Math.min(100, ((visitor.cursorX || 0) / (visitor.viewportW || 1440)) * 100)}%` }}
             />
           </div>
@@ -53,7 +53,7 @@ export function LiveMetricsGrid({ visitor, recentClicks, theme = 'dashboard' }: 
         {visitor.viewportW && (
           <div className="mt-1.5 flex justify-center">
             <div
-              className="border-2 border-purple-300 dark:border-purple-500/40 rounded-sm"
+              className="border-2 border-blue-300 dark:border-blue-500/40 rounded-sm"
               style={{
                 width: `${Math.min(48, (visitor.viewportW / 1920) * 48)}px`,
                 height: `${Math.min(28, ((visitor.viewportH || 900) / 1080) * 28)}px`,
@@ -77,7 +77,7 @@ export function LiveMetricsGrid({ visitor, recentClicks, theme = 'dashboard' }: 
         {scrollPercent !== null && (
           <div className="mt-1.5 w-full h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-500 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(100, scrollPercent)}%` }}
             />
           </div>

@@ -364,7 +364,7 @@ export default function AddonsPage() {
               {featuredAddons.map(addon => (
                 <div
                   key={addon.id}
-                  className="relative shrink-0 w-[340px] lg:w-[400px] rounded-2xl overflow-hidden border border-[var(--border)] bg-gradient-to-br from-[var(--primary)]/10 via-[var(--card)] to-purple-500/10 group cursor-pointer hover:shadow-xl hover:shadow-[var(--primary)]/10 transition-all duration-300"
+                  className="relative shrink-0 w-[340px] lg:w-[400px] rounded-2xl overflow-hidden border border-[var(--border)] bg-gradient-to-br from-[var(--primary)]/10 via-[var(--card)] to-blue-500/10 group cursor-pointer hover:shadow-xl hover:shadow-[var(--primary)]/10 transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent pointer-events-none" />
                   <div className="absolute top-4 right-4 z-10">
@@ -374,7 +374,7 @@ export default function AddonsPage() {
                   </div>
                   <div className="p-6 relative">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-purple-500/20 flex items-center justify-center text-4xl shadow-inner">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-blue-500/20 flex items-center justify-center text-4xl shadow-inner">
                         {addon.icon || '🧩'}
                       </div>
                       <StarRating rating={5} size={13} />
@@ -401,7 +401,7 @@ export default function AddonsPage() {
                       </div>
                       <button
                         onClick={() => setModalAddon(addon)}
-                        className="px-5 py-2.5 bg-gradient-to-r from-[var(--primary)] to-purple-500 hover:from-[var(--primary-hover)] hover:to-purple-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 hover:shadow-xl hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-2"
+                        className="px-5 py-2.5 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 hover:shadow-xl hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-2"
                       >
                         <ShoppingCart size={15} /> Hemen Satın Al
                       </button>
@@ -453,7 +453,7 @@ export default function AddonsPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${
                         addon.isFeatured
-                          ? 'bg-gradient-to-br from-[var(--primary)]/20 to-purple-500/20'
+                          ? 'bg-gradient-to-br from-[var(--primary)]/20 to-blue-500/20'
                           : 'bg-[var(--primary-light)]'
                       }`}>
                         {addon.icon || '🧩'}
@@ -527,7 +527,7 @@ export default function AddonsPage() {
                       ) : (
                         <button
                           onClick={() => setModalAddon(addon)}
-                          className="px-4 py-2 bg-gradient-to-r from-[var(--primary)] to-purple-500 hover:from-[var(--primary-hover)] hover:to-purple-600 text-white text-sm font-medium rounded-xl shadow-md shadow-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-1.5"
+                          className="px-4 py-2 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-medium rounded-xl shadow-md shadow-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-1.5"
                         >
                           <ShoppingCart size={14} /> Satın Al
                         </button>
@@ -543,7 +543,7 @@ export default function AddonsPage() {
             <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-16">
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/3 to-transparent pointer-events-none" />
               <div className="relative flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-purple-500/20 flex items-center justify-center text-4xl mb-5 shadow-inner">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-blue-500/20 flex items-center justify-center text-4xl mb-5 shadow-inner">
                   <Package size={36} className="text-[var(--primary)]/60" />
                 </div>
                 <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">Eklenti bulunamadı</h3>
@@ -581,7 +581,7 @@ export default function AddonsPage() {
                 </button>
 
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-purple-500/20 flex items-center justify-center text-3xl">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-blue-500/20 flex items-center justify-center text-3xl">
                     {modalAddon.icon || '🧩'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -596,7 +596,7 @@ export default function AddonsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-purple-500/5 border border-[var(--border)] p-4 mb-5">
+                <div className="rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-blue-500/5 border border-[var(--border)] p-4 mb-5">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-[var(--muted-foreground)]">Aylık Ücret</span>
                     <div className="text-right">
@@ -626,7 +626,7 @@ export default function AddonsPage() {
                   <button
                     onClick={() => handlePurchase(modalAddon.id)}
                     disabled={purchasingId === modalAddon.id}
-                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[var(--primary)] to-purple-500 hover:from-[var(--primary-hover)] hover:to-purple-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {purchasingId === modalAddon.id ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

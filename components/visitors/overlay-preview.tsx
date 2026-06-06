@@ -533,7 +533,7 @@ export function OverlayPreview({
           <div className="flex flex-col items-center gap-3 text-center px-6">
             <div className="w-14 h-14 rounded-2xl bg-red-500/10 grid place-items-center text-2xl">🚫</div>
             <p className="text-sm font-semibold text-white/90">Ziyaretçi ekran paylaşımını reddetti</p>
-            <button onClick={handleStart} className="mt-1 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] hover:opacity-90 transition-opacity">Tekrar Dene</button>
+            <button onClick={handleStart} className="mt-1 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] hover:opacity-90 transition-opacity">Tekrar Dene</button>
           </div>
         </div>
       )}
@@ -542,7 +542,7 @@ export function OverlayPreview({
       {privacyMode && isActive && (
         <div className="absolute inset-0 z-30 grid place-items-center bg-[#050816]/98 backdrop-blur-xl">
           <div className="flex flex-col items-center gap-4 text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 grid place-items-center text-3xl">🔒</div>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 grid place-items-center text-3xl">🔒</div>
             <div>
               <p className="text-lg font-bold text-white">Gizlilik nedeniyle ekran gizlendi</p>
               <p className="text-sm text-white/40 mt-1.5 leading-relaxed">
@@ -593,7 +593,7 @@ export function OverlayPreview({
             </p>
           </div>
           {visitor.isLive ? (
-            <button onClick={handleStart} className="mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#6C3CE1] to-[#8B5CF6] shadow-lg shadow-[#6C3CE1]/25 hover:shadow-[#6C3CE1]/40 hover:scale-[1.02] active:scale-95 transition-all">
+            <button onClick={handleStart} className="mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 hover:scale-[1.02] active:scale-95 transition-all">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
               Ekranı İzle
             </button>

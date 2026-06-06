@@ -44,9 +44,9 @@ export default function AdminSettingsPage() {
               <h3 className="font-semibold text-blue-700 dark:text-blue-400 text-sm">Başlangıç</h3>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">5 temsilci / 1.000 sohbet</p>
             </div>
-            <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
-              <h3 className="font-semibold text-purple-700 dark:text-purple-400 text-sm">Profesyonel</h3>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">15 temsilci / Sınırsız</p>
+            <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+              <h3 className="font-semibold text-blue-700 dark:text-blue-400 text-sm">Profesyonel</h3>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">15 temsilci / Sınırsız</p>
             </div>
             <div className="p-4 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
               <h3 className="font-semibold text-green-700 dark:text-green-400 text-sm">İş</h3>
