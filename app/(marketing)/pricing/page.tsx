@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta, type PlanId } from '@/lib/plan-cta'
-import { Check, Minus, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
+import { PLAN_LIMITS, type PlanType } from '@/lib/constants'
+import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { FadeIn } from '@/components/marketing/fade-in'
@@ -54,6 +55,75 @@ const PLANS = [
   },
 ]
 
+// ─── Plan card feature lists (from PLAN_LIMITS) ────────────────────────────
+
+function formatPlanCount(n: number): string {
+  if (n === Infinity) return 'Sınırsız'
+  return n.toLocaleString('tr-TR')
+}
+
+interface PlanCardFeature {
+  label: string
+  included: boolean
+}
+
+function buildPlanCardFeatures(planId: PlanType): PlanCardFeature[] {
+  const l = PLAN_LIMITS[planId]
+  const features: PlanCardFeature[] = [
+    { label: `${formatPlanCount(l.maxAgents)} temsilci`, included: true },
+    { label: `${formatPlanCount(l.maxConversationsPerMonth)} sohbet/ay`, included: true },
+    { label: 'Canlı sohbet widget\'ı', included: true },
+    { label: 'Paylaşımlı gelen kutusu', included: true },
+    { label: 'Temel analitik', included: true },
+    { label: 'Ziyaretçi takibi', included: l.visitorTracking },
+    { label: 'Chatbot oluşturucu', included: l.chatbot },
+    { label: 'Bilgi bankası', included: l.knowledgeBase },
+    { label: 'Bilet sistemi', included: l.ticketing },
+    { label: 'Hazır cevaplar', included: l.cannedResponses },
+    { label: 'CSAT puanlama', included: l.ratings },
+    { label: 'Proaktif mesajlar', included: l.proactiveMessages },
+    { label: 'Dosya paylaşımı', included: l.fileUpload },
+    { label: 'Ekran izleme & müdahale', included: l.overlayAI },
+    { label: 'AI otomatik yanıt & asistan', included: l.aiAssistant },
+    { label: '50+ dil otomatik çeviri', included: l.autoTranslate },
+    { label: 'E-posta kampanyaları', included: l.campaigns },
+    { label: 'Çoklu kanal (WhatsApp, Telegram…)', included: l.multiChannel },
+    { label: 'Otomasyon iş akışları', included: l.workflows },
+    { label: 'Durum sayfası', included: l.statusPage },
+    { label: 'API & Webhook', included: l.webhooks && l.apiAccess },
+    { label: 'Gelişmiş analitik', included: l.advancedAnalytics },
+    { label: 'Beyaz etiket (filigransız)', included: l.customBranding },
+  ]
+  if (planId === 'BUSINESS') {
+    features.push(
+      { label: 'Özel SLA garantisi (%99.9)', included: true },
+      { label: '7/24 öncelikli destek', included: true },
+    )
+  }
+  return features
+}
+
+function PlanFeatureList({ planId }: { planId: PlanType }) {
+  const features = buildPlanCardFeatures(planId)
+  return (
+    <ul className="mt-5 mb-5 flex-1 space-y-2 border-t border-slate-100 pt-5">
+      {features.map((f) => (
+        <li
+          key={f.label}
+          className={`flex items-start gap-2 text-xs leading-relaxed ${f.included ? 'text-slate-700' : 'text-slate-400'}`}
+        >
+          {f.included ? (
+            <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+          ) : (
+            <X className="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-0.5" />
+          )}
+          <span className={f.included ? '' : 'line-through decoration-slate-300/60'}>{f.label}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 // ─── Feature comparison table ────────────────────────────────────────────────
 
 type FeatureValue = boolean | string | null
@@ -89,6 +159,8 @@ const FEATURE_GROUPS: FeatureGroup[] = [
       { label: 'Mobil uygulama', free: true, starter: true, pro: true, business: true },
       { label: 'Sınırsız sohbet geçmişi', free: false, starter: true, pro: true, business: true },
       { label: 'Hazır cevaplar', free: false, starter: true, pro: true, business: true },
+      { label: 'Bilet sistemi', free: false, starter: true, pro: true, business: true },
+      { label: 'CSAT puanlama', free: false, starter: true, pro: true, business: true },
       { label: 'Dahili notlar', free: false, starter: true, pro: true, business: true },
       { label: 'Sohbet önceliklendirme', free: false, starter: true, pro: true, business: true },
       { label: 'Takip hatırlatıcıları', free: false, starter: true, pro: true, business: true },
@@ -142,6 +214,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
       { label: 'Chatbot oluşturucu', free: false, starter: true, pro: true, business: true },
       { label: 'Otomasyon iş akışları', free: false, starter: false, pro: true, business: true },
       { label: 'Kampanya gönderimi', free: false, starter: false, pro: true, business: true },
+      { label: 'Durum sayfası', free: false, starter: false, pro: true, business: true },
       { label: 'API & Webhook', free: false, starter: false, pro: true, business: true },
     ],
   },
@@ -346,6 +419,7 @@ export default function PricingPage() {
                         </div>
                       )}
                     </div>
+                    <PlanFeatureList planId={plan.id as PlanType} />
                     <Link
                       href={planCta(plan.id as PlanId).href}
                       className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all ${
