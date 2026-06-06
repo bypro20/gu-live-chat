@@ -18,33 +18,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        })
+        try {
+          const email = (credentials.email as string).trim().toLowerCase()
+          const user = await prisma.user.findUnique({
+            where: { email },
+          })
 
-        if (!user || !user.passwordHash) {
+          if (!user || !user.passwordHash) {
+            return null
+          }
+
+          if (user.isBanned) {
+            return null
+          }
+
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          )
+
+          if (!isValid) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+          }
+        } catch (err) {
+          console.error('[Auth] authorize error:', err)
           return null
-        }
-
-        if (user.isBanned) {
-          return null
-        }
-
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
-
-        if (!isValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
         }
       },
     }),
@@ -73,8 +79,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
+      // Credentials: authorize() already checked password + ban — avoid extra DB calls
+      // that can fail in serverless/Turso and incorrectly block admin login.
+      if (account?.provider === 'credentials') {
+        return true
+      }
+
       try {
-        // Ban check — applies to all providers
+        // Ban check — OAuth providers
         if (user?.email) {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
@@ -170,23 +182,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async jwt({ token, user, trigger }) {
       try {
-        // On first sign in, get role and activeWebsiteId from DB
-        if (user?.email) {
+        // On first sign-in, trust authorize() output immediately so a transient
+        // Turso/DB error cannot strip ADMIN role or user id from the session.
+        const signInRole = user ? (user as { role?: string }).role : undefined
+        if (user) {
+          if (user.id) token.id = user.id
+          if (user.email) token.email = user.email
+          if (signInRole) token.role = signInRole
+        }
+
+        // Refresh role and activeWebsiteId from DB when possible (never clear role on failure)
+        const email = (user?.email ?? token.email) as string | undefined
+        if (email) {
           const dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
+            where: { email: email.trim().toLowerCase() },
             select: { id: true, role: true, activeWebsiteId: true },
           })
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
             token.activeWebsiteId = dbUser.activeWebsiteId || undefined
+          } else if (signInRole && !token.role) {
+            token.role = signInRole
           }
         }
 
         // On session update, refresh from DB
         if (trigger === 'update' && token.email) {
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email as string },
+            where: { email: (token.email as string).trim().toLowerCase() },
             select: { id: true, role: true, activeWebsiteId: true },
           })
           if (dbUser) {
@@ -199,7 +223,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Lazy-load role if missing (e.g. after token rotation)
         if (!token.role && token.email) {
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email as string },
+            where: { email: (token.email as string).trim().toLowerCase() },
             select: { id: true, role: true, activeWebsiteId: true },
           })
           if (dbUser) {

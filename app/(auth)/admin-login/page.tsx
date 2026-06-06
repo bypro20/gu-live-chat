@@ -1,14 +1,30 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Shield } from 'lucide-react'
 
+const ADMIN_EMAIL = 'admin@guchat.org'
+
+/** signIn(redirect:false) sets the cookie asynchronously — poll until the session is readable. */
+async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const meRes = await fetch('/api/admin/me', {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+    if (meRes.ok) return true
+    // 403 = logged in but not ADMIN; don't retry
+    if (meRes.status === 403) return false
+    await new Promise((r) => setTimeout(r, delayMs))
+  }
+  const session = await getSession()
+  return session?.user?.role === 'ADMIN'
+}
+
 export default function AdminLoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,23 +35,28 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError('')
 
+    const normalizedEmail = email.trim().toLowerCase()
+    if (normalizedEmail !== ADMIN_EMAIL) {
+      setError('Bu panel sadece yöneticiler içindir.')
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await signIn('credentials', {
-        email,
+        email: normalizedEmail,
         password,
         redirect: false,
       })
 
       if (result?.ok) {
-        const sessionRes = await fetch('/api/auth/session')
-        const session = await sessionRes.json()
-
-        if (session?.user?.role === 'ADMIN') {
-          router.push('/admin')
-          router.refresh()
-        } else {
-          setError('Bu panel sadece yöneticiler içindir.')
+        const isAdmin = await waitForAdminSession()
+        if (isAdmin) {
+          // Full navigation so the new session cookie is always sent to /admin
+          window.location.href = '/admin'
+          return
         }
+        setError('Bu panel sadece yöneticiler içindir.')
       } else {
         setError('E-posta veya şifre hatalı')
       }
@@ -57,8 +78,10 @@ export default function AdminLoginPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-light rounded-xl mb-4">
               <Shield className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Yönetim Paneli</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Sadece yöneticiler giriş yapabilir</p>
+            <h1 className="text-2xl font-bold text-foreground">Guchat Yönetim Paneli</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              guchat.org · Sadece platform yöneticileri
+            </p>
           </div>
 
           {error && (
@@ -78,7 +101,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-muted/40 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="admin@gulive.com"
+                placeholder="admin@guchat.org"
                 required
               />
             </div>
@@ -117,10 +140,9 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-primary-light rounded-xl border border-primary/10">
-            <p className="text-xs text-muted-foreground text-center mb-1">Demo yönetici hesabı:</p>
-            <p className="text-xs text-foreground text-center font-mono">demo@gulive.com / demo123</p>
-          </div>
+          <p className="mt-6 text-xs text-muted-foreground text-center">
+            Yönetici hesabınızla giriş yapın.
+          </p>
 
           <div className="mt-4 text-center">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-primary transition">
