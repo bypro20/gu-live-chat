@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseCallback } from '@/lib/paytr'
-import { activateSubscription, handleFailedPayment } from '@/lib/subscription'
+import { parseCallback, parseMerchantOid } from '@/lib/paytr'
+import {
+  activateSubscription,
+  handleFailedPayment,
+  renewSubscriptionFromCallback,
+} from '@/lib/subscription'
+import { activateAddonFromPayment } from '@/lib/addon-purchase'
 import { prisma } from '@/lib/db'
 import { PLANS } from '@/lib/constants'
+import type { Plan } from '@/app/generated/prisma/client'
+
+async function findWebsiteForCallback(merchantOid: string) {
+  const byOid = await prisma.website.findUnique({
+    where: { paytrMerchantOid: merchantOid },
+    select: { websiteId: true, plan: true, subscriptionStatus: true },
+  })
+  if (byOid) return byOid
+
+  const parsed = parseMerchantOid(merchantOid)
+  if (!parsed) return null
+
+  return prisma.website.findFirst({
+    where: { websiteId: { endsWith: parsed.websiteIdSuffix } },
+    select: { websiteId: true, plan: true, subscriptionStatus: true },
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,17 +42,14 @@ export async function POST(request: NextRequest) {
     }
 
     const merchantOid = callbackData.merchantOid
-    const parts = merchantOid.split('_')
+    const parsed = parseMerchantOid(merchantOid)
 
-    if (parts.length < 2) {
+    if (!parsed) {
       console.error('[PayTR Callback] Invalid merchant_oid format:', merchantOid)
       return new NextResponse('INVALID', { status: 400 })
     }
 
-    const website = await prisma.website.findUnique({
-      where: { paytrMerchantOid: merchantOid },
-      select: { websiteId: true, plan: true, subscriptionStatus: true },
-    })
+    const website = await findWebsiteForCallback(merchantOid)
 
     if (!website) {
       console.error('[PayTR Callback] Website not found for merchant_oid:', merchantOid)
@@ -46,11 +65,33 @@ export async function POST(request: NextRequest) {
       return new NextResponse('OK', { status: 200 })
     }
 
-    if (callbackData.status === 'success') {
-      const planId = parts.length >= 3 ? parts[2] : 'FREE'
-      const validPlans = ['STARTER', 'PRO', 'BUSINESS']
-      const plan = validPlans.includes(planId) ? planId : 'STARTER'
+    if (parsed.kind === 'addon') {
+      if (callbackData.status === 'success') {
+        const addon = await prisma.addon.findUnique({
+          where: { slug: parsed.addonSlug },
+          select: { price: true },
+        })
+        if (addon && addon.price > 0 && callbackData.totalAmount !== addon.price) {
+          console.error(
+            `[PayTR Callback] Addon amount mismatch for ${merchantOid}: expected ${addon.price}, got ${callbackData.totalAmount}`
+          )
+          return new NextResponse('INVALID', { status: 400 })
+        }
+        await activateAddonFromPayment(website.websiteId, parsed.addonSlug)
+        console.log(`[PayTR Callback] Addon activated: ${parsed.addonSlug} for ${website.websiteId}`)
+      } else {
+        console.error(
+          `[PayTR Callback] Addon payment failed for ${website.websiteId}: ${callbackData.failedReasonMsg || 'Unknown'}`
+        )
+      }
+      return new NextResponse('OK', { status: 200 })
+    }
 
+    const validPlans = ['STARTER', 'PRO', 'BUSINESS']
+    const planId = validPlans.includes(parsed.planId) ? parsed.planId : 'STARTER'
+    const plan = planId as Plan
+
+    if (callbackData.status === 'success') {
       const planData = PLANS.find((p) => p.id === plan)
       const expectedAmount = planData ? Math.round(planData.price * 100) : 0
       if (expectedAmount > 0 && callbackData.totalAmount !== expectedAmount) {
@@ -60,17 +101,34 @@ export async function POST(request: NextRequest) {
         return new NextResponse('INVALID', { status: 400 })
       }
 
-      await activateSubscription(
-        website.websiteId,
-        plan as 'STARTER' | 'PRO' | 'BUSINESS',
-        merchantOid,
-        callbackData.utoken,
-        callbackData.ctoken
-      )
+      const isRenewal =
+        website.subscriptionStatus === 'ACTIVE' && website.plan === plan
 
-      console.log(`[PayTR Callback] Subscription activated: ${website.websiteId} -> ${plan}`)
+      if (isRenewal) {
+        await renewSubscriptionFromCallback(website.websiteId, merchantOid, plan)
+        console.log(`[PayTR Callback] Subscription renewed: ${website.websiteId}`)
+      } else {
+        await activateSubscription(
+          website.websiteId,
+          plan,
+          merchantOid,
+          callbackData.utoken,
+          callbackData.ctoken
+        )
+        console.log(`[PayTR Callback] Subscription activated: ${website.websiteId} -> ${plan}`)
+      }
     } else {
-      await handleFailedPayment(website.websiteId)
+      const isRecurringFailure =
+        website.subscriptionStatus === 'PAST_DUE' ||
+        (website.subscriptionStatus === 'ACTIVE' && website.plan === plan)
+
+      if (isRecurringFailure) {
+        await handleFailedPayment(website.websiteId)
+      } else {
+        console.log(
+          `[PayTR Callback] Checkout failed for ${website.websiteId}, not treating as recurring failure`
+        )
+      }
       console.error(
         `[PayTR Callback] Payment failed for ${website.websiteId}: ${callbackData.failedReasonMsg || 'Unknown reason'}`
       )

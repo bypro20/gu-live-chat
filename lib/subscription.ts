@@ -62,7 +62,6 @@ export async function activateSubscription(
     throw new Error(`Invalid plan: ${plan}`)
   }
 
-  // Calculate period end (30 days from now for paid plans)
   const periodStart = new Date()
   const currentPeriodEnd = new Date()
   currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30)
@@ -225,6 +224,11 @@ export async function renewSubscription(
 
   const merchantOid = generateMerchantOid(websiteId, website.plan)
 
+  await prisma.website.update({
+    where: { websiteId },
+    data: { paytrMerchantOid: merchantOid },
+  })
+
   const result = await processRecurringPayment({
     merchantOid,
     utoken: website.paytrUserToken,
@@ -280,6 +284,68 @@ export async function renewSubscription(
   // Payment failed
   await handleFailedPayment(websiteId)
   return { success: false, msg: result.msg || 'Recurring payment failed' }
+}
+
+// ─── Renew From Callback ──────────────────────────────────────────
+/**
+ * Extend an active subscription after a successful recurring payment callback.
+ * Period extends from the later of now or the existing period end.
+ */
+export async function renewSubscriptionFromCallback(
+  websiteId: string,
+  merchantOid: string,
+  plan: Plan
+): Promise<void> {
+  const planData = PLANS.find((p) => p.id === plan)
+  if (!planData) {
+    throw new Error(`Invalid plan: ${plan}`)
+  }
+
+  const website = await prisma.website.findUnique({
+    where: { websiteId },
+    select: { id: true, currentPeriodEnd: true },
+  })
+  if (!website) {
+    throw new Error('Website not found')
+  }
+
+  const now = new Date()
+  const base =
+    website.currentPeriodEnd && website.currentPeriodEnd > now
+      ? website.currentPeriodEnd
+      : now
+  const periodStart = new Date()
+  const newPeriodEnd = new Date(base)
+  newPeriodEnd.setDate(newPeriodEnd.getDate() + 30)
+
+  await prisma.website.update({
+    where: { websiteId },
+    data: {
+      subscriptionStatus: 'ACTIVE',
+      currentPeriodEnd: newPeriodEnd,
+      paytrMerchantOid: merchantOid,
+      failedPayments: 0,
+    },
+  })
+
+  if (planData.price > 0) {
+    try {
+      await prisma.invoice.create({
+        data: {
+          websiteId: website.id,
+          plan,
+          amount: planData.price * 100,
+          currency: 'TRY',
+          status: 'PAID',
+          periodStart,
+          periodEnd: newPeriodEnd,
+          paytrMerchantOid: merchantOid,
+        },
+      })
+    } catch (err) {
+      console.error('[Subscription] Failed to record renewal invoice:', err)
+    }
+  }
 }
 
 // ─── Initiate Checkout ─────────────────────────────────────────────

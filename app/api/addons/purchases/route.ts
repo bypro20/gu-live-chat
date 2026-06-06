@@ -89,6 +89,18 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Bu eklenti zaten satın alınmış' }, { status: 409 })
         }
 
+        if (addon.price > 0) {
+          return NextResponse.json(
+            {
+              error: 'Ücretli eklentiler için ödeme gerekli',
+              paymentRequired: true,
+              addonSlug: addon.slug,
+              price: addon.price,
+            },
+            { status: 402 }
+          )
+        }
+
         const expiresAt = addon.purchaseType === 'MONTHLY'
           ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           : addon.purchaseType === 'YEARLY'

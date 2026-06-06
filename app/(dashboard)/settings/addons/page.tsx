@@ -23,6 +23,16 @@ interface Addon {
   isFeatured: boolean
   version: string
   developer: string
+  featureKey?: string | null
+  requiredPlan?: string | null
+  includedInPlan?: boolean
+}
+
+const PLAN_BADGE: Record<string, { label: string; className: string }> = {
+  FREE: { label: 'Ücretsiz', className: 'bg-gray-500/10 text-gray-600' },
+  STARTER: { label: 'Başlangıç', className: 'bg-blue-500/10 text-blue-600' },
+  PRO: { label: 'Profesyonel', className: 'bg-purple-500/10 text-purple-600' },
+  BUSINESS: { label: 'Kurumsal', className: 'bg-amber-500/10 text-amber-600' },
 }
 
 interface Purchase {
@@ -82,6 +92,8 @@ export default function AddonsPage() {
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [purchasingId, setPurchasingId] = useState<string | null>(null)
+  const [purchaseError, setPurchaseError] = useState<string | null>(null)
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null)
   const [modalAddon, setModalAddon] = useState<Addon | null>(null)
   const categoryRef = useRef<HTMLDivElement>(null)
   const featuredRef = useRef<HTMLDivElement>(null)
@@ -95,6 +107,7 @@ export default function AddonsPage() {
           const data = await res.json()
           setAddons(data.addons || [])
           setPurchases(data.purchases || [])
+          setCurrentPlan(data.plan || null)
         }
       } catch (err) {
         console.error('Failed to fetch addons:', err)
@@ -134,22 +147,42 @@ export default function AddonsPage() {
     })
   }, [addons, activeCategory, searchQuery, purchasedAddonIds])
 
-  const handlePurchase = async (addonId: string) => {
+  const handlePurchase = async (addon: Addon) => {
     if (!activeWebsite) return
-    setPurchasingId(addonId)
+    setPurchasingId(addon.id)
+    setPurchaseError(null)
     try {
       const res = await fetch('/api/addons/purchases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId: activeWebsite.websiteId, addonId, action: 'purchase' }),
+        body: JSON.stringify({ websiteId: activeWebsite.websiteId, addonId: addon.id, action: 'purchase' }),
       })
+      const data = await res.json()
+
+      if (res.status === 402 && data.paymentRequired) {
+        const payRes = await fetch('/api/paytr/addon-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ websiteId: activeWebsite.websiteId, addonSlug: addon.slug }),
+        })
+        const payData = await payRes.json()
+        if (payRes.ok && payData.iframeUrl) {
+          window.location.href = payData.iframeUrl
+          return
+        }
+        setPurchaseError(payData.error || 'Ödeme başlatılamadı')
+        return
+      }
+
       if (res.ok) {
-        const data = await res.json()
-        setPurchases(prev => [...prev, { addonId, isActive: true, config: null, expiresAt: data.purchase.expiresAt, cancelledAt: null }])
+        setPurchases(prev => [...prev, { addonId: addon.id, isActive: true, config: null, expiresAt: data.purchase.expiresAt, cancelledAt: null }])
         setModalAddon(null)
+      } else {
+        setPurchaseError(data.error || 'Satın alma başarısız')
       }
     } catch (err) {
       console.error('Purchase failed:', err)
+      setPurchaseError('Bağlantı hatası')
     } finally {
       setPurchasingId(null)
     }
@@ -249,6 +282,12 @@ export default function AddonsPage() {
             </div>
           </div>
         </div>
+
+        {purchaseError && (
+          <div className="p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">
+            {purchaseError}
+          </div>
+        )}
 
         {/* CATEGORY TABS */}
         <div className="relative">
@@ -435,11 +474,14 @@ export default function AddonsPage() {
               const isPurchased = purchasedAddonIds.has(addon.id)
               const purchase = activePurchaseMap.get(addon.id)
               const isActive = purchase?.isActive ?? false
+              const planBadge = addon.requiredPlan ? PLAN_BADGE[addon.requiredPlan] : null
+              const isPlanIncluded = addon.includedInPlan === true
+              const isLocked = !isPurchased && !isPlanIncluded && !!addon.requiredPlan
 
               return (
                 <div
                   key={addon.id}
-                  className="group relative rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-[var(--primary)]/8 hover:-translate-y-1 hover:border-[var(--primary)]/30"
+                  className={`group relative rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-[var(--primary)]/8 hover:-translate-y-1 hover:border-[var(--primary)]/30 ${isLocked ? 'opacity-90' : ''}`}
                 >
                   {addon.isFeatured && (
                     <div className="absolute top-4 right-4 z-10">
@@ -458,12 +500,26 @@ export default function AddonsPage() {
                       }`}>
                         {addon.icon || '🧩'}
                       </div>
-                      {addon.category && (
-                        <span className="px-2 py-0.5 bg-[var(--primary-light)] text-[var(--primary)] text-[10px] font-medium rounded-md shrink-0">
-                          {CATEGORY_LABELS[addon.category] || addon.category}
-                        </span>
-                      )}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        {planBadge && (
+                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${planBadge.className}`}>
+                            {isPlanIncluded ? `✓ ${planBadge.label} dahil` : `${planBadge.label}+`}
+                          </span>
+                        )}
+                        {addon.category && (
+                          <span className="px-2 py-0.5 bg-[var(--primary-light)] text-[var(--primary)] text-[10px] font-medium rounded-md">
+                            {CATEGORY_LABELS[addon.category] || addon.category}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {isLocked && (
+                      <div className="flex items-center gap-1.5 mb-2 text-[10px] text-amber-600 dark:text-amber-400">
+                        <AlertCircle size={12} />
+                        <span>Plan yükseltme veya eklenti satın alma gerekli</span>
+                      </div>
+                    )}
 
                     <h3 className="text-[15px] font-bold text-[var(--foreground)] mb-1.5 group-hover:text-[var(--primary)] transition-colors">{addon.name}</h3>
                     <p className="text-xs text-[var(--muted-foreground)] leading-relaxed line-clamp-2 mb-3">{addon.description}</p>
@@ -514,7 +570,7 @@ export default function AddonsPage() {
                         </div>
                       ) : addon.price === 0 ? (
                         <button
-                          onClick={() => handlePurchase(addon.id)}
+                          onClick={() => handlePurchase(addon)}
                           disabled={purchasingId === addon.id}
                           className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-medium rounded-xl shadow-md shadow-green-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
@@ -624,7 +680,7 @@ export default function AddonsPage() {
                     İptal
                   </button>
                   <button
-                    onClick={() => handlePurchase(modalAddon.id)}
+                    onClick={() => handlePurchase(modalAddon)}
                     disabled={purchasingId === modalAddon.id}
                     className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
