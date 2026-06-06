@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
+import { Download } from 'lucide-react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useToast } from '@/lib/toast'
 
 async function fetcher(url: string) {
   const res = await fetch(url)
@@ -12,7 +14,32 @@ async function fetcher(url: string) {
 
 export default function AnalyticsPage() {
   const { activeWebsite } = useActiveWebsite()
+  const { toast } = useToast()
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('7d')
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport(type: 'conversations' | 'visitors' | 'team') {
+    if (!activeWebsite?.websiteId) return
+    setExporting(true)
+    try {
+      const res = await fetch(
+        `/api/analytics/export?websiteId=${activeWebsite.websiteId}&period=${period}&type=${type}`
+      )
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `gu-chat-${type}-${period}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast({ title: 'CSV indirildi', variant: 'success' })
+    } catch {
+      toast({ title: 'Dışa aktarma başarısız', variant: 'error' })
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const websiteId = activeWebsite?.websiteId || ''
 
@@ -43,7 +70,28 @@ export default function AnalyticsPage() {
             {activeWebsite ? `${activeWebsite.name} — ` : ''}Performans metrikleri
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative group">
+            <button
+              disabled={!websiteId || exporting}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card hover:bg-muted transition disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              CSV
+            </button>
+            <div className="absolute right-0 top-full mt-1 hidden group-hover:block group-focus-within:block z-10 min-w-[160px] surface p-1 shadow-lg">
+              {(['conversations', 'visitors', 'team'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => handleExport(t)}
+                  disabled={exporting}
+                  className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition"
+                >
+                  {t === 'conversations' ? 'Sohbetler' : t === 'visitors' ? 'Ziyaretçiler' : 'Ekip'}
+                </button>
+              ))}
+            </div>
+          </div>
           {(['7d', '30d', '90d'] as const).map((p) => (
             <button
               key={p}
