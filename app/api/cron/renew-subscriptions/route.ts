@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const providedSecret = authHeader?.replace('Bearer ', '')
 
+  if (!cronSecret) {
+    console.error('[Cron] CRON_SECRET ortam değişkeni tanımlı değil — endpoint herkese açık!')
+  }
+
   if (cronSecret && providedSecret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

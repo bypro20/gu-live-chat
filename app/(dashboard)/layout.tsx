@@ -101,6 +101,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         { href: '/settings/billing', icon: 'billing', label: 'Faturalama', badge: null },
       ],
     },
+    {
+      title: 'Hesap',
+      items: [
+        { href: '/settings/privacy', icon: 'shield', label: 'Gizlilik & KVKK', badge: null },
+      ],
+    },
   ]
 
   const handleSignOut = async () => {
@@ -447,6 +453,11 @@ function SidebarLink({ href, icon, label, badge, active }: {
     status: (
       <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
+      </svg>
+    ),
+    shield: (
+      <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
       </svg>
     ),
   }

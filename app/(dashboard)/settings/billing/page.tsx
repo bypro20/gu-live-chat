@@ -115,12 +115,12 @@ export default function BillingPage() {
     if (paymentStatus === 'success') {
       setMessage({ type: 'success', text: 'Ödeme başarıyla tamamlandı! Planınız güncelleniyor...' })
       // Clean URL
-      window.history.replaceState({}, '', '/dashboard/settings/billing')
+      window.history.replaceState({}, '', '/settings/billing')
       // Refresh subscription status
       setTimeout(() => { fetchSubscription(); fetchInvoices(); fetchTrialInfo() }, 2000)
     } else if (paymentStatus === 'failed') {
       setMessage({ type: 'error', text: 'Ödeme başarısız oldu. Lütfen tekrar deneyin.' })
-      window.history.replaceState({}, '', '/dashboard/settings/billing')
+      window.history.replaceState({}, '', '/settings/billing')
     }
   }, [fetchSubscription, fetchInvoices])
 

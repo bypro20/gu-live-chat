@@ -308,6 +308,13 @@ export async function initiateCheckout(
 
   const merchantOid = generateMerchantOid(websiteId, planId)
 
+  // Persist merchantOid BEFORE calling PayTR so the callback can find the
+  // website by this field regardless of whether payment succeeds or fails.
+  await prisma.website.update({
+    where: { websiteId },
+    data: { paytrMerchantOid: merchantOid },
+  })
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   const result = await createPaymentToken({
@@ -319,8 +326,8 @@ export async function initiateCheckout(
     paymentAmount: plan.price,
     currency: 'TL',
     installmentCount: 0, // Single payment
-    okUrl: `${baseUrl}/dashboard/settings/billing?payment=success`,
-    failUrl: `${baseUrl}/dashboard/settings/billing?payment=failed`,
+    okUrl: `${baseUrl}/settings/billing?payment=success`,
+    failUrl: `${baseUrl}/settings/billing?payment=failed`,
     storeCard: true, // Required for recurring payments
   })
 

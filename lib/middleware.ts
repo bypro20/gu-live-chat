@@ -79,7 +79,7 @@ export function forbiddenError(message = 'Bu işlem için yetkiniz yok') {
   })
 }
 
-export function planLimitError(feature: string, upgradeUrl = '/dashboard/settings/billing') {
+export function planLimitError(feature: string, upgradeUrl = '/settings/billing') {
   return new Response(
     JSON.stringify({
       error: `Bu özellik mevcut planınızda bulunmuyor. Yükseltme için: ${upgradeUrl}`,
