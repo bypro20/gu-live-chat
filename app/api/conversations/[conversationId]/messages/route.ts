@@ -21,6 +21,27 @@ export async function GET(
   const cursor = searchParams.get('cursor')
   const limit = parseInt(searchParams.get('limit') || '50')
 
+  // Tenant isolation: the conversation must exist and the requester must be a
+  // member of the website that owns it. Without this check any authenticated
+  // user could read another tenant's messages by guessing a conversationId.
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { websiteId: true },
+  })
+
+  if (!conversation) {
+    return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
+  }
+
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: conversation.websiteId, userId: session.user.id },
+    select: { id: true },
+  })
+
+  if (!member) {
+    return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+  }
+
   const messages = await prisma.message.findMany({
     where: { conversationId },
     include: {

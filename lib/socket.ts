@@ -44,7 +44,34 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent Authentication ──────────────────────────────────
     socket.on('agent:auth', async (data: { userId: string; websiteIds: string[] }) => {
-      const { userId, websiteIds } = data
+      const { userId } = data
+      const requestedWebsiteIds = Array.isArray(data.websiteIds) ? data.websiteIds : []
+
+      // Tenant isolation: never trust the client-supplied website list. Only
+      // let this user join the rooms of websites they are actually a member of.
+      // `requestedWebsiteIds` are public websiteIds; membership is stored
+      // against the internal website id, so we resolve through the relation.
+      let websiteIds: string[] = []
+      if (userId && requestedWebsiteIds.length > 0) {
+        try {
+          const memberships = await prisma.teamMember.findMany({
+            where: {
+              userId,
+              website: { websiteId: { in: requestedWebsiteIds } },
+            },
+            select: { website: { select: { websiteId: true } } },
+          })
+          websiteIds = memberships.map((m) => m.website.websiteId)
+        } catch (err) {
+          console.error('[Socket] agent:auth membership check failed:', err)
+          return
+        }
+      }
+
+      if (websiteIds.length === 0) {
+        console.warn(`[Socket] agent:auth denied for user ${userId}: no verified website membership`)
+        return
+      }
 
       // Store userId on socket for cleanup
       ;(socket as any).userId = userId

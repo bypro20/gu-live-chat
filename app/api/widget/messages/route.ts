@@ -12,6 +12,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const conversationId = searchParams.get('conversationId')
     const fingerprint = searchParams.get('fingerprint')
+    // Optional public websiteId — when sent by the widget it must match the
+    // conversation's website, adding a second tenant-scoping guard on top of
+    // the fingerprint ownership check.
+    const websiteId = searchParams.get('websiteId')
 
     if (!conversationId || !fingerprint) {
       return NextResponse.json({ error: 'Eksik parametre' }, { status: 400 })
@@ -23,6 +27,7 @@ export async function GET(req: Request) {
         id: true,
         status: true,
         visitor: { select: { fingerprint: true } },
+        website: { select: { websiteId: true } },
       },
     })
 
@@ -32,6 +37,11 @@ export async function GET(req: Request) {
 
     // Ensure the requester actually owns this conversation.
     if (conversation.visitor?.fingerprint !== fingerprint) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+    }
+
+    // Reject mismatched tenant when the widget provides its websiteId.
+    if (websiteId && conversation.website?.websiteId !== websiteId) {
       return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
 

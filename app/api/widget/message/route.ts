@@ -72,6 +72,24 @@ export async function POST(req: Request) {
     let conversationId = validated.conversationId
     let isNewConversation = false
 
+    // If the client supplied a conversationId, it must actually belong to this
+    // website AND this visitor. Otherwise a malicious visitor could append
+    // messages to another tenant's conversation (cross-tenant IDOR write).
+    if (conversationId) {
+      const owned = await prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          websiteId: website.id,
+          visitorId: visitor.id,
+        },
+        select: { id: true },
+      })
+      if (!owned) {
+        // Ignore the spoofed id and fall back to the find-or-create flow below.
+        conversationId = null
+      }
+    }
+
     if (!conversationId) {
       // Check for open conversation
       const existing = await prisma.conversation.findFirst({

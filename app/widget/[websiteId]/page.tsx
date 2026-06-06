@@ -442,7 +442,7 @@ export default function WidgetPage() {
       try {
         const fp = getFingerprint()
         const res = await fetch(
-          `/api/widget/messages?conversationId=${encodeURIComponent(conversationId)}&fingerprint=${encodeURIComponent(fp)}`
+          `/api/widget/messages?conversationId=${encodeURIComponent(conversationId)}&fingerprint=${encodeURIComponent(fp)}&websiteId=${encodeURIComponent(websiteId)}`
         )
         if (!res.ok) return
         const data = await res.json()
