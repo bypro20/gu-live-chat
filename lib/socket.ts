@@ -163,8 +163,21 @@ export function initSocketServer(httpServer: HTTPServer) {
       console.log(`[Socket] Visitor ${visitorId.substring(0, 8)}... connected to website ${websiteId} (room: website:${websiteId})`)
     })
 
+    // ─── Join Conversation Rooms ───────────────────────────────
+    socket.on('agent:join-conversation', (data: { conversationId: string }) => {
+      if (data.conversationId) {
+        socket.join(`conversation:${data.conversationId}`)
+      }
+    })
+
+    socket.on('visitor:join-conversation', (data: { conversationId: string }) => {
+      if (data.conversationId) {
+        socket.join(`conversation:${data.conversationId}`)
+      }
+    })
+
     // ─── Agent Messages ────────────────────────────────────────
-    socket.on('agent:message', (data: { conversationId: string; content: string; type: string; senderId: string; senderName: string }) => {
+    socket.on('agent:message', (data: { conversationId: string; websiteId?: string; content: string; type: string; senderId: string; senderName: string }) => {
       const { conversationId, content, type, senderId, senderName } = data
 
       // Broadcast to visitor and other agents in the conversation
@@ -179,14 +192,16 @@ export function initSocketServer(httpServer: HTTPServer) {
       })
 
       // Notify all agents in the website about updated conversation
-      socket.to(`website:${data.conversationId}`).emit('agent:conversation:updated', {
-        conversationId,
-        lastMessage: content.substring(0, 100),
-      })
+      if (data.websiteId) {
+        io.to(`website:${data.websiteId}`).emit('agent:conversation:updated', {
+          conversationId,
+          lastMessage: content.substring(0, 100),
+        })
+      }
     })
 
     // ─── Visitor Messages ──────────────────────────────────────
-    socket.on('visitor:message', (data: { conversationId: string; content: string; type: string; visitorId: string }) => {
+    socket.on('visitor:message', (data: { conversationId: string; websiteId?: string; content: string; type: string; visitorId: string }) => {
       const { conversationId, content, type, visitorId } = data
 
       io.to(`conversation:${conversationId}`).emit('agent:message', {
@@ -199,11 +214,13 @@ export function initSocketServer(httpServer: HTTPServer) {
         createdAt: new Date().toISOString(),
       })
 
-      io.to(`website:${conversationId}`).emit('agent:conversation:new', {
-        conversationId,
-        visitorId,
-        lastMessage: content.substring(0, 100),
-      })
+      if (data.websiteId) {
+        io.to(`website:${data.websiteId}`).emit('agent:conversation:new', {
+          conversationId,
+          visitorId,
+          lastMessage: content.substring(0, 100),
+        })
+      }
     })
 
     // ─── Typing Indicators ──────────────────────────────────────

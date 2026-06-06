@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket-client'
+import { connectSocket, getSocket, retainSocket, releaseSocket } from '@/lib/socket-client'
 import type { Socket } from 'socket.io-client'
 
 interface WidgetConfig {
@@ -285,13 +285,14 @@ export default function WidgetPage() {
   useEffect(() => {
     if (!isInitialized || !visitorTokenRef.current) return
 
-    const socket = connectSocket()
+    const socket = retainSocket()
 
     socket.on('connect', () => {
       setSocketConnected(true)
       socket.emit('visitor:auth', {
         visitorToken: visitorTokenRef.current,
         websiteId,
+        conversationId: conversationId || undefined,
       })
     })
 
@@ -374,9 +375,29 @@ export default function WidgetPage() {
     })
 
     return () => {
-      disconnectSocket()
+      releaseSocket()
     }
-  }, [isInitialized, websiteId])
+  }, [isInitialized, websiteId, conversationId])
+
+  // Join conversation room when conversationId is set
+  useEffect(() => {
+    if (!conversationId) return
+
+    const socket = getSocket() || connectSocket()
+    const join = () => {
+      socket.emit('visitor:join-conversation', { conversationId })
+    }
+
+    if (socket.connected) {
+      join()
+    } else {
+      socket.on('connect', join)
+    }
+
+    return () => {
+      socket.off('connect', join)
+    }
+  }, [conversationId])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

@@ -3,6 +3,7 @@
 import { io, Socket } from 'socket.io-client'
 
 let socket: Socket | null = null
+let retainCount = 0
 
 export function getSocket(): Socket | null {
   return socket
@@ -36,7 +37,21 @@ export function connectSocket(): Socket {
   return socket
 }
 
+export function retainSocket(): Socket {
+  retainCount++
+  return connectSocket()
+}
+
+export function releaseSocket() {
+  retainCount = Math.max(0, retainCount - 1)
+  if (retainCount === 0 && socket) {
+    socket.disconnect()
+    socket = null
+  }
+}
+
 export function disconnectSocket() {
+  retainCount = 0
   if (socket) {
     socket.disconnect()
     socket = null

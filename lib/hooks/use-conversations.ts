@@ -90,7 +90,7 @@ export function useConversations(options?: {
     activeWebsite ? url : null,
     fetcher,
     {
-      refreshInterval: 5000, // Poll every 5 seconds for new conversations
+      refreshInterval: 30000, // Fallback poll; real-time via socket
       revalidateOnFocus: true,
     }
   )

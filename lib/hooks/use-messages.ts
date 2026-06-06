@@ -48,7 +48,7 @@ export function useMessages(conversationId: string | null) {
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
     fetcher,
     {
-      refreshInterval: 3000, // Poll every 3 seconds for new messages
+      refreshInterval: 30000, // Fallback poll; real-time via socket
       revalidateOnFocus: true,
     }
   )

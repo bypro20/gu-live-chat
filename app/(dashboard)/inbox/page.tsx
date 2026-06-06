@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
-import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket-client'
+import { retainSocket, releaseSocket } from '@/lib/socket-client'
 
 // ─── Conversation List Item ─────────────────────────────────────────
 
@@ -178,6 +179,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
 // ─── Main Page ──────────────────────────────────────────────────────
 
 export default function InboxPage() {
+  const { data: session } = useSession()
   const { activeWebsite } = useActiveWebsite()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'OPEN' | 'PENDING' | 'RESOLVED'>('all')
@@ -187,47 +189,131 @@ export default function InboxPage() {
   const [autoTranslate, setAutoTranslate] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { conversations, total, isLoading, error } = useConversations({
+  const { conversations, total, isLoading, error, mutate: mutateConversations } = useConversations({
     status: filter,
     search: search || undefined,
     page: 1,
     limit: 50,
   })
 
-  const { messages, isLoading: messagesLoading, sendMessage, sending } = useMessages(selectedId)
+  const { messages, isLoading: messagesLoading, sendMessage, sending, mutate: mutateMessages } = useMessages(selectedId)
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Socket connection for typing preview
+  // Socket connection for real-time messages and typing preview
   useEffect(() => {
-    const socket = connectSocket()
+    if (!session?.user?.id || !activeWebsite?.websiteId) return
 
-    socket.on('visitor:typing-preview', (data: { conversationId: string; content: string }) => {
+    const socket = retainSocket()
+
+    const onTypingPreview = (data: { conversationId: string; content: string }) => {
       setTypingPreview(data)
-    })
+    }
 
-    socket.on('visitor:typing-preview:clear', (data: { conversationId: string }) => {
+    const onTypingPreviewClear = (data: { conversationId: string }) => {
       setTypingPreview((prev) => prev?.conversationId === data.conversationId ? null : prev)
-    })
+    }
 
-    socket.on('agent:typing:stop', (data: { conversationId: string }) => {
+    const onAgentTypingStop = (data: { conversationId: string }) => {
       setTypingPreview((prev) => prev?.conversationId === data.conversationId ? null : prev)
-    })
+    }
 
-    if (activeWebsite) {
+    const onAgentMessage = (data: {
+      id: string
+      conversationId: string
+      content: string
+      type: string
+      senderType: string
+      createdAt: string
+      senderId?: string
+    }) => {
+      if (data.conversationId !== selectedId) {
+        mutateConversations()
+        return
+      }
+      mutateMessages((current) => {
+        if (!current) return current
+        if (current.messages.some((m) => m.id === data.id)) return current
+        return {
+          ...current,
+          messages: [
+            ...current.messages,
+            {
+              id: data.id,
+              conversationId: data.conversationId,
+              content: data.content,
+              type: data.type,
+              senderType: data.senderType,
+              senderId: data.senderId ?? null,
+              createdAt: data.createdAt,
+              readAt: null,
+              attachments: [],
+            },
+          ],
+        }
+      }, { revalidate: false })
+      mutateConversations()
+    }
+
+    const onConversationUpdate = () => {
+      mutateConversations()
+    }
+
+    socket.on('visitor:typing-preview', onTypingPreview)
+    socket.on('visitor:typing-preview:clear', onTypingPreviewClear)
+    socket.on('agent:typing:stop', onAgentTypingStop)
+    socket.on('agent:message', onAgentMessage)
+    socket.on('agent:conversation:updated', onConversationUpdate)
+    socket.on('agent:conversation:new', onConversationUpdate)
+
+    const authenticate = () => {
       socket.emit('agent:auth', {
-        userId: 'inbox-agent',
-        websiteIds: [activeWebsite.id],
+        userId: session.user.id,
+        websiteIds: [activeWebsite.websiteId],
       })
     }
 
-    return () => {
-      disconnectSocket()
+    if (socket.connected) {
+      authenticate()
+    } else {
+      socket.on('connect', authenticate)
     }
-  }, [activeWebsite])
+
+    return () => {
+      socket.off('visitor:typing-preview', onTypingPreview)
+      socket.off('visitor:typing-preview:clear', onTypingPreviewClear)
+      socket.off('agent:typing:stop', onAgentTypingStop)
+      socket.off('agent:message', onAgentMessage)
+      socket.off('agent:conversation:updated', onConversationUpdate)
+      socket.off('agent:conversation:new', onConversationUpdate)
+      socket.off('connect', authenticate)
+      releaseSocket()
+    }
+  }, [activeWebsite?.websiteId, session?.user?.id, selectedId, mutateMessages, mutateConversations])
+
+  // Join conversation room when selected
+  useEffect(() => {
+    if (!selectedId || !session?.user?.id) return
+
+    const socket = retainSocket()
+    const join = () => {
+      socket.emit('agent:join-conversation', { conversationId: selectedId })
+    }
+
+    if (socket.connected) {
+      join()
+    } else {
+      socket.on('connect', join)
+    }
+
+    return () => {
+      socket.off('connect', join)
+      releaseSocket()
+    }
+  }, [selectedId, session?.user?.id])
 
   const handleSend = async () => {
     if (!messageText.trim() || sending) return

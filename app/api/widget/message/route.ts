@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { emitVisitorMessage } from '@/lib/socket-events'
+import { notifyWebsiteMembers } from '@/lib/notifications'
 
 const widgetMessageSchema = z.object({
   websiteId: z.string(),
@@ -57,6 +59,7 @@ export async function POST(req: Request) {
 
     // Find or create conversation
     let conversationId = validated.conversationId
+    let isNewConversation = false
 
     if (!conversationId) {
       // Check for open conversation
@@ -84,6 +87,7 @@ export async function POST(req: Request) {
           },
         })
         conversationId = conversation.id
+        isNewConversation = true
       }
     }
 
@@ -106,6 +110,28 @@ export async function POST(req: Request) {
         lastMessagePreview: validated.content.substring(0, 100),
         unreadCount: { increment: 1 },
       },
+    })
+
+    emitVisitorMessage({
+      conversationId,
+      websiteId: website.websiteId,
+      message: {
+        id: message.id,
+        content: message.content,
+        type: message.type,
+        visitorId: visitor.id,
+        createdAt: message.createdAt,
+      },
+      isNewConversation,
+    })
+
+    const visitorName = visitor.name || visitor.email?.split('@')[0] || 'Ziyaretçi'
+    await notifyWebsiteMembers({
+      websiteId: website.id,
+      type: 'NEW_MESSAGE',
+      title: 'Yeni mesaj',
+      message: `${visitorName} bir mesaj gönderdi`,
+      data: { conversationId },
     })
 
     return NextResponse.json({

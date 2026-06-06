@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { sendMessageSchema } from '@/lib/validators/message'
+import { emitAgentMessage } from '@/lib/socket-events'
 
 export async function GET(
   req: Request,
@@ -52,6 +53,23 @@ export async function POST(
     const body = await req.json()
     const validated = sendMessageSchema.parse(body)
 
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { website: { select: { id: true, websiteId: true } } },
+    })
+
+    if (!conversation) {
+      return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
+    }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { websiteId: conversation.websiteId, userId: session.user.id },
+    })
+
+    if (!member) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+    }
+
     const message = await prisma.message.create({
       data: {
         conversationId,
@@ -73,6 +91,19 @@ export async function POST(
       data: {
         lastMessageAt: new Date(),
         lastMessagePreview: validated.content.substring(0, 100),
+      },
+    })
+
+    emitAgentMessage({
+      conversationId,
+      websiteId: conversation.website.websiteId,
+      message: {
+        id: message.id,
+        content: message.content,
+        type: message.type,
+        senderId: session.user.id,
+        senderName: message.sender?.name || 'Temsilci',
+        createdAt: message.createdAt,
       },
     })
 
