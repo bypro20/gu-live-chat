@@ -3,6 +3,10 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { parseIncomingWebhook, markWhatsAppMessageRead, WhatsAppConfig } from '@/lib/channels/whatsapp'
 import { emitVisitorMessage } from '@/lib/socket-events'
+import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
+import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
+import { analyzeSentiment } from '@/lib/ai/sentiment'
+import { websiteHasFeature } from '@/lib/addon-features'
 
 // ─── Webhook Verification (GET) ───────────────────────────────────────
 // Meta sends this when you register the webhook URL in the Developer Console.
@@ -106,6 +110,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'no_integration' })
     }
 
+    if (!(await websiteHasFeature(integration.websiteId, integration.website.plan, 'multiChannel'))) {
+      console.warn('[WhatsApp Webhook] Plan does not include multi-channel for', integration.website.websiteId)
+      return NextResponse.json({ status: 'plan_denied' })
+    }
+
     const cfg = JSON.parse(integration.config || '{}') as WhatsAppConfig
 
     for (const msg of messages) {
@@ -158,6 +167,8 @@ export async function POST(request: NextRequest) {
         isNewConversation = true
       }
 
+      const sentiment = analyzeSentiment(content)
+
       // Save message
       const message = await prisma.message.create({
         data: {
@@ -166,6 +177,7 @@ export async function POST(request: NextRequest) {
           type: msg.type === 'text' ? 'TEXT' : 'FILE',
           senderType: 'VISITOR',
           status: 'SENT',
+          sentiment,
         },
       })
 
@@ -191,7 +203,33 @@ export async function POST(request: NextRequest) {
         isNewConversation,
       })
 
-      // Mark as read
+      const priorConversations = await prisma.conversation.count({
+        where: { visitorId: visitor.id, websiteId: integration.websiteId },
+      })
+
+      const { resolveAgentsOnline } = await import('@/lib/agents-online')
+      const agentsOnline = await resolveAgentsOnline(
+        integration.website.websiteId,
+        integration.websiteId
+      )
+
+      await processChatbotOnVisitorMessage({
+        websiteDbId: integration.websiteId,
+        websitePublicId: integration.website.websiteId,
+        conversationId: conversation.id,
+        visitorId: visitor.id,
+        messageContent: content,
+        isFirstVisit: isNewConversation || priorConversations <= 1,
+        agentsOnline,
+      })
+
+      await maybeRunAiAutoReply({
+        websiteDbId: integration.websiteId,
+        websitePublicId: integration.website.websiteId,
+        conversationId: conversation.id,
+        visitorId: visitor.id,
+      })
+
       markWhatsAppMessageRead(cfg, msg.id)
     }
 

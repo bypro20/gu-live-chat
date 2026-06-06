@@ -47,6 +47,8 @@ export interface GenerateAiReplyParams {
   /** Optional identifiers for logging/diagnostics only. */
   websiteId?: string
   conversationId?: string
+  /** Visitor CRM context appended to the system prompt. */
+  visitorContext?: string
 }
 
 const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini'
@@ -115,7 +117,12 @@ function knowledgeToText(knowledge?: KnowledgeEntry[]): string {
     .join('\n\n')
 }
 
-function buildSystemPrompt(siteName: string, knowledge?: KnowledgeEntry[], custom?: string): string {
+function buildSystemPrompt(
+  siteName: string,
+  knowledge?: KnowledgeEntry[],
+  custom?: string,
+  visitorContext?: string
+): string {
   const base =
     custom?.trim() ||
     `Sen ${siteName} destek ekibinin bir üyesisin. İnsan gibi, sıcak ve samimi bir dille yazıyorsun — ` +
@@ -124,15 +131,18 @@ function buildSystemPrompt(siteName: string, knowledge?: KnowledgeEntry[], custo
       `Bilmediğin bir şeyi asla uydurma; "biraz araştırayım" ya da "bu konuda sizi yönlendireyim" ` +
       `gibi doğal bir geçiş yap. Asla "yapay zeka", "bot" veya "asistan" kelimelerini kullanma.`
 
+  let prompt = base
+  if (visitorContext?.trim()) {
+    prompt += `\n\nZiyaretçi bilgisi: ${visitorContext.trim()}`
+  }
+
   const kb = knowledgeToText(knowledge)
   if (kb) {
-    return (
-      `${base}\n\n` +
-      `Aşağıda ${siteName} hakkında bilgi tabanı var. Soruyla ilgiliyse bu bilgilere dayan, ` +
+    prompt +=
+      `\n\nAşağıda ${siteName} hakkında bilgi tabanı var. Soruyla ilgiliyse bu bilgilere dayan, ` +
       `ama metni aynen kopyalama — kendi cümlelenle akıcı biçimde aktarmanı bekliyoruz:\n\n${kb}`
-    )
   }
-  return base
+  return prompt
 }
 
 // ─── Rule / knowledge-based fallback (no API key) ───────────────────
@@ -222,7 +232,7 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
     return fallbackReply(siteName, messages, knowledge)
   }
 
-  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt)
+  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, params.visitorContext)
 
   try {
     if (runtime.provider === 'OPENAI') {

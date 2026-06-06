@@ -2,48 +2,60 @@ import { prisma } from '../db'
 import { emitBotMessage } from '../socket-events'
 import { generateAiReply } from './provider'
 import { loadKnowledge, toChatMessages } from './knowledge'
+import { loadVisitorContext } from './visitor-context'
+import { isChatbotWaitingForInput } from '../chatbot-runner'
+import { deliverChannelReply } from '../channels/deliver-reply'
+import { websiteHasAiAssistant } from '../plan-features'
 
-// Bot sender name uses the website name so it reads as the support team,
-// not as a generic "AI assistant". Falls back to 'Destek' if name is empty.
 const HISTORY_LIMIT = 12
 
 interface AutoReplyParams {
   websiteDbId: string
   websitePublicId: string
   conversationId: string
+  visitorId?: string
 }
 
 /**
- * Generates and persists an automatic AI bot reply for an incoming visitor
- * message — Crisp-style. Safeguards:
- *  - only replies when AIConfig.isActive && autoReply are enabled,
- *  - never replies once a human agent is assigned to the conversation,
- *  - only replies when the most recent message is from the visitor
- *    (prevents the bot from answering its own / an agent's message),
- *  - never throws (a failure here must not break visitor message sending).
- * The created Message is delivered to widget + admin through the existing
- * polling/socket flow (a new Message row is all that's required).
+ * Supsis-style hybrid AI: rule chatbot runs first; when flow completes or
+ * hands off (END step), LLM auto-reply takes over if enabled.
  */
 export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void> {
   try {
+    const waiting = await isChatbotWaitingForInput(params.conversationId)
+    if (waiting) return
+
     const conversation = await prisma.conversation.findUnique({
       where: { id: params.conversationId },
       select: {
         id: true,
         assignedToId: true,
-        website: { select: { id: true, name: true } },
+        chatbotCompleted: true,
+        chatbotHandedToAi: true,
+        chatbotId: true,
+        visitorId: true,
+        website: { select: { id: true, name: true, plan: true } },
       },
     })
 
-    // No conversation, or a human agent has taken over → bot stays quiet.
     if (!conversation) return
     if (conversation.assignedToId) return
+
+    const hasAi = await websiteHasAiAssistant(
+      params.websiteDbId,
+      conversation.website.plan
+    )
+    if (!hasAi) return
+
+    // Mid-rule-bot without handoff: AI stays quiet until flow ends.
+    if (conversation.chatbotId && !conversation.chatbotCompleted && !conversation.chatbotHandedToAi) {
+      return
+    }
 
     const aiConfig = await prisma.aIConfig.findUnique({
       where: { websiteId: params.websiteDbId },
     })
 
-    // Bot is "active" only when explicitly enabled for auto-reply.
     if (!aiConfig || !aiConfig.isActive || !aiConfig.autoReply) return
 
     const recent = await prisma.message.findMany({
@@ -54,7 +66,6 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     })
     const ordered = recent.reverse()
 
-    // Only respond to a fresh visitor message (loop / self-reply guard).
     const last = ordered[ordered.length - 1]
     if (!last || last.senderType !== 'VISITOR') return
 
@@ -62,12 +73,14 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (messages.length === 0) return
 
     const knowledge = await loadKnowledge(params.websiteDbId)
+    const visitorContext = await loadVisitorContext(params.visitorId || conversation.visitorId)
 
     const reply = await generateAiReply({
       siteName: conversation.website.name,
       messages,
       knowledge,
       systemPrompt: aiConfig.systemPrompt || undefined,
+      visitorContext,
       dbConfig: {
         provider: aiConfig.provider,
         model: aiConfig.model,
@@ -110,6 +123,8 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         createdAt: botMessage.createdAt,
       },
     })
+
+    await deliverChannelReply(params.conversationId, content)
   } catch {
     console.error('[AI auto-reply] failed for conversation', params.conversationId)
   }

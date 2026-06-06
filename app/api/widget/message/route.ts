@@ -4,12 +4,14 @@ import { z } from 'zod'
 import { emitVisitorMessage } from '@/lib/socket-events'
 import { notifyNewConversation, notifyWebsiteMembers } from '@/lib/notifications'
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
-import { runChatbotForNewConversation } from '@/lib/chatbot-runner'
+import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
 import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
+import { analyzeSentiment } from '@/lib/ai/sentiment'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
+import { resolveAgentsOnline } from '@/lib/agents-online'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -26,6 +28,7 @@ const widgetMessageSchema = z.object({
   visitorName: z.string().optional(),
   visitorEmail: z.string().email().optional().or(z.literal('')),
   fingerprint: z.string(),
+  visitorLang: z.string().min(2).max(8).optional(),
   attachment: widgetAttachmentSchema.optional(),
 })
 
@@ -142,6 +145,8 @@ export async function POST(req: Request) {
       }
     }
 
+    const sentiment = analyzeSentiment(validated.content)
+
     // Create message (with an attachment when the visitor sent a file/image).
     const message = await prisma.message.create({
       data: {
@@ -150,6 +155,7 @@ export async function POST(req: Request) {
         type: validated.type,
         senderType: 'VISITOR',
         status: 'SENT',
+        sentiment,
         ...(validated.attachment
           ? {
               attachments: {
@@ -173,6 +179,7 @@ export async function POST(req: Request) {
         lastMessageAt: new Date(),
         lastMessagePreview: validated.content.substring(0, 100),
         unreadCount: { increment: 1 },
+        ...(validated.visitorLang ? { visitorLang: validated.visitorLang } : {}),
       },
     })
 
@@ -205,16 +212,6 @@ export async function POST(req: Request) {
         conversationId,
         visitorId: visitor.id,
       })
-      const priorConversations = await prisma.conversation.count({
-        where: { visitorId: visitor.id, websiteId: website.id },
-      })
-      await runChatbotForNewConversation({
-        websiteDbId: website.id,
-        websitePublicId: website.websiteId,
-        conversationId,
-        visitorId: visitor.id,
-        isFirstVisit: priorConversations <= 1,
-      })
     } else {
       await notifyWebsiteMembers({
         websiteId: website.id,
@@ -242,13 +239,27 @@ export async function POST(req: Request) {
       senderType: 'VISITOR',
     })
 
-    // Automatic AI bot reply (Crisp-style): only when enabled and the
-    // conversation hasn't been taken over by a human agent. Internally
-    // guarded and never throws, so it can't break message delivery.
+    const priorConversations = await prisma.conversation.count({
+      where: { visitorId: visitor.id, websiteId: website.id },
+    })
+
+    const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+
+    await processChatbotOnVisitorMessage({
+      websiteDbId: website.id,
+      websitePublicId: website.websiteId,
+      conversationId,
+      visitorId: visitor.id,
+      messageContent: validated.content,
+      isFirstVisit: priorConversations <= 1,
+      agentsOnline,
+    })
+
     await maybeRunAiAutoReply({
       websiteDbId: website.id,
       websitePublicId: website.websiteId,
       conversationId,
+      visitorId: visitor.id,
     })
 
     return NextResponse.json({

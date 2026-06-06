@@ -6,6 +6,7 @@ import { emitAgentMessage } from '@/lib/socket-events'
 import { notifyWebsiteMembers } from '@/lib/notifications'
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { runWorkflows } from '@/lib/workflow-runner'
+import { deliverChannelReply } from '@/lib/channels/deliver-reply'
 
 export async function GET(
   req: Request,
@@ -42,6 +43,11 @@ export async function GET(
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { unreadCount: 0 },
+  })
+
   const messages = await prisma.message.findMany({
     where: { conversationId },
     include: {
@@ -58,6 +64,7 @@ export async function GET(
 
   return NextResponse.json({
     messages: items.reverse(),
+    total: items.length,
     nextCursor: hasMore ? items[items.length - 1]?.id : null,
   })
 }
@@ -156,6 +163,8 @@ export async function POST(
       messageContent: message.content,
       senderType: 'AGENT',
     })
+
+    await deliverChannelReply(conversationId, validated.content)
 
     return NextResponse.json(message, { status: 201 })
   } catch (error: unknown) {
