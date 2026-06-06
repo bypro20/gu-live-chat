@@ -77,9 +77,9 @@ const testimonials = [
 
 const plans = [
   { name: 'Ücretsiz', monthly: 0, desc: 'Başlamak için ideal', features: ['2 Temsilci', '100 Sohbet / Ay', 'Temel Widget', 'E-posta Bildirimleri'], highlighted: false, cta: 'Ücretsiz Başla' },
-  { name: 'Başlangıç', monthly: 199, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Chatbot', 'Ziyaretçi Takibi', 'Hazır Cevaplar'], highlighted: false, cta: 'Hemen Başla' },
-  { name: 'Profesyonel', monthly: 499, desc: 'Profesyonel ekipler', features: ['15 Temsilci', 'Sınırsız Sohbet', 'AI Yardım', 'API & Webhook', 'Gelişmiş Analitik'], highlighted: true, cta: 'Hemen Başla' },
-  { name: 'Kurumsal', monthly: 999, desc: 'Büyük ölçek', features: ['Sınırsız Temsilci', 'Beyaz Etiket', 'SLA Garantisi', 'Özel Entegrasyonlar', 'Öncelikli Destek'], highlighted: false, cta: 'İletişime Geç' },
+  { name: 'Başlangıç', monthly: 1790, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Chatbot', 'Ziyaretçi Takibi', 'Hazır Cevaplar', 'Dosya Yükleme', 'Bilgi Bankası'], highlighted: false, cta: 'Deneyi Başlat' },
+  { name: 'Profesyonel', monthly: 3790, desc: 'Profesyonel ekipler', features: ['25 Temsilci', 'Sınırsız Sohbet', 'AI Yardım & Otomatik Yanıt', '50+ Dil Çeviri', 'WhatsApp / E-posta / Messenger', 'API & Webhook', 'Analitik & Raporlar', 'Kampanyalar', 'Durum Sayfası'], highlighted: true, cta: 'Deneyi Başlat' },
+  { name: 'Kurumsal', monthly: 11990, desc: 'Büyük ölçekli çözüm', features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'Özel Marka (White-label)', 'SLA Garantisi (%99.9)', 'Özel Entegrasyon', '7/24 Öncelikli Destek', 'Gelişmiş API Limitleri'], highlighted: false, cta: 'İletişime Geç' },
 ]
 
 const faqs = [

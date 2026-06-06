@@ -9,7 +9,7 @@ const navLinks = [
   { label: 'Özellikler', href: '/features' },
   { label: 'Yapay Zeka', href: '/ai' },
   { label: 'Apps', href: '/apps' },
-  { label: 'Fiyatlandırma', href: '/#pricing' },
+  { label: 'Fiyatlandırma', href: '/pricing' },
   { label: 'Entegrasyonlar', href: '/integrations' },
   { label: 'Yardım', href: '/help' },
 ]

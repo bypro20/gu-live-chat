@@ -109,7 +109,7 @@ export const PLANS = [
   {
     id: 'STARTER',
     name: 'Başlangıç',
-    price: 199,
+    price: 1790,
     popular: false,
     description: 'Büyüyen işletmeler için gelişmiş özellikler',
     features: [
@@ -127,7 +127,7 @@ export const PLANS = [
   {
     id: 'PRO',
     name: 'Profesyonel',
-    price: 799,
+    price: 3790,
     popular: true,
     description: 'Profesyonel ekipler için tam donanım',
     features: [
@@ -150,7 +150,7 @@ export const PLANS = [
   {
     id: 'BUSINESS',
     name: 'Kurumsal',
-    price: 1499,
+    price: 11990,
     popular: false,
     description: 'Kurumsal çözümler için sınırsız paket',
     features: [
