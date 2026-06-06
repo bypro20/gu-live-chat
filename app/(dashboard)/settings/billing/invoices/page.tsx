@@ -49,7 +49,7 @@ export default function InvoicesPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/settings/billing"
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition"
+          className="p-2 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

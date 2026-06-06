@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/*
+ * Wire Tailwind v4's `dark:` variant to the `.dark` class set by next-themes
+ * (attribute="class"). Without this, `dark:` utilities default to the OS
+ * `prefers-color-scheme` media query while our CSS-variable theme follows the
+ * class — the mismatch produced white-on-white / invisible text in the dashboard.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #FFFFFF;
   --foreground: #111827;
