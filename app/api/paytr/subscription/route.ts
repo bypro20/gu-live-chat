@@ -7,8 +7,43 @@ import {
   initiateCheckout,
 } from '@/lib/subscription'
 
+/**
+ * Resolve the target website for billing operations.
+ *
+ * Priority:
+ *   1. Explicit `websiteId` param — verified that the user is OWNER or ADMIN
+ *   2. `activeWebsiteId` stored in the JWT session
+ *   3. First owned website (legacy fallback)
+ */
+async function resolveWebsite(
+  userId: string,
+  requestedWebsiteId?: string | null,
+  sessionActiveId?: string | null
+): Promise<{ websiteId: string; plan: string } | null> {
+  const candidates = [requestedWebsiteId, sessionActiveId].filter(Boolean) as string[]
+
+  for (const wid of candidates) {
+    const membership = await prisma.teamMember.findFirst({
+      where: {
+        userId,
+        role: { in: ['OWNER', 'ADMIN'] },
+        website: { websiteId: wid },
+      },
+      select: { website: { select: { websiteId: true, plan: true } } },
+    })
+    if (membership?.website) return membership.website
+  }
+
+  // Fallback: first owned website
+  const owned = await prisma.website.findFirst({
+    where: { ownerId: userId },
+    select: { websiteId: true, plan: true },
+  })
+  return owned ?? null
+}
+
 // GET — Get current subscription status
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.email) {
@@ -19,16 +54,12 @@ export async function GET() {
       where: { email: session.user.email },
       select: { id: true },
     })
-
     if (!user) {
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 })
     }
 
-    const website = await prisma.website.findFirst({
-      where: { ownerId: user.id },
-      select: { websiteId: true },
-    })
-
+    const requestedId = request.nextUrl.searchParams.get('websiteId')
+    const website = await resolveWebsite(user.id, requestedId, session.user.activeWebsiteId)
     if (!website) {
       return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
     }
@@ -37,15 +68,12 @@ export async function GET() {
     return NextResponse.json(subscription)
   } catch (error) {
     console.error('[Subscription API] GET error:', error)
-    return NextResponse.json(
-      { error: 'Abonelik durumu alınamadı' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Abonelik durumu alınamadı' }, { status: 500 })
   }
 }
 
 // POST — Cancel subscription
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.email) {
@@ -56,25 +84,25 @@ export async function POST() {
       where: { email: session.user.email },
       select: { id: true },
     })
-
     if (!user) {
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 })
     }
 
-    const website = await prisma.website.findFirst({
-      where: { ownerId: user.id },
-      select: { websiteId: true, plan: true },
-    })
+    let requestedId: string | null = null
+    try {
+      const body = await request.json()
+      requestedId = body?.websiteId ?? null
+    } catch {
+      // Body is optional — ignore parse errors
+    }
 
+    const website = await resolveWebsite(user.id, requestedId, session.user.activeWebsiteId)
     if (!website) {
       return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
     }
 
     if (website.plan === 'FREE') {
-      return NextResponse.json(
-        { error: 'Zaten ücretsiz plan aktif' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Zaten ücretsiz plan aktif' }, { status: 400 })
     }
 
     await cancelSubscription(website.websiteId)
@@ -82,10 +110,7 @@ export async function POST() {
     return NextResponse.json({ success: true, message: 'Abonelik iptal edildi' })
   } catch (error) {
     console.error('[Subscription API] POST error:', error)
-    return NextResponse.json(
-      { error: 'Abonelik iptal edilemedi' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Abonelik iptal edilemedi' }, { status: 500 })
   }
 }
 
@@ -98,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId } = body
+    const { planId, websiteId: requestedId } = body
 
     if (!planId || !['STARTER', 'PRO', 'BUSINESS'].includes(planId)) {
       return NextResponse.json({ error: 'Geçersiz plan' }, { status: 400 })
@@ -108,16 +133,11 @@ export async function PATCH(request: NextRequest) {
       where: { email: session.user.email },
       select: { id: true },
     })
-
     if (!user) {
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 })
     }
 
-    const website = await prisma.website.findFirst({
-      where: { ownerId: user.id },
-      select: { websiteId: true },
-    })
-
+    const website = await resolveWebsite(user.id, requestedId ?? null, session.user.activeWebsiteId)
     if (!website) {
       return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
     }
@@ -138,15 +158,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 })
     }
 
-    return NextResponse.json({
-      token: result.token,
-      merchantOid: result.merchantOid,
-    })
+    return NextResponse.json({ token: result.token, merchantOid: result.merchantOid })
   } catch (error) {
     console.error('[Subscription API] PATCH error:', error)
-    return NextResponse.json(
-      { error: 'Plan değiştirilemedi' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Plan değiştirilemedi' }, { status: 500 })
   }
 }

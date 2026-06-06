@@ -10,6 +10,13 @@ import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 
+const widgetAttachmentSchema = z.object({
+  url: z.string().min(1).max(2000),
+  fileName: z.string().min(1).max(255),
+  fileSize: z.number().int().nonnegative().optional(),
+  mimeType: z.string().max(255).optional(),
+})
+
 const widgetMessageSchema = z.object({
   websiteId: z.string(),
   conversationId: z.string().nullable().optional(),
@@ -18,6 +25,7 @@ const widgetMessageSchema = z.object({
   visitorName: z.string().optional(),
   visitorEmail: z.string().email().optional().or(z.literal('')),
   fingerprint: z.string(),
+  attachment: widgetAttachmentSchema.optional(),
 })
 
 export async function POST(req: Request) {
@@ -120,7 +128,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create message
+    // Create message (with an attachment when the visitor sent a file/image).
     const message = await prisma.message.create({
       data: {
         conversationId,
@@ -128,7 +136,20 @@ export async function POST(req: Request) {
         type: validated.type,
         senderType: 'VISITOR',
         status: 'SENT',
+        ...(validated.attachment
+          ? {
+              attachments: {
+                create: {
+                  url: validated.attachment.url,
+                  fileName: validated.attachment.fileName,
+                  fileSize: validated.attachment.fileSize ?? null,
+                  mimeType: validated.attachment.mimeType ?? null,
+                },
+              },
+            }
+          : {}),
       },
+      include: { attachments: true },
     })
 
     // Update conversation

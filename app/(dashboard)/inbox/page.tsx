@@ -78,6 +78,85 @@ function ConversationItem({ conversation, selected, onClick }: {
   )
 }
 
+// ─── Attachments ────────────────────────────────────────────────────
+
+type InboxAttachment = {
+  id?: string
+  url: string
+  fileName?: string
+  filename?: string
+  mimeType?: string | null
+  mimetype?: string
+  fileSize?: number | null
+  size?: number
+}
+
+function attName(a: InboxAttachment): string {
+  return a.fileName || a.filename || 'dosya'
+}
+function attMime(a: InboxAttachment): string {
+  return (a.mimeType || a.mimetype || '') as string
+}
+function attSize(a: InboxAttachment): number | undefined {
+  return (a.fileSize ?? a.size) ?? undefined
+}
+function isImageAtt(a: InboxAttachment): boolean {
+  const mime = attMime(a)
+  if (mime) return mime.startsWith('image/')
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(attName(a) || a.url)
+}
+function formatBytesInbox(bytes?: number): string {
+  if (!bytes || bytes <= 0) return ''
+  const units = ['B', 'KB', 'MB', 'GB']
+  let i = 0
+  let v = bytes
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }
+  return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`
+}
+
+function AttachmentList({ attachments, onDark }: { attachments: InboxAttachment[]; onDark: boolean }) {
+  if (!attachments || attachments.length === 0) return null
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      {attachments.map((a, i) =>
+        isImageAtt(a) ? (
+          <a key={a.id || i} href={a.url} target="_blank" rel="noopener noreferrer" className="block">
+            <img
+              src={a.url}
+              alt={attName(a)}
+              className="max-w-[220px] max-h-[200px] w-auto rounded-xl border border-border object-cover"
+            />
+          </a>
+        ) : (
+          <a
+            key={a.id || i}
+            href={a.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={attName(a)}
+            className={`flex items-center gap-2.5 rounded-xl px-3 py-2 max-w-[240px] no-underline ${
+              onDark ? 'bg-primary-foreground/15' : 'bg-muted'
+            }`}
+          >
+            <span className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${onDark ? 'bg-primary-foreground/20' : 'bg-primary/10'}`}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={onDark ? 'text-primary-foreground' : 'text-primary'}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className={`block text-[13px] font-semibold truncate ${onDark ? 'text-primary-foreground' : 'text-foreground'}`}>{attName(a)}</span>
+              <span className={`block text-[11px] ${onDark ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                {formatBytesInbox(attSize(a))}{attSize(a) ? ' • ' : ''}İndir
+              </span>
+            </span>
+          </a>
+        )
+      )}
+    </div>
+  )
+}
+
 // ─── Message Bubble ─────────────────────────────────────────────────
 
 function MessageBubble({ message, autoTranslate }: { message: {
@@ -86,6 +165,7 @@ function MessageBubble({ message, autoTranslate }: { message: {
   type: string
   senderType: string
   createdAt: string
+  attachments?: InboxAttachment[]
 }
   autoTranslate: boolean
 }) {
@@ -146,18 +226,26 @@ function MessageBubble({ message, autoTranslate }: { message: {
             🤖 Bot
           </span>
         )}
-        <div className={`px-4 py-2.5 rounded-2xl text-sm ${
-          isVisitor
-            ? 'bg-card text-foreground rounded-bl-sm border border-border'
-            : 'bg-primary text-primary-foreground rounded-br-sm shadow-brand'
-        }`}>
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
-          {showTranslate && translatedText && (
-            <p className={`text-xs mt-1.5 pt-1.5 border-t italic ${isVisitor ? 'text-muted-foreground border-border' : 'text-primary-foreground/80 border-primary-foreground/20'}`}>
-              🌐 {translatedText}
-            </p>
-          )}
-        </div>
+        {(() => {
+          const hasAtt = !!(message.attachments && message.attachments.length > 0)
+          const hideText = hasAtt && /^(🖼️|📎)\s/u.test(message.content)
+          if (!message.content && !hasAtt) return null
+          return (
+            <div className={`px-4 py-2.5 rounded-2xl text-sm ${
+              isVisitor
+                ? 'bg-card text-foreground rounded-bl-sm border border-border'
+                : 'bg-primary text-primary-foreground rounded-br-sm shadow-brand'
+            }`}>
+              {!hideText && <p className="whitespace-pre-wrap break-words">{message.content}</p>}
+              {hasAtt && <AttachmentList attachments={message.attachments!} onDark={!isVisitor} />}
+              {showTranslate && translatedText && (
+                <p className={`text-xs mt-1.5 pt-1.5 border-t italic ${isVisitor ? 'text-muted-foreground border-border' : 'text-primary-foreground/80 border-primary-foreground/20'}`}>
+                  🌐 {translatedText}
+                </p>
+              )}
+            </div>
+          )
+        })()}
         <div className={`flex items-center gap-1 mt-0.5 ${isVisitor ? 'ml-1' : 'mr-1 justify-end'}`}>
           <span className="text-[10px] text-muted-foreground tabular-nums">{formatTime(message.createdAt)}</span>
           {isVisitor && (

@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
+import { isTranslationAvailable } from '@/lib/ai/translate'
+import { PLAN_LIMITS } from '@/lib/constants'
+import type { DbAiConfig } from '@/lib/ai/provider'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -151,11 +154,43 @@ export async function POST(req: Request) {
       JSON.stringify({ visitorId: visitor.id, websiteId: website.websiteId, sessionId: session.sessionId })
     ).toString('base64')
 
+    // Resolve plan limits for this website
+    const planLimits = PLAN_LIMITS[website.plan]
+    const fileUpload = planLimits.fileUpload
+
+    // Determine whether live message translation can be offered. Checks the
+    // plan limit first, then verifies an AI/Google key is actually configured.
+    // Never throws — translation simply stays disabled when unavailable.
+    let aiTranslate = false
+    if (planLimits.autoTranslate) {
+      try {
+        const aiCfg = await prisma.aIConfig.findUnique({
+          where: { websiteId: website.id },
+          select: { provider: true, model: true, apiKey: true, temperature: true },
+        })
+        const dbConfig: DbAiConfig | null = aiCfg
+          ? {
+              provider: aiCfg.provider as DbAiConfig['provider'],
+              model: aiCfg.model ?? null,
+              apiKey: aiCfg.apiKey ?? null,
+              temperature: aiCfg.temperature ?? null,
+            }
+          : null
+        aiTranslate = isTranslationAvailable(dbConfig)
+      } catch {
+        aiTranslate = false
+      }
+    }
+
     return NextResponse.json({
       visitorToken,
       visitorId: visitor.id,
       sessionId: session.id,
       conversationId: existingConversation?.id || null,
+      features: {
+        fileUpload,
+        aiTranslate,
+      },
       websiteConfig: {
         primaryColor: website.primaryColor,
         position: website.position,

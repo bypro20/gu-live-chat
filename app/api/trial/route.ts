@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 import { startTrial, isTrialActive, getTrialInfo } from '@/lib/trial'
 
 // POST /api/trial — Start trial for a website
@@ -14,6 +16,18 @@ export async function POST(req: NextRequest) {
 
   if (!websiteId) {
     return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
+  }
+
+  // Tenant isolation: only an owner/admin of this website may start its trial
+  const website = await resolveWebsite(websiteId)
+  if (!website) {
+    return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
+  }
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+  })
+  if (!member) {
+    return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
   }
 
   // Check if trial already used
@@ -51,6 +65,17 @@ export async function GET(req: NextRequest) {
 
   if (!websiteId) {
     return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
+  }
+
+  const website = await resolveWebsite(websiteId)
+  if (!website) {
+    return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
+  }
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: website.id, userId: session.user.id },
+  })
+  if (!member) {
+    return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
   const trialInfo = await getTrialInfo(websiteId)

@@ -54,6 +54,9 @@ export async function GET(req: Request) {
         senderType: true,
         createdAt: true,
         sender: { select: { name: true } },
+        attachments: {
+          select: { id: true, url: true, fileName: true, fileSize: true, mimeType: true },
+        },
       },
       orderBy: { createdAt: 'asc' },
       take: 200,
@@ -68,6 +71,13 @@ export async function GET(req: Request) {
         senderType: m.senderType,
         senderName: m.sender?.name || null,
         createdAt: m.createdAt,
+        attachments: m.attachments.map((a) => ({
+          id: a.id,
+          url: a.url,
+          fileName: a.fileName,
+          fileSize: a.fileSize,
+          mimeType: a.mimeType,
+        })),
       })),
     })
   } catch (error) {

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { PLANS } from '@/lib/constants'
 import { isPaytrEnabled } from '@/lib/paytr-client'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
 import PaytrFrame from './PaytrFrame'
 
 interface SubscriptionInfo {
@@ -15,10 +16,32 @@ interface SubscriptionInfo {
   failedPayments: number
 }
 
+interface TrialInfo {
+  isTrialing: boolean
+  daysLeft: number
+  trialEndsAt: string | null
+  trialPlan: string | null
+  trialUsed: boolean
+}
+
+interface Invoice {
+  id: string
+  plan: string
+  amount: number
+  currency: string
+  status: string
+  periodStart: string
+  periodEnd: string
+  createdAt: string
+}
+
 export default function BillingPage() {
   const { data: session } = useSession()
-  const { activeWebsite } = useActiveWebsite()
+  const { activeWebsite, isLoading: websitesLoading } = useActiveWebsite()
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
+  const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null)
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoicesLoading, setInvoicesLoading] = useState(true)
   const [loading, setLoading] = useState(true)
   const [paytrToken, setPaytrToken] = useState<string | null>(null)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null) // planId being loaded
@@ -28,8 +51,9 @@ export default function BillingPage() {
   const paytrEnabled = isPaytrEnabled()
 
   const fetchSubscription = useCallback(async () => {
+    if (!activeWebsite) return
     try {
-      const res = await fetch('/api/paytr/subscription')
+      const res = await fetch(`/api/paytr/subscription?websiteId=${activeWebsite.websiteId}`)
       if (res.ok) {
         const data = await res.json()
         setSubscription(data)
@@ -39,11 +63,50 @@ export default function BillingPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeWebsite])
+
+  const fetchTrialInfo = useCallback(async () => {
+    if (!activeWebsite) return
+    try {
+      const res = await fetch(`/api/trial?websiteId=${activeWebsite.websiteId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setTrialInfo(data)
+      }
+    } catch {
+      // Non-critical — ignore
+    }
+  }, [activeWebsite])
 
   useEffect(() => {
-    fetchSubscription()
-  }, [fetchSubscription])
+    if (activeWebsite) {
+      fetchSubscription()
+      fetchTrialInfo()
+    } else if (!websitesLoading) {
+      // Websites loaded but none available
+      setLoading(false)
+    }
+  }, [activeWebsite, websitesLoading, fetchSubscription, fetchTrialInfo])
+
+  const fetchInvoices = useCallback(async () => {
+    if (!activeWebsite) return
+    setInvoicesLoading(true)
+    try {
+      const res = await fetch(`/api/invoices?websiteId=${activeWebsite.websiteId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setInvoices(data.invoices || [])
+      }
+    } catch {
+      // Ignore fetch errors
+    } finally {
+      setInvoicesLoading(false)
+    }
+  }, [activeWebsite])
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [fetchInvoices])
 
   // Check for payment redirect status in URL
   useEffect(() => {
@@ -54,12 +117,12 @@ export default function BillingPage() {
       // Clean URL
       window.history.replaceState({}, '', '/dashboard/settings/billing')
       // Refresh subscription status
-      setTimeout(() => fetchSubscription(), 2000)
+      setTimeout(() => { fetchSubscription(); fetchInvoices(); fetchTrialInfo() }, 2000)
     } else if (paymentStatus === 'failed') {
       setMessage({ type: 'error', text: 'Ödeme başarısız oldu. Lütfen tekrar deneyin.' })
       window.history.replaceState({}, '', '/dashboard/settings/billing')
     }
-  }, [fetchSubscription])
+  }, [fetchSubscription, fetchInvoices])
 
   const handleUpgrade = async (planId: string) => {
     if (!paytrEnabled) {
@@ -74,7 +137,7 @@ export default function BillingPage() {
       const res = await fetch('/api/paytr/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, websiteId: activeWebsite?.websiteId }),
       })
 
       const data = await res.json()
@@ -100,7 +163,11 @@ export default function BillingPage() {
     setMessage(null)
 
     try {
-      const res = await fetch('/api/paytr/subscription', { method: 'POST' })
+      const res = await fetch('/api/paytr/subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId: activeWebsite?.websiteId }),
+      })
       const data = await res.json()
 
       if (res.ok) {
@@ -119,8 +186,8 @@ export default function BillingPage() {
   const handlePaymentSuccess = useCallback(() => {
     setPaytrToken(null)
     setMessage({ type: 'success', text: 'Ödeme başarıyla tamamlandı! Planınız güncelleniyor...' })
-    setTimeout(() => fetchSubscription(), 2000)
-  }, [fetchSubscription])
+    setTimeout(() => { fetchSubscription(); fetchInvoices(); fetchTrialInfo() }, 2000)
+  }, [fetchSubscription, fetchInvoices, fetchTrialInfo])
 
   const handlePaymentFailure = useCallback((reason?: string) => {
     setPaytrToken(null)
@@ -197,7 +264,7 @@ export default function BillingPage() {
         {/* Current Plan */}
         <div className="surface p-5 sm:p-6 mb-8">
           {/* Trial Banner */}
-          {planStatus === 'TRIALING' && subscription?.currentPeriodEnd && (
+          {planStatus === 'TRIALING' && (trialInfo?.trialEndsAt || trialInfo?.daysLeft !== undefined) && (
             <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-500/10 border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -208,7 +275,7 @@ export default function BillingPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">PRO Plan Deneme Süresi Aktif</p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                    Deneme sürenizin dolmasına <strong>{Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / 86400000))} gün</strong> kaldı
+                    Deneme sürenizin dolmasına <strong>{trialInfo?.daysLeft ?? 0} gün</strong> kaldı
                   </p>
                 </div>
               </div>
@@ -216,7 +283,7 @@ export default function BillingPage() {
           )}
 
           {/* Start Trial Banner (for FREE users who haven't used trial) */}
-          {currentPlan === 'FREE' && planStatus !== 'TRIALING' && (
+          {currentPlan === 'FREE' && planStatus !== 'TRIALING' && !trialInfo?.trialUsed && (
             <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200 dark:border-emerald-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -243,6 +310,7 @@ export default function BillingPage() {
                       if (res.ok) {
                         setMessage({ type: 'success', text: 'PRO deneme süresi başlatıldı!' })
                         fetchSubscription()
+                        fetchTrialInfo()
                       } else {
                         setMessage({ type: 'error', text: data.error || 'Deneme başlatılamadı' })
                       }
@@ -398,13 +466,42 @@ export default function BillingPage() {
               Tümünü Gör →
             </Link>
           </div>
-          <div className="text-center py-8 text-muted-foreground">
-            <svg className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p>Henüz fatura bulunmuyor</p>
-            <p className="text-sm mt-1 text-muted-foreground/70">Ücretli bir plana geçtiğinizde faturalar burada görünecek</p>
-          </div>
+          {invoicesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <svg className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p>Henüz fatura bulunmuyor</p>
+              <p className="text-sm mt-1 text-muted-foreground/70">Ücretli bir plana geçtiğinizde faturalar burada görünecek</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {invoices.slice(0, 5).map((invoice) => (
+                <div key={invoice.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      #{invoice.id.slice(-8).toUpperCase()} · {getPlanLabel(invoice.plan)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(invoice.createdAt).toLocaleDateString('tr-TR')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatAmount(invoice.amount, invoice.currency)}
+                    </span>
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
+                      {getInvoiceStatusLabel(invoice.status)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -15,6 +15,14 @@ interface WidgetConfig {
   agentsOnline: number
 }
 
+interface Attachment {
+  id?: string
+  url: string
+  fileName: string
+  fileSize?: number | null
+  mimeType?: string | null
+}
+
 interface Message {
   id: string
   content: string
@@ -22,6 +30,167 @@ interface Message {
   senderType: 'VISITOR' | 'AGENT' | 'BOT' | 'SYSTEM'
   senderName?: string
   createdAt: string
+  attachments?: Attachment[]
+}
+
+// ─── Lightweight i18n (TR default, EN optional) ─────────────────────────
+// The message-translation engine (lib/ai/translate.ts) works with ANY target
+// language. `lang` therefore holds any ISO 639-1 code; only the static UI
+// dictionary is limited to TR/EN (everything else falls back to English).
+type WidgetLang = string
+
+// Comprehensive translation target list: ISO 639-1 code + native name.
+const WIDGET_LANGUAGES: { code: string; name: string }[] = [
+  { code: 'tr', name: 'Türkçe' },
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'fr', name: 'Français' },
+  { code: 'es', name: 'Español' },
+  { code: 'it', name: 'Italiano' },
+  { code: 'pt', name: 'Português' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'ar', name: 'العربية' },
+  { code: 'fa', name: 'فارسی' },
+  { code: 'zh', name: '中文' },
+  { code: 'ja', name: '日本語' },
+  { code: 'ko', name: '한국어' },
+  { code: 'hi', name: 'हिन्दी' },
+  { code: 'ur', name: 'اردو' },
+  { code: 'bn', name: 'বাংলা' },
+  { code: 'id', name: 'Bahasa Indonesia' },
+  { code: 'ms', name: 'Bahasa Melayu' },
+  { code: 'tl', name: 'Filipino' },
+  { code: 'vi', name: 'Tiếng Việt' },
+  { code: 'th', name: 'ไทย' },
+  { code: 'nl', name: 'Nederlands' },
+  { code: 'pl', name: 'Polski' },
+  { code: 'uk', name: 'Українська' },
+  { code: 'el', name: 'Ελληνικά' },
+  { code: 'ro', name: 'Română' },
+  { code: 'bg', name: 'Български' },
+  { code: 'cs', name: 'Čeština' },
+  { code: 'sk', name: 'Slovenčina' },
+  { code: 'hu', name: 'Magyar' },
+  { code: 'sv', name: 'Svenska' },
+  { code: 'no', name: 'Norsk' },
+  { code: 'fi', name: 'Suomi' },
+  { code: 'da', name: 'Dansk' },
+  { code: 'he', name: 'עברית' },
+  { code: 'sr', name: 'Српски' },
+  { code: 'hr', name: 'Hrvatski' },
+  { code: 'sl', name: 'Slovenščina' },
+  { code: 'az', name: 'Azərbaycanca' },
+  { code: 'kk', name: 'Қазақша' },
+  { code: 'hy', name: 'Հայերեն' },
+  { code: 'ka', name: 'ქართული' },
+  { code: 'et', name: 'Eesti' },
+  { code: 'lt', name: 'Lietuvių' },
+  { code: 'lv', name: 'Latviešu' },
+]
+
+const WIDGET_STRINGS = {
+  tr: {
+    online: 'Çevrimiçi',
+    typicalReply: 'Tipik yanıt: 2 dk',
+    today: 'Bugün',
+    welcomeFallback: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
+    quickChat: '💬 Sohbet başlat',
+    quickPricing: '💰 Fiyatlandırma',
+    quickSupport: '🛠️ Destek talebi',
+    preChatHi: 'Merhaba! 👋',
+    preChatSub: 'Sohbete başlamak için bilgilerinizi girin',
+    namePlaceholder: 'Adınız',
+    emailPlaceholder: 'E-posta adresiniz',
+    startChat: 'Sohbete Başla',
+    sslNote: '256-bit SSL ile korunmaktadır',
+    inputPlaceholder: 'Mesajınızı yazın...',
+    poweredBy: 'Gu Live Chat',
+    help: '📚 Yardım',
+    backToChat: 'Sohbete Dön',
+    back: '← Geri',
+    loading: 'Yükleniyor...',
+    noArticles: 'Henüz yardım makalesi bulunmuyor.',
+    rateChat: 'Sohbeti değerlendirin',
+    commentPlaceholder: 'Yorum ekleyin (isteğe bağlı)...',
+    send: 'Gönder',
+    sending: 'Gönderiliyor...',
+    thanksRating: 'Değerlendirmeniz için teşekkür ederiz! 🙏',
+    thanksRatingSub: 'Görüşleriniz bizim için çok değerli',
+    close: 'Kapat',
+    attachFile: 'Dosya ekle',
+    uploading: 'Yükleniyor...',
+    fileTooLarge: "Dosya boyutu 10MB'dan büyük olamaz.",
+    fileTypeError: 'Desteklenmeyen dosya türü.',
+    uploadError: 'Dosya yüklenemedi, lütfen tekrar deneyin.',
+    download: 'İndir',
+    translate: 'Çevir',
+    showOriginal: 'Orijinali göster',
+    translating: 'Çevriliyor...',
+    emoji: 'Emoji',
+    langName: 'Türkçe',
+  },
+  en: {
+    online: 'Online',
+    typicalReply: 'Typically replies in 2 min',
+    today: 'Today',
+    welcomeFallback: 'Hello! 👋 How can we help you?',
+    quickChat: '💬 Start chat',
+    quickPricing: '💰 Pricing',
+    quickSupport: '🛠️ Support request',
+    preChatHi: 'Hello! 👋',
+    preChatSub: 'Enter your details to start chatting',
+    namePlaceholder: 'Your name',
+    emailPlaceholder: 'Your email address',
+    startChat: 'Start Chat',
+    sslNote: 'Protected with 256-bit SSL',
+    inputPlaceholder: 'Type your message...',
+    poweredBy: 'Gu Live Chat',
+    help: '📚 Help',
+    backToChat: 'Back to chat',
+    back: '← Back',
+    loading: 'Loading...',
+    noArticles: 'No help articles yet.',
+    rateChat: 'Rate this chat',
+    commentPlaceholder: 'Add a comment (optional)...',
+    send: 'Send',
+    sending: 'Sending...',
+    thanksRating: 'Thank you for your feedback! 🙏',
+    thanksRatingSub: 'Your opinion matters to us',
+    close: 'Close',
+    attachFile: 'Attach file',
+    uploading: 'Uploading...',
+    fileTooLarge: 'File size cannot exceed 10MB.',
+    fileTypeError: 'Unsupported file type.',
+    uploadError: 'Upload failed, please try again.',
+    download: 'Download',
+    translate: 'Translate',
+    showOriginal: 'Show original',
+    translating: 'Translating...',
+    emoji: 'Emoji',
+    langName: 'English',
+  },
+} as const
+
+type WidgetStrings = Record<keyof typeof WIDGET_STRINGS['tr'], string>
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+const ACCEPTED_UPLOAD = 'image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain,.doc,.docx,.xls,.xlsx'
+
+function isImageAttachment(a: Attachment): boolean {
+  if (a.mimeType) return a.mimeType.startsWith('image/')
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(a.fileName || a.url)
+}
+
+function formatBytes(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return ''
+  const units = ['B', 'KB', 'MB', 'GB']
+  let i = 0
+  let v = bytes
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`
 }
 
 interface KBArticle {
@@ -99,9 +268,21 @@ export default function WidgetPage() {
   const [ratingComment, setRatingComment] = useState('')
   const [ratingSending, setRatingSending] = useState(false)
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
+  const [lang, setLang] = useState<WidgetLang>('tr')
+  const [aiTranslateAvailable, setAiTranslateAvailable] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [translations, setTranslations] = useState<Record<string, string>>({})
+  const [translatingId, setTranslatingId] = useState<string | null>(null)
+
+  // UI dictionary only ships TR/EN; any other selected language falls back to
+  // English for interface labels while message translation still targets it.
+  const t: WidgetStrings = WIDGET_STRINGS[lang as keyof typeof WIDGET_STRINGS] || WIDGET_STRINGS.en
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const seenAgentCountRef = useRef(0)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const gifPickerRef = useRef<HTMLDivElement>(null)
   const emojiBtnRef = useRef<HTMLButtonElement>(null)
@@ -144,6 +325,7 @@ export default function WidgetPage() {
 
         setConfig(data.websiteConfig)
         setConversationId(data.conversationId)
+        setAiTranslateAvailable(!!data.features?.aiTranslate)
         setIsInitialized(true)
 
         visitorTokenRef.current = data.visitorToken
@@ -185,6 +367,21 @@ export default function WidgetPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
+
+  // Report unread agent/bot messages to the parent launcher (badge) while the
+  // chat window is closed; clear the count as soon as it's opened.
+  useEffect(() => {
+    const agentCount = messages.filter(
+      (m) => m.senderType === 'AGENT' || m.senderType === 'BOT'
+    ).length
+    if (isOpen) {
+      seenAgentCountRef.current = agentCount
+      window.parent?.postMessage({ type: 'gu:unread', count: 0 }, '*')
+      return
+    }
+    const unread = Math.max(0, agentCount - seenAgentCountRef.current)
+    window.parent?.postMessage({ type: 'gu:unread', count: unread }, '*')
+  }, [messages, isOpen])
 
   useEffect(() => {
     let screenshotForwardCount = 0
@@ -456,6 +653,7 @@ export default function WidgetPage() {
             senderType: string
             senderName?: string | null
             createdAt: string
+            attachments?: Attachment[]
           }) => ({
             id: m.id,
             content: m.content,
@@ -463,6 +661,7 @@ export default function WidgetPage() {
             senderType: m.senderType as Message['senderType'],
             senderName: m.senderName || undefined,
             createdAt: m.createdAt,
+            attachments: Array.isArray(m.attachments) ? m.attachments : undefined,
           }))
           setMessages((prev) => mergeWidgetMessages(prev, incoming))
         }
@@ -680,10 +879,194 @@ export default function WidgetPage() {
     }
   }, [inputMessage, websiteId, conversationId, visitorInfo])
 
+  const handlePickFile = () => {
+    setUploadError(null)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    // Reset the input so the same file can be re-selected later.
+    if (e.target) e.target.value = ''
+    if (!file) return
+
+    setUploadError(null)
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError(t.fileTooLarge)
+      return
+    }
+
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('websiteId', websiteId)
+
+      const upRes = await fetch('/api/widget/upload', { method: 'POST', body: fd })
+      const upData = await upRes.json()
+      if (!upRes.ok || !upData.url) {
+        setUploadError(upData.error || t.uploadError)
+        return
+      }
+
+      const attachment: Attachment = {
+        url: upData.url,
+        fileName: upData.fileName || file.name,
+        fileSize: upData.fileSize ?? file.size,
+        mimeType: upData.mimeType ?? file.type,
+      }
+      const isImg = isImageAttachment(attachment)
+      const caption = inputMessage.trim()
+      // content drives the optimistic/server dedupe key — keep it stable.
+      const content = caption || (isImg ? `🖼️ ${attachment.fileName}` : `📎 ${attachment.fileName}`)
+      const msgType = isImg ? 'IMAGE' : 'FILE'
+
+      const tempId = `temp_${Date.now()}`
+      const optimistic: Message = {
+        id: tempId,
+        content,
+        type: msgType,
+        senderType: 'VISITOR',
+        createdAt: new Date().toISOString(),
+        attachments: [attachment],
+      }
+      setMessages((prev) => [...prev, optimistic])
+      setInputMessage('')
+
+      const res = await fetch('/api/widget/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId,
+          conversationId,
+          content,
+          type: msgType,
+          visitorName: visitorInfo.name,
+          visitorEmail: visitorInfo.email,
+          fingerprint: getFingerprint(),
+          attachment,
+        }),
+      })
+      const data = await res.json()
+      if (data.conversationId) {
+        setConversationId(data.conversationId)
+      }
+    } catch (error) {
+      console.error('[Gu Widget] File upload failed:', error)
+      setUploadError(t.uploadError)
+    } finally {
+      setUploading(false)
+    }
+  }, [websiteId, conversationId, visitorInfo, inputMessage, t])
+
+  const handleTranslateMessage = useCallback(async (msg: Message) => {
+    if (translations[msg.id]) {
+      // Toggle off — show original.
+      setTranslations((prev) => {
+        const next = { ...prev }
+        delete next[msg.id]
+        return next
+      })
+      return
+    }
+    if (!msg.content?.trim()) return
+    setTranslatingId(msg.id)
+    try {
+      const res = await fetch('/api/widget/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId,
+          text: msg.content,
+          targetLang: lang,
+        }),
+      })
+      const data = await res.json()
+      if (data.available && data.translatedText) {
+        setTranslations((prev) => ({ ...prev, [msg.id]: data.translatedText }))
+      } else if (data.available === false) {
+        // No engine configured — hide the feature going forward.
+        setAiTranslateAvailable(false)
+      }
+    } catch {
+      // Silent — never break the chat over a translation hiccup.
+    } finally {
+      setTranslatingId(null)
+    }
+  }, [translations, websiteId, lang])
+
   const primaryColor = config?.primaryColor || '#1972F5'
   const gradientStart = '#1972F5'
   const gradientEnd = '#3B82F6'
   const agentsOnline = config?.agentsOnline ?? 3
+
+  const renderAttachments = (msg: Message, onDark: boolean) => {
+    if (!msg.attachments || msg.attachments.length === 0) return null
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+        {msg.attachments.map((att, i) => {
+          if (isImageAttachment(att)) {
+            return (
+              <a key={att.id || i} href={att.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', lineHeight: 0 }}>
+                <img
+                  src={att.url}
+                  alt={att.fileName}
+                  style={{
+                    maxWidth: '220px',
+                    maxHeight: '200px',
+                    width: 'auto',
+                    borderRadius: '12px',
+                    border: onDark ? '1px solid rgba(255,255,255,0.25)' : '1px solid #E5E7EB',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </a>
+            )
+          }
+          return (
+            <a
+              key={att.id || i}
+              href={att.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={att.fileName}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                textDecoration: 'none',
+                background: onDark ? 'rgba(255,255,255,0.15)' : '#F3F4F6',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                maxWidth: '230px',
+              }}
+            >
+              <div style={{
+                width: '34px', height: '34px', flexShrink: 0, borderRadius: '9px',
+                background: onDark ? 'rgba(255,255,255,0.2)' : '#E0E7FF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={onDark ? '#fff' : primaryColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                </svg>
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: onDark ? '#fff' : '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {att.fileName}
+                </p>
+                <p style={{ margin: '1px 0 0', fontSize: '11px', color: onDark ? 'rgba(255,255,255,0.8)' : '#76728A' }}>
+                  {formatBytes(att.fileSize)}{att.fileSize ? ' • ' : ''}{t.download}
+                </p>
+              </div>
+            </a>
+          )
+        })}
+      </div>
+    )
+  }
 
   if (!isInitialized || !config) {
     const loadingWidget = (
@@ -740,6 +1123,7 @@ export default function WidgetPage() {
           50% { transform: scale(1.3); }
           100% { transform: scale(1); opacity: 1; }
         }
+        @keyframes gwSpin { to { transform: rotate(360deg); } }
         .gw-scroll::-webkit-scrollbar { width: 4px; }
         .gw-scroll::-webkit-scrollbar-track { background: transparent; }
         .gw-scroll::-webkit-scrollbar-thumb { background: #DDDCE5; border-radius: 4px; }
@@ -767,15 +1151,15 @@ export default function WidgetPage() {
           position: 'relative',
         }}>
           <div style={{
-            background: primaryColor,
+            background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -30)} 100%)`,
             padding: '20px 20px 16px',
             flexShrink: 0,
             position: 'relative',
             overflow: 'hidden',
           }}>
-            <div style={{ position: 'absolute', top: '-50px', right: '-40px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-            <div style={{ position: 'absolute', bottom: '-60px', left: '-30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-            <div style={{ position: 'absolute', top: '6px', right: '70px', width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+            <div style={{ position: 'absolute', top: '-50px', right: '-40px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ position: 'absolute', bottom: '-60px', left: '-30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+            <div style={{ position: 'absolute', top: '6px', right: '70px', width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
               <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -797,34 +1181,81 @@ export default function WidgetPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ color: 'white', fontWeight: 700, fontSize: '15px', margin: 0, letterSpacing: '-0.01em' }}>{AGENT.name}</p>
-                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', margin: '2px 0 0', fontWeight: 400, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#86efac' }} />
-                  Çevrimiçi • Tipik yanıt: 2 dk
+                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', margin: '2px 0 0', fontWeight: 400, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#86efac', boxShadow: '0 0 0 2px rgba(134,239,172,0.3)' }} />
+                  {t.online} • {t.typicalReply}
                 </p>
               </div>
-              <button
-                onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '7px',
-                  cursor: 'pointer',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s',
-                  flexShrink: 0,
-                  lineHeight: 0,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; e.currentTarget.style.transform = 'scale(1.08)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'scale(1)' }}
-              >
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <svg
+                    width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"
+                    style={{ position: 'absolute', left: '8px', pointerEvents: 'none', opacity: 0.9 }}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value)}
+                    aria-label="Çeviri dili / Translation language"
+                    title="Çeviri dili"
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      background: 'rgba(255,255,255,0.18)',
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.25)',
+                      borderRadius: '9px',
+                      padding: '5px 22px 5px 26px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      maxWidth: '120px',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {WIDGET_LANGUAGES.map((l) => (
+                      <option key={l.code} value={l.code} style={{ color: '#111827', background: '#ffffff' }}>
+                        {l.name} ({l.code.toUpperCase()})
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"
+                    style={{ position: 'absolute', right: '7px', pointerEvents: 'none', opacity: 0.9 }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                  </svg>
+                </div>
+                <button
+                  onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
+                  aria-label={t.close}
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '7px',
+                    cursor: 'pointer',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                    flexShrink: 0,
+                    lineHeight: 0,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; e.currentTarget.style.transform = 'scale(1.08)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'scale(1)' }}
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -835,7 +1266,7 @@ export default function WidgetPage() {
               display: 'flex', flexDirection: 'column', gap: '8px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', flexShrink: 0 }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#111827' }}>📚 Yardım</p>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#111827' }}>{t.help}</p>
                 <button
                   onClick={() => { setShowKnowledgeBase(false); setSelectedArticle(null) }}
                   style={{
@@ -847,11 +1278,11 @@ export default function WidgetPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#E0DFEF' }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = '#F3F4F6' }}
                 >
-                  Sohbete Dön
+                  {t.backToChat}
                 </button>
               </div>
               {kbLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>Yükleniyor...</div>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>{t.loading}</div>
               ) : selectedArticle ? (
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                   <button
@@ -863,14 +1294,14 @@ export default function WidgetPage() {
                       fontFamily: 'inherit',
                     }}
                   >
-                    ← Geri
+                    {t.back}
                   </button>
                   <h3 style={{ margin: '0 0 12px', fontSize: '16px', color: '#111827', lineHeight: '1.4' }}>{selectedArticle.title}</h3>
                   <div style={{ fontSize: '14px', color: '#111827', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{selectedArticle.content}</div>
                 </div>
               ) : kbArticles.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: '#76728A', fontSize: '14px' }}>
-                  Henüz yardım makalesi bulunmuyor.
+                  {t.noArticles}
                 </div>
               ) : (
                 kbArticles.map((article) => (
@@ -925,7 +1356,7 @@ export default function WidgetPage() {
                     flexShrink: 0,
                   }}
                 >
-                  Kapat
+                  {t.close}
                 </button>
               </div>
             )}
@@ -949,7 +1380,7 @@ export default function WidgetPage() {
                   fontWeight: 600,
                   letterSpacing: '0.02em',
                 }}>
-                  Bugün
+                  {t.today}
                 </span>
               </div>
 
@@ -979,7 +1410,7 @@ export default function WidgetPage() {
                     boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                   }}>
                     <p style={{ margin: 0, fontSize: '14px', color: '#111827', lineHeight: '1.6' }}>
-                      {config.welcomeMessage || 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?'}
+                      {config.welcomeMessage || t.welcomeFallback}
                     </p>
                   </div>
                   <p style={{ margin: '4px 0 0 4px', fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
@@ -990,17 +1421,21 @@ export default function WidgetPage() {
 
               {messages.length === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', marginLeft: '40px' }}>
-                  {['💬 Sohbet başlat', '💰 Fiyatlandırma', '🛠️ Destek talebi'].map((text) => (
+                  {[
+                    { key: 'chat', label: t.quickChat },
+                    { key: 'pricing', label: t.quickPricing },
+                    { key: 'support', label: t.quickSupport },
+                  ].map(({ key, label }) => (
                     <button
-                      key={text}
+                      key={key}
                       onClick={() => {
-                        if (text.includes('Sohbet')) {
+                        if (key === 'chat') {
                           if (visitorInfo.name && visitorInfo.email) {
                             setShowPreChat(false)
                             setTimeout(() => inputRef.current?.focus(), 100)
                           }
                         }
-                        setInputMessage(text.replace(/^[^\s]+\s/, ''))
+                        setInputMessage(label.replace(/^[^\s]+\s/, ''))
                         inputRef.current?.focus()
                       }}
                       style={{
@@ -1027,7 +1462,7 @@ export default function WidgetPage() {
                         e.currentTarget.style.transform = 'translateX(0)'
                       }}
                     >
-                      {text}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -1043,17 +1478,20 @@ export default function WidgetPage() {
                   {msg.senderType === 'VISITOR' ? (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <div style={{ maxWidth: '270px' }}>
-                        <div style={{
-                          background: '#1972F5',
-                          color: 'white',
-                          borderRadius: '12px 12px 4px 12px',
-                          padding: '11px 16px',
-                          fontSize: '14px',
-                          lineHeight: '1.6',
-                          boxShadow: '0 2px 8px rgba(25,114,245,0.25)',
-                        }}>
-                          {msg.content}
-                        </div>
+                        {!(msg.attachments?.length && /^(🖼️|📎)\s/u.test(msg.content)) && (
+                          <div style={{
+                            background: '#1972F5',
+                            color: 'white',
+                            borderRadius: '12px 12px 4px 12px',
+                            padding: '11px 16px',
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            boxShadow: '0 2px 8px rgba(25,114,245,0.25)',
+                          }}>
+                            {msg.content}
+                          </div>
+                        )}
+                        {renderAttachments(msg, true)}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', margin: '4px 4px 0 0' }}>
                           <span style={{ fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
                             {formatTime(msg.createdAt)}
@@ -1096,10 +1534,36 @@ export default function WidgetPage() {
                           boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                         }}>
                           {msg.content}
+                          {translations[msg.id] && (
+                            <span style={{ display: 'block', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #EEF0F4', fontSize: '13px', color: '#4B5563', fontStyle: 'italic' }}>
+                              🌐 {translations[msg.id]}
+                            </span>
+                          )}
                         </div>
-                        <p style={{ margin: '4px 0 0 4px', fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
-                          {formatTime(msg.createdAt)}
-                        </p>
+                        {renderAttachments(msg, false)}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 0 4px' }}>
+                          <span style={{ fontSize: '10px', color: '#B0B0C5', fontWeight: 500 }}>
+                            {formatTime(msg.createdAt)}
+                          </span>
+                          {aiTranslateAvailable && msg.content?.trim() && (
+                            <button
+                              onClick={() => handleTranslateMessage(msg)}
+                              disabled={translatingId === msg.id}
+                              aria-label={translations[msg.id] ? t.showOriginal : t.translate}
+                              title={translations[msg.id] ? t.showOriginal : t.translate}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                padding: 0, fontSize: '10px', fontWeight: 600,
+                                color: translations[msg.id] ? primaryColor : '#9CA3AF',
+                                display: 'flex', alignItems: 'center', gap: '3px',
+                                fontFamily: 'inherit', lineHeight: 1,
+                              }}
+                            >
+                              <span style={{ fontSize: '11px' }}>🌐</span>
+                              {translatingId === msg.id ? t.translating : (translations[msg.id] ? t.showOriginal : t.translate)}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1134,7 +1598,7 @@ export default function WidgetPage() {
               )}
               {(conversationStatus === 'RESOLVED' || conversationStatus === 'CLOSED') && messages.length > 0 && !ratingSubmitted && (
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>Sohbeti değerlendirin</p>
+                  <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>{t.rateChat}</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginBottom: '10px' }}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -1177,7 +1641,7 @@ export default function WidgetPage() {
                     type="text"
                     value={ratingComment}
                     onChange={(e) => setRatingComment(e.target.value)}
-                    placeholder="Yorum ekleyin (isteğe bağlı)..."
+                    placeholder={t.commentPlaceholder}
                     style={{
                       width: '100%',
                       padding: '10px 14px',
@@ -1229,15 +1693,15 @@ export default function WidgetPage() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    {ratingSending ? 'Gönderiliyor...' : 'Gönder'}
+                    {ratingSending ? t.sending : t.send}
                   </button>
                 </div>
               )}
 
               {ratingSubmitted && (
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', textAlign: 'center', animation: 'gwFadeIn 0.3s ease-out' }}>
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#111827' }}>Değerlendirmeniz için teşekkür ederiz! 🙏</p>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>Görüşleriniz bizim için çok değerli</p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#111827' }}>{t.thanksRating}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#76728A' }}>{t.thanksRatingSub}</p>
                 </div>
               )}
 
@@ -1261,9 +1725,9 @@ export default function WidgetPage() {
                 }}>
                   <img src={AGENT.photo} alt={AGENT.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <p style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Merhaba! 👋</p>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{t.preChatHi}</p>
                 <p style={{ fontSize: '13px', color: '#76728A', margin: 0, lineHeight: '1.5' }}>
-                  Sohbete başlamak için bilgilerinizi girin
+                  {t.preChatSub}
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1273,7 +1737,7 @@ export default function WidgetPage() {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Adınız"
+                    placeholder={t.namePlaceholder}
                     value={visitorInfo.name}
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, name: e.target.value }))}
                     style={{
@@ -1293,7 +1757,7 @@ export default function WidgetPage() {
                   </svg>
                   <input
                     type="email"
-                    placeholder="E-posta adresiniz"
+                    placeholder={t.emailPlaceholder}
                     value={visitorInfo.email}
                     onChange={(e) => setVisitorInfo(prev => ({ ...prev, email: e.target.value }))}
                     style={{
@@ -1334,14 +1798,14 @@ export default function WidgetPage() {
                     e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
-                  Sohbete Başla
+                  {t.startChat}
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '4px' }}>
                   <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="#C5C5D5" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <p style={{ textAlign: 'center', fontSize: '11px', color: '#B0B0C5', margin: 0, fontWeight: 500 }}>
-                    256-bit SSL ile korunmaktadır
+                    {t.sslNote}
                   </p>
                 </div>
               </div>
@@ -1447,6 +1911,40 @@ export default function WidgetPage() {
                 >
                   🎬
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_UPLOAD}
+                  onChange={handleFileSelected}
+                  style={{ display: 'none' }}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <button
+                  onClick={handlePickFile}
+                  disabled={uploading}
+                  aria-label={t.attachFile}
+                  title={t.attachFile}
+                  style={{
+                    width: '36px', height: '36px',
+                    background: 'transparent',
+                    border: 'none', borderRadius: '50%',
+                    cursor: uploading ? 'wait' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, lineHeight: 0, color: '#76728A',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { if (!uploading) e.currentTarget.style.background = '#F0EFF5' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  {uploading ? (
+                    <span style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid rgba(25,114,245,0.25)', borderTopColor: '#1972F5', borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }} />
+                  ) : (
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  )}
+                </button>
                 <textarea
                   ref={inputRef}
                   value={inputMessage}
@@ -1457,7 +1955,7 @@ export default function WidgetPage() {
                       handleStartChat()
                     }
                   }}
-                  placeholder="Mesajınızı yazın..."
+                  placeholder={t.inputPlaceholder}
                   rows={1}
                   className="gw-input"
                   style={{
@@ -1516,9 +2014,19 @@ export default function WidgetPage() {
                   ➤
                 </button>
               </div>
-              <p style={{ textAlign: 'center', fontSize: '10px', color: '#C5C5D5', margin: '8px 0 0', fontWeight: 500, letterSpacing: '0.02em' }}>
-                Gu Live Chat
-              </p>
+              {uploadError && (
+                <p style={{ margin: '8px 4px 0', fontSize: '11px', color: '#DC2626', fontWeight: 500 }}>
+                  {uploadError}
+                </p>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', margin: '8px 0 0' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C5C5D5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+                </svg>
+                <p style={{ textAlign: 'center', fontSize: '10px', color: '#C5C5D5', margin: 0, fontWeight: 600, letterSpacing: '0.02em' }}>
+                  {t.poweredBy}
+                </p>
+              </div>
             </div>
           )}
         </div>

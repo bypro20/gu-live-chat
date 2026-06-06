@@ -63,10 +63,11 @@ export async function activateSubscription(
   }
 
   // Calculate period end (30 days from now for paid plans)
+  const periodStart = new Date()
   const currentPeriodEnd = new Date()
   currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30)
 
-  await prisma.website.update({
+  const updated = await prisma.website.update({
     where: { websiteId },
     data: {
       plan,
@@ -77,7 +78,29 @@ export async function activateSubscription(
       paytrCardToken: ctoken || undefined,
       failedPayments: 0,
     },
+    select: { id: true },
   })
+
+  // Record a paid invoice so the billing history reflects real payments.
+  // Non-fatal: a failure here should not block subscription activation.
+  if (planData.price > 0) {
+    try {
+      await prisma.invoice.create({
+        data: {
+          websiteId: updated.id,
+          plan,
+          amount: planData.price * 100, // kuruş
+          currency: 'TRY',
+          status: 'PAID',
+          periodStart,
+          periodEnd: currentPeriodEnd,
+          paytrMerchantOid: merchantOid,
+        },
+      })
+    } catch (err) {
+      console.error('[Subscription] Failed to record invoice:', err)
+    }
+  }
 }
 
 // ─── Cancel Subscription ──────────────────────────────────────────
@@ -174,6 +197,7 @@ export async function renewSubscription(
   const website = await prisma.website.findUnique({
     where: { websiteId },
     select: {
+      id: true,
       plan: true,
       paytrUserToken: true,
       paytrCardToken: true,
@@ -212,6 +236,7 @@ export async function renewSubscription(
 
   if (result.status === 'success') {
     // Extend subscription period by 30 days
+    const periodStart = new Date()
     const newPeriodEnd = new Date()
     newPeriodEnd.setDate(newPeriodEnd.getDate() + 30)
 
@@ -224,6 +249,24 @@ export async function renewSubscription(
         failedPayments: 0,
       },
     })
+
+    // Record a paid invoice for the renewal period (non-fatal).
+    try {
+      await prisma.invoice.create({
+        data: {
+          websiteId: website.id,
+          plan: website.plan,
+          amount: planData.price * 100, // kuruş
+          currency: 'TRY',
+          status: 'PAID',
+          periodStart,
+          periodEnd: newPeriodEnd,
+          paytrMerchantOid: merchantOid,
+        },
+      })
+    } catch (err) {
+      console.error('[Subscription] Failed to record renewal invoice:', err)
+    }
 
     return { success: true }
   }

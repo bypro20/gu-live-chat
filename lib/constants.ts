@@ -40,7 +40,7 @@ export const PLAN_LIMITS = {
     autoTranslate: false,
   },
   PRO: {
-    maxAgents: 15,
+    maxAgents: 25,
     maxConversationsPerMonth: Infinity,
     chatbot: true,
     visitorTracking: true,

@@ -1,10 +1,33 @@
 import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { PLAN_LIMITS } from '@/lib/constants'
 
 export async function POST(req: Request) {
-  const { text, fromLang, toLang } = await req.json()
+  // Auth required — this endpoint uses server-side API keys
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
+  }
+
+  const { text, fromLang, toLang, websiteId } = await req.json()
 
   if (!text) {
     return NextResponse.json({ error: 'Metin gerekli' }, { status: 400 })
+  }
+
+  // Plan gate: autoTranslate feature required (check active website when provided)
+  if (websiteId) {
+    const website = await prisma.website.findUnique({
+      where: { websiteId },
+      select: { plan: true },
+    })
+    if (website && !PLAN_LIMITS[website.plan].autoTranslate) {
+      return NextResponse.json(
+        { error: 'Otomatik çeviri bu plan kapsamında mevcut değil', translatedText: text },
+        { status: 403 }
+      )
+    }
   }
 
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY

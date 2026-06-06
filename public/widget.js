@@ -39,14 +39,17 @@
   var forceStyle = document.createElement('style');
   forceStyle.id = 'gu-widget-force-style';
   forceStyle.textContent =
-    '#gu-chat-button{position:fixed!important;bottom:24px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;transform:none!important;filter:none!important;}' +
-    '#gu-widget-iframe{position:fixed!important;bottom:88px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;transform:none!important;filter:none!important;}' +
+    '#gu-chat-button{position:fixed!important;bottom:24px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
+    '#gu-widget-iframe{position:fixed!important;bottom:96px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
+    '#gu-greeting-bubble{position:fixed!important;bottom:96px!important;right:24px!important;z-index:2147483646!important;filter:none!important;}' +
     'html,body{transform:none!important;filter:none!important;}' +
     '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}' +
     '#gu-chat-button svg{display:block;pointer-events:none;}' +
-    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(25,114,245,0.35),0 4px 16px rgba(25,114,245,0.3)}50%{box-shadow:0 0 0 12px rgba(25,114,245,0.06),0 4px 20px rgba(25,114,245,0.4)}100%{box-shadow:0 0 0 0 rgba(25,114,245,0),0 4px 16px rgba(25,114,245,0.3)}}' +
+    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(25,114,245,0.4),0 6px 20px rgba(25,114,245,0.35)}70%{box-shadow:0 0 0 14px rgba(25,114,245,0),0 8px 26px rgba(25,114,245,0.45)}100%{box-shadow:0 0 0 0 rgba(25,114,245,0),0 6px 20px rgba(25,114,245,0.35)}}' +
     '@keyframes gu-fade-in{from{opacity:0}to{opacity:1}}' +
-    '@keyframes gu-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}';
+    '@keyframes gu-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}' +
+    '@keyframes gu-badge-pop{0%{transform:scale(0)}60%{transform:scale(1.25)}100%{transform:scale(1)}}' +
+    '@keyframes gu-bubble-in{from{opacity:0;transform:translateY(12px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}';
   (document.head || document.documentElement).appendChild(forceStyle);
 
   // ─── Chat button — DIRECTLY on document.body (no container) ──────────
@@ -57,25 +60,64 @@
 
   var chatBtn = document.createElement('div');
   chatBtn.id = 'gu-chat-button';
-  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:48px;height:48px;border-radius:50%;background:#1972F5;cursor:pointer;box-shadow:0 4px 16px rgba(25,114,245,0.35);display:flex;align-items:center;justify-content:center;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;transform:none;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;';
+  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#2B82FF 0%,#1565E0 100%);cursor:pointer;box-shadow:0 6px 20px rgba(25,114,245,0.4),0 2px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),box-shadow 0.28s ease;pointer-events:auto;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;animation:gu-pulse 3s ease-in-out infinite;';
+
+  // ─── Unread badge (shown when widget is closed and new messages arrive) ──
+  var unreadBadge = document.createElement('span');
+  unreadBadge.id = 'gu-unread-badge';
+  unreadBadge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#EF4444;color:#fff;font:700 11px/20px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);box-sizing:border-box;display:none;animation:gu-badge-pop 0.3s cubic-bezier(0.16,1,0.3,1);';
+  unreadBadge.textContent = '';
+  chatBtn.appendChild(unreadBadge);
+
+  var unreadCount = 0;
+  function setUnread(count) {
+    unreadCount = count > 0 ? count : 0;
+    if (unreadCount > 0) {
+      unreadBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+      unreadBadge.style.display = 'block';
+    } else {
+      unreadBadge.style.display = 'none';
+    }
+  }
 
   var chatOpen = false;  // Start closed — user clicks to open chat
+
+  function showIframe() {
+    iframe.style.display = 'block';
+    // Animate in on the next frame so the transition runs.
+    requestAnimationFrame(function() {
+      iframe.style.opacity = '1';
+      iframe.style.transform = 'translateY(0) scale(1)';
+    });
+  }
+  function hideIframe() {
+    iframe.style.opacity = '0';
+    iframe.style.transform = 'translateY(12px) scale(0.98)';
+    setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 260);
+  }
+
+  function setIconChat() { chatBtn.innerHTML = CHAT_ICON; chatBtn.appendChild(unreadBadge); }
+  function setIconClose() { chatBtn.innerHTML = CLOSE_ICON; chatBtn.appendChild(unreadBadge); }
+
   chatBtn.innerHTML = CHAT_ICON;
+  chatBtn.appendChild(unreadBadge);
   chatBtn.addEventListener('click', function() {
     chatOpen = !chatOpen;
     if (chatOpen) {
-      iframe.style.display = 'block';
-      iframe.style.opacity = '1';
+      removeGreeting();
+      setUnread(0);
+      showIframe();
       iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
-      chatBtn.innerHTML = CLOSE_ICON;
+      setIconClose();
+      chatBtn.style.animation = 'none';
     } else {
-      iframe.style.display = 'none';
+      hideIframe();
       iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:close' }, '*');
-      chatBtn.innerHTML = CHAT_ICON;
+      setIconChat();
     }
   });
-  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 6px 24px rgba(25,114,245,0.45)'; chatBtn.style.transform = 'scale(1.06)'; });
-  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 4px 16px rgba(25,114,245,0.35)'; chatBtn.style.transform = 'scale(1)'; });
+  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 10px 30px rgba(25,114,245,0.5)'; chatBtn.style.transform = 'scale(1.08)'; });
+  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 6px 20px rgba(25,114,245,0.4),0 2px 6px rgba(0,0,0,0.1)'; chatBtn.style.transform = 'scale(1)'; });
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(chatBtn);
 
@@ -84,10 +126,55 @@
   var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:80px;right:24px;z-index:2147483647;width:380px;height:600px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.05);display:none;opacity:0;transition:opacity 0.3s ease;pointer-events:auto;background:white;transform:none;filter:none;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:96px;right:24px;z-index:2147483647;width:384px;height:620px;max-height:calc(100vh - 120px);border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.04);display:none;opacity:0;transform:translateY(12px) scale(0.98);transform-origin:bottom right;transition:opacity 0.28s ease,transform 0.28s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:white;filter:none;';
   iframe.allow = 'microphone; camera';
+  iframe.title = 'Canlı Sohbet';
   // DIRECTLY on body — no container wrapper
   document.body.appendChild(iframe);
+
+  // ─── Optional proactive greeting bubble near the launcher ────────────
+  var greetingEl = null;
+  var greetingDismissed = sessionStorage.getItem('gu_greeting_dismissed') === '1';
+
+  function removeGreeting() {
+    if (greetingEl && greetingEl.parentNode) {
+      greetingEl.parentNode.removeChild(greetingEl);
+    }
+    greetingEl = null;
+  }
+
+  function showGreeting(text) {
+    if (greetingDismissed || chatOpen || greetingEl) return;
+    greetingEl = document.createElement('div');
+    greetingEl.id = 'gu-greeting-bubble';
+    greetingEl.style.cssText = 'position:fixed;bottom:96px;right:24px;z-index:2147483646;max-width:240px;background:#fff;color:#111827;border-radius:16px 16px 4px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.16);padding:13px 16px;font:400 13.5px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;animation:gu-bubble-in 0.35s cubic-bezier(0.16,1,0.3,1);filter:none;';
+
+    var close = document.createElement('span');
+    close.textContent = '×';
+    close.style.cssText = 'position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#fff;color:#76728A;font:700 15px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+    close.addEventListener('click', function(e) {
+      e.stopPropagation();
+      greetingDismissed = true;
+      try { sessionStorage.setItem('gu_greeting_dismissed', '1'); } catch (err) {}
+      removeGreeting();
+    });
+
+    var txt = document.createElement('div');
+    txt.textContent = text;
+
+    greetingEl.appendChild(close);
+    greetingEl.appendChild(txt);
+    greetingEl.addEventListener('click', function() {
+      removeGreeting();
+      if (!chatOpen) { chatBtn.click(); }
+    });
+    document.body.appendChild(greetingEl);
+  }
+
+  // Surface a friendly greeting a few seconds after load (once per session).
+  setTimeout(function() {
+    showGreeting('Merhaba! 👋 Size nasıl yardımcı olabiliriz?');
+  }, 6000);
 
   // ─── Proactive Messages ────────────────────────────────────────────
   var proactiveMessages = [];
@@ -328,18 +415,24 @@
 
   // ─── Listen for messages from iframe (e.g. close button inside widget) ──
   window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'gu:resize') {
+    if (!event.data || !event.data.type) return;
+    if (event.data.type === 'gu:resize') {
       if (event.data.open) {
-        iframe.style.display = 'block';
-        iframe.style.opacity = '1';
         chatOpen = true;
-        chatBtn.innerHTML = CLOSE_ICON;
+        removeGreeting();
+        setUnread(0);
+        showIframe();
+        setIconClose();
+        chatBtn.style.animation = 'none';
         ensureWidgetMounted();
       } else {
-        iframe.style.display = 'none';
         chatOpen = false;
-        chatBtn.innerHTML = CHAT_ICON;
+        hideIframe();
+        setIconChat();
       }
+    } else if (event.data.type === 'gu:unread') {
+      // The chat UI reports how many unread messages arrived while closed.
+      if (!chatOpen) setUnread(parseInt(event.data.count, 10) || 0);
     }
   });
 
@@ -536,7 +629,7 @@
 
   // IDs of elements to exclude from screenshots — the widget iframe and button
   // are the heaviest DOM subtrees; skipping them makes screenshots 5-10× faster.
-  var HIDDEN_ELEMENT_IDS = ['gu-widget-iframe', 'gu-chat-button'];
+  var HIDDEN_ELEMENT_IDS = ['gu-widget-iframe', 'gu-chat-button', 'gu-greeting-bubble'];
 
   // Capture screenshot — uses onclone (never modifies original DOM)
   var _captureCount = 0;
@@ -944,17 +1037,19 @@
     switch(method) {
       case 'open':
         chatOpen = true;
-        iframe.style.display = 'block';
-        iframe.style.opacity = '1';
+        removeGreeting();
+        setUnread(0);
+        showIframe();
         iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
-        chatBtn.innerHTML = CLOSE_ICON;
+        setIconClose();
+        chatBtn.style.animation = 'none';
         ensureWidgetMounted();
         break;
       case 'close':
         chatOpen = false;
-        iframe.style.display = 'none';
+        hideIframe();
         iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:close' }, '*');
-        chatBtn.innerHTML = CHAT_ICON;
+        setIconChat();
         break;
       case 'startScreenCapture':
         startScreenCapture();
