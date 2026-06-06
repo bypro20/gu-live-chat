@@ -27,6 +27,13 @@ interface VisitorSessionInfo {
 const agentOnline = new Map<string, Set<string>>() // websiteId -> Set of userIds
 const visitorSessions = new Map<string, VisitorSessionInfo>() // socketId -> session info
 
+function isAgentAuthed(socket: { userId?: string; websiteIds?: string[] }, websiteId?: string): boolean {
+  if (!socket.userId) return false
+  if (websiteId && socket.websiteIds && !socket.websiteIds.includes(websiteId)) return false
+  return true
+}
+
+
 export function initSocketServer(httpServer: HTTPServer) {
   io = new SocketIOServer(httpServer, {
     path: '/socket.io',
@@ -108,6 +115,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     // ─── Agent requests current live visitors ──────────────────
     socket.on('agent:visitor:list', (data: { websiteId: string }) => {
       const { websiteId } = data
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, websiteId)) return
       const visitors = Array.from(visitorSessions.values())
         .filter((v) => v.websiteId === websiteId)
         .map((v) => ({
@@ -192,6 +200,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Join Conversation Rooms ───────────────────────────────
     socket.on('agent:join-conversation', (data: { conversationId: string }) => {
+      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] })) return
       if (data.conversationId) {
         socket.join(`conversation:${data.conversationId}`)
       }

@@ -4,6 +4,11 @@ import type { NextRequest } from 'next/server'
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // Legacy admin login URL alias
+  if (pathname === '/panel-giris') {
+    return NextResponse.redirect(new URL('/admin-login', req.url))
+  }
+
   // Allow widget routes (public chat widget)
   if (pathname.startsWith('/widget') || pathname.startsWith('/api/widget')) {
     return NextResponse.next()

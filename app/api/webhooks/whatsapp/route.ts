@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { parseIncomingWebhook, markWhatsAppMessageRead, WhatsAppConfig } from '@/lib/channels/whatsapp'
 import { emitVisitorMessage } from '@/lib/socket-events'
@@ -38,9 +39,28 @@ export async function GET(request: NextRequest) {
 }
 
 // ─── Incoming Messages (POST) ─────────────────────────────────────────
+function verifyWhatsAppSignature(rawBody: string, signature: string | null, appSecret: string): boolean {
+  if (!signature || !appSecret) return false
+  const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex')
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const rawBody = await request.text()
+    const signature = request.headers.get('x-hub-signature-256')
+    const appSecret = process.env.WHATSAPP_APP_SECRET || ''
+
+    if (appSecret && !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
+      console.warn('[WhatsApp Webhook] Invalid signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    }
+
+    const body = JSON.parse(rawBody)
 
     // Only process message events
     if (body?.object !== 'whatsapp_business_account') {

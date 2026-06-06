@@ -202,6 +202,7 @@ export async function renewSubscription(
       paytrUserToken: true,
       paytrCardToken: true,
       paytrMerchantOid: true,
+      owner: { select: { email: true } },
     },
   })
 
@@ -230,9 +231,14 @@ export async function renewSubscription(
     ctoken: website.paytrCardToken,
     paymentAmount: planData.price,
     currency: 'TL',
-    userEmail: '', // Will be fetched from website owner
+    userEmail: website.owner?.email || '',
     userIp: '127.0.0.1', // Server-initiated, no user IP
   })
+
+  if (result.status === 'wait_callback') {
+    console.log(`[Subscription] Renewal pending callback for ${websiteId}`)
+    return { success: true, msg: 'Payment pending callback' }
+  }
 
   if (result.status === 'success') {
     // Extend subscription period by 30 days

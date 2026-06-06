@@ -60,6 +60,21 @@ export async function PATCH(
   const { visitorId } = await params
 
   try {
+    const existing = await prisma.visitor.findUnique({
+      where: { id: visitorId },
+      select: { websiteId: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Ziyaretçi bulunamadı' }, { status: 404 })
+    }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { websiteId: existing.websiteId, userId: session.user.id },
+    })
+    if (!member) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+    }
+
     const body = await req.json()
     const { name, email, phone, notes, customData } = body
 

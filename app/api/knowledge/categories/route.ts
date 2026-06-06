@@ -47,6 +47,11 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = categorySchema.parse(body)
 
+    const member = await prisma.teamMember.findFirst({
+      where: { websiteId: validated.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN', 'MEMBER'] } },
+    })
+    if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
     const existing = await prisma.knowledgeCategory.findUnique({
       where: { websiteId_slug: { websiteId: validated.websiteId, slug: validated.slug } },
     })

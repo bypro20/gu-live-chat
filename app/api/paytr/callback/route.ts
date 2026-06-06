@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { parseCallback } from '@/lib/paytr'
 import { activateSubscription, handleFailedPayment } from '@/lib/subscription'
 import { prisma } from '@/lib/db'
+import { PLANS } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,6 @@ export async function POST(request: NextRequest) {
       body[key] = value.toString()
     })
 
-    // Parse and verify callback
     const callbackData = parseCallback(body)
 
     if (!callbackData) {
@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
       return new NextResponse('INVALID', { status: 400 })
     }
 
-    // Extract websiteId from merchantOid format: gu_{websiteIdSuffix}_{planId}_{timestamp}_{random}
     const merchantOid = callbackData.merchantOid
     const parts = merchantOid.split('_')
 
@@ -28,10 +27,9 @@ export async function POST(request: NextRequest) {
       return new NextResponse('INVALID', { status: 400 })
     }
 
-    // Find website by paytrMerchantOid
     const website = await prisma.website.findUnique({
       where: { paytrMerchantOid: merchantOid },
-      select: { websiteId: true, plan: true },
+      select: { websiteId: true, plan: true, subscriptionStatus: true },
     })
 
     if (!website) {
@@ -39,11 +37,28 @@ export async function POST(request: NextRequest) {
       return new NextResponse('INVALID', { status: 400 })
     }
 
+    const existingInvoice = await prisma.invoice.findFirst({
+      where: { paytrMerchantOid: merchantOid, status: 'PAID' },
+      select: { id: true },
+    })
+    if (callbackData.status === 'success' && existingInvoice) {
+      console.log(`[PayTR Callback] Already processed: ${merchantOid}`)
+      return new NextResponse('OK', { status: 200 })
+    }
+
     if (callbackData.status === 'success') {
-      // Determine plan from merchant_oid
       const planId = parts.length >= 3 ? parts[2] : 'FREE'
       const validPlans = ['STARTER', 'PRO', 'BUSINESS']
       const plan = validPlans.includes(planId) ? planId : 'STARTER'
+
+      const planData = PLANS.find((p) => p.id === plan)
+      const expectedAmount = planData ? Math.round(planData.price * 100) : 0
+      if (expectedAmount > 0 && callbackData.totalAmount !== expectedAmount) {
+        console.error(
+          `[PayTR Callback] Amount mismatch for ${merchantOid}: expected ${expectedAmount}, got ${callbackData.totalAmount}`
+        )
+        return new NextResponse('INVALID', { status: 400 })
+      }
 
       await activateSubscription(
         website.websiteId,
@@ -53,18 +68,14 @@ export async function POST(request: NextRequest) {
         callbackData.ctoken
       )
 
-      console.log(
-        `[PayTR Callback] Subscription activated: ${website.websiteId} -> ${plan}`
-      )
+      console.log(`[PayTR Callback] Subscription activated: ${website.websiteId} -> ${plan}`)
     } else {
-      // Payment failed
       await handleFailedPayment(website.websiteId)
       console.error(
         `[PayTR Callback] Payment failed for ${website.websiteId}: ${callbackData.failedReasonMsg || 'Unknown reason'}`
       )
     }
 
-    // PayTR requires "OK" response
     return new NextResponse('OK', { status: 200 })
   } catch (error) {
     console.error('[PayTR Callback] Error:', error)

@@ -83,6 +83,18 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'id gerekli' }, { status: 400 })
   }
 
+  const existing = await prisma.proactiveMessage.findUnique({ where: { id } })
+  if (!existing) {
+    return NextResponse.json({ error: 'Proaktif mesaj bulunamadı' }, { status: 404 })
+  }
+
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+  })
+  if (!member) {
+    return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+  }
+
   const proactive = await prisma.proactiveMessage.update({
     where: { id },
     data: {
@@ -111,6 +123,18 @@ export async function DELETE(req: Request) {
 
   if (!id) {
     return NextResponse.json({ error: 'id gerekli' }, { status: 400 })
+  }
+
+  const existing = await prisma.proactiveMessage.findUnique({ where: { id } })
+  if (!existing) {
+    return NextResponse.json({ error: 'Proaktif mesaj bulunamadı' }, { status: 404 })
+  }
+
+  const member = await prisma.teamMember.findFirst({
+    where: { websiteId: existing.websiteId, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
+  })
+  if (!member) {
+    return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
   await prisma.proactiveMessage.delete({ where: { id } })
