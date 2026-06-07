@@ -22,10 +22,15 @@ export async function GET(req: Request) {
     const [conversations, total] = await Promise.all([
       prisma.conversation.findMany({
         where,
-        include: {
-          visitor: { select: { id: true, name: true, email: true, avatarUrl: true } },
-          assignedTo: { select: { id: true, name: true, image: true } },
-          _count: { select: { messages: true } },
+        select: {
+          id: true,
+          websiteId: true,
+          visitorId: true,
+          status: true,
+          lastMessageAt: true,
+          lastMessagePreview: true,
+          unreadCount: true,
+          visitor: { select: { id: true, name: true, email: true } },
         },
         orderBy: { lastMessageAt: 'desc' },
         skip: (page - 1) * limit,

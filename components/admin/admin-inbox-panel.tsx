@@ -46,11 +46,19 @@ export function AdminInboxPanel() {
   selectedIdRef.current = selectedId
   soundOnRef.current = soundOn
 
-  const loadSetup = () => {
+  const loadSetup = useCallback(() => {
     setLoadError(null)
     setMarketingSite(null)
-    return fetch('/api/admin/inbox/setup', { credentials: 'include' })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 12000)
+
+    return fetch('/api/admin/inbox/setup', {
+      credentials: 'include',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
       .then(async (r) => {
+        clearTimeout(timeout)
         const d = await r.json()
         if (!r.ok) {
           const msg = [d.error, d.detail, d.hint].filter(Boolean).join(' — ')
@@ -58,8 +66,15 @@ export function AdminInboxPanel() {
         }
         setMarketingSite(d)
       })
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Hata'))
-  }
+      .catch((e) => {
+        clearTimeout(timeout)
+        if (e instanceof Error && e.name === 'AbortError') {
+          setLoadError('Gelen kutusu zaman aşımına uğradı. Yeniden deneyin.')
+        } else {
+          setLoadError(e instanceof Error ? e.message : 'Gelen kutusu açılamadı')
+        }
+      })
+  }, [])
 
   useEffect(() => {
     connectSocket()
@@ -71,7 +86,7 @@ export function AdminInboxPanel() {
       window.removeEventListener('click', unlock)
       window.removeEventListener('keydown', unlock)
     }
-  }, [])
+  }, [loadSetup])
 
   const websiteId = marketingSite?.websiteId
   const { conversations, isLoading, error, mutate: mutateConversations } =
@@ -249,13 +264,23 @@ export function AdminInboxPanel() {
     )
   }
 
-  if (!marketingSite) {
+  if (!marketingSite && !loadError) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm">Gelen kutusu yükleniyor…</p>
+        <button
+          type="button"
+          onClick={() => loadSetup()}
+          className="text-xs underline hover:text-white"
+        >
+          Çok uzun sürüyorsa yeniden dene
+        </button>
       </div>
     )
   }
+
+  if (!marketingSite) return null
 
   const totalUnread = conversations.reduce((s, c) => s + c.unreadCount, 0)
   const connectionLabel = liveConnected
