@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/schema-sync",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/site-health-bot",
+      "schedule": "0 * * * *"
     }
   ]
 }
