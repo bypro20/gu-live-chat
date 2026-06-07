@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
 
 const POLL_LIST_MS = 2000
-const POLL_IDLE_MS = 15000
+const POLL_MSG_MS = 1500
+const POLL_IDLE_MS = 5000
 
 interface Conversation {
   id: string
@@ -86,7 +87,7 @@ export function useAdminInboxConversations(enabled: boolean) {
 
 export function useAdminInboxMessages(conversationId: string | null) {
   const [sending, setSending] = useState(false)
-  const pollInterval = usePollInterval(2000, POLL_IDLE_MS)
+  const pollInterval = usePollInterval(POLL_MSG_MS, POLL_MSG_MS)
 
   const { data, error, mutate, isLoading } = useSWR<{ messages: Message[] }>(
     conversationId

@@ -6,8 +6,8 @@ import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-
 
 // Poll fast (~2s) when relying on REST polling; back off to a safety-net
 // interval when a live socket connection is carrying realtime updates.
-const POLL_FAST_MS = 2000
-const POLL_IDLE_MS = 30000
+const POLL_FAST_MS = 1500
+const POLL_IDLE_MS = 5000
 
 // ─── Types ──────────────────────────────────────────────────────────
 

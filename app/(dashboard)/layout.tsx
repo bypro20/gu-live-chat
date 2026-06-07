@@ -35,6 +35,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      const callback = encodeURIComponent(pathname || '/dashboard')
+      router.replace(`/login?callbackUrl=${callback}`)
+    }
+  }, [status, pathname, router])
+
+  useEffect(() => {
     if (!activeWebsite?.websiteId || status !== 'authenticated') return
     const poll = async () => {
       try {

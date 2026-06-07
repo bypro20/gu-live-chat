@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { PlanType } from '@/lib/constants'
 import type { PlanFeature } from '@/lib/plan-shared'
 import { MIN_PLAN_FOR_FEATURE, planAllowsFeature } from '@/lib/plan-shared'
@@ -13,9 +14,46 @@ const PLAN_NAMES: Record<PlanType, string> = {
 }
 
 export function usePlanFeature(feature: PlanFeature) {
-  const { activeWebsite, isLoading } = useActiveWebsite()
+  const { activeWebsite, isLoading: websiteLoading } = useActiveWebsite()
   const plan = (activeWebsite?.plan || 'FREE') as PlanType
-  const allowed = planAllowsFeature(plan, feature)
+  const [addonAllowed, setAddonAllowed] = useState<boolean | null>(null)
+  const [featuresLoading, setFeaturesLoading] = useState(false)
+
+  useEffect(() => {
+    if (!activeWebsite?.websiteId) {
+      setAddonAllowed(null)
+      return
+    }
+
+    let cancelled = false
+    setFeaturesLoading(true)
+
+    fetch(`/api/websites/${encodeURIComponent(activeWebsite.websiteId)}/plan-features`, {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+      .then(async (res) => {
+        if (!res.ok) return null
+        return res.json() as Promise<{ features?: Partial<Record<PlanFeature, boolean>> }>
+      })
+      .then((data) => {
+        if (cancelled) return
+        setAddonAllowed(data?.features?.[feature] ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setAddonAllowed(null)
+      })
+      .finally(() => {
+        if (!cancelled) setFeaturesLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeWebsite?.websiteId, feature])
+
+  const planAllowed = planAllowsFeature(plan, feature)
+  const allowed = addonAllowed !== null ? addonAllowed : planAllowed
   const requiredPlan = MIN_PLAN_FOR_FEATURE[feature] || 'PRO'
 
   return {
@@ -23,7 +61,7 @@ export function usePlanFeature(feature: PlanFeature) {
     plan,
     requiredPlan,
     requiredPlanName: PLAN_NAMES[requiredPlan],
-    isLoading,
+    isLoading: websiteLoading || featuresLoading,
     activeWebsite,
   }
 }

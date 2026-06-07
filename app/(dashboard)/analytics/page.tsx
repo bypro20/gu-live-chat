@@ -14,7 +14,7 @@ async function fetcher(url: string) {
 }
 
 export default function AnalyticsPage() {
-  const { allowed: hasAdvancedAnalytics } = usePlanFeature('apiAccess')
+  const { allowed: hasAdvancedAnalytics } = usePlanFeature('advancedAnalytics')
   const { activeWebsite } = useActiveWebsite()
   const { toast } = useToast()
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('7d')

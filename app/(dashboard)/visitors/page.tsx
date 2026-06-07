@@ -54,6 +54,7 @@ export default function VisitorsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterDevice, setFilterDevice] = useState<string>('all')
   const [upgradeRequired, setUpgradeRequired] = useState(false)
+  const [overlayEnabled, setOverlayEnabled] = useState(false)
   const [screenCapturingId, setScreenCapturingId] = useState<string | null>(null)
   const userWebsiteIds = websites.map((w) => w.websiteId)
   const [webrtcStream, setWebrtcStream] = useState<MediaStream | null>(null)
@@ -91,6 +92,7 @@ export default function VisitorsPage() {
       if (!res.ok) throw new Error('Ziyaretçiler alınamadı')
       const data = await res.json()
       setVisitors(data.visitors || [])
+      setOverlayEnabled(!!data.overlayEnabled)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -321,9 +323,9 @@ export default function VisitorsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold mb-2">Ekran İzleme</h2>
+            <h2 className="text-xl font-bold mb-2">Ziyaretçi Takibi</h2>
             <p className="text-muted-foreground mb-4">
-              Canlı ziyaretçi izleme, cursor takibi ve ekran önizlemesi profesyonel ve iş paketlerinde kullanılabilir.
+              Canlı ziyaretçi listesi ve sayfa takibi başlangıç paketinde veya ziyaretçi takibi eklentisi ile kullanılabilir.
             </p>
             <Link href="/settings/billing" className="btn-primary">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -341,7 +343,7 @@ export default function VisitorsPage() {
         <div className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold">Ekran İzleme</h1>
+              <h1 className="text-lg font-bold">Ziyaretçiler</h1>
               <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-success-light text-success tabular-nums">
                 {visitors.size}
               </span>
@@ -502,8 +504,8 @@ export default function VisitorsPage() {
               recentClicks={recentClicks}
               activities={visitorActivities}
               theme="dashboard"
-              onScreenCaptureToggle={handleScreenCaptureToggle}
-              isScreenCapturing={screenCapturingId === selectedVisitorId}
+              onScreenCaptureToggle={overlayEnabled ? handleScreenCaptureToggle : undefined}
+              isScreenCapturing={overlayEnabled && screenCapturingId === selectedVisitorId}
               webrtcStream={webrtcStream}
               webrtcState={webrtcState}
               privacyMode={privacyMode}
@@ -521,10 +523,12 @@ export default function VisitorsPage() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">
-                Ekran İzleme
+                Ziyaretçiler
               </h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Ziyaretçi ekranını gerçek zamanlı izleyin. Kredi kartı ve şifre gibi hassas bilgiler otomatik olarak gizlenir.
+                {overlayEnabled
+                  ? 'Ziyaretçi ekranını gerçek zamanlı izleyin. Kredi kartı ve şifre gibi hassas bilgiler otomatik olarak gizlenir.'
+                  : 'Çevrimiçi ziyaretçileri görün ve hangi sayfada olduklarını takip edin. Ekran izleme profesyonel pakette açılır.'}
               </p>
               {visitors.size > 0 && (
                 <p className="text-xs text-success mt-3 font-medium">

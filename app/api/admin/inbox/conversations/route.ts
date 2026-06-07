@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { prisma } from '@/lib/db'
-import { ensureAdminMarketingAccess } from '@/lib/marketing-website'
+import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
 
 /** Admin gelen kutusu — marketing widget sohbetleri (takım üyeliği gerekmez). */
 export async function GET(req: Request) {
@@ -9,14 +9,9 @@ export async function GET(req: Request) {
     const check = await requireAdmin()
     if ('error' in check) return check.error
 
-    const publicWebsiteId = await ensureAdminMarketingAccess(check.user.id)
-    const website = await prisma.website.findUnique({
-      where: { websiteId: publicWebsiteId },
-      select: { id: true },
-    })
-    if (!website) {
-      return NextResponse.json({ error: 'Marketing sitesi bulunamadı' }, { status: 404 })
-    }
+    const site = await resolveAdminInboxSite(check.user.id)
+    const website = { id: site.id }
+    const publicWebsiteId = site.websiteId
 
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
@@ -30,7 +25,6 @@ export async function GET(req: Request) {
         include: {
           visitor: { select: { id: true, name: true, email: true, avatarUrl: true } },
           assignedTo: { select: { id: true, name: true, image: true } },
-          tags: { include: { tag: true } },
           _count: { select: { messages: true } },
         },
         orderBy: { lastMessageAt: 'desc' },

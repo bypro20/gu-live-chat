@@ -91,6 +91,17 @@ export async function POST(req: Request) {
     const fileName = `${Date.now()}-${safeName}`
 
     const s3 = getS3Client()
+    const onVercel = !!process.env.VERCEL
+    if (!s3 && onVercel) {
+      return NextResponse.json(
+        {
+          error: 'Dosya yükleme şu an yapılandırılmamış. AWS S3 ayarlarını kontrol edin.',
+          code: 'STORAGE_NOT_CONFIGURED',
+        },
+        { status: 503 }
+      )
+    }
+
     if (s3 && process.env.AWS_S3_BUCKET) {
       const key = `uploads/widget/${websiteId}/${fileName}`
       await s3.send(

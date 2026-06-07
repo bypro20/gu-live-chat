@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Shield } from 'lucide-react'
-
-const ADMIN_EMAIL = 'admin@guchat.org'
 
 /** signIn(redirect:false) sets the cookie asynchronously — poll until the session is readable. */
 async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boolean> {
@@ -24,7 +23,9 @@ async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boo
   return session?.user?.role === 'ADMIN'
 }
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -36,11 +37,6 @@ export default function AdminLoginPage() {
     setError('')
 
     const normalizedEmail = email.trim().toLowerCase()
-    if (normalizedEmail !== ADMIN_EMAIL) {
-      setError('Bu panel sadece yöneticiler içindir.')
-      setLoading(false)
-      return
-    }
 
     try {
       const result = await signIn('credentials', {
@@ -53,7 +49,7 @@ export default function AdminLoginPage() {
         const isAdmin = await waitForAdminSession()
         if (isAdmin) {
           // Full navigation so the new session cookie is always sent to /admin
-          window.location.href = '/admin'
+          window.location.href = callbackUrl.startsWith('/') ? callbackUrl : '/admin'
           return
         }
         setError('Bu panel sadece yöneticiler içindir.')
@@ -152,5 +148,17 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <AdminLoginForm />
+    </Suspense>
   )
 }

@@ -1,73 +1,74 @@
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
 
-const MARKETING_DOMAIN = (process.env.MARKETING_WEBSITE_DOMAIN || 'guchat.org').toLowerCase()
+const MARKETING_DOMAIN = (process.env.MARKETING_WEBSITE_DOMAIN || 'guchat.org')
+  .toLowerCase()
+  .replace(/^https?:\/\//, '')
+  .replace(/\/$/, '')
 const MARKETING_NAME = process.env.MARKETING_WEBSITE_NAME || 'Gu Chat — Platform'
 
-/** Exact marketing domain match (substring değil). */
-function marketingDomainFilter() {
-  return {
-    OR: [
-      { domain: MARKETING_DOMAIN },
-      { domain: `www.${MARKETING_DOMAIN}` },
-    ],
-  }
+function marketingDomainVariants(): string[] {
+  const d = MARKETING_DOMAIN
+  return [...new Set([d, `www.${d}`, `https://${d}`, `http://${d}`])]
 }
 
+/** Marketing sitesini bul — domain varyantları + env override. */
 async function findMarketingWebsiteInDb() {
+  const override =
+    process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim() ||
+    process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID?.trim()
+
+  if (override) {
+    const byId = await prisma.website.findUnique({
+      where: { websiteId: override },
+      select: { id: true, websiteId: true, name: true, domain: true },
+    })
+    if (byId) return byId
+  }
+
   return prisma.website.findFirst({
-    where: marketingDomainFilter(),
+    where: { domain: { in: marketingDomainVariants() } },
     orderBy: { createdAt: 'asc' },
     select: { id: true, websiteId: true, name: true, domain: true },
   })
 }
 
 async function ensureTeamOwner(websiteInternalId: string, userId: string) {
-  const member = await prisma.teamMember.findFirst({
-    where: { websiteId: websiteInternalId, userId },
-  })
-  if (!member) {
-    await prisma.teamMember.create({
-      data: {
+  try {
+    await prisma.teamMember.upsert({
+      where: {
+        userId_websiteId: { userId, websiteId: websiteInternalId },
+      },
+      create: {
         websiteId: websiteInternalId,
         userId,
         role: 'OWNER',
         acceptedAt: new Date(),
       },
+      update: { role: 'OWNER', acceptedAt: new Date() },
     })
+  } catch (e) {
+    // Eski şema / yarış durumu — sessizce yoksay
+    console.warn('[marketing-website] team upsert:', e)
   }
 }
 
-/** Tüm platform adminlerine marketing sitesi erişimi ver. */
 async function ensureAllPlatformAdmins(websiteInternalId: string) {
   const admins = await prisma.user.findMany({
     where: { role: 'ADMIN' },
     select: { id: true },
   })
-  await Promise.all(admins.map((a) => ensureTeamOwner(websiteInternalId, a.id)))
+  for (const admin of admins) {
+    await ensureTeamOwner(websiteInternalId, admin.id)
+  }
 }
 
-/**
- * Public websiteId for guchat.org widget.
- * Env override yalnızca DB'de karşılığı varsa kullanılır.
- */
 export async function resolveMarketingWebsiteId(): Promise<string | null> {
-  const override =
-    process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim() ||
-    process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID?.trim()
-
-  if (override) {
-    const site = await prisma.website.findUnique({
-      where: { websiteId: override },
-      select: { websiteId: true },
-    })
-    if (site) return site.websiteId
-  }
-
   try {
     const site = await findMarketingWebsiteInDb()
     return site?.websiteId ?? null
-  } catch {
+  } catch (e) {
+    console.error('[marketing-website] resolve failed:', e)
     return null
   }
 }
@@ -80,16 +81,16 @@ export async function isPlatformMarketingWebsiteId(
   return marketingId === websiteId
 }
 
-/**
- * Marketing sitesi yoksa oluşturur; tüm ADMIN kullanıcıları OWNER yapar.
- */
 export async function ensureMarketingWebsite(ownerUserId: string): Promise<string> {
-  let siteId: string
-  let sitePublicId: string
-
   const existing = await findMarketingWebsiteInDb()
 
-  if (!existing) {
+  if (existing) {
+    await ensureTeamOwner(existing.id, ownerUserId)
+    await ensureAllPlatformAdmins(existing.id)
+    return existing.websiteId
+  }
+
+  try {
     const created = await prisma.website.create({
       data: {
         name: MARKETING_NAME,
@@ -108,37 +109,49 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
       },
       select: { id: true, websiteId: true },
     })
-    siteId = created.id
-    sitePublicId = created.websiteId
-  } else {
-    siteId = existing.id
-    sitePublicId = existing.websiteId
-    await ensureTeamOwner(siteId, ownerUserId)
-  }
-
-  await ensureAllPlatformAdmins(siteId)
-  return sitePublicId
-}
-
-/**
- * Admin gelen kutusu + widget aynı siteId. Her admin çağrısında erişim garanti.
- */
-export async function ensureAdminMarketingAccess(adminUserId: string): Promise<string> {
-  const resolved = await resolveMarketingWebsiteId()
-  if (resolved) {
-    const site = await prisma.website.findUnique({
-      where: { websiteId: resolved },
-      select: { id: true, websiteId: true },
-    })
-    if (site) {
-      await ensureAllPlatformAdmins(site.id)
-      return site.websiteId
+    await ensureAllPlatformAdmins(created.id)
+    return created.websiteId
+  } catch (createError) {
+    console.error('[marketing-website] create failed, retrying find:', createError)
+    const retry = await findMarketingWebsiteInDb()
+    if (retry) {
+      await ensureTeamOwner(retry.id, ownerUserId)
+      await ensureAllPlatformAdmins(retry.id)
+      return retry.websiteId
     }
+    throw createError
   }
-  return ensureMarketingWebsite(adminUserId)
 }
 
-/** guchat.org sayfalarında widget — site yoksa admin ile bootstrap. */
+export async function ensureAdminMarketingAccess(adminUserId: string): Promise<string> {
+  try {
+    const resolved = await resolveMarketingWebsiteId()
+    if (resolved) {
+      const site = await prisma.website.findUnique({
+        where: { websiteId: resolved },
+        select: { id: true, websiteId: true },
+      })
+      if (site) {
+        await ensureAllPlatformAdmins(site.id)
+        return site.websiteId
+      }
+    }
+    return await ensureMarketingWebsite(adminUserId)
+  } catch (e) {
+    console.error('[ensureAdminMarketingAccess] primary failed:', e)
+    const member = await prisma.teamMember.findFirst({
+      where: { userId: adminUserId },
+      include: { website: { select: { id: true, websiteId: true } } },
+      orderBy: { acceptedAt: 'desc' },
+    })
+    if (member?.website) {
+      await ensureAllPlatformAdmins(member.website.id)
+      return member.website.websiteId
+    }
+    throw e
+  }
+}
+
 export async function resolveOrBootstrapMarketingWebsiteId(): Promise<string | null> {
   try {
     const existing = await resolveMarketingWebsiteId()
@@ -157,6 +170,6 @@ export async function resolveOrBootstrapMarketingWebsiteId(): Promise<string | n
     return await ensureMarketingWebsite(admin.id)
   } catch (e) {
     console.error('[marketing-website] bootstrap failed:', e)
-    return null
+    return await resolveMarketingWebsiteId()
   }
 }

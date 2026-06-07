@@ -2,16 +2,12 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { prisma } from '@/lib/db'
 import { sendMessageSchema } from '@/lib/validators/message'
-import { ensureAdminMarketingAccess } from '@/lib/marketing-website'
+import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
 import { emitAgentMessage } from '@/lib/socket-events'
 
-async function getMarketingWebsiteInternalId(adminUserId: string) {
-  const publicId = await ensureAdminMarketingAccess(adminUserId)
-  const website = await prisma.website.findUnique({
-    where: { websiteId: publicId },
-    select: { id: true, websiteId: true },
-  })
-  return website
+async function getAdminInboxWebsite(adminUserId: string) {
+  const site = await resolveAdminInboxSite(adminUserId)
+  return { id: site.id, websiteId: site.websiteId }
 }
 
 export async function GET(
@@ -23,7 +19,7 @@ export async function GET(
     if ('error' in check) return check.error
 
     const { conversationId } = await params
-    const website = await getMarketingWebsiteInternalId(check.user.id)
+    const website = await getAdminInboxWebsite(check.user.id)
     if (!website) {
       return NextResponse.json({ error: 'Marketing sitesi bulunamadı' }, { status: 404 })
     }
@@ -73,7 +69,7 @@ export async function POST(
     if ('error' in check) return check.error
 
     const { conversationId } = await params
-    const website = await getMarketingWebsiteInternalId(check.user.id)
+    const website = await getAdminInboxWebsite(check.user.id)
     if (!website) {
       return NextResponse.json({ error: 'Marketing sitesi bulunamadı' }, { status: 404 })
     }

@@ -8,7 +8,7 @@ import { useActiveWebsite } from './use-active-website'
 // Conversation list refresh cadence: ~5s while polling, backing off when a
 // live socket connection is already streaming new conversations/messages.
 const POLL_LIST_MS = 2000
-const POLL_IDLE_MS = 15000
+const POLL_IDLE_MS = 5000
 
 // ─── Types ──────────────────────────────────────────────────────────
 

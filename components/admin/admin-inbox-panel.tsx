@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { useAdminInboxConversations, useAdminInboxMessages } from '@/lib/hooks/use-admin-inbox'
 import { useInboxSoundAlert } from '@/lib/hooks/use-inbox-sound-alert'
-import { retainSocket, releaseSocket } from '@/lib/socket-client'
+import { connectSocket, retainSocket, releaseSocket } from '@/lib/socket-client'
 
 function timeAgo(date: string) {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
@@ -32,14 +32,24 @@ export function AdminInboxPanel() {
   const selectedIdRef = useRef<string | null>(null)
   selectedIdRef.current = selectedId
 
-  useEffect(() => {
-    fetch('/api/admin/marketing-website')
+  const loadSetup = () => {
+    setLoadError(null)
+    setMarketingSite(null)
+    return fetch('/api/admin/inbox/setup', { credentials: 'include' })
       .then(async (r) => {
         const d = await r.json()
-        if (!r.ok) throw new Error(d.error || 'Site yüklenemedi')
+        if (!r.ok) {
+          const msg = [d.error, d.detail, d.hint].filter(Boolean).join(' — ')
+          throw new Error(msg || 'Kurulum başarısız')
+        }
         setMarketingSite(d)
       })
       .catch((e) => setLoadError(e instanceof Error ? e.message : 'Hata'))
+  }
+
+  useEffect(() => {
+    connectSocket()
+    loadSetup()
   }, [])
 
   const websiteId = marketingSite?.websiteId
@@ -124,17 +134,7 @@ export function AdminInboxPanel() {
         <p className="font-medium">{loadError}</p>
         <button
           type="button"
-          onClick={() => {
-            setLoadError(null)
-            setMarketingSite(null)
-            fetch('/api/admin/marketing-website')
-              .then(async (r) => {
-                const d = await r.json()
-                if (!r.ok) throw new Error(d.error || 'Site yüklenemedi')
-                setMarketingSite(d)
-              })
-              .catch((e) => setLoadError(e instanceof Error ? e.message : 'Hata'))
-          }}
+          onClick={() => loadSetup()}
           className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-medium"
         >
           Yeniden Kur

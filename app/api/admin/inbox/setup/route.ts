@@ -1,23 +1,23 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { prisma } from '@/lib/db'
 import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
 
-/** guchat.org widget'ının bağlı olduğu site (admin gelen kutusu). */
+/** GET /api/admin/inbox/setup — Gelen kutusu sitesini kur/getir. */
 export async function GET() {
   try {
     const check = await requireAdmin()
     if ('error' in check) return check.error
 
-    const website = await resolveAdminInboxSite(check.user.id)
-    return NextResponse.json(website)
+    const site = await resolveAdminInboxSite(check.user.id)
+    return NextResponse.json(site)
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
-    console.error('Admin marketing-website error:', error)
+    console.error('[Admin inbox setup] error:', error)
     return NextResponse.json(
       {
-        error: 'Marketing sitesi kurulamadı. Deploy sonrası seed-admin çalıştırın.',
-        detail: detail.slice(0, 200),
+        error: 'Gelen kutusu kurulamadı',
+        detail,
+        hint: 'curl -H "Authorization: Bearer CRON_SECRET" https://guchat.org/api/cron/seed-admin',
       },
       { status: 500 }
     )

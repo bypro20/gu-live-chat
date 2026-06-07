@@ -58,15 +58,17 @@ export async function GET(req: Request) {
       }
     }
 
-    // Check plan: Ekran İzleme requires PRO or BUSINESS
-    const hasOverlayAI = await websiteHasFeature(website.id, website.plan, 'overlayAI')
-    if (!hasOverlayAI) {
+    const hasVisitorTracking = await websiteHasFeature(website.id, website.plan, 'visitorTracking')
+    if (!hasVisitorTracking) {
       return NextResponse.json({
-        error: 'Ekran İzleme profesyonel ve iş paketlerinde kullanılabilir',
+        error: 'Ziyaretçi takibi başlangıç paketinde veya eklenti ile kullanılabilir',
         upgradeRequired: true,
-        requiredPlan: 'PRO',
+        requiredPlan: 'STARTER',
+        feature: 'visitorTracking',
       }, { status: 403 })
     }
+
+    const hasOverlayAI = await websiteHasFeature(website.id, website.plan, 'overlayAI')
 
     // Get active sessions from DB (endedAt is null and lastActiveAt within 30 min)
     const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000)
@@ -131,6 +133,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       count: visitors.length,
       visitors,
+      overlayEnabled: hasOverlayAI,
     })
   } catch (error) {
     console.error('[Visitors Live API] Error:', error)
