@@ -3,24 +3,30 @@ import { prisma } from './db'
 export async function isIpBanned(ip: string | null): Promise<boolean> {
   if (!ip) return false
 
-  const ipBan = await prisma.ipBan.findUnique({
-    where: { ipAddress: ip },
-  })
+  try {
+    const ipBan = await prisma.ipBan.findUnique({
+      where: { ipAddress: ip },
+    })
 
-  if (ipBan) {
-    if (ipBan.expiresAt && ipBan.expiresAt < new Date()) {
-      await prisma.ipBan.delete({ where: { id: ipBan.id } }).catch(() => {})
-      return false
+    if (ipBan) {
+      if (ipBan.expiresAt && ipBan.expiresAt < new Date()) {
+        await prisma.ipBan.delete({ where: { id: ipBan.id } }).catch(() => {})
+        return false
+      }
+      return true
     }
-    return true
+
+    const userWithBannedIp = await prisma.user.findFirst({
+      where: { bannedIp: ip, isBanned: true },
+      select: { id: true },
+    })
+
+    return !!userWithBannedIp
+  } catch (e) {
+    // Prod şema eksikse widget/inbox çalışmaya devam etsin
+    console.warn('[ip-ban] check skipped:', e)
+    return false
   }
-
-  const userWithBannedIp = await prisma.user.findFirst({
-    where: { bannedIp: ip, isBanned: true },
-    select: { id: true },
-  })
-
-  return !!userWithBannedIp
 }
 
 export async function banIpAddress(

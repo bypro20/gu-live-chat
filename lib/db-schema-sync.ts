@@ -10,6 +10,17 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
 
   const statements: Array<{ label: string; sql: string }> = [
     {
+      label: 'ip_bans',
+      sql: `CREATE TABLE IF NOT EXISTS "ip_bans" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "ipAddress" TEXT NOT NULL,
+        "reason" TEXT,
+        "bannedBy" TEXT,
+        "expiresAt" DATETIME,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    {
       label: 'platform_settings',
       sql: `CREATE TABLE IF NOT EXISTS "platform_settings" (
         "key" TEXT NOT NULL PRIMARY KEY,

@@ -91,15 +91,30 @@ export async function POST(req: Request) {
 
     let isNewVisitor = false
 
-    // Find or create visitor
-    let visitor = await prisma.visitor.findUnique({
-      where: {
-        websiteId_fingerprint: {
-          websiteId: website.id,
-          fingerprint: validated.fingerprint,
+    let visitor: { id: string } | null = null
+    try {
+      visitor = await prisma.visitor.findUnique({
+        where: {
+          websiteId_fingerprint: {
+            websiteId: website.id,
+            fingerprint: validated.fingerprint,
+          },
         },
-      },
-    })
+        select: { id: true },
+      })
+    } catch (visitorLookupErr) {
+      console.warn('[widget/init] visitor lookup failed:', visitorLookupErr)
+      try {
+        const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+          `SELECT id FROM visitors WHERE websiteId = ? AND fingerprint = ? LIMIT 1`,
+          website.id,
+          validated.fingerprint
+        )
+        visitor = rows[0] ?? null
+      } catch {
+        visitor = null
+      }
+    }
 
     if (!visitor) {
       isNewVisitor = true
@@ -148,20 +163,32 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create visitor session
-    const session = await prisma.visitorSession.create({
-      data: {
-        visitorId: visitor.id,
-        websiteId: website.id,
-        sessionId: crypto.randomUUID(),
-        landingPage: validated.currentPage || null,
-        currentPage: validated.currentPage || null,
-        currentTitle: extractPageTitle(validated.currentPage ?? null) ?? null,
-        referrer: validated.referrer ?? null,
-        userAgent: validated.userAgent ?? null,
-        // country and city will be populated later via IP geolocation
-      },
-    })
+    let session: { sessionId: string }
+    try {
+      session = await prisma.visitorSession.create({
+        data: {
+          visitorId: visitor.id,
+          websiteId: website.id,
+          sessionId: crypto.randomUUID(),
+          landingPage: validated.currentPage || null,
+          currentPage: validated.currentPage || null,
+          currentTitle: extractPageTitle(validated.currentPage ?? null) ?? null,
+          referrer: validated.referrer ?? null,
+          userAgent: validated.userAgent ?? null,
+        },
+        select: { sessionId: true },
+      })
+    } catch (sessionErr) {
+      console.warn('[widget/init] visitorSession create failed, minimal:', sessionErr)
+      session = await prisma.visitorSession.create({
+        data: {
+          visitorId: visitor.id,
+          websiteId: website.id,
+          sessionId: crypto.randomUUID(),
+        },
+        select: { sessionId: true },
+      })
+    }
 
     // Check for open conversation
     const existingConversation = await prisma.conversation.findFirst({
