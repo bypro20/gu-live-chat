@@ -55,7 +55,7 @@ export default function NewTicketPage() {
         setError(data.error || 'Bilet oluşturulamadı')
         return
       }
-      router.push(`/settings/tickets/${data.ticket?.id || ''}`)
+      router.push(`/settings/tickets/${data.id}`)
     } catch {
       setError('Bir hata oluştu')
     } finally {

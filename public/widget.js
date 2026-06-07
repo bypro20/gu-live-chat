@@ -186,7 +186,7 @@
 
   function fetchProactiveMessages() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', getWidgetBaseUrl() + '/api/proactive?websiteId=' + WEBSITE_ID, true);
+    xhr.open('GET', getWidgetBaseUrl() + '/api/widget/proactive?websiteId=' + WEBSITE_ID, true);
     xhr.onload = function() {
       if (xhr.status === 200) {
         try {
@@ -1071,6 +1071,24 @@
   // ─── GDPR/KVKK Consent Banner ─────────────────────────────────────────
   var GDPR_STORAGE_KEY = 'gu_gdpr_consent';
   var gdprConsent = localStorage.getItem(GDPR_STORAGE_KEY);
+  var privacyConfig = {
+    showConsentBanner: true,
+    consentBannerText: null,
+    cookieConsentEnabled: true,
+  };
+
+  function fetchPrivacyConfig(cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', getWidgetBaseUrl() + '/api/widget/privacy?websiteId=' + WEBSITE_ID, true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try { privacyConfig = JSON.parse(xhr.responseText); } catch(e) {}
+      }
+      if (cb) cb();
+    };
+    xhr.onerror = function() { if (cb) cb(); };
+    xhr.send();
+  }
 
   function createConsentBanner() {
     var banner = document.createElement('div');
@@ -1082,7 +1100,8 @@
 
     var text = document.createElement('p');
     text.style.cssText = 'margin:0;font-size:13px;line-height:1.6;color:#E5E0F0;';
-    text.textContent = 'Bu site, size daha iyi hizmet verebilmek için çerezler ve kişisel verilerinizi işlemektedir. Devam ederek bunu kabul etmiş olursunuz.';
+    text.textContent = privacyConfig.consentBannerText || privacyConfig.cookieConsentText ||
+      'Bu site, size daha iyi hizmet verebilmek için çerezler ve kişisel verilerinizi işlemektedir. Devam ederek bunu kabul etmiş olursunuz.';
 
     var buttons = document.createElement('div');
     buttons.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
@@ -1145,16 +1164,21 @@
     }
   }
 
-  if (gdprConsent === 'granted' || gdprConsent === 'rejected') {
-    initWidget(gdprConsent === 'rejected');
-  } else {
-    chatBtn.style.display = 'none';
-    iframe.style.display = 'none';
-    chatBtn.style.pointerEvents = 'none';
-
-    var consentBanner = createConsentBanner();
-    document.body.appendChild(consentBanner);
+  function bootWidget() {
+    if (gdprConsent === 'granted' || gdprConsent === 'rejected') {
+      initWidget(gdprConsent === 'rejected');
+    } else if (privacyConfig.showConsentBanner === false) {
+      initWidget(false);
+    } else {
+      chatBtn.style.display = 'none';
+      iframe.style.display = 'none';
+      chatBtn.style.pointerEvents = 'none';
+      var consentBanner = createConsentBanner();
+      document.body.appendChild(consentBanner);
+    }
   }
+
+  fetchPrivacyConfig(bootWidget);
 
   console.log('[Gu Live Chat] Widget loaded for website:', WEBSITE_ID, '| Self-healing enabled | GDPR/KVKK consent:', gdprConsent || 'pending');
 })();

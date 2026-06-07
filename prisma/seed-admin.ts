@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/db'
+import { ensureMarketingWebsite } from '../lib/marketing-website'
 
 async function main() {
   const email = process.env.ADMIN_EMAIL
@@ -26,7 +27,9 @@ async function main() {
     },
   })
 
+  const marketingWebsiteId = await ensureMarketingWebsite(user.id)
   console.log(`✅ Admin kullanıcı hazır: ${user.email} (role: ${user.role})`)
+  console.log(`✅ Marketing website: ${marketingWebsiteId} (guchat.org widget → bu site inbox'a düşer)`)
 }
 
 main()

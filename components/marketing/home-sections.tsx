@@ -34,7 +34,7 @@ const channels = [
   { icon: MessageCircle, label: 'Widget', active: true },
   { icon: Mail, label: 'E-posta', active: true },
   { icon: Smartphone, label: 'WhatsApp', active: true },
-  { icon: MessageSquare, label: 'Messenger', active: false },
+  { icon: MessageSquare, label: 'Messenger', active: true },
 ]
 
 const products = [

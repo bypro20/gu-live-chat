@@ -45,7 +45,20 @@ export async function GET(
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
-  return NextResponse.json(visitor)
+  const { sessions: _sessions, conversations, ...rest } = visitor
+
+  return NextResponse.json({
+    ...rest,
+    conversations: conversations.map((c) => {
+      const lastMsg = c.messages[0]
+      return {
+        id: c.id,
+        status: c.status,
+        lastMessageAt: (lastMsg?.createdAt ?? c.createdAt).toISOString(),
+        lastMessagePreview: lastMsg?.content?.substring(0, 120) ?? null,
+      }
+    }),
+  })
 }
 
 export async function PATCH(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
+import { ensureMarketingWebsite } from '@/lib/marketing-website'
 
 // GET /api/cron/seed-admin
 // Creates or updates the platform admin user from env vars.
@@ -30,7 +31,13 @@ export async function GET(request: NextRequest) {
       create: { email, name: 'Guchat Platform Admin', passwordHash, role: 'ADMIN' },
       update: { passwordHash, role: 'ADMIN' },
     })
-    return NextResponse.json({ message: 'Admin user ready', email: user.email, role: user.role })
+    const marketingWebsiteId = await ensureMarketingWebsite(user.id)
+    return NextResponse.json({
+      message: 'Admin user ready',
+      email: user.email,
+      role: user.role,
+      marketingWebsiteId,
+    })
   } catch (error) {
     console.error('[Cron] seed-admin error:', error)
     return NextResponse.json({ error: 'Failed to seed admin' }, { status: 500 })

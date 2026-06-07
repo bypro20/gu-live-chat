@@ -11,6 +11,8 @@ Yerel `.env` dosyanızdaki **gizli değerleri** (secret, client secret, token vb
 | `AUTH_URL` | `https://guchat.org` | NextAuth callback tabanı |
 | `NEXT_PUBLIC_APP_URL` | `https://guchat.org` | Widget / linkler |
 | `NEXT_PUBLIC_SOCKET_URL` | Railway URL (örn. `https://socket.guchat.org`) | Socket aynı domainde değilse **guchat.org yapmayın**; yerel `.env` ile aynı Railway adresini kullanın |
+| `SOCKET_SERVER_URL` | Railway URL (aynı socket host) | Vercel API → socket köprüsü (mesajların widget'a gitmesi için) |
+| `SOCKET_INTERNAL_SECRET` | Güçlü secret (veya `CRON_SECRET` ile aynı) | `/internal/emit` yetkilendirmesi |
 
 ## `.env` → Vercel (değerleri kopyala, URL’leri yukarıdaki gibi düzelt)
 
@@ -25,12 +27,25 @@ Yerel `.env` dosyanızdaki **gizli değerleri** (secret, client secret, token vb
 | `AUTH_URL` | ✅ | → `https://guchat.org` |
 | `NEXT_PUBLIC_APP_URL` | ✅ | → `https://guchat.org` |
 | `NEXT_PUBLIC_SOCKET_URL` | ✅ | Railway/socket subdomain; vercel.app değil |
-| `NEXT_PUBLIC_MARKETING_WEBSITE_ID` | Varsa ✅ | — |
+| `NEXT_PUBLIC_MARKETING_WEBSITE_ID` veya `NEXT_PUBLIC_WIDGET_WEBSITE_ID` | Önerilen | guchat.org widget → inbox eşleşmesi |
 | `AWS_*` / `S3_*` | Opsiyonel | — |
 | `PAYTR_*` | Opsiyonel | — |
 | `SMTP_*` | Opsiyonel | — |
 | `OPENAI_API_KEY` | Opsiyonel | — |
 | `CRON_SECRET` | Varsa ✅ | — |
+| `ADMIN_EMAIL` | ✅ | Örn. `admin@guchat.org` — platform yöneticisi |
+| `ADMIN_PASSWORD` | ✅ | Güçlü rastgele şifre; git'e yazmayın |
+
+## Admin hesabı (production)
+
+1. Vercel'de `ADMIN_EMAIL`, `ADMIN_PASSWORD` ve `CRON_SECRET` tanımlayın.
+2. Deploy sonrası bir kez çalıştırın:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://guchat.org/api/cron/seed-admin
+```
+
+Yerel: `ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run db:seed-admin`
 
 ## Google Cloud Console (OAuth)
 

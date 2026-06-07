@@ -13,6 +13,9 @@ export const updateWebsiteSchema = z.object({
   welcomeMessage: z.string().max(500).optional(),
   offlineMessage: z.string().max(500).optional(),
   avatarUrl: z.string().url().nullable().optional(),
+  showPreChatForm: z.boolean().optional(),
+  requireName: z.boolean().optional(),
+  requireEmail: z.boolean().optional(),
 })
 
 export type CreateWebsiteInput = z.infer<typeof createWebsiteSchema>

@@ -5,6 +5,7 @@ import { registerSchema } from '@/lib/validators/auth'
 import { generateWebsiteId } from '@/lib/utils'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
+import { acceptTeamInvite } from '@/lib/team-invite'
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +17,6 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = registerSchema.parse(body)
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email: validated.email },
     })
@@ -28,10 +28,42 @@ export async function POST(req: Request) {
       )
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(validated.password, 12)
 
-    // Create user + website in transaction
+    if (validated.inviteToken) {
+      const user = await prisma.user.create({
+        data: {
+          email: validated.email,
+          name: validated.name,
+          passwordHash,
+          lastIp: clientIp,
+        },
+      })
+
+      const inviteResult = await acceptTeamInvite(
+        validated.inviteToken,
+        user.id,
+        validated.email
+      )
+
+      if ('error' in inviteResult) {
+        await prisma.user.delete({ where: { id: user.id } })
+        return NextResponse.json({ error: inviteResult.error }, { status: 400 })
+      }
+
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        invited: true,
+        website: {
+          websiteId: inviteResult.websitePublicId,
+        },
+      }, { status: 201 })
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -44,14 +76,13 @@ export async function POST(req: Request) {
 
       const website = await tx.website.create({
         data: {
-          name: validated.websiteName,
-          domain: validated.websiteDomain,
+          name: validated.websiteName!,
+          domain: validated.websiteDomain!,
           websiteId: generateWebsiteId(),
           ownerId: user.id,
         },
       })
 
-      // Auto-create team member as OWNER
       await tx.teamMember.create({
         data: {
           userId: user.id,
@@ -61,7 +92,6 @@ export async function POST(req: Request) {
         },
       })
 
-      // Set activeWebsiteId so user lands on their website
       await tx.user.update({
         where: { id: user.id },
         data: { activeWebsiteId: website.websiteId },

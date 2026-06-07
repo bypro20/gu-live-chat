@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import type { PlanFeature } from '@/lib/plan-gate'
-import { MIN_PLAN_FOR_FEATURE } from '@/lib/plan-gate'
-import { FEATURE_ADDON_SLUG } from '@/lib/addon-features'
+import type { PlanFeature } from '@/lib/plan-shared'
+import { FEATURE_ADDON_SLUG, MIN_PLAN_FOR_FEATURE } from '@/lib/plan-shared'
 
 const FEATURE_TITLES: Partial<Record<PlanFeature, string>> = {
   chatbot: 'Chatbot',

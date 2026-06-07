@@ -10,10 +10,11 @@ export async function GET(request: NextRequest) {
   const providedSecret = authHeader?.replace('Bearer ', '')
 
   if (!cronSecret) {
-    console.error('[Cron] CRON_SECRET ortam değişkeni tanımlı değil — endpoint herkese açık!')
+    console.error('[Cron] CRON_SECRET tanımlı değil — istek reddedildi')
+    return NextResponse.json({ error: 'Cron not configured' }, { status: 503 })
   }
 
-  if (cronSecret && providedSecret !== cronSecret) {
+  if (providedSecret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

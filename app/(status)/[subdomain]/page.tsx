@@ -66,12 +66,23 @@ export default function PublicStatusPage() {
       .finally(() => setLoading(false))
   }, [subdomain])
 
-  function handleSubscribe(e: React.FormEvent) {
+  async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault()
     if (!email) return
-    setSubscribed(true)
-    setTimeout(() => setSubscribed(false), 3000)
-    setEmail('')
+    try {
+      const res = await fetch('/api/status-page/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subdomain, email }),
+      })
+      if (!res.ok) throw new Error()
+      setSubscribed(true)
+      setTimeout(() => setSubscribed(false), 3000)
+      setEmail('')
+    } catch {
+      setError('Abonelik kaydedilemedi')
+      setTimeout(() => setError(''), 3000)
+    }
   }
 
   if (loading) {

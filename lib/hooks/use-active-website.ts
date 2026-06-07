@@ -19,6 +19,9 @@ interface UserWebsite {
   welcomeMessage: string | null
   offlineMessage: string | null
   avatarUrl: string | null
+  showPreChatForm?: boolean
+  requireName?: boolean
+  requireEmail?: boolean
 }
 
 interface UseActiveWebsiteReturn {

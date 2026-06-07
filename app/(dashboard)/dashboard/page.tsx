@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { PLANS, PLAN_LIMITS } from '@/lib/constants'
+import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
 import {
   MessageSquare, Clock, Eye, Zap, Monitor, Users, Bot,
   ArrowRight, Copy, Check, Inbox,
@@ -17,6 +19,12 @@ export default function DashboardPage() {
   const resolvedRate = stats.totalConversations > 0
     ? Math.round((stats.resolvedConversations / stats.totalConversations) * 100)
     : 0
+
+  const planKey = (activeWebsite?.plan || 'FREE') as keyof typeof PLAN_LIMITS
+  const planInfo = PLANS.find((p) => p.id === planKey)
+  const convLimit = PLAN_LIMITS[planKey]?.maxConversationsPerMonth
+  const convLimitLabel = convLimit === Infinity ? 'Sınırsız' : String(convLimit)
+  const installSnippet = buildWidgetInstallSnippet(activeWebsite?.websiteId || 'YOUR_WEBSITE_ID')
 
   const statCards = [
     { label: 'Açık Sohbetler', value: stats.openConversations, icon: MessageSquare, color: 'text-primary', bg: 'bg-primary-light' },
@@ -92,20 +100,19 @@ export default function DashboardPage() {
 
           <div className="surface p-6">
             <h2 className="text-base font-bold mb-3">Widget Kurulumu</h2>
+            {activeWebsite ? (
+              <p className="text-sm text-muted-foreground mb-2">
+                <span className="font-medium text-foreground">{activeWebsite.name}</span> için embed kodu —
+                bu siteye ekleyin, mesajlar Gelen Kutusuna düşer.
+              </p>
+            ) : null}
             <p className="text-sm text-muted-foreground mb-4">
               Aşağıdaki kodu sitenizin <code className="text-xs bg-primary-light text-primary px-1.5 py-0.5 rounded font-mono">&lt;head&gt;</code> etiketinden önce ekleyin:
             </p>
             <div className="relative">
               <button
                 onClick={() => {
-                  const code = `<script>
-  window.$gu = window.$gu || function() {
-    (window.$gu.q = window.$gu.q || []).push(arguments);
-  };
-  $gu('set', 'WEBSITE_ID', '${activeWebsite?.websiteId || 'YOUR_WEBSITE_ID'}');
-</script>
-<script async src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js"></script>`
-                  navigator.clipboard.writeText(code).then(() => {
+                  navigator.clipboard.writeText(installSnippet).then(() => {
                     setCopiedCode(true)
                     setTimeout(() => setCopiedCode(false), 2000)
                   })
@@ -115,13 +122,7 @@ export default function DashboardPage() {
                 {copiedCode ? <><Check className="w-3.5 h-3.5 text-success" /><span className="text-success">Kopyalandı</span></> : <><Copy className="w-3.5 h-3.5" /><span>Kopyala</span></>}
               </button>
               <div className="bg-[#0F172A] rounded-xl p-4 overflow-x-auto">
-                <pre className="text-[13px] text-emerald-400 font-mono leading-relaxed">{`<script>
-  window.$gu = window.$gu || function() {
-    (window.$gu.q = window.$gu.q || []).push(arguments);
-  };
-  $gu('set', 'WEBSITE_ID', '${activeWebsite?.websiteId || 'YOUR_WEBSITE_ID'}');
-</script>
-<script async src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js"></script>`}</pre>
+                <pre className="text-[13px] text-emerald-400 font-mono leading-relaxed">{installSnippet}</pre>
               </div>
             </div>
           </div>
@@ -157,15 +158,20 @@ export default function DashboardPage() {
               <h2 className="text-base font-bold">Plan</h2>
               <Link href="/settings/billing" className="text-xs font-semibold text-primary hover:text-primary-hover">Yükselt →</Link>
             </div>
-            <p className="text-sm font-semibold">Ücretsiz</p>
+            <p className="text-sm font-semibold">{planInfo?.name || 'Ücretsiz'}</p>
             <div className="mt-3 bg-primary-light rounded-xl p-3 border border-primary/10">
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                <span>Sohbet kullanımı</span>
-                <span>{isLoading ? '—' : `${stats.totalConversations} / 100`}</span>
+                <span>Sohbet kullanımı (bu ay)</span>
+                <span>{isLoading ? '—' : `${stats.totalConversations} / ${convLimitLabel}`}</span>
               </div>
-              <div className="w-full bg-border rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${Math.min((stats.totalConversations / 100) * 100, 100)}%` }} />
-              </div>
+              {convLimit !== Infinity && (
+                <div className="w-full bg-border rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${Math.min((stats.totalConversations / convLimit) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

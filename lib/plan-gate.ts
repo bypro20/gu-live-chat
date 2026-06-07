@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { Plan } from '@/app/generated/prisma/client'
 import { canPerformAction } from '@/lib/subscription'
-import type { PLAN_LIMITS } from '@/lib/constants'
-import { websiteHasFeature, FEATURE_ADDON_SLUG } from '@/lib/addon-features'
+import { websiteHasFeature } from '@/lib/addon-features'
+import {
+  FEATURE_ADDON_SLUG,
+  MIN_PLAN_FOR_FEATURE,
+  type PlanFeature,
+} from '@/lib/plan-shared'
 
-export type PlanFeature = keyof (typeof PLAN_LIMITS)[Plan]
+export type { PlanFeature } from '@/lib/plan-shared'
+export { MIN_PLAN_FOR_FEATURE } from '@/lib/plan-shared'
 
 const FEATURE_LABELS: Partial<Record<PlanFeature, string>> = {
   chatbot: 'Chatbot',
@@ -26,29 +31,6 @@ const FEATURE_LABELS: Partial<Record<PlanFeature, string>> = {
   ratings: 'CSAT puanlama',
   proactiveMessages: 'Hedefli mesajlar',
   advancedAnalytics: 'Gelişmiş analitik',
-}
-
-/** Minimum paid plan that unlocks each feature (for upgrade UI). */
-export const MIN_PLAN_FOR_FEATURE: Partial<Record<PlanFeature, Plan>> = {
-  chatbot: 'STARTER',
-  visitorTracking: 'STARTER',
-  cannedResponses: 'STARTER',
-  knowledgeBase: 'STARTER',
-  ticketing: 'STARTER',
-  fileUpload: 'STARTER',
-  ratings: 'STARTER',
-  proactiveMessages: 'STARTER',
-  overlayAI: 'PRO',
-  aiAssistant: 'PRO',
-  campaigns: 'PRO',
-  multiChannel: 'PRO',
-  workflows: 'PRO',
-  statusPage: 'PRO',
-  webhooks: 'PRO',
-  apiAccess: 'PRO',
-  autoTranslate: 'PRO',
-  advancedAnalytics: 'PRO',
-  customBranding: 'BUSINESS',
 }
 
 export function planHasFeature(plan: Plan, feature: PlanFeature): boolean {

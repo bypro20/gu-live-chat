@@ -105,7 +105,8 @@ export default function TicketDetailPage() {
         setMessages(await messagesRes.json())
       }
       if (membersRes.ok) {
-        setTeamMembers(await membersRes.json())
+        const teamData = await membersRes.json()
+        setTeamMembers(teamData.team || teamData)
       }
     } catch {
       // silently fail

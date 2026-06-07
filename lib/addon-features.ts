@@ -1,8 +1,10 @@
 import { prisma } from './db'
 import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, type PlanType } from './constants'
-import type { PlanFeature } from './plan-gate'
+import type { PlanFeature } from './plan-shared'
 import type { Plan } from '@/app/generated/prisma/client'
+
+export { FEATURE_ADDON_SLUG } from './plan-shared'
 
 /** Addon slug → plan feature it unlocks when purchased. */
 export const ADDON_FEATURE_MAP: Record<string, PlanFeature> = {
@@ -33,28 +35,6 @@ export const ADDON_FEATURE_MAP: Record<string, PlanFeature> = {
   'ecommerce-tracker': 'visitorTracking',
   'sentiment-analysis': 'aiAssistant',
   'team-departments': 'workflows',
-}
-
-/** Primary addon slug shown in upgrade UI per feature. */
-export const FEATURE_ADDON_SLUG: Partial<Record<PlanFeature, string>> = {
-  multiChannel: 'whatsapp-channel',
-  aiAssistant: 'ai-agent-pro',
-  autoTranslate: 'live-translate-pro',
-  chatbot: 'ai-chatbot',
-  knowledgeBase: 'knowledge-base',
-  ticketing: 'ticketing-system',
-  ratings: 'csat-ratings',
-  cannedResponses: 'canned-responses',
-  proactiveMessages: 'proactive-chat',
-  visitorTracking: 'visitor-tracking',
-  campaigns: 'email-campaigns',
-  workflows: 'workflow-automation',
-  webhooks: 'webhooks-api',
-  apiAccess: 'rest-api',
-  statusPage: 'status-page',
-  overlayAI: 'screen-co-browsing',
-  advancedAnalytics: 'advanced-analytics',
-  customBranding: 'white-label',
 }
 
 const CHANNEL_ADDON_SLUGS = new Set([

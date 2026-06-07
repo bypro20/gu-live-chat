@@ -1,7 +1,7 @@
 import { websiteHasFeature, hasActiveAddonPurchase } from './addon-features'
 import type { PlanType } from './constants'
 import type { Plan } from '@/app/generated/prisma/client'
-import type { PlanFeature } from './plan-gate'
+import type { PlanFeature } from './plan-shared'
 
 export { websiteHasFeature, hasActiveAddonPurchase, hasActiveAddonForFeature } from './addon-features'
 

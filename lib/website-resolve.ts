@@ -11,6 +11,6 @@ export async function resolveWebsite(idOrPublicId: string | null | undefined) {
   if (!idOrPublicId) return null
   return prisma.website.findFirst({
     where: { OR: [{ websiteId: idOrPublicId }, { id: idOrPublicId }] },
-    select: { id: true, websiteId: true, plan: true, ownerId: true },
+    select: { id: true, websiteId: true, name: true, plan: true, ownerId: true },
   })
 }

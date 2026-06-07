@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { resolveWebsite } from '@/lib/website-resolve'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -9,19 +10,26 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const websiteId = searchParams.get('websiteId')
+  const websiteIdParam = searchParams.get('websiteId')
   const period = searchParams.get('period') || '7d'
 
-  if (!websiteId) {
+  if (!websiteIdParam) {
     return NextResponse.json({ error: 'Website ID gerekli' }, { status: 400 })
   }
 
+  const website = await resolveWebsite(websiteIdParam)
+  if (!website) {
+    return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
+  }
+
   const member = await prisma.teamMember.findFirst({
-    where: { websiteId, userId: session.user.id },
+    where: { websiteId: website.id, userId: session.user.id },
   })
   if (!member) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
+
+  const websiteId = website.id
 
   // Calculate date range
   const now = new Date()

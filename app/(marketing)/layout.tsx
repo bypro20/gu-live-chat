@@ -1,4 +1,9 @@
 import type { Metadata } from 'next'
+import { MarketingProviders } from '@/components/marketing/marketing-providers'
+import { MarketingWidgetLoader } from '@/components/marketing/marketing-widget-loader'
+
+export const runtime = 'nodejs'
+export const revalidate = 600
 
 export const metadata: Metadata = {
   title: {
@@ -26,8 +31,11 @@ export const metadata: Metadata = {
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-foreground antialiased">
-      {children}
-    </div>
+    <MarketingProviders>
+      <div className="min-h-screen bg-white text-foreground antialiased">
+        {children}
+        <MarketingWidgetLoader />
+      </div>
+    </MarketingProviders>
   )
 }

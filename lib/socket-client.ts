@@ -6,18 +6,23 @@ let socket: Socket | null = null
 let retainCount = 0
 let socketConnected = false
 
-/** Normalised socket server URL, or undefined when none is configured. */
+/**
+ * Dedicated Socket.io server URL (Railway / local custom server).
+ * In production on Vercel, set NEXT_PUBLIC_SOCKET_URL to your socket host.
+ * When unset, the app uses REST polling only — no doomed same-origin socket attempts.
+ */
 function getSocketUrl(): string | undefined {
-  const url = process.env.NEXT_PUBLIC_SOCKET_URL
-  return url && url.trim() ? url.trim() : undefined
+  const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
+  if (envUrl) return envUrl
+
+  // Local dev with `npm run dev` (tsx server.ts) — socket on same origin
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    return window.location.origin
+  }
+
+  return undefined
 }
 
-/**
- * True when a dedicated Socket.io server is configured (local dev / Railway).
- * On Vercel serverless there is no socket server, so this is false and the app
- * relies on REST polling. We deliberately do NOT attempt a same-origin socket
- * connection there — it would only spam reconnect errors in the console.
- */
 export function isSocketEnabled(): boolean {
   return !!getSocketUrl()
 }
@@ -32,14 +37,9 @@ export function getSocket(): Socket | null {
 }
 
 export function connectSocket(): Socket | null {
-  // Return existing socket regardless of connection state —
-  // creating a new one would orphan the old socket and lose its event handlers.
   if (socket) return socket
 
   const socketUrl = getSocketUrl()
-
-  // No dedicated socket server configured (e.g. Vercel serverless).
-  // Stay silently in polling mode instead of attempting a doomed connection.
   if (!socketUrl) return null
 
   socket = io(socketUrl, {
@@ -78,6 +78,7 @@ export function releaseSocket() {
   if (retainCount === 0 && socket) {
     socket.disconnect()
     socket = null
+    socketConnected = false
   }
 }
 
@@ -86,5 +87,6 @@ export function disconnectSocket() {
   if (socket) {
     socket.disconnect()
     socket = null
+    socketConnected = false
   }
 }

@@ -27,7 +27,9 @@ export function useDashboardStats() {
   const params = new URLSearchParams()
   if (activeWebsite?.websiteId) params.set('websiteId', activeWebsite.websiteId)
   const query = params.toString()
-  const url = `/api/dashboard/stats${query ? `?${query}` : ''}`
+  const url = activeWebsite?.websiteId
+    ? `/api/dashboard/stats?${query}`
+    : null
 
   const { data, error, isLoading, mutate } = useSWR<DashboardStats>(
     url,

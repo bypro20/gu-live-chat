@@ -75,7 +75,13 @@ export default function KnowledgeBasePage() {
     } catch {}
   }
 
-  if (!website) return null
+  if (!website) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh] p-8">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
   if (!planLoading && !planAllowed) {
     return <PlanUpgradePrompt feature="knowledgeBase" />
   }

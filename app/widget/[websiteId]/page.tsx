@@ -14,6 +14,9 @@ interface WidgetConfig {
   avatarUrl: string | null
   websiteName: string | null
   agentsOnline: number
+  showPreChatForm?: boolean
+  requireName?: boolean
+  requireEmail?: boolean
 }
 
 interface Attachment {
@@ -256,7 +259,7 @@ export default function WidgetPage() {
   const [queuePosition, setQueuePosition] = useState(0)
   const [estimatedWait, setEstimatedWait] = useState('')
   const [visitorInfo, setVisitorInfo] = useState({ name: '', email: '' })
-  const [showPreChat, setShowPreChat] = useState(true)
+  const [showPreChat, setShowPreChat] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [conversationStatus, setConversationStatus] = useState<string | null>(null)
   const [avatarLoaded, setAvatarLoaded] = useState(false)
@@ -272,9 +275,11 @@ export default function WidgetPage() {
   const [ratingSending, setRatingSending] = useState(false)
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
   const [lang, setLang] = useState<WidgetLang>('tr')
+  const [autoTranslateOn, setAutoTranslateOn] = useState(true)
   const [aiTranslateAvailable, setAiTranslateAvailable] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [sendError, setSendError] = useState<string | null>(null)
   const [translations, setTranslations] = useState<Record<string, string>>({})
   const [translatingId, setTranslatingId] = useState<string | null>(null)
 
@@ -292,6 +297,19 @@ export default function WidgetPage() {
   const gifBtnRef = useRef<HTMLButtonElement>(null)
   const lastTypingEmitRef = useRef(0)
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`gu_widget_lang_${websiteId}`)
+      if (saved) setLang(saved)
+    } catch { /* ignore */ }
+  }, [websiteId])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`gu_widget_lang_${websiteId}`, lang)
+    } catch { /* ignore */ }
+  }, [websiteId, lang])
 
   useEffect(() => {
     const initWidget = async () => {
@@ -330,6 +348,11 @@ export default function WidgetPage() {
         setConfig(data.websiteConfig)
         setConversationId(data.conversationId)
         setAiTranslateAvailable(!!data.features?.aiTranslate)
+        if (data.conversationId) {
+          setShowPreChat(false)
+        } else if (data.websiteConfig?.showPreChatForm) {
+          setShowPreChat(true)
+        }
         setIsInitialized(true)
 
         visitorTokenRef.current = data.visitorToken
@@ -630,14 +653,13 @@ export default function WidgetPage() {
     }
   }, [conversationId])
 
-  // REST polling fallback: pull conversation messages (~2s) whenever a live
-  // socket isn't carrying updates. Idempotent merge by id prevents duplicates
-  // when socket + polling briefly overlap.
+  // REST polling: always sync messages from DB. Faster when socket is down;
+  // slower backup when socket is up (Vercel API may not reach socket server).
   useEffect(() => {
     if (!conversationId) return
-    if (isSocketEnabled() && socketConnected) return
 
     let active = true
+    const pollMs = isSocketEnabled() && socketConnected ? 4000 : 2000
 
     const poll = async () => {
       if (document.hidden) return
@@ -680,12 +702,12 @@ export default function WidgetPage() {
     }
 
     poll()
-    const id = setInterval(poll, 2000)
+    const id = setInterval(poll, pollMs)
     return () => {
       active = false
       clearInterval(id)
     }
-  }, [conversationId, socketConnected])
+  }, [conversationId, socketConnected, websiteId])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -725,7 +747,7 @@ export default function WidgetPage() {
   }, [inputMessage])
 
   useEffect(() => {
-    if (!conversationId || !showPreChat) return
+    if (!conversationId || showPreChat) return
     const socket = getSocket()
     if (!socket?.connected) return
 
@@ -830,7 +852,7 @@ export default function WidgetPage() {
     if (kbArticles.length > 0) return
     setKbLoading(true)
     try {
-      const res = await fetch(`/api/knowledge/articles?websiteId=${websiteId}&status=PUBLISHED`)
+      const res = await fetch(`/api/widget/knowledge?websiteId=${websiteId}`)
       const data = await res.json()
       setKbArticles(Array.isArray(data) ? data : data.articles || [])
     } catch (err) {
@@ -841,12 +863,13 @@ export default function WidgetPage() {
   }
 
   const handleStartChat = useCallback(async () => {
-    if (!inputMessage.trim()) return
+    const content = inputMessage.trim()
+    if (!content) return
 
     const tempId = `temp_${Date.now()}`
     const newMessage: Message = {
       id: tempId,
-      content: inputMessage,
+      content,
       type: 'TEXT',
       senderType: 'VISITOR',
       createdAt: new Date().toISOString(),
@@ -854,12 +877,14 @@ export default function WidgetPage() {
 
     setMessages((prev) => [...prev, newMessage])
     setInputMessage('')
+    setShowPreChat(false)
 
     const socket = getSocket()
     if (socket?.connected && conversationId) {
       socket.emit('visitor:typing:stop', { conversationId, visitorId: '' })
     }
 
+    setSendError(null)
     try {
       const res = await fetch('/api/widget/message', {
         method: 'POST',
@@ -867,22 +892,36 @@ export default function WidgetPage() {
         body: JSON.stringify({
           websiteId,
           conversationId,
-          content: inputMessage,
+          content,
           type: 'TEXT',
           visitorName: visitorInfo.name,
           visitorEmail: visitorInfo.email,
           fingerprint: getFingerprint(),
+          visitorLang: lang,
         }),
       })
 
       const data = await res.json()
+      if (!res.ok) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId))
+        setSendError(data.error || 'Mesaj gönderilemedi')
+        console.error('[Gu Widget] Send message failed:', data.error)
+        return
+      }
       if (data.conversationId) {
         setConversationId(data.conversationId)
       }
+      if (data.message?.id) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, id: data.message.id } : m))
+        )
+      }
     } catch (error) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId))
+      setSendError('Bağlantı hatası — mesaj gönderilemedi')
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [inputMessage, websiteId, conversationId, visitorInfo])
+  }, [inputMessage, websiteId, conversationId, visitorInfo, lang])
 
   const handlePickFile = () => {
     setUploadError(null)
@@ -950,6 +989,7 @@ export default function WidgetPage() {
           visitorName: visitorInfo.name,
           visitorEmail: visitorInfo.email,
           fingerprint: getFingerprint(),
+          visitorLang: lang,
           attachment,
         }),
       })
@@ -1000,6 +1040,33 @@ export default function WidgetPage() {
       setTranslatingId(null)
     }
   }, [translations, websiteId, lang])
+
+  // Supsis-style: auto-translate agent/bot messages to visitor's language
+  useEffect(() => {
+    if (!aiTranslateAvailable || !autoTranslateOn || lang === 'tr') return
+    const pending = messages.filter(
+      (m) =>
+        (m.senderType === 'AGENT' || m.senderType === 'BOT') &&
+        m.content?.trim() &&
+        !translations[m.id]
+    )
+    pending.slice(-5).forEach((msg) => {
+      setTranslatingId(msg.id)
+      fetch('/api/widget/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId, text: msg.content, targetLang: lang }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.available && data.translatedText) {
+            setTranslations((prev) => ({ ...prev, [msg.id]: data.translatedText }))
+          }
+        })
+        .catch(() => {})
+        .finally(() => setTranslatingId(null))
+    })
+  }, [messages, lang, aiTranslateAvailable, autoTranslateOn, translations, websiteId])
 
   const primaryColor = config?.primaryColor || '#1972F5'
   const agentsOnline = config?.agentsOnline ?? 3
@@ -1199,9 +1266,25 @@ export default function WidgetPage() {
                   <circle cx="12" cy="12" r="10" />
                   <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
+                {aiTranslateAvailable && (
+                  <button
+                    type="button"
+                    onClick={() => setAutoTranslateOn((v) => !v)}
+                    title={autoTranslateOn ? 'Otomatik çeviri açık' : 'Otomatik çeviri kapalı'}
+                    style={{
+                      background: autoTranslateOn ? `${primaryColor}18` : '#F8FAFC',
+                      color: autoTranslateOn ? primaryColor : '#94A3B8',
+                      border: `1px solid ${autoTranslateOn ? primaryColor + '40' : '#E2E8F0'}`,
+                      borderRadius: '10px', padding: '5px 8px', fontSize: '10px', fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    {autoTranslateOn ? '🌐 Auto' : '🌐'}
+                  </button>
+                )}
                 <select
                   value={lang}
-                  onChange={(e) => setLang(e.target.value)}
+                  onChange={(e) => { setLang(e.target.value); setTranslations({}) }}
                   aria-label="Dil seçin"
                   style={{
                     appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
@@ -1583,10 +1666,16 @@ export default function WidgetPage() {
                         if (rating === 0 || ratingSending) return
                         setRatingSending(true)
                         try {
-                          await fetch('/api/ratings', {
+                          await fetch('/api/widget/ratings', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ conversationId, rating, comment: ratingComment || null }),
+                            body: JSON.stringify({
+                              conversationId,
+                              websiteId,
+                              fingerprint: getFingerprint(),
+                              rating,
+                              comment: ratingComment || null,
+                            }),
                           })
                           setRatingSubmitted(true)
                         } catch { /* silent */ } finally {
@@ -1660,15 +1749,31 @@ export default function WidgetPage() {
                 </div>
                 <button
                   onClick={() => {
-                    if (visitorInfo.name && visitorInfo.email) {
+                    const needsName = config?.requireName !== false
+                    const needsEmail = config?.requireEmail !== false
+                    const nameOk = !needsName || visitorInfo.name.trim().length > 0
+                    const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
+                    if (nameOk && emailOk) {
                       setShowPreChat(false)
                       setTimeout(() => inputRef.current?.focus(), 80)
                     }
                   }}
                   style={{
                     width: '100%', padding: '12px',
-                    background: visitorInfo.name && visitorInfo.email ? primaryColor : '#E2E8F0',
-                    color: visitorInfo.name && visitorInfo.email ? '#fff' : '#94A3B8',
+                    background: (() => {
+                      const needsName = config?.requireName !== false
+                      const needsEmail = config?.requireEmail !== false
+                      const nameOk = !needsName || visitorInfo.name.trim().length > 0
+                      const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
+                      return nameOk && emailOk ? primaryColor : '#E2E8F0'
+                    })(),
+                    color: (() => {
+                      const needsName = config?.requireName !== false
+                      const needsEmail = config?.requireEmail !== false
+                      const nameOk = !needsName || visitorInfo.name.trim().length > 0
+                      const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
+                      return nameOk && emailOk ? '#fff' : '#94A3B8'
+                    })(),
                     border: 'none', borderRadius: '12px',
                     fontSize: '14px', fontWeight: 700, cursor: 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.15s',
@@ -1839,8 +1944,8 @@ export default function WidgetPage() {
                 </button>
               </div>
 
-              {uploadError && (
-                <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#EF4444', fontWeight: 500 }}>{uploadError}</p>
+              {(sendError || uploadError) && (
+                <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#EF4444', fontWeight: 500 }}>{sendError || uploadError}</p>
               )}
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '8px' }}>

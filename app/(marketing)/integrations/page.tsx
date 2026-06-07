@@ -12,6 +12,7 @@ const integrations = [
   { name: 'Webhook & API', desc: 'REST API ve webhook ile kendi sistemlerinize bağlanın. conversation.created, message.sent ve daha fazlası.', status: 'Aktif' },
   { name: 'E-posta Kanalı', desc: 'Gelen e-postaları inbox\'a aktarın, yanıtları e-posta olarak gönderin.', status: 'Aktif' },
   { name: 'WhatsApp Business', desc: 'WhatsApp mesajlarını tek panelden yönetin. Eklenti mağazasından aktifleştirin.', status: 'Eklenti' },
+  { name: 'Facebook Messenger', desc: 'Meta Messenger mesajlarını birleşik inbox\'ta yönetin. Kanal ayarlarından bağlayın.', status: 'Aktif' },
   { name: 'Slack', desc: 'Yeni sohbet bildirimlerini Slack kanalınıza gönderin.', status: 'Yakında' },
   { name: 'Zapier', desc: 'Kodsuz otomasyon ile 5000+ uygulamaya bağlanın.', status: 'Yakında' },
   { name: 'Shopify & WooCommerce', desc: 'E-ticaret sitelerinize doğrudan entegrasyon.', status: 'Yakında' },

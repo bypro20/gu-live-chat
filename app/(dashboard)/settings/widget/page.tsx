@@ -2,19 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
-
-function buildInstallSnippet(websiteId: string) {
-  return `<script>
-  window.$gu = window.$gu || function() {
-    (window.$gu.q = window.$gu.q || []).push(arguments);
-  };
-  window.GU_WIDGET_URL = '${APP_URL}';
-  $gu('set', 'WEBSITE_ID', '${websiteId || 'WEBSITE_ID'}');
-</script>
-<script async src="${APP_URL}/widget.js"></script>`
-}
+import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
 
 export default function WidgetSettingsPage() {
   const { activeWebsite } = useActiveWebsite()
@@ -24,7 +12,7 @@ export default function WidgetSettingsPage() {
     welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
     offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
     avatarUrl: '',
-    showPreChatForm: true,
+    showPreChatForm: false,
     requireName: true,
     requireEmail: true,
     soundEnabled: true,
@@ -48,6 +36,9 @@ export default function WidgetSettingsPage() {
       welcomeMessage: activeWebsite.welcomeMessage || prev.welcomeMessage,
       offlineMessage: activeWebsite.offlineMessage || prev.offlineMessage,
       avatarUrl: activeWebsite.avatarUrl || prev.avatarUrl,
+      showPreChatForm: activeWebsite.showPreChatForm ?? prev.showPreChatForm,
+      requireName: activeWebsite.requireName ?? prev.requireName,
+      requireEmail: activeWebsite.requireEmail ?? prev.requireEmail,
     }))
   }, [activeWebsite])
 
@@ -67,6 +58,9 @@ export default function WidgetSettingsPage() {
           position: config.position,
           welcomeMessage: config.welcomeMessage,
           offlineMessage: config.offlineMessage,
+          showPreChatForm: config.showPreChatForm,
+          requireName: config.requireName,
+          requireEmail: config.requireEmail,
         }),
       })
       if (!res.ok) {
@@ -82,7 +76,7 @@ export default function WidgetSettingsPage() {
     }
   }
 
-  const installSnippet = buildInstallSnippet(websiteId)
+  const installSnippet = buildWidgetInstallSnippet(websiteId)
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
@@ -264,8 +258,23 @@ export default function WidgetSettingsPage() {
         {/* Installation Code */}
         <div className="surface p-5 sm:p-6">
           <h3 className="text-lg font-semibold text-foreground mb-2">Widget Kurulumu</h3>
+          {activeWebsite ? (
+            <div className="mb-4 p-3 rounded-xl bg-primary/5 border border-primary/20 text-sm">
+              <p className="font-medium text-foreground">
+                Bu kod yalnızca <span className="text-primary">{activeWebsite.name}</span> sitesine aittir.
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Ziyaretçiler bu kodu eklediğiniz siteden yazdığında mesajlar yalnızca sizin{' '}
+                <strong className="text-foreground">Gelen Kutunuzda</strong> görünür — başka müşterilerin paneline düşmez.
+              </p>
+              <p className="text-[10px] font-mono text-muted-foreground mt-2 break-all">
+                WEBSITE_ID: {activeWebsite.websiteId}
+              </p>
+            </div>
+          ) : null}
           <p className="text-sm text-muted-foreground mb-4">
-            Aşağıdaki kodu sitenizin <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">&lt;head&gt;</code> etiketinden önce ekleyin.
+            Aşağıdaki kodu <strong className="text-foreground">kendi sitenizin</strong>{' '}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">&lt;head&gt;</code> etiketinden önce ekleyin.
           </p>
           <div className="relative">
             <button

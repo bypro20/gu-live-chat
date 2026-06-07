@@ -21,7 +21,12 @@ export function useChatbots() {
     { revalidateOnFocus: false }
   )
 
-  const createChatbot = async (chatbotData: { name: string; triggerType: string; triggerValue?: string; steps: unknown[] }) => {
+  const createChatbot = async (chatbotData: {
+    name: string
+    trigger: string
+    triggerValue?: string
+    steps: Array<{ type: string; message?: string; options?: unknown; order: number }>
+  }) => {
     if (!activeWebsite) throw new Error('Aktif site seçili değil')
 
     const res = await fetch('/api/chatbots', {
@@ -37,6 +42,20 @@ export function useChatbots() {
 
     mutate()
     return res.json()
+  }
+
+  const toggleChatbot = async (chatbotId: string, isActive: boolean) => {
+    if (!activeWebsite) throw new Error('Aktif site seçili değil')
+    const res = await fetch(`/api/chatbots/${chatbotId}?websiteId=${activeWebsite.websiteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.error || 'Güncellenemedi')
+    }
+    mutate()
   }
 
   const deleteChatbot = async (chatbotId: string) => {
@@ -59,5 +78,6 @@ export function useChatbots() {
     mutate,
     createChatbot,
     deleteChatbot,
+    toggleChatbot,
   }
 }

@@ -12,14 +12,36 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    setLoading(false)
-    toast({
-      title: 'Mesajınız alındı',
-      description: 'En kısa sürede size dönüş yapacağız.',
-      variant: 'success',
-    })
-    ;(e.target as HTMLFormElement).reset()
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fd.get('name'),
+          email: fd.get('email'),
+          subject: fd.get('subject'),
+          message: fd.get('message'),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Gönderilemedi')
+      toast({
+        title: 'Mesajınız alındı',
+        description: 'En kısa sürede size dönüş yapacağız.',
+        variant: 'success',
+      })
+      form.reset()
+    } catch (err) {
+      toast({
+        title: 'Gönderilemedi',
+        description: err instanceof Error ? err.message : 'Bir hata oluştu',
+        variant: 'error',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -34,8 +56,8 @@ export default function ContactPage() {
 
       <div className="grid md:grid-cols-3 gap-4 mb-10">
         {[
-          { icon: Mail, label: 'E-posta', value: 'destek@guchat.org' },
-          { icon: MessageSquare, label: 'Canlı Destek', value: 'guchat.org üzerinden' },
+          { icon: Mail, label: 'E-posta', value: 'destek@gulive.com' },
+          { icon: MessageSquare, label: 'Canlı Destek', value: 'gulive.com üzerinden' },
           { icon: Phone, label: 'Kurumsal', value: 'Demo talep formu' },
         ].map((item) => (
           <div key={item.label} className="surface p-4 text-center">

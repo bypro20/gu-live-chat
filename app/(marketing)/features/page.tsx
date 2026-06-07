@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 }
 
 const allFeatures = [
-  { icon: MessageCircle, title: 'Gerçek Zamanlı Sohbet', desc: 'WebSocket tabanlı anlık mesajlaşma, yazıyor göstergesi, okundu onayı ve dosya paylaşımı.' },
+  { id: 'widget', icon: MessageCircle, title: 'Gerçek Zamanlı Sohbet', desc: 'WebSocket tabanlı anlık mesajlaşma, yazıyor göstergesi, okundu onayı ve dosya paylaşımı.' },
   { icon: Bot, title: 'AI Chatbot & Otomasyon', desc: 'Görsel editör ile chatbot akışları oluşturun. AI destekli akıllı yanıtlar.' },
-  { icon: Users, title: 'Ziyaretçi İzleme', desc: 'Canlı ziyaretçi listesi, sayfa geçmişi, scroll derinliği ve davranış takibi.' },
+  { id: 'crm', icon: Users, title: 'Ziyaretçi İzleme', desc: 'Canlı ziyaretçi listesi, sayfa geçmişi, scroll derinliği ve davranış takibi.' },
   { icon: Blocks, title: 'Çoklu Kanal', desc: 'Web widget, e-posta ve mesajlaşma kanallarını tek inbox\'ta birleştirin.' },
   { icon: Workflow, title: 'Workflow Otomasyonu', desc: 'Tetikleyici ve aksiyon tabanlı otomatik yanıt akışları.' },
-  { icon: BarChart3, title: 'Gelişmiş Analitik', desc: 'Yanıt süreleri, çözüm oranları, ekip performansı ve CSV export.' },
+  { id: 'analytics', icon: BarChart3, title: 'Gelişmiş Analitik', desc: 'Yanıt süreleri, çözüm oranları, ekip performansı ve CSV export.' },
   { icon: Shield, title: 'Güvenlik & Uyumluluk', desc: 'SSL/TLS şifreleme, KVKK uyumu, IP ban sistemi ve rol tabanlı erişim.' },
   { icon: Zap, title: 'Hızlı Kurulum', desc: 'Tek satır embed kodu ile 30 saniyede sitenize entegre edin.' },
 ]
@@ -32,7 +32,7 @@ export default function FeaturesPage() {
 
       <div className="grid sm:grid-cols-2 gap-5 mb-12">
         {allFeatures.map((f) => (
-          <div key={f.title} className="surface p-5">
+          <div key={f.title} id={'id' in f ? f.id : undefined} className="surface p-5 scroll-mt-28">
             <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center mb-4">
               <f.icon className="w-5 h-5" />
             </div>

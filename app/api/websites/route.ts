@@ -3,11 +3,24 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { createWebsiteSchema } from '@/lib/validators/website'
 import { generateWebsiteId } from '@/lib/utils'
+import { ensureAdminMarketingAccess } from '@/lib/marketing-website'
 
 export async function GET() {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  })
+  if (user?.role === 'ADMIN') {
+    try {
+      await ensureAdminMarketingAccess(session.user.id)
+    } catch (e) {
+      console.error('[websites] admin marketing sync failed:', e)
+    }
   }
 
   const memberships = await prisma.teamMember.findMany({

@@ -40,24 +40,26 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/knowledge/articles?websiteId=${websiteId}&status=PUBLISHED&search=${search}${selectedCategory ? `&categoryId=${selectedCategory}` : ''}`)
+    const q = new URLSearchParams({ websiteId })
+    if (search) q.set('search', search)
+    if (selectedCategory) q.set('categoryId', selectedCategory)
+    fetch(`/api/widget/knowledge?${q}`)
       .then(r => r.json())
-      .then(data => setArticles(data.articles || []))
+      .then(data => {
+        setArticles(data.articles || [])
+        if (data.websiteName) setWebsiteName(data.websiteName)
+      })
       .catch(() => {})
-    fetch(`/api/knowledge/categories?websiteId=${websiteId}`)
+    fetch(`/api/widget/knowledge?websiteId=${websiteId}&type=categories`)
       .then(r => r.json())
-      .then(data => setCategories(data || []))
+      .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(() => {})
-    fetch(`/api/websites/${websiteId}`)
-      .then(r => r.json())
-      .then(data => setWebsiteName(data.name || 'Bilgi Bankası'))
-      .catch(() => setWebsiteName('Bilgi Bankası'))
       .finally(() => setLoading(false))
   }, [websiteId, selectedCategory, search])
 
   useEffect(() => {
     if (selectedArticle && !selectedArticle.content) {
-      fetch(`/api/knowledge/articles/${selectedArticle.id}?websiteId=${websiteId}`)
+      fetch(`/api/widget/knowledge?websiteId=${websiteId}&articleId=${selectedArticle.id}`)
         .then(r => r.json())
         .then(data => { if (data.content) setSelectedArticle(prev => prev ? { ...prev, content: data.content } : prev) })
         .catch(() => {})

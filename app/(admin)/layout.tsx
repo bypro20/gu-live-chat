@@ -1,9 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { SessionProvider, signOut } from 'next-auth/react'
 import Link from 'next/link'
+import {
+  playInboxNotificationSound,
+  requestDesktopNotificationPermission,
+  showDesktopNotification,
+} from '@/lib/inbox-sound'
 
 interface AdminUser {
   id: string
@@ -22,6 +27,9 @@ export default function AdminLayout({
   const [admin, setAdmin] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [inboxUnread, setInboxUnread] = useState(0)
+  const prevInboxUnreadRef = useRef(0)
+  const inboxUnreadInitRef = useRef(false)
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
@@ -43,6 +51,8 @@ export default function AdminLayout({
           return
         }
         setAdmin(data)
+        // Marketing sitesi + gelen kutusu erişimini hemen kur
+        fetch('/api/admin/marketing-website').catch(() => {})
       } catch {
         router.push('/admin-login')
       } finally {
@@ -51,6 +61,42 @@ export default function AdminLayout({
     }
     checkAdmin()
   }, [router])
+
+  useEffect(() => {
+    if (!admin) return
+    requestDesktopNotificationPermission()
+
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/admin/inbox-unread')
+        if (!res.ok) return
+        const data = await res.json()
+        const count = Number(data.unreadCount) || 0
+        setInboxUnread(count)
+
+        if (!inboxUnreadInitRef.current) {
+          inboxUnreadInitRef.current = true
+          prevInboxUnreadRef.current = count
+          return
+        }
+
+        if (count > prevInboxUnreadRef.current && !pathname.startsWith('/admin/inbox')) {
+          playInboxNotificationSound()
+          showDesktopNotification(
+            'Yeni widget mesajı',
+            `${count - prevInboxUnreadRef.current} okunmamış mesaj`
+          )
+        }
+        prevInboxUnreadRef.current = count
+      } catch {
+        // ignore
+      }
+    }
+
+    poll()
+    const id = setInterval(poll, 5000)
+    return () => clearInterval(id)
+  }, [admin, pathname])
 
   if (loading) {
     return (
@@ -68,6 +114,7 @@ export default function AdminLayout({
 
   const navItems = [
     { href: '/admin', icon: 'dashboard', label: 'Genel Bakış' },
+    { href: '/admin/inbox', icon: 'inbox', label: 'Gelen Kutusu' },
     { href: '/admin/visitors', icon: 'visitors', label: 'Ekran İzleme' },
     { href: '/admin/users', icon: 'users', label: 'Kullanıcılar' },
     { href: '/admin/ip-bans', icon: 'ipbans', label: 'IP Engelleme' },
@@ -76,6 +123,7 @@ export default function AdminLayout({
   ]
 
   return (
+    <SessionProvider>
     <div className="h-screen flex overflow-hidden bg-[#0d0d1a]">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -102,7 +150,14 @@ export default function AdminLayout({
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(item => (
-            <NavLink key={item.href} href={item.href} icon={item.icon} label={item.label} active={pathname === item.href} />
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              badge={item.href === '/admin/inbox' && inboxUnread > 0 ? inboxUnread : undefined}
+              active={pathname === item.href || (item.href === '/admin/inbox' && pathname.startsWith('/admin/inbox'))}
+            />
           ))}
 
           <div className="pt-4 mt-4 border-t border-white/10">
@@ -130,7 +185,13 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-[#0d0d1a]">
+      <main
+        className={`flex-1 bg-[#0d0d1a] ${
+          pathname.startsWith('/admin/inbox')
+            ? 'flex flex-col min-h-0 overflow-hidden'
+            : 'overflow-y-auto'
+        }`}
+      >
         {/* Top bar for mobile */}
         <div className="lg:hidden h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 gap-3">
           <button onClick={() => setSidebarOpen(true)} className="p-2 text-gray-600 dark:text-gray-300">
@@ -143,10 +204,23 @@ export default function AdminLayout({
         {children}
       </main>
     </div>
+    </SessionProvider>
   )
 }
 
-function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
+function NavLink({
+  href,
+  icon,
+  label,
+  active,
+  badge,
+}: {
+  href: string
+  icon: string
+  label: string
+  active: boolean
+  badge?: number
+}) {
   const icons: Record<string, React.ReactNode> = {
     dashboard: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,6 +259,11 @@ function NavLink({ href, icon, label, active }: { href: string; icon: string; la
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
       </svg>
     ),
+    inbox: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
   }
 
   return (
@@ -198,6 +277,11 @@ function NavLink({ href, icon, label, active }: { href: string; icon: string; la
     >
       <span className="shrink-0">{icons[icon]}</span>
       <span className="flex-1 text-sm font-medium">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </a>
   )
 }

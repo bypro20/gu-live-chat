@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 
 interface Visitor {
   id: string
@@ -16,22 +18,51 @@ interface Visitor {
 }
 
 export default function ContactsPage() {
-  const [contacts] = useState<Visitor[]>([])
+  const { activeWebsite } = useActiveWebsite()
+  const [contacts, setContacts] = useState<Visitor[]>([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
+
+  const fetchContacts = useCallback(async () => {
+    if (!activeWebsite?.websiteId) return
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        websiteId: activeWebsite.websiteId,
+        limit: '50',
+      })
+      if (search.trim()) params.set('search', search.trim())
+      const res = await fetch(`/api/contacts?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        setContacts(data.visitors || [])
+        setTotal(data.total || 0)
+      }
+    } catch (err) {
+      console.error('Contacts fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [activeWebsite?.websiteId, search])
+
+  useEffect(() => {
+    const timer = setTimeout(fetchContacts, search ? 300 : 0)
+    return () => clearTimeout(timer)
+  }, [fetchContacts, search])
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Kişiler</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Ziyaretçilerin profil bilgilerini ve sohbet geçmişini yönetin
+            {total > 0 && <span className="ml-2 text-primary font-medium">({total})</span>}
           </p>
         </div>
       </div>
 
-      {/* Search */}
       <div className="mb-6">
         <div className="relative max-w-md">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,9 +78,12 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* Contacts */}
       <div className="surface overflow-hidden">
-        {contacts.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : contacts.length === 0 ? (
           <div className="p-10 sm:p-12 text-center">
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +97,6 @@ export default function ContactsPage() {
           </div>
         ) : (
           <>
-            {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/60">
@@ -77,9 +110,9 @@ export default function ContactsPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {contacts.map((contact) => (
-                    <tr key={contact.id} className="hover:bg-muted/50 transition cursor-pointer">
+                    <tr key={contact.id} className="hover:bg-muted/50 transition">
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                        <Link href={`/contacts/${contact.id}`} className="flex items-center gap-3">
                           <div className="w-9 h-9 bg-primary-light rounded-full flex items-center justify-center text-primary text-sm font-semibold shrink-0">
                             {contact.name?.[0]?.toUpperCase() || '?'}
                           </div>
@@ -87,7 +120,7 @@ export default function ContactsPage() {
                             <p className="font-medium text-foreground text-sm truncate">{contact.name || 'Anonim'}</p>
                             <p className="text-xs text-muted-foreground truncate">{contact.email || '-'}</p>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {contact.city && contact.country ? `${contact.city}, ${contact.country}` : '-'}
@@ -109,10 +142,9 @@ export default function ContactsPage() {
               </table>
             </div>
 
-            {/* Mobile stacked cards */}
             <div className="md:hidden divide-y divide-border">
               {contacts.map((contact) => (
-                <div key={contact.id} className="p-4 active:bg-muted/50 transition cursor-pointer">
+                <Link key={contact.id} href={`/contacts/${contact.id}`} className="block p-4 active:bg-muted/50 transition">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-primary text-sm font-semibold shrink-0">
                       {contact.name?.[0]?.toUpperCase() || '?'}
@@ -125,21 +157,7 @@ export default function ContactsPage() {
                       {contact._count.conversations}
                     </span>
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                    <div>
-                      <p className="text-muted-foreground/70">Konum</p>
-                      <p className="text-foreground mt-0.5 truncate">{contact.city && contact.country ? `${contact.city}, ${contact.country}` : '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground/70">Cihaz</p>
-                      <p className="text-foreground mt-0.5 truncate">{contact.browser || '-'} / {contact.device || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground/70">Son Aktivite</p>
-                      <p className="text-foreground mt-0.5 tabular-nums">{new Date(contact.updatedAt).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </>

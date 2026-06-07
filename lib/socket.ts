@@ -92,6 +92,25 @@ export function initSocketServer(httpServer: HTTPServer) {
         }
       }
 
+      // Platform admin: marketing sitesine otomatik erişim (gelen kutusu socket)
+      if (websiteIds.length === 0 && userId && requestedWebsiteIds.length > 0) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+          })
+          if (user?.role === 'ADMIN') {
+            const { ensureAdminMarketingAccess } = await import('./marketing-website')
+            const marketingId = await ensureAdminMarketingAccess(userId)
+            if (requestedWebsiteIds.includes(marketingId)) {
+              websiteIds = [marketingId]
+            }
+          }
+        } catch (err) {
+          console.error('[Socket] admin marketing auth failed:', err)
+        }
+      }
+
       if (websiteIds.length === 0) {
         console.warn(`[Socket] agent:auth denied for user ${userId}: no verified website membership`)
         return

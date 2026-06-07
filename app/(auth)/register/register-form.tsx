@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Zap, Shield, BarChart3, Users } from 'lucide-react'
@@ -14,8 +14,19 @@ const markaOzellikleri = [
   { simge: Users, metin: 'Sınırsız ekip üyesi ekleme' },
 ]
 
+const PLAN_LABELS: Record<string, string> = {
+  STARTER: 'Başlangıç',
+  PRO: 'Profesyonel',
+  BUSINESS: 'Kurumsal',
+}
+
 export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const selectedPlan = searchParams.get('plan')
+  const inviteToken = searchParams.get('invite')
+  const selectedPlanLabel = selectedPlan ? PLAN_LABELS[selectedPlan] : null
+  const [inviteInfo, setInviteInfo] = useState<{ websiteName: string; email: string } | null>(null)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -26,6 +37,19 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
   })
   const [hata, setHata] = useState('')
   const [yukleniyor, setYukleniyor] = useState(false)
+
+  useEffect(() => {
+    if (!inviteToken) return
+    fetch(`/api/team/invite?token=${encodeURIComponent(inviteToken)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.email) {
+          setInviteInfo({ websiteName: data.websiteName, email: data.email })
+          setForm((prev) => ({ ...prev, email: data.email }))
+        }
+      })
+      .catch(() => {})
+  }, [inviteToken])
 
   const formuGonder = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +66,10 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          ...(inviteToken ? { inviteToken } : {}),
+        }),
       })
 
       const data = await res.json()
@@ -60,7 +87,12 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
       })
 
       if (sonuc?.ok) {
-        router.push('/dashboard')
+        const afterRegister = data.invited
+          ? '/dashboard'
+          : selectedPlan && ['STARTER', 'PRO', 'BUSINESS'].includes(selectedPlan)
+            ? `/settings/billing?plan=${selectedPlan}`
+            : '/dashboard'
+        router.push(afterRegister)
         router.refresh()
       } else {
         router.push('/login')
@@ -115,8 +147,21 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
 
           {/* Başlık */}
           <div className="mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Hesap Oluştur</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">2 dakikada ücretsiz başlayın</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+              {inviteInfo ? 'Takım Davetini Kabul Et' : 'Hesap Oluştur'}
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              {inviteInfo
+                ? `${inviteInfo.websiteName} takımına katılmak için hesap oluşturun`
+                : selectedPlanLabel
+                  ? `${selectedPlanLabel} planı için kayıt olun — 14 gün ücretsiz deneyin`
+                  : '2 dakikada ücretsiz başlayın'}
+            </p>
+            {selectedPlanLabel && (
+              <span className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                Seçilen plan: {selectedPlanLabel}
+              </span>
+            )}
           </div>
 
           {/* Hata mesajı */}
@@ -130,7 +175,11 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
           {googleAktif && (
             <div className="mb-6 space-y-3">
               <button
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                onClick={() => signIn('google', {
+                  callbackUrl: selectedPlan && ['STARTER', 'PRO', 'BUSINESS'].includes(selectedPlan)
+                    ? `/settings/billing?plan=${selectedPlan}`
+                    : '/dashboard',
+                })}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-muted dark:hover:bg-gray-700 transition font-medium"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -220,40 +269,41 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               </div>
             </div>
 
-            {/* Website bilgileri bölümü */}
-            <div className="border-t border-border dark:border-gray-700 pt-4 mt-4">
-              <h3 className="text-sm font-medium text-foreground dark:text-gray-300 mb-3">Website Bilgileri</h3>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="websiteName" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                    Website Adı
-                  </label>
-                  <input
-                    id="websiteName"
-                    type="text"
-                    value={form.websiteName}
-                    onChange={(e) => guncelle('websiteName', e.target.value)}
-                    className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                    placeholder="Şirket Adı"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="websiteDomain" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                    Website Domain
-                  </label>
-                  <input
-                    id="websiteDomain"
-                    type="text"
-                    value={form.websiteDomain}
-                    onChange={(e) => guncelle('websiteDomain', e.target.value)}
-                    className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                    placeholder="orneksite.com"
-                    required
-                  />
+            {!inviteToken && (
+              <div className="border-t border-border dark:border-gray-700 pt-4 mt-4">
+                <h3 className="text-sm font-medium text-foreground dark:text-gray-300 mb-3">Website Bilgileri</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="websiteName" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
+                      Website Adı
+                    </label>
+                    <input
+                      id="websiteName"
+                      type="text"
+                      value={form.websiteName}
+                      onChange={(e) => guncelle('websiteName', e.target.value)}
+                      className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      placeholder="Şirket Adı"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="websiteDomain" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
+                      Website Domain
+                    </label>
+                    <input
+                      id="websiteDomain"
+                      type="text"
+                      value={form.websiteDomain}
+                      onChange={(e) => guncelle('websiteDomain', e.target.value)}
+                      className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      placeholder="orneksite.com"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Kayıt butonu */}
             <button

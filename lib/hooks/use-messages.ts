@@ -18,6 +18,7 @@ export interface Message {
   type: string
   senderType: string
   senderId: string | null
+  sentiment?: string | null
   createdAt: string
   readAt: string | null
   attachments: Array<{
@@ -84,12 +85,39 @@ export function useMessages(conversationId: string | null) {
   const sendMessage = useCallback(async (content: string) => {
     if (!conversationId || !content.trim()) return
 
+    const trimmed = content.trim()
+    const optimisticId = `opt_${Date.now()}`
     setSending(true)
+
+    mutate(
+      (current) => {
+        if (!current) return current
+        return {
+          ...current,
+          messages: [
+            ...current.messages,
+            {
+              id: optimisticId,
+              conversationId,
+              content: trimmed,
+              type: 'TEXT',
+              senderType: 'AGENT',
+              senderId: null,
+              createdAt: new Date().toISOString(),
+              readAt: null,
+              attachments: [],
+            },
+          ],
+        }
+      },
+      { revalidate: false }
+    )
+
     try {
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, type: 'TEXT' }),
+        body: JSON.stringify({ content: trimmed, type: 'TEXT' }),
       })
 
       if (!res.ok) {
@@ -97,8 +125,39 @@ export function useMessages(conversationId: string | null) {
         throw new Error(data.error || 'Mesaj gönderilemedi')
       }
 
-      // Revalidate messages
-      mutate()
+      const saved = await res.json()
+      mutate(
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            messages: current.messages.map((m) =>
+              m.id === optimisticId
+                ? {
+                    ...m,
+                    id: saved.id,
+                    senderId: saved.senderId ?? saved.sender?.id ?? null,
+                    createdAt: saved.createdAt,
+                    attachments: saved.attachments ?? [],
+                  }
+                : m
+            ),
+          }
+        },
+        { revalidate: true }
+      )
+    } catch (err) {
+      mutate(
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            messages: current.messages.filter((m) => m.id !== optimisticId),
+          }
+        },
+        { revalidate: false }
+      )
+      throw err
     } finally {
       setSending(false)
     }

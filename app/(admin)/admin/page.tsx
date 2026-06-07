@@ -68,7 +68,7 @@ const statCards = [
   { key: 'totalWebsites', label: 'Kayıtlı Site', icon: Globe, color: 'sky', href: '/admin/websites' },
   { key: 'bannedUsers', label: 'Banlı Kullanıcı', icon: Shield, color: 'orange', href: '/admin/users' },
   { key: 'totalIpBans', label: 'IP Engeli', icon: Shield, color: 'amber', href: '/admin/ip-bans' },
-  { key: 'totalConversations', label: 'Toplam Sohbet', icon: MessageSquare, color: 'orange' },
+  { key: 'totalConversations', label: 'Toplam Sohbet', icon: MessageSquare, color: 'orange', href: '/admin/inbox' },
   { key: 'totalMessages', label: 'Toplam Mesaj', icon: Mail, color: 'cyan' },
   { key: 'paidWebsites', label: 'Ücretli Site', icon: CreditCard, color: 'green' },
 ]
@@ -142,6 +142,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [inboxUnread, setInboxUnread] = useState(0)
+  const [health, setHealth] = useState({ ok: true, db: true, socket: false })
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const loadStats = useCallback(async () => {
@@ -159,6 +161,24 @@ export default function AdminDashboardPage() {
         setStats((prev) => ({ ...prev, activeVisitors: data.count || 0 }))
       }
     } catch {}
+    try {
+      const res = await fetch('/api/admin/inbox-unread')
+      if (res.ok) {
+        const data = await res.json()
+        setInboxUnread(Number(data.unreadCount) || 0)
+      }
+    } catch {}
+    try {
+      const res = await fetch('/api/health')
+      if (res.ok) {
+        const data = await res.json()
+        setHealth({ ok: !!data.ok, db: !!data.db, socket: !!data.socket })
+      } else {
+        setHealth({ ok: false, db: false, socket: false })
+      }
+    } catch {
+      setHealth({ ok: false, db: false, socket: false })
+    }
     setLastUpdated(new Date())
     setLoading(false)
   }, [])
@@ -256,10 +276,18 @@ export default function AdminDashboardPage() {
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                <button className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all duration-200 relative">
+                <Link
+                  href="/admin/inbox"
+                  className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all duration-200 relative"
+                  title="Gelen Kutusu"
+                >
                   <Bell className="w-4 h-4" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-[#0d0d1a]" />
-                </button>
+                  {inboxUnread > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 flex items-center justify-center text-[9px] font-bold bg-primary text-white rounded-full border-2 border-[#0d0d1a]">
+                      {inboxUnread > 99 ? '99+' : inboxUnread}
+                    </span>
+                  )}
+                </Link>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -501,18 +529,18 @@ export default function AdminDashboardPage() {
                   İyi
                 </span>
               </div>
-              <div className="flex items-center gap-6 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-gray-500">
                 <span className="flex items-center gap-1.5">
-                  <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-                  API: <span className="text-emerald-400">Çalışıyor</span>
+                  <Wifi className={`w-3.5 h-3.5 ${health.ok ? 'text-emerald-400' : 'text-red-400'}`} />
+                  API: <span className={health.ok ? 'text-emerald-400' : 'text-red-400'}>{health.ok ? 'Çalışıyor' : 'Sorunlu'}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5 text-emerald-400" />
-                  Veritabanı: <span className="text-emerald-400">Bağlı</span>
+                  <Database className={`w-3.5 h-3.5 ${health.db ? 'text-emerald-400' : 'text-red-400'}`} />
+                  Veritabanı: <span className={health.db ? 'text-emerald-400' : 'text-red-400'}>{health.db ? 'Bağlı' : 'Kopuk'}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
-                  Redis: <span className="text-emerald-400">Bağlı</span>
+                  <Server className={`w-3.5 h-3.5 ${health.socket ? 'text-emerald-400' : 'text-amber-400'}`} />
+                  Canlı: <span className={health.socket ? 'text-emerald-400' : 'text-amber-400'}>{health.socket ? 'Socket aktif' : 'Polling modu'}</span>
                 </span>
               </div>
             </div>
@@ -526,6 +554,7 @@ export default function AdminDashboardPage() {
               Hızlı Erişim
             </h3>
             <div className="space-y-2">
+              <QuickActionButton href="/admin/inbox" icon={MessageSquare} label="Gelen Kutusu" color="orange" />
               <QuickActionButton href="/admin/users" icon={Users} label="Kullanıcıları Yönet" color="blue" />
               <QuickActionButton href="/admin/websites" icon={Globe} label="Siteleri Yönet" color="sky" />
               <QuickActionButton href="/admin/settings" icon={Settings} label="Platform Ayarları" color="gray" />
@@ -629,6 +658,7 @@ function QuickActionButton({ href, icon: Icon, label, color }: {
     gray: 'text-gray-400 bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08]',
     emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20',
     amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20',
+    orange: 'text-orange-400 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20',
   }
   return (
     <Link

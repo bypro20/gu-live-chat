@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Globe, Search, MessageSquare, Users, Calendar } from 'lucide-react'
+import { useToast } from '@/lib/toast'
 
 interface Website {
   id: string
@@ -22,6 +23,7 @@ const planBadge: Record<string, string> = {
 }
 
 export default function AdminWebsitesPage() {
+  const { toast } = useToast()
   const [websites, setWebsites] = useState<Website[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -33,8 +35,12 @@ export default function AdminWebsitesPage() {
         if (res.ok) {
           const data = await res.json()
           setWebsites(data)
+        } else {
+          const data = await res.json().catch(() => ({}))
+          toast({ title: data.error || 'Siteler yüklenemedi', variant: 'error' })
         }
       } catch (err) {
+        toast({ title: 'Siteler yüklenemedi', variant: 'error' })
         console.error('Failed to load websites:', err)
       } finally {
         setLoading(false)
@@ -57,8 +63,13 @@ export default function AdminWebsitesPage() {
       })
       if (res.ok) {
         setWebsites(prev => prev.map(w => w.id === websiteId ? { ...w, plan: newPlan } : w))
+        toast({ title: 'Plan güncellendi', variant: 'success' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: data.error || 'Plan güncellenemedi', variant: 'error' })
       }
     } catch (err) {
+      toast({ title: 'Plan güncellenemedi', variant: 'error' })
       console.error('Failed to update plan:', err)
     }
   }

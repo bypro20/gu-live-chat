@@ -29,9 +29,33 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const { activeWebsite, websites, switchWebsite, isLoading: websitesLoading } = useActiveWebsite()
   const [websiteDropdownOpen, setWebsiteDropdownOpen] = useState(false)
+  const [inboxUnread, setInboxUnread] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (!activeWebsite?.websiteId || status !== 'authenticated') return
+    const poll = async () => {
+      try {
+        const res = await fetch(
+          `/api/conversations?websiteId=${encodeURIComponent(activeWebsite.websiteId)}&limit=50`
+        )
+        if (!res.ok) return
+        const data = await res.json()
+        const total = (data.conversations || []).reduce(
+          (sum: number, c: { unreadCount?: number }) => sum + (c.unreadCount || 0),
+          0
+        )
+        setInboxUnread(total)
+      } catch {
+        // polling fallback — sessizce devam
+      }
+    }
+    poll()
+    const id = setInterval(poll, 10000)
+    return () => clearInterval(id)
+  }, [activeWebsite?.websiteId, status])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -236,7 +260,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     icon={item.icon}
                     label={item.label}
-                    badge={item.badge}
+                    badge={
+                      item.href === '/inbox' && inboxUnread > 0
+                        ? inboxUnread > 99
+                          ? '99+'
+                          : String(inboxUnread)
+                        : item.badge
+                    }
                     active={isActive(item.href)}
                   />
                 ))}

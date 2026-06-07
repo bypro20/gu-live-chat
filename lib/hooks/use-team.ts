@@ -68,7 +68,8 @@ export function useTeam() {
   }
 
   return {
-    members: data?.members || [],
+    members: data?.team || data?.members || [],
+    pendingInvites: data?.pendingInvites || [],
     isLoading,
     error,
     mutate,

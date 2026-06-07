@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Globe, Monitor, Smartphone, Tablet, Globe2, Clock, Link as LinkIcon,
   Users, Search, X, ExternalLink, Activity, Eye,
@@ -152,7 +153,14 @@ function getCountryCounts(visitors: LiveVisitor[]): Record<string, { count: numb
   return map
 }
 
+const TIME_SINCE: Record<string, string | null> = {
+  '1s': null,
+  '24h': '24h',
+  '7d': '7d',
+}
+
 export default function AdminVisitorsPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const [visitors, setVisitors] = useState<LiveVisitor[]>([])
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
@@ -165,9 +173,13 @@ export default function AdminVisitorsPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      const since = TIME_SINCE[timeFilter]
+      const historyUrl = since
+        ? `/api/admin/visitors/history?page=1&limit=100&since=${since}`
+        : '/api/admin/visitors/history?page=1&limit=50'
       const [liveRes, historyRes] = await Promise.all([
         fetch('/api/admin/visitors/live'),
-        fetch('/api/admin/visitors/history?page=1&limit=50'),
+        fetch(historyUrl),
       ])
       if (liveRes.ok) {
         const data = await liveRes.json()
@@ -182,16 +194,28 @@ export default function AdminVisitorsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [timeFilter])
 
   useEffect(() => { fetchData() }, [fetchData])
 
   useEffect(() => {
-    const interval = setInterval(fetchData, 10000)
+    const interval = setInterval(fetchData, timeFilter === '1s' ? 10000 : 30000)
     return () => clearInterval(interval)
-  }, [fetchData])
+  }, [fetchData, timeFilter])
+
+  const timeCutoff = timeFilter === '24h'
+    ? Date.now() - 24 * 60 * 60 * 1000
+    : timeFilter === '7d'
+      ? Date.now() - 7 * 24 * 60 * 60 * 1000
+      : null
 
   const filteredVisitors = visitors.filter(v => {
+    if (timeCutoff && v.lastActiveAt) {
+      if (new Date(v.lastActiveAt).getTime() < timeCutoff) return false
+    }
+    if (timeFilter === '1s' && v.lastActiveAt) {
+      if (Date.now() - new Date(v.lastActiveAt).getTime() > 300000) return false
+    }
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -257,21 +281,24 @@ export default function AdminVisitorsPage() {
     setSelectedVisitor(v)
     if (!detailedData[v.visitorId]) {
       try {
-        const res = await fetch(`/api/visitors/history?visitorId=${v.visitorId}&page=1&limit=5`)
+        const res = await fetch(`/api/admin/visitors/detail?visitorId=${v.visitorId}`)
         if (res.ok) {
           const data = await res.json()
-          const session = data.sessions?.[0]
-          if (session) {
-            setDetailedData(prev => ({
-              ...prev,
-              [v.visitorId]: {
-                ...v,
-                visitorName: session.visitor?.name,
-                visitorEmail: session.visitor?.email,
-                pages: session.pages || [],
-              } as any,
-            }))
-          }
+          setDetailedData(prev => ({
+            ...prev,
+            [v.visitorId]: {
+              ...v,
+              visitorName: data.visitor?.name,
+              visitorEmail: data.visitor?.email,
+              visitorPhone: data.visitor?.phone,
+              timezone: data.visitor?.timezone,
+              isp: data.visitor?.isp,
+              region: data.visitor?.region,
+              pages: data.pages || [],
+              hasConversation: data.hasConversation,
+              conversationId: data.conversationId,
+            } as VisitorDetail & { conversationId?: string | null },
+          }))
         }
       } catch {}
     }
@@ -764,10 +791,18 @@ export default function AdminVisitorsPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/[0.04]">
-                        {detail?.hasConversation && (
-                          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-xs font-medium transition-all">
+                        {(detail as { conversationId?: string | null })?.conversationId && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const cid = (detail as { conversationId?: string }).conversationId
+                              if (cid) router.push(`/admin/inbox?conversation=${cid}`)
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-xs font-medium transition-all"
+                          >
                             <MessageSquare className="w-3.5 h-3.5" />
-                            Sohbet Başlat
+                            Sohbete Git
                           </button>
                         )}
                         <button

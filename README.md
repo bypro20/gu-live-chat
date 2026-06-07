@@ -114,7 +114,9 @@ Mesajlar REST API ile kaydedilir; gelen kutusu socket bağlı değilken 4 sn pol
 - **Workflow engine** — Tetikleyici bazlı otomasyon (`lib/workflow-runner.ts`)
 - **Ban sistemi** — Kullanıcı + IP ban (`/api/admin/ip-bans`)
 - **Bildirimler** — Mesaj/konuşma olaylarında DB bildirimi
-- **Admin panel** — `/admin` (ADMIN rolü gerekli)
+- **Admin panel** — `https://guchat.org/admin-login` (ADMIN rolü; `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile seed)
+
+Admin hesabı: Vercel'de `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CRON_SECRET` tanımlayın, ardından `GET /api/cron/seed-admin` (Bearer `CRON_SECRET`). Yerel: `npm run db:seed-admin`. Ayrıntı: [VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md).
 
 ## Manuel Test Kontrol Listesi
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { Suspense, useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useMessages } from '@/lib/hooks/use-messages'
@@ -166,6 +167,7 @@ function MessageBubble({ message, autoTranslate, canTranslate }: { message: {
   type: string
   senderType: string
   createdAt: string
+  sentiment?: string | null
   attachments?: InboxAttachment[]
 }
   autoTranslate: boolean
@@ -223,9 +225,14 @@ function MessageBubble({ message, autoTranslate, canTranslate }: { message: {
   return (
     <div className={`flex ${isVisitor ? 'justify-start' : 'justify-end'}`}>
       <div className={`max-w-[80%] sm:max-w-[70%] ${isVisitor ? 'order-1' : 'order-2'}`}>
-        {(isBot) && (
+        {isBot && (
           <span className="text-[10px] text-muted-foreground ml-1 mb-0.5 block">
             🤖 Bot
+          </span>
+        )}
+        {isVisitor && message.sentiment === 'NEGATIVE' && (
+          <span className="text-[10px] text-destructive font-medium ml-1 mb-0.5 block">
+            ⚠ Olumsuz ton
           </span>
         )}
         {(() => {
@@ -268,12 +275,18 @@ function MessageBubble({ message, autoTranslate, canTranslate }: { message: {
 
 // ─── Main Page ──────────────────────────────────────────────────────
 
-export default function InboxPage() {
+function InboxPageContent() {
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
-  const { activeWebsite } = useActiveWebsite()
-  const canTranslate = activeWebsite
-    ? (PLAN_LIMITS[activeWebsite.plan as keyof typeof PLAN_LIMITS]?.autoTranslate ?? false)
-    : false
+  const { activeWebsite, websites } = useActiveWebsite()
+  const [allWebsites, setAllWebsites] = useState(false)
+  const planLimits = activeWebsite
+    ? PLAN_LIMITS[activeWebsite.plan as keyof typeof PLAN_LIMITS]
+    : null
+  const canTranslate = planLimits?.autoTranslate ?? false
+  const canAiAssistant = planLimits?.aiAssistant ?? false
+  const canCannedResponses = planLimits?.cannedResponses ?? false
+  const [aiSuggestEnabled, setAiSuggestEnabled] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'OPEN' | 'PENDING' | 'RESOLVED'>('all')
   const [search, setSearch] = useState('')
@@ -284,16 +297,49 @@ export default function InboxPage() {
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [aiSuggesting, setAiSuggesting] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [cannedResponses, setCannedResponses] = useState<Array<{ id: string; title: string; content: string; shortcut: string | null }>>([])
+  const [showCannedPicker, setShowCannedPicker] = useState(false)
+  const [updatingConversation, setUpdatingConversation] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const updateConversation = async (patch: { status?: string; assignedToId?: string | null }) => {
+    if (!selectedId) return
+    setUpdatingConversation(true)
+    try {
+      const res = await fetch(`/api/conversations/${selectedId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Güncellenemedi')
+      }
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setUpdatingConversation(false)
+    }
+  }
 
   const { conversations, total, isLoading, error, mutate: mutateConversations } = useConversations({
     status: filter,
     search: search || undefined,
     page: 1,
     limit: 50,
+    allWebsites,
   })
 
   const { messages, isLoading: messagesLoading, sendMessage, sending, mutate: mutateMessages } = useMessages(selectedId)
+
+  const conversationFromUrl = searchParams.get('conversation')
+  useEffect(() => {
+    if (!conversationFromUrl || isLoading) return
+    const exists = conversations.some((c) => c.id === conversationFromUrl)
+    if (exists) setSelectedId(conversationFromUrl)
+  }, [conversationFromUrl, conversations, isLoading])
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -360,12 +406,17 @@ export default function InboxPage() {
       mutateConversations()
     }
 
+    const onNewConversation = (data: { conversationId: string }) => {
+      mutateConversations()
+      setSelectedId((current) => current ?? data.conversationId)
+    }
+
     socket.on('visitor:typing-preview', onTypingPreview)
     socket.on('visitor:typing-preview:clear', onTypingPreviewClear)
     socket.on('agent:typing:stop', onAgentTypingStop)
     socket.on('agent:message', onAgentMessage)
     socket.on('agent:conversation:updated', onConversationUpdate)
-    socket.on('agent:conversation:new', onConversationUpdate)
+    socket.on('agent:conversation:new', onNewConversation)
 
     const authenticate = () => {
       socket.emit('agent:auth', {
@@ -386,7 +437,7 @@ export default function InboxPage() {
       socket.off('agent:typing:stop', onAgentTypingStop)
       socket.off('agent:message', onAgentMessage)
       socket.off('agent:conversation:updated', onConversationUpdate)
-      socket.off('agent:conversation:new', onConversationUpdate)
+      socket.off('agent:conversation:new', onNewConversation)
       socket.off('connect', authenticate)
       releaseSocket()
     }
@@ -419,6 +470,59 @@ export default function InboxPage() {
     setDetectedVisitorLang(null)
   }, [selectedId])
 
+  useEffect(() => {
+    if (!activeWebsite?.websiteId) {
+      setAiSuggestEnabled(false)
+      return
+    }
+    fetch(`/api/ai/config?websiteId=${activeWebsite.websiteId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { aiConfig?: { isActive?: boolean; autoSuggest?: boolean } } | null) => {
+        setAiSuggestEnabled(!!data?.aiConfig?.isActive && data?.aiConfig?.autoSuggest !== false)
+      })
+      .catch(() => setAiSuggestEnabled(false))
+  }, [activeWebsite?.websiteId])
+
+  const lastVisitorSentiment = messages
+    .filter((m) => m.senderType === 'VISITOR')
+    .slice(-1)[0]?.sentiment
+
+  useEffect(() => {
+    if (!activeWebsite?.websiteId || !canCannedResponses) {
+      setCannedResponses([])
+      return
+    }
+    fetch(`/api/canned-responses?websiteId=${activeWebsite.websiteId}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setCannedResponses(Array.isArray(data) ? data : []))
+      .catch(() => setCannedResponses([]))
+  }, [activeWebsite?.websiteId, canCannedResponses])
+
+  const cannedQuery = messageText.startsWith('/') ? messageText.slice(1).toLowerCase() : ''
+  const filteredCanned = showCannedPicker
+    ? cannedResponses.filter((r) => {
+        if (!cannedQuery) return true
+        return (
+          r.title.toLowerCase().includes(cannedQuery) ||
+          (r.shortcut?.toLowerCase().includes(cannedQuery) ?? false)
+        )
+      })
+    : []
+
+  const handleMessageChange = (value: string) => {
+    setMessageText(value)
+    if (canCannedResponses && value.startsWith('/')) {
+      setShowCannedPicker(true)
+    } else {
+      setShowCannedPicker(false)
+    }
+  }
+
+  const selectCannedResponse = (content: string) => {
+    setMessageText(content)
+    setShowCannedPicker(false)
+  }
+
   // Detect visitor language from recent messages when auto-translate is on
   useEffect(() => {
     if (!autoTranslate || !canTranslate || !activeWebsite) return
@@ -446,7 +550,8 @@ export default function InboxPage() {
   }, [autoTranslate, messages, canTranslate, activeWebsite])
 
   const handleSend = async () => {
-    if (!messageText.trim() || sending) return
+    if (!messageText.trim() || sending || !selectedId) return
+    setSendError(null)
     let textToSend = messageText.trim()
 
     // Translate outgoing message to visitor's language when auto-translate is active
@@ -474,8 +579,12 @@ export default function InboxPage() {
       }
     }
 
-    await sendMessage(textToSend)
-    setMessageText('')
+    try {
+      await sendMessage(textToSend)
+      setMessageText('')
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : 'Mesaj gönderilemedi')
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -524,6 +633,39 @@ export default function InboxPage() {
               </span>
             )}
           </div>
+          {activeWebsite && (
+            <p className="text-[11px] text-muted-foreground mb-2 truncate" title={activeWebsite.websiteId}>
+              {allWebsites ? 'Tüm siteleriniz' : `${activeWebsite.name} · widget mesajları`}
+            </p>
+          )}
+          {websites.length > 1 && (
+            <div className="flex gap-1.5 mb-2">
+              <button
+                type="button"
+                onClick={() => setAllWebsites(false)}
+                disabled={!activeWebsite}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition truncate max-w-[160px] ${
+                  !allWebsites
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+                title={activeWebsite?.name}
+              >
+                {activeWebsite?.name || 'Aktif site'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAllWebsites(true)}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition ${
+                  allWebsites
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Tüm siteler
+              </button>
+            </div>
+          )}
           <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-0.5">
             {([
               { key: 'all' as const, label: 'Tümü' },
@@ -568,9 +710,20 @@ export default function InboxPage() {
             <div className="flex items-center justify-center h-32">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : error ? (
+          ) : !activeWebsite ? (
             <div className="flex flex-col items-center justify-center h-32 text-center px-6">
-              <p className="text-sm text-destructive">Hata: {error.message}</p>
+              <p className="text-sm text-muted-foreground">Site yükleniyor...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-32 text-center px-6 gap-2">
+              <p className="text-sm text-destructive">{error.message}</p>
+              <button
+                type="button"
+                onClick={() => mutateConversations()}
+                className="text-xs text-primary underline"
+              >
+                Tekrar dene
+              </button>
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center px-6">
@@ -580,9 +733,16 @@ export default function InboxPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-foreground">Henüz sohbet yok</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Yeni ziyaretçi mesajları burada görünecek
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                {activeWebsite
+                  ? `Sitenize eklediğiniz widget kodundan gelen mesajlar burada görünür. Ayarlar → Widget sayfasındaki embed kodunu kullanın.`
+                  : 'Önce bir web sitesi oluşturun veya davet kabul edin.'}
               </p>
+              {activeWebsite && (
+                <p className="text-[10px] text-muted-foreground mt-3 font-mono break-all">
+                  Widget ID: {activeWebsite.websiteId}
+                </p>
+              )}
             </div>
           ) : (
             conversations.map((conv) => (
@@ -652,6 +812,40 @@ export default function InboxPage() {
                   {selectedConversation.assignedTo.name || 'Temsilci'}
                 </div>
               )}
+              <div className="flex items-center gap-1 shrink-0">
+                {session?.user?.id && (
+                  <button
+                    type="button"
+                    disabled={updatingConversation}
+                    onClick={() => updateConversation({ assignedToId: session.user!.id })}
+                    className="px-2 py-1 text-[11px] font-medium rounded-lg bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 disabled:opacity-50 transition hidden md:inline"
+                    title="Sohbeti bana ata"
+                  >
+                    Bana ata
+                  </button>
+                )}
+                {selectedConversation.status !== 'RESOLVED' && selectedConversation.status !== 'CLOSED' ? (
+                  <button
+                    type="button"
+                    disabled={updatingConversation}
+                    onClick={() => updateConversation({ status: 'RESOLVED' })}
+                    className="px-2 py-1 text-[11px] font-medium rounded-lg bg-success/15 text-success hover:bg-success/25 disabled:opacity-50 transition"
+                    title="Çözüldü olarak işaretle"
+                  >
+                    Çözüldü
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={updatingConversation}
+                    onClick={() => updateConversation({ status: 'OPEN' })}
+                    className="px-2 py-1 text-[11px] font-medium rounded-lg bg-primary-light text-primary hover:bg-primary/15 disabled:opacity-50 transition"
+                    title="Sohbeti yeniden aç"
+                  >
+                    Yeniden aç
+                  </button>
+                )}
+              </div>
               {/* Translate toggle in chat header */}
               <button
                 onClick={() => canTranslate && setAutoTranslate((v) => !v)}
@@ -712,6 +906,7 @@ export default function InboxPage() {
             {/* Message Input */}
             <div className="p-3 sm:p-4 border-t border-border bg-card">
               <div className="flex items-center justify-between gap-2 mb-2">
+                {canAiAssistant && aiSuggestEnabled && (
                 <button
                   onClick={handleAiSuggest}
                   disabled={aiSuggesting}
@@ -727,6 +922,10 @@ export default function InboxPage() {
                     <>✨ AI ile yanıtla</>
                   )}
                 </button>
+                )}
+                {lastVisitorSentiment === 'NEGATIVE' && (
+                  <span className="text-[11px] text-destructive font-medium">⚠ Ziyaretçi olumsuz — öncelik verin</span>
+                )}
                 {aiError && (
                   <span className="text-[11px] text-destructive truncate">{aiError}</span>
                 )}
@@ -739,16 +938,38 @@ export default function InboxPage() {
                   Gelen mesajlar TR&apos;ye çevriliyor · Giden mesajlar {detectedVisitorLang.toUpperCase()}&apos;ye çevriliyor
                 </div>
               )}
+              {sendError && (
+                <p className="text-xs text-destructive mb-2">{sendError}</p>
+              )}
               <div className="flex items-end gap-2 sm:gap-3">
                 <div className="flex-1 relative">
+                  {showCannedPicker && filteredCanned.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 max-h-48 overflow-y-auto bg-card border border-border rounded-xl shadow-lg z-10">
+                      {filteredCanned.map((r) => (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => selectCannedResponse(r.content)}
+                          className="w-full text-left px-3 py-2 hover:bg-muted transition border-b border-border last:border-b-0"
+                        >
+                          <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
+                          {r.shortcut && (
+                            <p className="text-[10px] text-muted-foreground">/{r.shortcut}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <textarea
                     value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
+                    onChange={(e) => handleMessageChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={
                       autoTranslate && canTranslate && detectedVisitorLang
                         ? `Türkçe yazın — ${detectedVisitorLang.toUpperCase()}'ye çevrilerek gönderilecek`
-                        : 'Mesaj yazın...'
+                        : canCannedResponses
+                          ? 'Mesaj yazın... (hazır cevap için / yazın)'
+                          : 'Mesaj yazın...'
                     }
                     className="w-full px-4 py-3 bg-muted border border-border rounded-xl resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-sm"
                     rows={1}
@@ -775,5 +996,19 @@ export default function InboxPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+          Gelen kutusu yükleniyor...
+        </div>
+      }
+    >
+      <InboxPageContent />
+    </Suspense>
   )
 }

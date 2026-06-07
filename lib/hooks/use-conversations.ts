@@ -7,8 +7,8 @@ import { useActiveWebsite } from './use-active-website'
 
 // Conversation list refresh cadence: ~5s while polling, backing off when a
 // live socket connection is already streaming new conversations/messages.
-const POLL_LIST_MS = 5000
-const POLL_IDLE_MS = 30000
+const POLL_LIST_MS = 2000
+const POLL_IDLE_MS = 15000
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -79,6 +79,10 @@ export function useConversations(options?: {
   search?: string
   page?: number
   limit?: number
+  /** true = tüm sitelerdeki sohbetler (websiteId filtresi yok) */
+  allWebsites?: boolean
+  /** Sabit public websiteId (admin gelen kutusu vb.) */
+  websiteId?: string
 }) {
   const { activeWebsite } = useActiveWebsite()
   const [pollInterval, setPollInterval] = useState(
@@ -105,13 +109,19 @@ export function useConversations(options?: {
   if (options?.search) params.set('search', options.search)
   if (options?.page) params.set('page', String(options.page))
   if (options?.limit) params.set('limit', String(options.limit))
-  if (activeWebsite?.websiteId) params.set('websiteId', activeWebsite.websiteId)
+  const pinnedWebsiteId = options?.websiteId || (!options?.allWebsites ? activeWebsite?.websiteId : undefined)
+  const scopeReady = options?.allWebsites || pinnedWebsiteId
+  if (options?.websiteId) {
+    params.set('websiteId', options.websiteId)
+  } else if (!options?.allWebsites && activeWebsite?.websiteId) {
+    params.set('websiteId', activeWebsite.websiteId)
+  }
 
   const query = params.toString()
   const url = `/api/conversations${query ? `?${query}` : ''}`
 
   const { data, error, mutate, isLoading } = useSWR<ConversationsResponse>(
-    activeWebsite ? url : null,
+    scopeReady ? url : null,
     fetcher,
     {
       refreshInterval: pollInterval,
