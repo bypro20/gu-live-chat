@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
-import { sendEmail, teamInviteEmail } from '@/lib/email'
+import { sendEmail, teamInviteEmail, isEmailConfigured } from '@/lib/email'
 import { buildTeamInviteUrl, teamInviteExpiry } from '@/lib/team-invite'
 
 export async function GET(req: Request) {
@@ -125,10 +125,21 @@ export async function POST(req: Request) {
 
       const acceptUrl = buildTeamInviteUrl(invite.token)
       const mail = teamInviteEmail({ inviterName, websiteName: website.name, acceptUrl })
-      await sendEmail({ ...mail, to: normalizedEmail })
+      let emailSent = false
+      if (isEmailConfigured()) {
+        const sent = await sendEmail({ ...mail, to: normalizedEmail })
+        emailSent = sent.success
+      }
 
       return NextResponse.json(
-        { pending: true, email: normalizedEmail, expiresAt: invite.expiresAt },
+        {
+          pending: true,
+          email: normalizedEmail,
+          expiresAt: invite.expiresAt,
+          acceptUrl,
+          emailSent,
+          note: emailSent ? undefined : 'Davet linki yanıtta — e-posta yapılandırması bekleniyor.',
+        },
         { status: 201 }
       )
     }

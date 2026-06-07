@@ -56,13 +56,17 @@ async function uploadToS3(input: UploadInput): Promise<UploadResult | null> {
 }
 
 async function uploadToVercelBlob(input: UploadInput): Promise<UploadResult | null> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN?.trim()) return null
+  const rwToken = process.env.BLOB_READ_WRITE_TOKEN?.trim()
+  const storeId = process.env.BLOB_STORE_ID?.trim()
+  if (!rwToken && !storeId) return null
 
-  const blob = await put(`${input.keyPrefix}/${input.safeFileName}`, input.buffer, {
+  const putOpts: Parameters<typeof put>[2] = {
     access: 'public',
     contentType: input.mimeType,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  })
+  }
+  if (rwToken) putOpts.token = rwToken
+
+  const blob = await put(`${input.keyPrefix}/${input.safeFileName}`, input.buffer, putOpts)
 
   return {
     url: blob.url,
@@ -108,7 +112,7 @@ export async function uploadFileBuffer(input: UploadInput): Promise<UploadResult
 
 export function isFileStorageConfigured(): boolean {
   if (getS3Client() && process.env.AWS_S3_BUCKET) return true
-  if (process.env.BLOB_READ_WRITE_TOKEN?.trim()) return true
+  if (process.env.BLOB_READ_WRITE_TOKEN?.trim() || process.env.BLOB_STORE_ID?.trim()) return true
   if (!process.env.VERCEL) return true
   return false
 }
