@@ -6,16 +6,26 @@ let socket: Socket | null = null
 let retainCount = 0
 let socketConnected = false
 
+/** Vercel / ana site URL'si socket sunucusu değildir — yanıltıcı env'yi yoksay. */
+function isUsableSocketUrl(url: string): boolean {
+  const normalized = url.replace(/\/$/, '').toLowerCase()
+  if (!normalized) return false
+  // Vercel preview/production app hostları Socket.io çalıştıramaz
+  if (normalized.includes('.vercel.app')) return false
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '').toLowerCase()
+  if (appUrl && normalized === appUrl) return false
+  if (appUrl && normalized === appUrl.replace('://www.', '://')) return false
+  return true
+}
+
 /**
  * Dedicated Socket.io server URL (Railway / local custom server).
- * In production on Vercel, set NEXT_PUBLIC_SOCKET_URL to your socket host.
- * When unset, the app uses REST polling only — no doomed same-origin socket attempts.
+ * Geçersiz veya eksik URL'de undefined döner → REST polling devreye girer.
  */
 function getSocketUrl(): string | undefined {
   const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
-  if (envUrl) return envUrl
+  if (envUrl && isUsableSocketUrl(envUrl)) return envUrl
 
-  // Local dev with `npm run dev` (tsx server.ts) — socket on same origin
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     return window.location.origin
   }
@@ -27,7 +37,6 @@ export function isSocketEnabled(): boolean {
   return !!getSocketUrl()
 }
 
-/** True when Socket.io is connected. Falls back to REST polling otherwise. */
 export function isSocketConnected(): boolean {
   return socketConnected
 }
@@ -48,6 +57,10 @@ export function connectSocket(): Socket | null {
     autoConnect: true,
     upgrade: true,
     rememberUpgrade: true,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    timeout: 8000,
   })
 
   socket.on('connect', () => {
@@ -62,7 +75,7 @@ export function connectSocket(): Socket | null {
 
   socket.on('connect_error', (err) => {
     socketConnected = false
-    console.error('[Gu Socket] Connection error:', err.message)
+    console.warn('[Gu Socket] Connection error:', err.message)
   })
 
   return socket

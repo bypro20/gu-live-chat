@@ -5,6 +5,7 @@ import {
   playInboxNotificationSound,
   requestDesktopNotificationPermission,
   showDesktopNotification,
+  unlockInboxAudio,
 } from '@/lib/inbox-sound'
 
 interface ConversationLike {
@@ -23,7 +24,9 @@ export function useInboxSoundAlert(
   const initializedRef = useRef(false)
 
   useEffect(() => {
-    if (enabled) requestDesktopNotificationPermission()
+    if (!enabled) return
+    unlockInboxAudio()
+    requestDesktopNotificationPermission()
   }, [enabled])
 
   useEffect(() => {
@@ -48,11 +51,24 @@ export function useInboxSoundAlert(
       if (latest) {
         const name = latest.visitor.name || latest.visitor.email?.split('@')[0] || 'Ziyaretçi'
         const preview = latest.lastMessagePreview || 'Yeni mesaj'
-        showDesktopNotification(`Yeni sohbet: ${name}`, preview)
+        showDesktopNotification(`Yeni mesaj: ${name}`, preview)
       }
     }
 
     prevUnreadRef.current = totalUnread
     prevIdsRef.current = currentIds
   }, [conversations, enabled])
+}
+
+/** Socket'ten gelen tekil mesaj için anında ses (polling beklemeden). */
+export function playNewMessageSound(
+  enabled: boolean,
+  senderType: string,
+  isSelectedConversation: boolean
+): void {
+  if (!enabled) return
+  if (senderType !== 'VISITOR') return
+  if (isSelectedConversation && document.hasFocus()) return
+  unlockInboxAudio()
+  playInboxNotificationSound()
 }

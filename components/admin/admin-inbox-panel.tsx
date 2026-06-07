@@ -1,11 +1,22 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
-import { useAdminInboxConversations, useAdminInboxMessages } from '@/lib/hooks/use-admin-inbox'
-import { useInboxSoundAlert } from '@/lib/hooks/use-inbox-sound-alert'
-import { connectSocket, retainSocket, releaseSocket } from '@/lib/socket-client'
+import {
+  useAdminInboxConversations,
+  useAdminInboxMessages,
+  type AdminMessage,
+} from '@/lib/hooks/use-admin-inbox'
+import { useInboxSoundAlert, playNewMessageSound } from '@/lib/hooks/use-inbox-sound-alert'
+import {
+  connectSocket,
+  retainSocket,
+  releaseSocket,
+  isSocketConnected,
+  isSocketEnabled,
+} from '@/lib/socket-client'
+import { unlockInboxAudio } from '@/lib/inbox-sound'
 
 function timeAgo(date: string) {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
@@ -28,9 +39,12 @@ export function AdminInboxPanel() {
   const [messageText, setMessageText] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(true)
+  const [liveConnected, setLiveConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const selectedIdRef = useRef<string | null>(null)
+  const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
+  soundOnRef.current = soundOn
 
   const loadSetup = () => {
     setLoadError(null)
@@ -50,13 +64,20 @@ export function AdminInboxPanel() {
   useEffect(() => {
     connectSocket()
     loadSetup()
+    const unlock = () => unlockInboxAudio()
+    window.addEventListener('click', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
+    return () => {
+      window.removeEventListener('click', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
   }, [])
 
   const websiteId = marketingSite?.websiteId
-  const { conversations, isLoading, error, mutate: mutateConversations } = useAdminInboxConversations(
-    !!marketingSite
-  )
-  const { messages, sendMessage, sending, mutate: mutateMessages } = useAdminInboxMessages(selectedId)
+  const { conversations, isLoading, error, mutate: mutateConversations } =
+    useAdminInboxConversations(!!marketingSite)
+  const { messages, sendMessage, sending, mutate: mutateMessages } =
+    useAdminInboxMessages(selectedId)
 
   useInboxSoundAlert(conversations, soundOn)
 
@@ -68,10 +89,74 @@ export function AdminInboxPanel() {
   }, [searchParams])
 
   useEffect(() => {
+    if (selectedId || conversations.length === 0) return
+    const fromUrl = searchParams.get('conversation')
+    if (fromUrl) return
+    const firstUnread = conversations.find((c) => c.unreadCount > 0)
+    setSelectedId((firstUnread ?? conversations[0]).id)
+  }, [conversations, selectedId, searchParams])
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Socket — guchat.org widget mesajları anlık gelsin
+  // Bağlantı durumu göstergesi
+  useEffect(() => {
+    if (!isSocketEnabled()) {
+      setLiveConnected(false)
+      return
+    }
+    const tick = () => setLiveConnected(isSocketConnected())
+    tick()
+    const id = setInterval(tick, 2000)
+    return () => clearInterval(id)
+  }, [])
+
+  const handleIncomingMessage = useCallback(
+    (data: {
+      id: string
+      conversationId: string
+      content: string
+      type: string
+      senderType: string
+      senderId?: string | null
+      createdAt: string
+    }) => {
+      const isSelected = selectedIdRef.current === data.conversationId
+      playNewMessageSound(
+        soundOnRef.current,
+        data.senderType,
+        isSelected
+      )
+
+      if (isSelected) {
+        mutateMessages((current) => {
+          if (!current) return current
+          if (current.messages.some((m) => m.id === data.id)) return current
+          const incoming: AdminMessage = {
+            id: data.id,
+            conversationId: data.conversationId,
+            content: data.content,
+            type: data.type,
+            senderType: data.senderType,
+            senderId: data.senderId ?? null,
+            createdAt: data.createdAt,
+            readAt: null,
+            attachments: [],
+          }
+          return { ...current, messages: [...current.messages, incoming] }
+        }, { revalidate: false })
+      }
+
+      void mutateConversations()
+      if (!selectedIdRef.current && data.conversationId) {
+        setSelectedId(data.conversationId)
+      }
+    },
+    [mutateMessages, mutateConversations]
+  )
+
+  // Socket — widget mesajları anlık
   useEffect(() => {
     if (!session?.user?.id || !websiteId) return
     const socket = retainSocket()
@@ -80,29 +165,49 @@ export function AdminInboxPanel() {
     const auth = () => {
       socket.emit('agent:auth', { userId: session.user.id, websiteIds: [websiteId] })
     }
-    const onMessage = () => {
-      mutateConversations()
-      if (selectedIdRef.current) mutateMessages()
+
+    const onMessage = (data: {
+      id: string
+      conversationId: string
+      content: string
+      type: string
+      senderType: string
+      senderId?: string | null
+      createdAt: string
+    }) => {
+      handleIncomingMessage(data)
     }
+
     const onNew = (data: { conversationId: string }) => {
-      mutateConversations()
+      void mutateConversations()
       setSelectedId((cur) => cur ?? data.conversationId)
+    }
+
+    const onUpdated = () => {
+      void mutateConversations()
+      if (selectedIdRef.current) void mutateMessages()
     }
 
     socket.on('connect', auth)
     socket.on('agent:message', onMessage)
     socket.on('agent:conversation:new', onNew)
-    socket.on('agent:conversation:updated', onMessage)
+    socket.on('agent:conversation:updated', onUpdated)
     if (socket.connected) auth()
 
     return () => {
       socket.off('connect', auth)
       socket.off('agent:message', onMessage)
       socket.off('agent:conversation:new', onNew)
-      socket.off('agent:conversation:updated', onMessage)
+      socket.off('agent:conversation:updated', onUpdated)
       releaseSocket()
     }
-  }, [session?.user?.id, websiteId, mutateConversations, mutateMessages])
+  }, [
+    session?.user?.id,
+    websiteId,
+    mutateConversations,
+    mutateMessages,
+    handleIncomingMessage,
+  ])
 
   useEffect(() => {
     if (!selectedId || !session?.user?.id) return
@@ -120,6 +225,7 @@ export function AdminInboxPanel() {
   const handleSend = async () => {
     if (!messageText.trim() || sending) return
     setSendError(null)
+    unlockInboxAudio()
     try {
       await sendMessage(messageText.trim())
       setMessageText('')
@@ -152,14 +258,35 @@ export function AdminInboxPanel() {
   }
 
   const totalUnread = conversations.reduce((s, c) => s + c.unreadCount, 0)
+  const connectionLabel = liveConnected
+    ? 'Canlı bağlantı'
+    : isSocketEnabled()
+      ? 'Bağlanıyor…'
+      : 'Hızlı senkron (~1sn)'
 
   return (
     <div className="flex flex-col flex-1 min-h-0 text-white">
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3 bg-[#1A1D2E]">
         <div>
-          <h1 className="text-lg font-bold">Gelen Kutusu</h1>
-          <p className="text-xs text-gray-400">
-            guchat.org widget · {marketingSite.name} · ID: {marketingSite.websiteId}
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold">Gelen Kutusu</h1>
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                liveConnected
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-amber-500/20 text-amber-400'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  liveConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`}
+              />
+              {connectionLabel}
+            </span>
+          </div>
+          <p className="text-xs text-gray-400 mt-0.5">
+            guchat.org widget · {marketingSite.name}
             {totalUnread > 0 && (
               <span className="ml-2 px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
                 {totalUnread} okunmamış
@@ -167,20 +294,26 @@ export function AdminInboxPanel() {
             )}
           </p>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={soundOn}
-            onChange={(e) => setSoundOn(e.target.checked)}
+            onChange={(e) => {
+              setSoundOn(e.target.checked)
+              if (e.target.checked) unlockInboxAudio()
+            }}
             className="rounded"
           />
-          Sesli bildirim
+          🔊 Sesli bildirim
         </label>
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Liste */}
-        <div className={`w-full lg:w-80 border-r border-white/10 flex flex-col bg-[#141625] ${selected ? 'hidden lg:flex' : 'flex'}`}>
+        <div
+          className={`w-full lg:w-80 border-r border-white/10 flex flex-col bg-[#141625] ${
+            selected ? 'hidden lg:flex' : 'flex'
+          }`}
+        >
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="flex justify-center py-12">
@@ -215,7 +348,9 @@ export function AdminInboxPanel() {
                     <span className="font-medium text-sm truncate">
                       {c.visitor.name || c.visitor.email?.split('@')[0] || 'Anonim'}
                     </span>
-                    <span className="text-[10px] text-gray-500 shrink-0">{timeAgo(c.lastMessageAt)}</span>
+                    <span className="text-[10px] text-gray-500 shrink-0">
+                      {timeAgo(c.lastMessageAt)}
+                    </span>
                   </div>
                   <p className="text-xs text-gray-400 truncate mt-0.5">
                     {c.lastMessagePreview || '—'}
@@ -231,8 +366,11 @@ export function AdminInboxPanel() {
           </div>
         </div>
 
-        {/* Sohbet */}
-        <div className={`flex-1 flex flex-col min-w-0 bg-[#0d0d1a] ${selected ? 'flex' : 'hidden lg:flex'}`}>
+        <div
+          className={`flex-1 flex flex-col min-w-0 bg-[#0d0d1a] ${
+            selected ? 'flex' : 'hidden lg:flex'
+          }`}
+        >
           {!selected ? (
             <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               Bir sohbet seçin
@@ -255,25 +393,32 @@ export function AdminInboxPanel() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.map((m) => {
-                  const isAgent = m.senderType === 'AGENT'
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}
-                    >
+                {messages.length === 0 && !sending ? (
+                  <p className="text-center text-gray-500 text-sm py-8">Mesaj yükleniyor…</p>
+                ) : (
+                  messages.map((m) => {
+                    const isAgent = m.senderType === 'AGENT'
+                    return (
                       <div
-                        className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
-                          isAgent
-                            ? 'bg-red-600 text-white'
-                            : 'bg-white/10 text-gray-100'
-                        }`}
+                        key={m.id}
+                        className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}
                       >
-                        {m.content}
+                        <div
+                          className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+                            isAgent
+                              ? 'bg-red-600 text-white'
+                              : 'bg-white/10 text-gray-100'
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                          <p className="text-[10px] opacity-50 mt-1 text-right">
+                            {timeAgo(m.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
                 <div ref={messagesEndRef} />
               </div>
               <div className="p-4 border-t border-white/10">
@@ -288,7 +433,7 @@ export function AdminInboxPanel() {
                         handleSend()
                       }
                     }}
-                    placeholder="Yanıt yazın..."
+                    placeholder="Yanıt yazın…"
                     rows={2}
                     className="flex-1 resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/50"
                   />
@@ -298,7 +443,7 @@ export function AdminInboxPanel() {
                     disabled={!messageText.trim() || sending}
                     className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 text-sm font-medium shrink-0"
                   >
-                    {sending ? '...' : 'Gönder'}
+                    {sending ? '…' : 'Gönder'}
                   </button>
                 </div>
               </div>

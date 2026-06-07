@@ -4,11 +4,11 @@ import useSWR from 'swr'
 import { useCallback, useEffect, useState } from 'react'
 import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
 
-const POLL_LIST_MS = 2000
-const POLL_MSG_MS = 1500
-const POLL_IDLE_MS = 5000
+const POLL_LIST_MS = 1000
+const POLL_MSG_MS = 800
+const POLL_IDLE_MS = 4000
 
-interface Conversation {
+export interface AdminConversation {
   id: string
   websiteId: string
   visitorId: string
@@ -24,7 +24,7 @@ interface Conversation {
   }
 }
 
-interface Message {
+export interface AdminMessage {
   id: string
   conversationId: string
   content: string
@@ -44,9 +44,7 @@ async function fetcher(url: string) {
 }
 
 function usePollInterval(fastMs: number, idleMs: number) {
-  const [interval, setInterval] = useState(
-    isSocketEnabled() ? idleMs : fastMs
-  )
+  const [interval, setInterval] = useState(isSocketEnabled() ? idleMs : fastMs)
 
   useEffect(() => {
     if (!isSocketEnabled()) {
@@ -56,7 +54,7 @@ function usePollInterval(fastMs: number, idleMs: number) {
     connectSocket()
     const update = () => setInterval(isSocketConnected() ? idleMs : fastMs)
     update()
-    const id = window.setInterval(update, 3000)
+    const id = window.setInterval(update, 2000)
     return () => window.clearInterval(id)
   }, [fastMs, idleMs])
 
@@ -66,14 +64,14 @@ function usePollInterval(fastMs: number, idleMs: number) {
 export function useAdminInboxConversations(enabled: boolean) {
   const pollInterval = usePollInterval(POLL_LIST_MS, POLL_IDLE_MS)
 
-  const { data, error, mutate, isLoading } = useSWR<{ conversations: Conversation[] }>(
+  const { data, error, mutate, isLoading } = useSWR<{ conversations: AdminConversation[] }>(
     enabled ? '/api/admin/inbox/conversations?limit=50' : null,
     fetcher,
     {
       refreshInterval: pollInterval,
       refreshWhenHidden: false,
       revalidateOnFocus: true,
-      dedupingInterval: 1500,
+      dedupingInterval: 400,
     }
   )
 
@@ -82,6 +80,7 @@ export function useAdminInboxConversations(enabled: boolean) {
     isLoading,
     error,
     mutate,
+    pollInterval,
   }
 }
 
@@ -89,7 +88,7 @@ export function useAdminInboxMessages(conversationId: string | null) {
   const [sending, setSending] = useState(false)
   const pollInterval = usePollInterval(POLL_MSG_MS, POLL_MSG_MS)
 
-  const { data, error, mutate, isLoading } = useSWR<{ messages: Message[] }>(
+  const { data, error, mutate, isLoading } = useSWR<{ messages: AdminMessage[] }>(
     conversationId
       ? `/api/admin/inbox/conversations/${conversationId}/messages`
       : null,
@@ -98,7 +97,7 @@ export function useAdminInboxMessages(conversationId: string | null) {
       refreshInterval: pollInterval,
       refreshWhenHidden: false,
       revalidateOnFocus: true,
-      dedupingInterval: 1000,
+      dedupingInterval: 300,
     }
   )
 
@@ -113,6 +112,7 @@ export function useAdminInboxMessages(conversationId: string | null) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ content: trimmed, type: 'TEXT' }),
           }
         )
@@ -134,5 +134,6 @@ export function useAdminInboxMessages(conversationId: string | null) {
     mutate,
     sendMessage,
     sending,
+    pollInterval,
   }
 }
