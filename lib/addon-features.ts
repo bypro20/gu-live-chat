@@ -101,5 +101,10 @@ export async function websiteHasFeature(
   currentCount?: number
 ): Promise<boolean> {
   if (canPerformAction(plan as Plan, feature, currentCount)) return true
-  return hasActiveAddonForFeature(websiteDbId, feature)
+  try {
+    return await hasActiveAddonForFeature(websiteDbId, feature)
+  } catch (e) {
+    console.warn('[addon-features] hasActiveAddonForFeature failed:', e)
+    return false
+  }
 }

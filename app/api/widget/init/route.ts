@@ -170,7 +170,12 @@ export async function POST(req: Request) {
     // plan limit first, then verifies an AI/Google key is actually configured.
     // Never throws — translation simply stays disabled when unavailable.
     let aiTranslate = false
-    const translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
+    let translateAllowed = false
+    try {
+      translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
+    } catch (translateErr) {
+      console.warn('[widget/init] translate check skipped:', translateErr)
+    }
     if (translateAllowed) {
       try {
         const aiCfg = await prisma.aIConfig.findUnique({
