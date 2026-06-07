@@ -7,7 +7,6 @@ import { isTranslationAvailable } from '@/lib/ai/translate'
 import { PLAN_LIMITS } from '@/lib/constants'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
-import { syncProductionSchema } from '@/lib/db-schema-sync'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
@@ -71,8 +70,6 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
-    await syncProductionSchema().catch((e) => console.warn('[widget/init] schema:', e))
-
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })

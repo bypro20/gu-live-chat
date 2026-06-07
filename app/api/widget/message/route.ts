@@ -12,7 +12,6 @@ import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
-import { syncProductionSchema } from '@/lib/db-schema-sync'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 
 const widgetAttachmentSchema = z.object({
@@ -36,8 +35,6 @@ const widgetMessageSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await syncProductionSchema().catch((e) => console.warn('[widget/message] schema:', e))
-
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
