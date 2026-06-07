@@ -13,6 +13,7 @@ import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { syncProductionSchema } from '@/lib/db-schema-sync'
+import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -45,11 +46,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = widgetMessageSchema.parse(body)
 
-    // Find website
-    const website = await prisma.website.findUnique({
-      where: { websiteId: validated.websiteId },
-    })
-
+    const website = await findWebsiteForWidget(validated.websiteId)
     if (!website) {
       return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
     }

@@ -8,6 +8,7 @@ import { PLAN_LIMITS } from '@/lib/constants'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { syncProductionSchema } from '@/lib/db-schema-sync'
+import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
 const widgetInitSchema = z.object({
@@ -80,11 +81,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validated = widgetInitSchema.parse(body)
 
-    // Find website
-    const website = await prisma.website.findUnique({
-      where: { websiteId: validated.websiteId },
-    })
-
+    const website = await findWebsiteForWidget(validated.websiteId)
     if (!website) {
       return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
     }
@@ -106,30 +103,49 @@ export async function POST(req: Request) {
 
     if (!visitor) {
       isNewVisitor = true
-      visitor = await prisma.visitor.create({
-        data: {
-          websiteId: website.id,
-          fingerprint: validated.fingerprint,
-          name: validated.visitorName || null,
-          email: validated.visitorEmail || null,
-          browser: ua.browser,
-          os: ua.os,
-          device: ua.device,
-        },
-      })
+      try {
+        visitor = await prisma.visitor.create({
+          data: {
+            websiteId: website.id,
+            fingerprint: validated.fingerprint,
+            name: validated.visitorName || null,
+            email: validated.visitorEmail || null,
+            browser: ua.browser,
+            os: ua.os,
+            device: ua.device,
+          },
+        })
+      } catch {
+        visitor = await prisma.visitor.create({
+          data: {
+            websiteId: website.id,
+            fingerprint: validated.fingerprint,
+            name: validated.visitorName || null,
+            email: validated.visitorEmail || null,
+          },
+        })
+      }
     } else {
-      // Update visitor info (always update UA, only update name/email if provided)
-      visitor = await prisma.visitor.update({
-        where: { id: visitor.id },
-        data: {
-          ...(validated.visitorName ? { name: validated.visitorName } : {}),
-          ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
-          browser: ua.browser,
-          os: ua.os,
-          device: ua.device,
-          // Keep existing country/city if we don't have new data
-        },
-      })
+      try {
+        visitor = await prisma.visitor.update({
+          where: { id: visitor.id },
+          data: {
+            ...(validated.visitorName ? { name: validated.visitorName } : {}),
+            ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
+            browser: ua.browser,
+            os: ua.os,
+            device: ua.device,
+          },
+        })
+      } catch {
+        visitor = await prisma.visitor.update({
+          where: { id: visitor.id },
+          data: {
+            ...(validated.visitorName ? { name: validated.visitorName } : {}),
+            ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
+          },
+        })
+      }
     }
 
     // Create visitor session
