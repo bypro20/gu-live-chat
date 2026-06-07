@@ -37,7 +37,7 @@ interface Message {
 }
 
 async function fetcher(url: string) {
-  const res = await fetch(url)
+  const res = await fetch(url, { credentials: 'include', cache: 'no-store' })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || 'İstek başarısız')
   return data

@@ -7,6 +7,7 @@ import { isTranslationAvailable } from '@/lib/ai/translate'
 import { PLAN_LIMITS } from '@/lib/constants'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
+import { syncProductionSchema } from '@/lib/db-schema-sync'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
 const widgetInitSchema = z.object({
@@ -69,6 +70,8 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
+    await syncProductionSchema().catch((e) => console.warn('[widget/init] schema:', e))
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
@@ -191,12 +194,16 @@ export async function POST(req: Request) {
     const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
 
     if (isNewVisitor) {
-      const { runWorkflows } = await import('@/lib/workflow-runner')
-      await runWorkflows('VISITOR_CREATED', {
-        websiteDbId: website.id,
-        websitePublicId: website.websiteId,
-        visitorId: visitor.id,
-      })
+      try {
+        const { runWorkflows } = await import('@/lib/workflow-runner')
+        await runWorkflows('VISITOR_CREATED', {
+          websiteDbId: website.id,
+          websitePublicId: website.websiteId,
+          visitorId: visitor.id,
+        })
+      } catch (wfErr) {
+        console.warn('[widget/init] workflow skipped:', wfErr)
+      }
     }
 
     return NextResponse.json({

@@ -12,6 +12,7 @@ import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
+import { syncProductionSchema } from '@/lib/db-schema-sync'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -34,6 +35,8 @@ const widgetMessageSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    await syncProductionSchema().catch((e) => console.warn('[widget/message] schema:', e))
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
@@ -183,84 +186,88 @@ export async function POST(req: Request) {
       },
     })
 
-    emitVisitorMessage({
-      conversationId,
-      websiteId: website.websiteId,
-      message: {
-        id: message.id,
-        content: message.content,
-        type: message.type,
-        visitorId: visitor.id,
-        createdAt: message.createdAt,
-      },
-      isNewConversation,
-    })
-
     const visitorName = visitor.name || visitor.email?.split('@')[0] || 'Ziyaretçi'
 
-    if (isNewConversation) {
-      await notifyNewConversation(website.id, visitorName, conversationId)
-      await dispatchWebhooks(website.id, 'conversation.created', {
+    try {
+      emitVisitorMessage({
         conversationId,
+        websiteId: website.websiteId,
+        message: {
+          id: message.id,
+          content: message.content,
+          type: message.type,
+          visitorId: visitor.id,
+          createdAt: message.createdAt,
+        },
+        isNewConversation,
+      })
+
+      if (isNewConversation) {
+        await notifyNewConversation(website.id, visitorName, conversationId)
+        await dispatchWebhooks(website.id, 'conversation.created', {
+          conversationId,
+          visitorId: visitor.id,
+          visitorName,
+          source: 'WIDGET',
+        })
+        await runWorkflows('CONVERSATION_CREATED', {
+          websiteDbId: website.id,
+          websitePublicId: website.websiteId,
+          conversationId,
+          visitorId: visitor.id,
+        })
+      } else {
+        await notifyWebsiteMembers({
+          websiteId: website.id,
+          type: 'NEW_MESSAGE',
+          title: 'Yeni mesaj',
+          message: `${visitorName} bir mesaj gönderdi`,
+          data: { conversationId },
+        })
+      }
+
+      await dispatchWebhooks(website.id, 'message.received', {
+        conversationId,
+        messageId: message.id,
+        content: message.content,
         visitorId: visitor.id,
         visitorName,
-        source: 'WIDGET',
       })
-      await runWorkflows('CONVERSATION_CREATED', {
+
+      await runWorkflows('MESSAGE_RECEIVED', {
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+        messageContent: message.content,
+        senderType: 'VISITOR',
+      })
+
+      const priorConversations = await prisma.conversation.count({
+        where: { visitorId: visitor.id, websiteId: website.id },
+      })
+
+      const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+
+      await processChatbotOnVisitorMessage({
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+        messageContent: validated.content,
+        isFirstVisit: priorConversations <= 1,
+        agentsOnline,
+      })
+
+      await maybeRunAiAutoReply({
         websiteDbId: website.id,
         websitePublicId: website.websiteId,
         conversationId,
         visitorId: visitor.id,
       })
-    } else {
-      await notifyWebsiteMembers({
-        websiteId: website.id,
-        type: 'NEW_MESSAGE',
-        title: 'Yeni mesaj',
-        message: `${visitorName} bir mesaj gönderdi`,
-        data: { conversationId },
-      })
+    } catch (postErr) {
+      console.error('[widget/message] post-process failed (message saved):', postErr)
     }
-
-    await dispatchWebhooks(website.id, 'message.received', {
-      conversationId,
-      messageId: message.id,
-      content: message.content,
-      visitorId: visitor.id,
-      visitorName,
-    })
-
-    await runWorkflows('MESSAGE_RECEIVED', {
-      websiteDbId: website.id,
-      websitePublicId: website.websiteId,
-      conversationId,
-      visitorId: visitor.id,
-      messageContent: message.content,
-      senderType: 'VISITOR',
-    })
-
-    const priorConversations = await prisma.conversation.count({
-      where: { visitorId: visitor.id, websiteId: website.id },
-    })
-
-    const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
-
-    await processChatbotOnVisitorMessage({
-      websiteDbId: website.id,
-      websitePublicId: website.websiteId,
-      conversationId,
-      visitorId: visitor.id,
-      messageContent: validated.content,
-      isFirstVisit: priorConversations <= 1,
-      agentsOnline,
-    })
-
-    await maybeRunAiAutoReply({
-      websiteDbId: website.id,
-      websitePublicId: website.websiteId,
-      conversationId,
-      visitorId: visitor.id,
-    })
 
     return NextResponse.json({
       message,

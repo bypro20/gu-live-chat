@@ -12,10 +12,15 @@ export async function resolveAgentsOnline(
   if (socketCount > 0) return socketCount
 
   const cutoff = new Date(Date.now() - ONLINE_WINDOW_MS)
-  return prisma.teamMember.count({
-    where: {
-      websiteId: websiteDbId,
-      user: { lastSeenAt: { gte: cutoff } },
-    },
-  })
+  try {
+    return await prisma.teamMember.count({
+      where: {
+        websiteId: websiteDbId,
+        user: { lastSeenAt: { gte: cutoff } },
+      },
+    })
+  } catch (e) {
+    console.warn('[agents-online] fallback 0:', e)
+    return 0
+  }
 }
