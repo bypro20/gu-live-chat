@@ -38,6 +38,8 @@ npm run dev:full     # next dev + server.ts paralel
 
 ### 2. Socket.io → Railway / Fly.io / VPS
 
+Adım adım kurulum: **[SOCKET_KURULUM.md](./SOCKET_KURULUM.md)** (`railway.toml` repoda hazır)
+
 ```bash
 # Railway'de start komutu:
 npm run start:socket

@@ -1,6 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io'
 import type { Server as HTTPServer } from 'http'
 import { prisma } from './db'
+import { socketCorsOrigins } from './socket-cors'
 
 let io: SocketIOServer
 
@@ -58,8 +59,9 @@ export function initSocketServer(httpServer: HTTPServer) {
     pingTimeout: 60000,
     pingInterval: 25000,
     cors: {
-      origin: process.env.NEXT_PUBLIC_APP_URL || '*',
+      origin: socketCorsOrigins(),
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   })
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, isEmailConfigured } from '@/lib/email'
+import { notifyAdminsOfContact } from '@/lib/contact-inbox'
 
 const contactSchema = z.object({
   name: z.string().min(1).max(200),
@@ -18,25 +19,36 @@ export async function POST(req: Request) {
     }
 
     const { name, email, subject, message } = parsed.data
-    const to = process.env.CONTACT_EMAIL || process.env.EMAIL_FROM || 'destek@gulive.com'
+    const to = process.env.CONTACT_EMAIL || process.env.SUPPORT_EMAIL || process.env.ADMIN_EMAIL || 'destek@guchat.org'
 
-    const html = `
-      <h2>Gu Live Chat — İletişim Formu</h2>
-      <p><strong>Ad:</strong> ${name}</p>
-      <p><strong>E-posta:</strong> ${email}</p>
-      <p><strong>Konu:</strong> ${subject}</p>
-      <p><strong>Mesaj:</strong></p>
-      <p>${message.replace(/\n/g, '<br>')}</p>
-    `
+    let emailDelivered = false
+    if (isEmailConfigured()) {
+      const html = `
+        <h2>Gu Chat — İletişim Formu</h2>
+        <p><strong>Ad:</strong> ${name}</p>
+        <p><strong>E-posta:</strong> ${email}</p>
+        <p><strong>Konu:</strong> ${subject}</p>
+        <p><strong>Mesaj:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      `
+      const result = await sendEmail({
+        to,
+        subject: `[İletişim] ${subject} — ${name}`,
+        html,
+        text: `${name} <${email}>\n${subject}\n\n${message}`,
+      })
+      emailDelivered = result.success
+    }
 
-    await sendEmail({
-      to,
-      subject: `[İletişim] ${subject} — ${name}`,
-      html,
-      text: `${name} <${email}>\n${subject}\n\n${message}`,
+    await notifyAdminsOfContact({ name, email, subject, message })
+
+    return NextResponse.json({
+      success: true,
+      delivered: emailDelivered,
+      note: emailDelivered
+        ? undefined
+        : 'Mesajınız admin paneline iletildi (e-posta yapılandırması bekleniyor).',
     })
-
-    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[Contact]', error)
     return NextResponse.json({ error: 'Mesaj gönderilemedi' }, { status: 500 })

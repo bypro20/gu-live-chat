@@ -26,18 +26,26 @@ interface EmailOptions {
 
 // ─── Get Provider ──────────────────────────────────────────────────
 
+export function isEmailConfigured(): boolean {
+  if (process.env.RESEND_API_KEY?.trim()) return true
+  if (process.env.SMTP_HOST?.trim() && process.env.SMTP_USER?.trim()) return true
+  return false
+}
+
 function getProvider(): EmailProvider {
   const provider = process.env.EMAIL_PROVIDER as EmailProvider
   if (provider === 'resend' || provider === 'smtp' || provider === 'console') {
     return provider
   }
-  // Auto-detect
   if (process.env.RESEND_API_KEY) return 'resend'
   if (process.env.SMTP_HOST) return 'smtp'
   return 'console'
 }
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'GU Live Chat <noreply@gulive.com>'
+const DEFAULT_FROM =
+  process.env.EMAIL_FROM ||
+  process.env.SMTP_FROM ||
+  'Gu Chat <noreply@guchat.org>'
 
 // ─── Send Email ────────────────────────────────────────────────────
 

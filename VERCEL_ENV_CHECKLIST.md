@@ -28,7 +28,11 @@ Yerel `.env` dosyanızdaki **gizli değerleri** (secret, client secret, token vb
 | `NEXT_PUBLIC_APP_URL` | ✅ | → `https://guchat.org` |
 | `NEXT_PUBLIC_SOCKET_URL` | ✅ | Railway/socket subdomain; vercel.app değil |
 | `NEXT_PUBLIC_MARKETING_WEBSITE_ID` veya `NEXT_PUBLIC_WIDGET_WEBSITE_ID` | Önerilen | guchat.org widget → inbox eşleşmesi |
-| `AWS_*` / `S3_*` | Opsiyonel | — |
+| `BLOB_READ_WRITE_TOKEN` | Önerilen (Vercel → Storage → Blob) | S3 yokken dosya yükleme |
+| `AWS_*` / `S3_*` | Opsiyonel | Blob yoksa S3 |
+| `CONTACT_EMAIL` / `SUPPORT_EMAIL` | Önerilen | İletişim formu (yoksa admin bildirimi) |
+| `SLACK_SIGNING_SECRET` | Opsiyonel | Slack webhook imza doğrulama |
+| `NEXT_PUBLIC_PAYTR_ENABLED` | `true` sadece PayTR doluysa | Billing UI |
 | `PAYTR_*` | Opsiyonel | — |
 | `SMTP_*` | Opsiyonel | — |
 | `OPENAI_API_KEY` | Opsiyonel | — |

@@ -44,7 +44,14 @@ const server = createServer(async (req, res) => {
 
   if (req.url === '/health' || req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
-    res.end(JSON.stringify({ status: 'ok', service: 'gu-live-chat-socket' }))
+    res.end(
+      JSON.stringify({
+        status: 'ok',
+        service: 'gu-live-chat-socket',
+        socketReady: !!getIO(),
+        uptimeSec: Math.floor(process.uptime()),
+      })
+    )
     return
   }
 

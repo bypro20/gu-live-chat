@@ -53,6 +53,21 @@ async function ensureTeamOwner(websiteInternalId: string, userId: string) {
   }
 }
 
+/** Platform marketing sitesi tüm PRO özelliklerle çalışsın. */
+async function ensureMarketingSiteProPlan(websiteInternalId: string) {
+  try {
+    await prisma.website.update({
+      where: { id: websiteInternalId },
+      data: {
+        plan: 'PRO',
+        subscriptionStatus: 'ACTIVE',
+      },
+    })
+  } catch (e) {
+    console.warn('[marketing-website] pro plan upgrade:', e)
+  }
+}
+
 async function ensureAllPlatformAdmins(websiteInternalId: string) {
   const admins = await prisma.user.findMany({
     where: { role: 'ADMIN' },
@@ -86,6 +101,7 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
 
   if (existing) {
     await ensureTeamOwner(existing.id, ownerUserId)
+    await ensureMarketingSiteProPlan(existing.id)
     await ensureAllPlatformAdmins(existing.id)
     return existing.websiteId
   }
@@ -99,6 +115,8 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
         ownerId: ownerUserId,
         welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
         offlineMessage: 'Şu an çevrimdışıyız. Mesaj bırakın, size dönelim.',
+        plan: 'PRO',
+        subscriptionStatus: 'ACTIVE',
         members: {
           create: {
             userId: ownerUserId,
@@ -116,6 +134,7 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
     const retry = await findMarketingWebsiteInDb()
     if (retry) {
       await ensureTeamOwner(retry.id, ownerUserId)
+      await ensureMarketingSiteProPlan(retry.id)
       await ensureAllPlatformAdmins(retry.id)
       return retry.websiteId
     }
@@ -132,6 +151,7 @@ export async function ensureAdminMarketingAccess(adminUserId: string): Promise<s
         select: { id: true, websiteId: true },
       })
       if (site) {
+        await ensureMarketingSiteProPlan(site.id)
         await ensureAllPlatformAdmins(site.id)
         return site.websiteId
       }

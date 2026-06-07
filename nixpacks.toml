@@ -1,0 +1,15 @@
+# Railway Nixpacks — sadece socket sunucusu (Next.js build yok)
+[variables]
+NIXPACKS_NODE_VERSION = "24"
+
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = ["npx prisma generate"]
+
+[start]
+cmd = "npm run start:socket"

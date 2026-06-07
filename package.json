@@ -2,6 +2,9 @@
   "name": "gu-live-chat",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "tsx server.ts",
     "dev:next": "next dev",
@@ -33,6 +36,7 @@
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "class-variance-authority": "^0.7.1",
@@ -52,6 +56,7 @@
     "socket.io-client": "^4.8.3",
     "swr": "^2.4.1",
     "tailwind-merge": "^3.6.0",
+    "tsx": "^4.22.4",
     "uuid": "^14.0.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
@@ -69,7 +74,6 @@
     "eslint-config-next": "16.2.6",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
-    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

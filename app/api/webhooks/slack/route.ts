@@ -1,9 +1,48 @@
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Slack Events API iskeleti — imza dogrulama ve event loglama
+function verifySlackSignature(
+  signingSecret: string,
+  signature: string | null,
+  timestamp: string | null,
+  rawBody: string
+): boolean {
+  if (!signature?.startsWith('v0=') || !timestamp) return false
+
+  const ageSec = Math.abs(Date.now() / 1000 - Number(timestamp))
+  if (!Number.isFinite(ageSec) || ageSec > 60 * 5) return false
+
+  const base = `v0:${timestamp}:${rawBody}`
+  const digest = crypto.createHmac('sha256', signingSecret).update(base).digest('hex')
+  const expected = `v0=${digest}`
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null)
-  if (!body) {
+  const rawBody = await req.text()
+  const signingSecret = process.env.SLACK_SIGNING_SECRET?.trim()
+
+  if (signingSecret) {
+    const ok = verifySlackSignature(
+      signingSecret,
+      req.headers.get('x-slack-signature'),
+      req.headers.get('x-slack-request-timestamp'),
+      rawBody
+    )
+    if (!ok) {
+      return NextResponse.json({ error: 'Geçersiz imza' }, { status: 401 })
+    }
+  }
+
+  let body: { type?: string; challenge?: string; event?: { type?: string } }
+  try {
+    body = JSON.parse(rawBody)
+  } catch {
     return NextResponse.json({ error: 'Gecersiz govde' }, { status: 400 })
   }
 
@@ -11,8 +50,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ challenge: body.challenge })
   }
 
-  // TODO: SLACK_SIGNING_SECRET ile imza dogrula, event -> bildirim
-  console.log('[Slack webhook]', body.type || 'event', body.event?.type || '')
+  if (body.event?.type) {
+    console.log('[Slack webhook]', body.type, body.event.type)
+  }
 
   return NextResponse.json({ ok: true })
 }
