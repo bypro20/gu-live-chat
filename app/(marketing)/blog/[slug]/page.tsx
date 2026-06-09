@@ -2,66 +2,66 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { JsonLd } from '@/components/marketing/json-ld'
 import { notFound } from 'next/navigation'
-
-const posts: Record<string, { title: string; date: string; content: string[] }> = {
-  'canli-destek-neden-onemli': {
-    title: 'Canlı Destek Neden Önemli?',
-    date: '15 Mayıs 2026',
-    content: [
-      'Müşteriler anında yanıt bekliyor. Araştırmalar, yanıt süresinin 1 dakikadan fazla gecikmesi halinde dönüşüm oranının %40\'a kadar düştüğünü gösteriyor.',
-      'Canlı destek, web sitenizdeki ziyaretçilerle gerçek zamanlı iletişim kurmanızı sağlar. Sorular anında yanıtlanır, tereddüt eden müşteriler satın almaya ikna olur.',
-      'Gu Chat ile widget\'ınızı 30 saniyede kurabilir, chatbot ile tekrarlayan soruları otomatik yanıtlayabilir ve ekibinizin verimliliğini artırabilirsiniz.',
-    ],
-  },
-  'chatbot-kurulum-rehberi': {
-    title: 'Chatbot Kurulum Rehberi',
-    date: '8 Mayıs 2026',
-    content: [
-      'Gu Chat chatbot\'u görsel bir editör ile kurulur. Kod yazmanıza gerek yok.',
-      'İlk adım: Ayarlar > Chatbot bölümüne gidin ve yeni bir akış oluşturun. Karşılama mesajı, soru-cevap adımları ve temsilciye yönlendirme kurallarını tanımlayın.',
-      'Bilgi bankanızı chatbot\'a bağlayarak AI destekli yanıtlar alabilirsiniz. Test modunda akışı deneyin, ardından yayına alın.',
-    ],
-  },
-  'musteri-deneyimi-ipuclari': {
-    title: 'Müşteri Deneyimi İpuçları',
-    date: '1 Mayıs 2026',
-    content: [
-      'Hızlı yanıt vermek müşteri memnuniyetinin temelidir. Ortalama yanıt sürenizi analitik panelden takip edin ve hedef belirleyin.',
-      'Hazır cevaplar kullanarak sık sorulan sorulara tutarlı yanıtlar verin. Inbox\'ta "/" yazarak hazır cevaplarınıza erişin.',
-      'Proaktif mesajlar ile ziyaretçilerinize doğru anda ulaşın. Sepet terk eden kullanıcılara yardım teklif edin veya yeni ziyaretçileri karşılayın.',
-    ],
-  },
-}
+import { BLOG_POSTS, BLOG_BY_SLUG } from '@/lib/blog-posts'
+import { articleJsonLd, buildMetadata, breadcrumbJsonLd } from '@/lib/seo'
 
 export async function generateStaticParams() {
-  return Object.keys(posts).map((slug) => ({ slug }))
+  return BLOG_POSTS.map((post) => ({ slug: post.slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const post = posts[slug]
+  const post = BLOG_BY_SLUG[slug]
   if (!post) return { title: 'Yazı bulunamadı' }
-  return { title: post.title, description: post.content[0] }
+  return buildMetadata({
+    title: post.title,
+    description: post.excerpt,
+    path: `/blog/${slug}`,
+    keywords: post.keywords,
+  })
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = posts[slug]
+  const post = BLOG_BY_SLUG[slug]
   if (!post) notFound()
 
   return (
     <MarketingPageShell>
+      <JsonLd
+        data={[
+          articleJsonLd({
+            title: post.title,
+            description: post.excerpt,
+            path: `/blog/${slug}`,
+            datePublished: post.dateIso,
+          }),
+          breadcrumbJsonLd([
+            { name: 'Ana Sayfa', path: '/' },
+            { name: 'Blog', path: '/blog' },
+            { name: post.title, path: `/blog/${slug}` },
+          ]),
+        ]}
+      />
       <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Blog&apos;a dön
       </Link>
-      <article>
-        <time className="text-xs text-muted-foreground">{post.date}</time>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-2 mb-8">{post.title}</h1>
-        <div className="prose prose-neutral max-w-none space-y-4">
+      <article itemScope itemType="https://schema.org/Article">
+        <time className="text-xs text-muted-foreground" dateTime={post.dateIso} itemProp="datePublished">{post.date}</time>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-2 mb-8" itemProp="headline">{post.title}</h1>
+        <div className="prose prose-neutral max-w-none space-y-4" itemProp="articleBody">
           {post.content.map((p, i) => (
             <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
           ))}
+        </div>
+        <div className="mt-12 p-6 surface text-center">
+          <p className="font-semibold mb-3">Gu Chat ile hemen başlayın</p>
+          <p className="text-sm text-muted-foreground mb-4">14 gün ücretsiz deneme — kredi kartı gerekmez</p>
+          <Link href="/register" className="btn-primary px-6 py-2.5 inline-flex">
+            Ücretsiz Kayıt Ol
+          </Link>
         </div>
       </article>
     </MarketingPageShell>

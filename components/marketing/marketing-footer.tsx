@@ -9,9 +9,12 @@ const columns = [
   {
     title: 'Ürün',
     links: [
+      { label: 'Canlı Destek', href: '/canli-destek' },
+      { label: 'Chatbot', href: '/chatbot' },
+      { label: 'WhatsApp Destek', href: '/whatsapp-destek' },
       { label: 'Özellikler', href: '/features' },
       { label: 'Entegrasyonlar', href: '/integrations' },
-      { label: 'Fiyatlandırma', href: '/#pricing' },
+      { label: 'Fiyatlandırma', href: '/pricing' },
       { label: 'Apps & Eklentiler', href: '/apps' },
       { label: 'Yapay Zeka', href: '/ai' },
     ],

@@ -3,7 +3,7 @@ export const SITE_LEGAL = {
   name: 'Gu Chat',
   tagline: 'Ziyaretçinizi müşteriye dönüştürmenin en etkili yolu',
   metaDescription:
-    'Canlı sohbet, ziyaretçi takibi ve AI ile ziyaretçinizi müşteriye dönüştürün. Widget, WhatsApp ve e-posta — tek inbox\'ta, Türk yapımı.',
+    'Gu Chat — Türkiye\'nin #1 canlı destek ve chatbot platformu. Web sitenize 30 saniyede canlı sohbet ekleyin, WhatsApp ve AI ile müşterilerinize anında ulaşın. Ücretsiz başlayın.',
   legalName: process.env.COMPANY_LEGAL_NAME || 'Gu Chat Yazılım ve Teknoloji A.Ş.',
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org',
   email: process.env.SUPPORT_EMAIL || 'destek@guchat.org',

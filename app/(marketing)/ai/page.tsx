@@ -2,11 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Bot, Sparkles, BookOpen, Workflow, MessageCircle, Check } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Yapay Zeka',
-  description: 'Gu Chat AI asistan — otomatik yanıtlar, akıllı yönlendirme ve 7/24 müşteri desteği.',
-}
+export const metadata: Metadata = buildMetadata(PAGE_SEO.ai)
 
 const capabilities = [
   { icon: MessageCircle, title: 'Bağlama duyarlı yanıtlar', desc: 'Müşterinin sorusunu anlayarak bilgi bankasından en uygun cevabı sunar.' },

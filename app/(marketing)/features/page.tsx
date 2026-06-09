@@ -20,12 +20,9 @@ import {
   Languages,
 } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Özellikler',
-  description:
-    'Gu Chat — AI Agent, birleşik inbox, WhatsApp, video destek ve 50+ entegrasyon. Müşteri hizmetleri için tek çözüm.',
-}
+export const metadata: Metadata = buildMetadata(PAGE_SEO.features)
 
 const allFeatures = [
   {

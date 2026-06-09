@@ -6,12 +6,12 @@ import { ArrowRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
 
 const navLinks = [
+  { label: 'Canlı Destek', href: '/canli-destek' },
   { label: 'Özellikler', href: '/features' },
   { label: 'Yapay Zeka', href: '/ai' },
-  { label: 'Apps', href: '/apps' },
   { label: 'Fiyatlandırma', href: '/pricing' },
   { label: 'Entegrasyonlar', href: '/integrations' },
-  { label: 'Yardım', href: '/help' },
+  { label: 'Blog', href: '/blog' },
 ]
 
 export function MarketingNav() {

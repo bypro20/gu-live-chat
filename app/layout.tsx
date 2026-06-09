@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
-import { SITE_LEGAL } from '@/lib/site-legal'
+import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -13,12 +13,13 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'),
-  title: {
-    default: `${SITE_LEGAL.name} — ${SITE_LEGAL.tagline}`,
-    template: `%s | ${SITE_LEGAL.name}`,
-  },
-  description: SITE_LEGAL.metaDescription,
+  ...buildMetadata(PAGE_SEO.home),
+  metadataBase: new URL('https://guchat.org'),
+  authors: [{ name: 'Gu Chat', url: 'https://guchat.org' }],
+  creator: 'Gu Chat',
+  publisher: 'Gu Chat',
+  formatDetection: { email: false, address: false, telephone: false },
+  category: 'technology',
 }
 
 export default function RootLayout({

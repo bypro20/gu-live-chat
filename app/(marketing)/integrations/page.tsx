@@ -2,11 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Entegrasyonlar',
-  description: 'Gu Chat entegrasyonları — webhook, API, WhatsApp, e-posta ve daha fazlası.',
-}
+export const metadata: Metadata = buildMetadata(PAGE_SEO.integrations)
 
 const integrations = [
   { name: 'Webhook & API', desc: 'REST API ve webhook ile kendi sistemlerinize bağlanın. conversation.created, message.sent ve daha fazlası.', status: 'Aktif' },
