@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
+import { connectSocket, getSocket } from '@/lib/socket-client'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo } from '@/lib/visitors-utils'
@@ -12,6 +14,12 @@ import {
   Eye, Users, Search, X, Monitor, Smartphone, Tablet,
   Globe2, MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
 } from 'lucide-react'
+
+interface AdminVisitorsMonitorProps {
+  variant?: 'admin' | 'dashboard'
+  websiteId?: string | null
+  websiteIds?: string[]
+}
 
 function DeviceIcon({ device }: { device?: string | null }) {
   const d = (device || '').toLowerCase()
@@ -33,7 +41,13 @@ function activityLabel(a: VisitorActivity): string {
   }
 }
 
-export function AdminVisitorsMonitor() {
+export function AdminVisitorsMonitor({
+  variant = 'admin',
+  websiteId = null,
+  websiteIds: websiteIdsProp = [],
+}: AdminVisitorsMonitorProps = {}) {
+  const isDashboard = variant === 'dashboard'
+  const agentLabel = isDashboard ? 'dashboard' : 'admin'
   const { data: session } = useSession()
   const {
     visitors,
@@ -45,7 +59,6 @@ export function AdminVisitorsMonitor() {
     updateVisitor,
     removeVisitor,
     updateCursor,
-    updateScreenshot,
     addActivity,
     selectVisitor,
     setLoading,
@@ -53,13 +66,18 @@ export function AdminVisitorsMonitor() {
 
   const { on, emit } = useSocket()
   const [searchQuery, setSearchQuery] = useState('')
-  const [websiteIds, setWebsiteIds] = useState<string[]>([])
+  const [adminWebsiteIds, setAdminWebsiteIds] = useState<string[]>([])
+  const [upgradeRequired, setUpgradeRequired] = useState(false)
+  const [overlayEnabled, setOverlayEnabled] = useState(isDashboard ? false : true)
+  const [overlayDeniedMessage, setOverlayDeniedMessage] = useState<string | null>(null)
   const [screenCapturingId, setScreenCapturingId] = useState<string | null>(null)
   const [webrtcStream, setWebrtcStream] = useState<MediaStream | null>(null)
   const [webrtcState, setWebrtcState] = useState<WebRTCConnectionState | 'idle' | 'denied'>('idle')
   const [privacyMode, setPrivacyMode] = useState(false)
   const selectedVisitorIdRef = useRef<string | null>(selectedVisitorId)
   useEffect(() => { selectedVisitorIdRef.current = selectedVisitorId }, [selectedVisitorId])
+
+  const websiteIds = isDashboard ? websiteIdsProp : adminWebsiteIds
 
   const selectedVisitor = selectedVisitorId ? visitors.get(selectedVisitorId) : null
   const visitorActivities = activities.filter((a) => a.visitorId === selectedVisitorId)
@@ -72,9 +90,20 @@ export function AdminVisitorsMonitor() {
     if (!session?.user) return
     try {
       setLoading(true)
-      const res = await fetch('/api/admin/visitors/live')
+      const url = isDashboard
+        ? `/api/visitors/live${websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : ''}`
+        : '/api/admin/visitors/live'
+      const res = await fetch(url)
+      if (isDashboard && res.status === 403) {
+        const data = await res.json()
+        if (data.upgradeRequired) {
+          setUpgradeRequired(true)
+          return
+        }
+      }
       if (!res.ok) throw new Error('Ziyaretçiler alınamadı')
       const data = await res.json()
+      setUpgradeRequired(false)
       setVisitors(
         (data.visitors || []).map((v: LiveVisitor & { pages?: LiveVisitor['pages'] }) => ({
           ...v,
@@ -82,13 +111,17 @@ export function AdminVisitorsMonitor() {
           currentPage: v.currentPage || '',
         }))
       )
-      if (data.websiteIds?.length) setWebsiteIds(data.websiteIds)
+      if (isDashboard) {
+        setOverlayEnabled(!!data.overlayEnabled)
+      } else if (data.websiteIds?.length) {
+        setAdminWebsiteIds(data.websiteIds)
+      }
     } catch (err) {
       console.error('[AdminVisitorsMonitor]', err)
     } finally {
       setLoading(false)
     }
-  }, [session, setVisitors, setLoading])
+  }, [session, setVisitors, setLoading, isDashboard, websiteId])
 
   useEffect(() => { fetchLiveVisitors() }, [fetchLiveVisitors])
 
@@ -97,15 +130,21 @@ export function AdminVisitorsMonitor() {
     return () => clearInterval(interval)
   }, [fetchLiveVisitors])
 
-  // Socket — platform admin tüm siteleri dinler
+  // Socket — admin tüm siteleri, dashboard kullanıcı kendi sitelerini dinler
   useEffect(() => {
     if (!session?.user?.id || websiteIds.length === 0) return
 
-    emit('agent:auth', {
-      userId: session.user.id,
-      websiteIds,
-      scope: 'platform',
-    })
+    const socket = getSocket() || connectSocket()
+    const authenticate = () => {
+      emit('agent:auth', {
+        userId: session.user.id,
+        websiteIds,
+        ...(isDashboard ? {} : { scope: 'platform' as const }),
+      })
+    }
+
+    if (socket?.connected) authenticate()
+    else socket?.on('connect', authenticate)
 
     const handleVisitorOnline = (data: any) => {
       addVisitor({
@@ -181,6 +220,13 @@ export function AdminVisitorsMonitor() {
       }
     }
 
+    const handleOverlayDenied = (data: any) => {
+      setScreenCapturingId(null)
+      setWebrtcStream(null)
+      setWebrtcState('idle')
+      setOverlayDeniedMessage(data.message || 'Ekran izleme mevcut paketinizde kullanılamaz.')
+    }
+
     const unsubs = [
       on('agent:visitor:online', handleVisitorOnline),
       on('agent:visitor:offline', handleVisitorOffline),
@@ -188,46 +234,62 @@ export function AdminVisitorsMonitor() {
       on('agent:visitor:cursor', handleVisitorCursor),
       on('agent:visitor:screenshot', handleVisitorScreenshot),
       on('agent:visitor:privacy-mode', handlePrivacyMode),
+      ...(isDashboard ? [on('agent:overlay:denied', handleOverlayDenied)] : []),
     ]
 
-    return () => unsubs.forEach((u) => u())
-  }, [session, websiteIds, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, addActivity])
+    return () => {
+      socket?.off('connect', authenticate)
+      unsubs.forEach((u) => u())
+    }
+  }, [session, websiteIds, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, addActivity, isDashboard])
 
   const handleScreenCaptureToggle = useCallback((visitorId: string, active: boolean) => {
+    if (active && isDashboard && !overlayEnabled) {
+      setOverlayDeniedMessage('Ekran izleme Profesyonel pakette veya ekran izleme eklentisi ile kullanılabilir.')
+      return
+    }
     const visitor = visitors.get(visitorId)
-    const websiteId = visitor?.websiteId
+    const targetWebsiteId = visitor?.websiteId || websiteId || undefined
+    if (!targetWebsiteId) return
     if (active) {
+      setOverlayDeniedMessage(null)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
       setPrivacyMode(false)
-      emit('agent:screen:start', { visitorId, websiteId })
+      emit('agent:screen:start', { visitorId, websiteId: targetWebsiteId })
     } else {
       setScreenCapturingId(null)
       setWebrtcStream(null)
       setWebrtcState('idle')
       setPrivacyMode(false)
-      emit('webrtc:stop', { visitorId, websiteId, agentId: session?.user?.id || 'admin' })
-      emit('agent:screen:stop', { visitorId, websiteId })
+      emit('webrtc:stop', { visitorId, websiteId: targetWebsiteId, agentId: session?.user?.id || agentLabel })
+      emit('agent:screen:stop', { visitorId, websiteId: targetWebsiteId })
       updateVisitor(visitorId, { screenshotUrl: null, screenshotAt: null })
     }
-  }, [emit, visitors, updateVisitor, session])
+  }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel])
 
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
+    if (active && isDashboard && !overlayEnabled) {
+      setOverlayDeniedMessage('HD ekran paylaşımı Profesyonel pakette kullanılabilir.')
+      return
+    }
     const visitor = visitors.get(visitorId)
-    const websiteId = visitor?.websiteId
+    const targetWebsiteId = visitor?.websiteId || websiteId || undefined
+    if (!targetWebsiteId) return
     if (active) {
       setWebrtcState('connecting')
       setWebrtcStream(null)
-      emit('webrtc:start', { visitorId, websiteId, agentId: session?.user?.id || 'admin' })
+      emit('webrtc:start', { visitorId, websiteId: targetWebsiteId, agentId: session?.user?.id || agentLabel })
     } else {
       setWebrtcStream(null)
       setWebrtcState('idle')
-      emit('webrtc:stop', { visitorId, websiteId, agentId: session?.user?.id || 'admin' })
+      emit('webrtc:stop', { visitorId, websiteId: targetWebsiteId, agentId: session?.user?.id || agentLabel })
     }
-  }, [emit, visitors, session])
+  }, [emit, visitors, session, isDashboard, overlayEnabled, websiteId, agentLabel])
 
   useEffect(() => { setPrivacyMode(false) }, [selectedVisitorId])
+  useEffect(() => { setOverlayDeniedMessage(null) }, [overlayEnabled, websiteId])
 
   const filtered = Array.from(visitors.values())
     .filter((v) => {
@@ -250,8 +312,30 @@ export function AdminVisitorsMonitor() {
 
   const geoVisitors = filtered.filter((v) => v.latitude != null && v.longitude != null)
 
+  if (upgradeRequired) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+            <Eye className="w-10 h-10 text-violet-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Ziyaretçi Takibi</h2>
+          <p className="text-gray-400 mb-4 text-sm">
+            Canlı ziyaretçi listesi ve sayfa takibi başlangıç paketinde veya ziyaretçi takibi eklentisi ile kullanılabilir.
+          </p>
+          <Link
+            href="/settings/billing"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:opacity-90"
+          >
+            Paketi Yükselt
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col xl:flex-row gap-4 min-h-[560px]">
+    <div className={`flex flex-col xl:flex-row gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
       {/* Sol: liste + aktivite */}
       <div className={`w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'hidden xl:flex' : 'flex'}`}>
         <div className="p-4 border-b border-white/[0.06] shrink-0">
@@ -396,32 +480,45 @@ export function AdminVisitorsMonitor() {
             ← Listeye dön
           </button>
         )}
-        <div className="flex-1 min-h-0 p-2">
+        <div className="flex-1 min-h-0 p-2 flex flex-col">
           {selectedVisitor ? (
             <>
               {screenCapturingId === selectedVisitorId && (
                 <WebRTCViewer
                   visitorId={selectedVisitorId || ''}
-                  websiteId={selectedVisitor.websiteId || ''}
-                  agentId={session?.user?.id || 'admin'}
+                  websiteId={selectedVisitor.websiteId || websiteId || ''}
+                  agentId={session?.user?.id || agentLabel}
                   onStreamReady={(s) => { setWebrtcStream(s); setWebrtcState('connected') }}
                   onDenied={() => setWebrtcState('denied')}
                   onStopped={() => { setWebrtcStream(null); setWebrtcState('idle') }}
                   onStateChange={setWebrtcState}
                 />
               )}
-              <VisitorDetailPanel
-                visitor={selectedVisitor}
-                recentClicks={recentClicks}
-                activities={visitorActivities}
-                theme="admin"
-                onScreenCaptureToggle={handleScreenCaptureToggle}
-                isScreenCapturing={screenCapturingId === selectedVisitorId}
-                webrtcStream={webrtcStream}
-                webrtcState={webrtcState}
-                privacyMode={privacyMode}
-                onWebRTCHDToggle={handleWebRTCHDToggle}
-              />
+              <div className="flex-1 min-h-0">
+                <VisitorDetailPanel
+                  visitor={selectedVisitor}
+                  recentClicks={recentClicks}
+                  activities={visitorActivities}
+                  theme="admin"
+                  onScreenCaptureToggle={handleScreenCaptureToggle}
+                  isScreenCapturing={screenCapturingId === selectedVisitorId}
+                  webrtcStream={webrtcStream}
+                  webrtcState={webrtcState}
+                  privacyMode={privacyMode}
+                  onWebRTCHDToggle={handleWebRTCHDToggle}
+                />
+              </div>
+              {overlayDeniedMessage && (
+                <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 shrink-0">
+                  {overlayDeniedMessage}
+                  {isDashboard && !overlayEnabled && (
+                    <>
+                      {' '}
+                      <Link href="/settings/billing?plan=PRO" className="font-semibold underline">Paketi yükselt</Link>
+                    </>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="h-full flex items-center justify-center text-center px-6">
