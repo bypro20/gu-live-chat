@@ -18,8 +18,8 @@ export default function HomePage() {
       <JsonLd data={[softwareApplicationJsonLd(), faqJsonLd(HOME_FAQS)]} />
       <MarketingNav />
       <HomeHero />
-      <TrustStrip />
       <MobileAppSection />
+      <TrustStrip />
       <FeatureGrid />
       <AiShowcase />
       <LiveTranslateSection />

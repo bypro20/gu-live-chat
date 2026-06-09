@@ -159,11 +159,19 @@ export function HomeHero() {
             </p>
           </FadeIn>
           <FadeIn delay={0.18}>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register" className="btn-primary px-8 py-3.5 text-base">
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 w-full max-w-md mx-auto">
+              <a
+                href="/downloads/guchat.apk"
+                download="GuChat.apk"
+                className="lg:hidden w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 shadow-lg shadow-emerald-500/25"
+              >
+                <Download className="w-5 h-5" />
+                Android Uygulamayı İndir
+              </a>
+              <Link href="/register" className="btn-primary px-8 py-3.5 text-base w-full sm:w-auto">
                 Ücretsiz Başla <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/ai" className="btn-secondary px-8 py-3.5 text-base">
+              <Link href="/ai" className="btn-secondary px-8 py-3.5 text-base w-full sm:w-auto">
                 AI özelliklerini keşfet
               </Link>
             </div>
@@ -197,9 +205,8 @@ export function TrustStrip() {
 
 export function MobileAppSection() {
   return (
-    <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+    <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <FadeIn>
           <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 px-6 py-10 sm:px-10 sm:py-14">
             <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-green-400/10 blur-3xl pointer-events-none" />
@@ -217,14 +224,15 @@ export function MobileAppSection() {
                   Evde, işte, her yerde — dışarıda bile müşterilerinizle konuşmaya devam edin.
                   Gelen kutusu, bildirimler ve hızlı yanıt cebinizde.
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
-                  <Link
-                    href="/mobil-indir"
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center lg:items-start justify-center lg:justify-start gap-3">
+                  <a
+                    href="/downloads/guchat.apk"
+                    download="GuChat.apk"
                     className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-base font-bold text-emerald-950 bg-white hover:bg-emerald-50 shadow-xl shadow-black/20 transition-colors w-full sm:w-auto"
                   >
                     <Download className="w-5 h-5" />
                     APK İndir — Ücretsiz
-                  </Link>
+                  </a>
                   <Link
                     href="/mobil-indir"
                     className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-sm font-semibold text-white/90 border border-white/20 hover:bg-white/10 transition-colors w-full sm:w-auto"
@@ -251,7 +259,6 @@ export function MobileAppSection() {
               </div>
             </div>
           </div>
-        </FadeIn>
       </div>
     </section>
   )

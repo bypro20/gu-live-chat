@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Download, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
+import { MobileAndroidNavButton } from '@/components/marketing/mobile-android-bar'
 
 const navLinks = [
   { label: 'Canlı Destek', href: '/canli-destek' },
@@ -51,18 +52,30 @@ export function MarketingNav() {
             </Link>
           </div>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
-            aria-label="Menü"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex lg:hidden items-center gap-2">
+            <MobileAndroidNavButton />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+              aria-label="Menü"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
       {mobileOpen && (
         <div className="lg:hidden border-t border-border bg-background px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
+          <a
+            href="/downloads/guchat.apk"
+            download="GuChat.apk"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center gap-2 mx-0 mb-4 px-4 py-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500"
+          >
+            <Download className="w-5 h-5" />
+            APK İndir — Android Uygulama
+          </a>
           {navLinks.map((item) => (
             <Link
               key={item.href}
@@ -76,10 +89,9 @@ export function MarketingNav() {
           <Link
             href="/mobil-indir"
             onClick={() => setMobileOpen(false)}
-            className="flex items-center justify-center gap-2 mx-4 mb-3 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500"
+            className="block px-4 py-2.5 text-sm font-medium text-emerald-700 hover:text-emerald-800 rounded-lg hover:bg-emerald-50"
           >
-            <Download className="w-4 h-4" />
-            Android Uygulamamızı Yükleyin
+            Kurulum adımları →
           </Link>
           <div className="border-t border-border mt-3 pt-3 space-y-2">
             <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-muted-foreground">

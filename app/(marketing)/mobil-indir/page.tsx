@@ -41,7 +41,7 @@ export default function MobilIndirPage() {
         <a
           href={APK_URL}
           download="GuChat.apk"
-          className="btn-primary px-10 py-4 text-base mt-8 inline-flex items-center gap-2"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 text-base mt-8 rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 shadow-lg shadow-emerald-500/25"
         >
           <Download className="w-5 h-5" />
           APK İndir (Android)
