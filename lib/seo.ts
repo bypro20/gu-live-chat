@@ -25,13 +25,15 @@ export const SEO_KEYWORDS = [
   'online müşteri hizmetleri',
 ] as const
 
+/** Google Search Console doğrulama — env ile override edilebilir */
+export const GOOGLE_SITE_VERIFICATION_CODE =
+  process.env.GOOGLE_SITE_VERIFICATION || '6rvC_wtUp9XHeIa0nxjGglIILkJjEW440tlaGqFbXVQ'
+
 /** Google/Bing doğrulama meta — env'den otomatik */
 export function getSiteVerificationMetadata(): Pick<Metadata, 'verification'> {
-  const google = process.env.GOOGLE_SITE_VERIFICATION
+  const google = GOOGLE_SITE_VERIFICATION_CODE
   const bing = process.env.BING_SITE_VERIFICATION
   const yandex = process.env.YANDEX_SITE_VERIFICATION
-
-  if (!google && !bing && !yandex) return {}
 
   return {
     verification: {
