@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
+import { Volume2, VolumeX, MessageSquare } from 'lucide-react'
 import {
   useAdminInboxConversations,
   useAdminInboxMessages,
@@ -17,14 +18,18 @@ import {
   isSocketEnabled,
 } from '@/lib/socket-client'
 import { unlockInboxAudio } from '@/lib/inbox-sound'
-
-function timeAgo(date: string) {
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-  if (diff < 60) return 'şimdi'
-  if (diff < 3600) return `${Math.floor(diff / 60)}dk`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}sa`
-  return `${Math.floor(diff / 86400)}g`
-}
+import { uploadInboxFile, attachmentContent } from '@/lib/inbox-upload'
+import { ConversationListItem } from '@/components/inbox/conversation-list-item'
+import { MessageBubble } from '@/components/inbox/message-bubble'
+import { MessageComposer, type PendingUpload } from '@/components/inbox/message-composer'
+import { ChatHeader } from '@/components/inbox/chat-header'
+import { ConnectionBadge } from '@/components/inbox/connection-badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useAgentLanguage } from '@/lib/hooks/use-agent-language'
+import { LanguageBar } from '@/components/inbox/language-bar'
+import { translateClient } from '@/lib/translate-client'
+import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
 
 export function AdminInboxPanel() {
   const searchParams = useSearchParams()
@@ -40,6 +45,12 @@ export function AdminInboxPanel() {
   const [sendError, setSendError] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(true)
   const [liveConnected, setLiveConnected] = useState(false)
+  const { agentLang, setAgentLang } = useAgentLanguage()
+  const [autoTranslate, setAutoTranslate] = useState(false)
+  const [detectedVisitorLang, setDetectedVisitorLang] = useState<string | null>(null)
+  const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
+  const [uploading, setUploading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
@@ -69,7 +80,7 @@ export function AdminInboxPanel() {
       .catch((e) => {
         clearTimeout(timeout)
         if (e instanceof Error && e.name === 'AbortError') {
-          setLoadError('Gelen kutusu zaman aşımına uğradı. Yeniden deneyin.')
+          setLoadError('Gelen kutusu zaman aşımına uğradı.')
         } else {
           setLoadError(e instanceof Error ? e.message : 'Gelen kutusu açılamadı')
         }
@@ -94,9 +105,7 @@ export function AdminInboxPanel() {
   const { messages, sendMessage, sending, mutate: mutateMessages } =
     useAdminInboxMessages(selectedId)
 
-  useInboxSoundAlert(conversations, soundOn)
-
-  const selected = conversations.find((c) => c.id === selectedId)
+  useInboxSoundAlert(conversations, soundOn, liveConnected)
 
   useEffect(() => {
     const fromUrl = searchParams.get('conversation')
@@ -115,7 +124,6 @@ export function AdminInboxPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Bağlantı durumu göstergesi
   useEffect(() => {
     if (!isSocketEnabled()) {
       setLiveConnected(false)
@@ -126,6 +134,42 @@ export function AdminInboxPanel() {
     const id = setInterval(tick, 2000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    setDetectedVisitorLang(null)
+    setPendingUpload(null)
+  }, [selectedId])
+
+  const selected = conversations.find((c) => c.id === selectedId)
+  const visitorLang = selected?.visitorLang || detectedVisitorLang || null
+  const normalizedVisitorLang = visitorLang ? normalizeLangCode(visitorLang) : null
+  const translationPairActive =
+    autoTranslate && normalizedVisitorLang && languagesDiffer(agentLang, normalizedVisitorLang)
+
+  useEffect(() => {
+    if (selected?.visitorLang) {
+      setDetectedVisitorLang(normalizeLangCode(selected.visitorLang))
+      return
+    }
+    if (!autoTranslate || !websiteId) return
+    const visitorText = messages
+      .filter((m) => m.senderType === 'VISITOR')
+      .slice(-3)
+      .map((m) => m.content)
+      .join(' ')
+      .trim()
+      .slice(0, 300)
+    if (!visitorText) return
+
+    translateClient({ text: visitorText, toLang: agentLang, websiteId })
+      .then((data) => {
+        const lang = data.detectedLanguage
+        if (lang && languagesDiffer(lang, agentLang)) {
+          setDetectedVisitorLang(normalizeLangCode(lang))
+        }
+      })
+      .catch(() => {})
+  }, [autoTranslate, messages, websiteId, agentLang, selected?.visitorLang])
 
   const handleIncomingMessage = useCallback(
     (data: {
@@ -138,11 +182,7 @@ export function AdminInboxPanel() {
       createdAt: string
     }) => {
       const isSelected = selectedIdRef.current === data.conversationId
-      playNewMessageSound(
-        soundOnRef.current,
-        data.senderType,
-        isSelected
-      )
+      playNewMessageSound(soundOnRef.current, data.senderType)
 
       if (isSelected) {
         mutateMessages((current) => {
@@ -171,7 +211,6 @@ export function AdminInboxPanel() {
     [mutateMessages, mutateConversations]
   )
 
-  // Socket — widget mesajları anlık
   useEffect(() => {
     if (!session?.user?.id || !websiteId) return
     const socket = retainSocket()
@@ -181,48 +220,24 @@ export function AdminInboxPanel() {
       socket.emit('agent:auth', { userId: session.user.id, websiteIds: [websiteId] })
     }
 
-    const onMessage = (data: {
-      id: string
-      conversationId: string
-      content: string
-      type: string
-      senderType: string
-      senderId?: string | null
-      createdAt: string
-    }) => {
-      handleIncomingMessage(data)
-    }
-
-    const onNew = (data: { conversationId: string }) => {
+    socket.on('connect', auth)
+    socket.on('agent:message', handleIncomingMessage)
+    socket.on('agent:conversation:new', (data: { conversationId: string }) => {
       void mutateConversations()
       setSelectedId((cur) => cur ?? data.conversationId)
-    }
-
-    const onUpdated = () => {
+    })
+    socket.on('agent:conversation:updated', () => {
       void mutateConversations()
       if (selectedIdRef.current) void mutateMessages()
-    }
-
-    socket.on('connect', auth)
-    socket.on('agent:message', onMessage)
-    socket.on('agent:conversation:new', onNew)
-    socket.on('agent:conversation:updated', onUpdated)
+    })
     if (socket.connected) auth()
 
     return () => {
       socket.off('connect', auth)
-      socket.off('agent:message', onMessage)
-      socket.off('agent:conversation:new', onNew)
-      socket.off('agent:conversation:updated', onUpdated)
+      socket.off('agent:message', handleIncomingMessage)
       releaseSocket()
     }
-  }, [
-    session?.user?.id,
-    websiteId,
-    mutateConversations,
-    mutateMessages,
-    handleIncomingMessage,
-  ])
+  }, [session?.user?.id, websiteId, mutateConversations, mutateMessages, handleIncomingMessage])
 
   useEffect(() => {
     if (!selectedId || !session?.user?.id) return
@@ -237,45 +252,106 @@ export function AdminInboxPanel() {
     }
   }, [selectedId, session?.user?.id])
 
+  const clearPendingUpload = () => {
+    if (pendingUpload?.previewUrl) URL.revokeObjectURL(pendingUpload.previewUrl)
+    setPendingUpload(null)
+  }
+
+  const handleFileSelect = async (file: File) => {
+    const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
+    setPendingUpload({ file, previewUrl })
+    setSendError(null)
+  }
+
   const handleSend = async () => {
-    if (!messageText.trim() || sending) return
+    if (sending || uploading) return
+    if (!messageText.trim() && !pendingUpload) return
     setSendError(null)
     unlockInboxAudio()
+
+    let textToSend = messageText.trim()
+    let attachmentPayload: ReturnType<typeof attachmentContent> | null = null
+    let uploadMeta: Awaited<ReturnType<typeof uploadInboxFile>> | null = null
+
+    if (pendingUpload) {
+      setUploading(true)
+      try {
+        uploadMeta = await uploadInboxFile(pendingUpload.file)
+        attachmentPayload = attachmentContent(uploadMeta, textToSend)
+        textToSend = attachmentPayload.content
+      } catch (e) {
+        setSendError(e instanceof Error ? e.message : 'Dosya yüklenemedi')
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
+
+    if (translationPairActive && normalizedVisitorLang && textToSend) {
+      setTranslatingOutgoing(true)
+      try {
+        const data = await translateClient({
+          text: textToSend,
+          toLang: normalizedVisitorLang,
+          fromLang: agentLang,
+          websiteId,
+        })
+        if (data.translatedText) textToSend = data.translatedText
+      } catch {
+        /* ignore */
+      } finally {
+        setTranslatingOutgoing(false)
+      }
+    }
+
     try {
-      await sendMessage(messageText.trim())
+      await sendMessage(textToSend, {
+        type: attachmentPayload?.type,
+        attachment: uploadMeta
+          ? {
+              url: uploadMeta.url,
+              fileName: uploadMeta.fileName,
+              fileSize: uploadMeta.fileSize,
+              mimeType: uploadMeta.mimeType,
+            }
+          : undefined,
+      })
       setMessageText('')
+      clearPendingUpload()
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Gönderilemedi')
     }
   }
 
+  const mapMessage = (m: AdminMessage) => ({
+    id: m.id,
+    content: m.content,
+    type: m.type,
+    senderType: m.senderType,
+    createdAt: m.createdAt,
+    attachments: m.attachments?.map((a) => ({
+      id: a.id,
+      url: a.url,
+      filename: a.filename,
+      mimetype: a.mimetype,
+      size: a.size,
+    })),
+  })
+
   if (loadError) {
     return (
-      <div className="p-8 text-center text-red-400 space-y-3">
-        <p className="font-medium">{loadError}</p>
-        <button
-          type="button"
-          onClick={() => loadSetup()}
-          className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-medium"
-        >
-          Yeniden Kur
-        </button>
+      <div className="p-8 text-center space-y-3">
+        <p className="text-sm text-destructive font-medium">{loadError}</p>
+        <Button onClick={() => loadSetup()}>Yeniden dene</Button>
       </div>
     )
   }
 
   if (!marketingSite && !loadError) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
-        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm">Gelen kutusu yükleniyor…</p>
-        <button
-          type="button"
-          onClick={() => loadSetup()}
-          className="text-xs underline hover:text-white"
-        >
-          Çok uzun sürüyorsa yeniden dene
-        </button>
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <p className="text-sm text-muted-foreground">Gelen kutusu yükleniyor…</p>
       </div>
     )
   }
@@ -283,195 +359,143 @@ export function AdminInboxPanel() {
   if (!marketingSite) return null
 
   const totalUnread = conversations.reduce((s, c) => s + c.unreadCount, 0)
-  const connectionLabel = liveConnected
-    ? 'Canlı bağlantı'
-    : isSocketEnabled()
-      ? 'Bağlanıyor…'
-      : 'Hızlı senkron (~1sn)'
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 text-white">
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3 bg-[#1A1D2E]">
+    <div className="flex flex-col flex-1 min-h-0 bg-background text-foreground">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3 bg-card shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold">Gelen Kutusu</h1>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                liveConnected
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-amber-500/20 text-amber-400'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  liveConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
-                }`}
-              />
-              {connectionLabel}
-            </span>
+            <h1 className="text-lg font-semibold tracking-tight">Gelen Kutusu</h1>
+            <ConnectionBadge connected={liveConnected} socketEnabled={isSocketEnabled()} />
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
-            guchat.org widget · {marketingSite.name}
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {marketingSite.name}
             {totalUnread > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                {totalUnread} okunmamış
-              </span>
+              <span className="ml-2 text-primary font-medium">{totalUnread} okunmamış</span>
             )}
           </p>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={soundOn}
-            onChange={(e) => {
-              setSoundOn(e.target.checked)
-              if (e.target.checked) unlockInboxAudio()
-            }}
-            className="rounded"
-          />
-          🔊 Sesli bildirim
-        </label>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-xs gap-1.5"
+          onClick={() => {
+            setSoundOn((v) => !v)
+            if (!soundOn) unlockInboxAudio()
+          }}
+        >
+          {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          Ses
+        </Button>
       </div>
 
       <div className="flex flex-1 min-h-0">
         <div
-          className={`w-full lg:w-80 border-r border-white/10 flex flex-col bg-[#141625] ${
+          className={`w-full lg:w-[340px] border-r border-border flex flex-col bg-card shrink-0 ${
             selected ? 'hidden lg:flex' : 'flex'
           }`}
         >
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <div className="p-4 space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
               </div>
             ) : error ? (
-              <div className="p-4 text-sm text-red-400 space-y-2">
+              <div className="p-4 text-sm text-destructive space-y-2">
                 <p>{error.message}</p>
-                <button
-                  type="button"
-                  onClick={() => mutateConversations()}
-                  className="text-xs underline text-gray-400 hover:text-white"
-                >
+                <Button variant="link" size="sm" onClick={() => mutateConversations()}>
                   Tekrar dene
-                </button>
+                </Button>
               </div>
             ) : conversations.length === 0 ? (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                Henüz mesaj yok. guchat.org sağ alttaki widget&apos;tan test mesajı gönderin.
+              <div className="p-8 text-center">
+                <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Henüz mesaj yok</p>
               </div>
             ) : (
               conversations.map((c) => (
-                <button
+                <ConversationListItem
                   key={c.id}
-                  type="button"
+                  conversation={c}
+                  selected={selectedId === c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full text-left p-3 border-b border-white/5 hover:bg-white/5 transition ${
-                    selectedId === c.id ? 'bg-white/10 border-l-2 border-l-red-500' : ''
-                  }`}
-                >
-                  <div className="flex justify-between gap-2">
-                    <span className="font-medium text-sm truncate">
-                      {c.visitor.name || c.visitor.email?.split('@')[0] || 'Anonim'}
-                    </span>
-                    <span className="text-[10px] text-gray-500 shrink-0">
-                      {timeAgo(c.lastMessageAt)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 truncate mt-0.5">
-                    {c.lastMessagePreview || '—'}
-                  </p>
-                  {c.unreadCount > 0 && (
-                    <span className="inline-block mt-1 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                      {c.unreadCount}
-                    </span>
-                  )}
-                </button>
+                />
               ))
             )}
           </div>
         </div>
 
         <div
-          className={`flex-1 flex flex-col min-w-0 bg-[#0d0d1a] ${
+          className={`flex-1 flex flex-col min-w-0 bg-muted/30 ${
             selected ? 'flex' : 'hidden lg:flex'
           }`}
         >
           {!selected ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               Bir sohbet seçin
             </div>
           ) : (
             <>
-              <div className="p-4 border-b border-white/10 flex items-center gap-3">
-                <button
-                  type="button"
-                  className="lg:hidden text-gray-400"
-                  onClick={() => setSelectedId(null)}
-                >
-                  ←
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">
-                    {selected.visitor.name || selected.visitor.email || 'Anonim'}
-                  </p>
-                  <p className="text-xs text-gray-500">{selected.status}</p>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <ChatHeader
+                conversation={selected}
+                onBack={() => setSelectedId(null)}
+                canTranslate
+                autoTranslate={autoTranslate}
+                onToggleTranslate={() => setAutoTranslate((v) => !v)}
+                detectedLang={normalizedVisitorLang}
+                agentLang={agentLang}
+              />
+
+              <LanguageBar
+                agentLang={agentLang}
+                onAgentLangChange={setAgentLang}
+                visitorLang={normalizedVisitorLang}
+                autoTranslate={autoTranslate}
+                canTranslate
+              />
+
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {messages.length === 0 && !sending ? (
-                  <p className="text-center text-gray-500 text-sm py-8">Mesaj yükleniyor…</p>
+                  <p className="text-center text-sm text-muted-foreground py-8">Mesaj yükleniyor…</p>
                 ) : (
-                  messages.map((m) => {
-                    const isAgent = m.senderType === 'AGENT'
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
-                            isAgent
-                              ? 'bg-red-600 text-white'
-                              : 'bg-white/10 text-gray-100'
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                          <p className="text-[10px] opacity-50 mt-1 text-right">
-                            {timeAgo(m.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })
+                  messages.map((m) => (
+                    <MessageBubble
+                      key={m.id}
+                      message={mapMessage(m)}
+                      autoTranslate={autoTranslate}
+                      canTranslate
+                      websiteId={websiteId}
+                      agentLang={agentLang}
+                    />
+                  ))
                 )}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-4 border-t border-white/10">
-                {sendError && <p className="text-xs text-red-400 mb-2">{sendError}</p>}
-                <div className="flex gap-2">
-                  <textarea
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSend()
-                      }
-                    }}
-                    placeholder="Yanıt yazın…"
-                    rows={2}
-                    className="flex-1 resize-none rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSend}
-                    disabled={!messageText.trim() || sending}
-                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 text-sm font-medium shrink-0"
-                  >
-                    {sending ? '…' : 'Gönder'}
-                  </button>
-                </div>
-              </div>
+
+              <MessageComposer
+                value={messageText}
+                onChange={setMessageText}
+                onSend={handleSend}
+                onFileSelect={handleFileSelect}
+                pendingUpload={pendingUpload}
+                onClearUpload={clearPendingUpload}
+                sending={sending}
+                translating={translatingOutgoing}
+                uploading={uploading}
+                canUpload
+                autoTranslate={autoTranslate}
+                detectedLang={normalizedVisitorLang}
+                agentLang={agentLang}
+                sendError={sendError}
+                placeholder={
+                  translationPairActive && normalizedVisitorLang
+                    ? `${languageLabel(agentLang)} yazın — ${languageLabel(normalizedVisitorLang)}'ye çevrilir`
+                    : 'Yanıt yazın…'
+                }
+              />
             </>
           )}
         </div>

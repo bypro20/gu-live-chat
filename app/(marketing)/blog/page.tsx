@@ -27,7 +27,7 @@ export default function BlogPage() {
 
       <div className="space-y-6">
         {posts.map((post) => (
-          <article key={post.slug} className="surface p-6 hover:shadow-md transition-shadow">
+          <article key={post.slug} className="surface p-6 hover:border-border-strong transition-colors">
             <time className="text-xs text-muted-foreground">{post.date}</time>
             <h2 className="text-xl font-semibold mt-2 mb-2">{post.title}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">{post.excerpt}</p>

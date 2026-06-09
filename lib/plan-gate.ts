@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { Plan } from '@/app/generated/prisma/client'
+import { auth } from '@/lib/auth'
 import { canPerformAction } from '@/lib/subscription'
 import { websiteHasFeature } from '@/lib/addon-features'
+import { isPlatformAdminRole } from '@/lib/admin-website'
 import {
   FEATURE_ADDON_SLUG,
   MIN_PLAN_FOR_FEATURE,
@@ -22,7 +24,7 @@ const FEATURE_LABELS: Partial<Record<PlanFeature, string>> = {
   statusPage: 'Durum sayfası',
   apiAccess: 'API erişimi',
   visitorTracking: 'Ziyaretçi takibi',
-  aiAssistant: 'AI asistan',
+  aiAssistant: 'AI Sohbet Asistanı',
   overlayAI: 'Ekran izleme',
   multiChannel: 'Çoklu kanal',
   autoTranslate: 'Otomatik çeviri',
@@ -65,6 +67,8 @@ export async function planFeatureDeniedAsync(
   feature: PlanFeature,
   currentCount?: number
 ): Promise<NextResponse | null> {
+  const session = await auth()
+  if (isPlatformAdminRole(session?.user?.role)) return null
   if (await websiteHasFeature(websiteDbId, plan, feature, currentCount)) return null
   const label = FEATURE_LABELS[feature] || feature
   const requiredPlan = MIN_PLAN_FOR_FEATURE[feature] || 'PRO'

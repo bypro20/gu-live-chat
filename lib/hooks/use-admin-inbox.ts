@@ -3,16 +3,19 @@
 import useSWR from 'swr'
 import { useCallback, useEffect, useState } from 'react'
 import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
+import type { SendAttachment } from '@/lib/hooks/use-messages'
 
-const POLL_LIST_MS = 1000
-const POLL_MSG_MS = 800
-const POLL_IDLE_MS = 4000
+const POLL_LIST_MS = 2000
+const POLL_MSG_MS = 2500
+const POLL_IDLE_MS = 5000
 
 export interface AdminConversation {
   id: string
   websiteId: string
   visitorId: string
   status: string
+  source?: string
+  visitorLang?: string | null
   lastMessageAt: string
   lastMessagePreview: string | null
   unreadCount: number
@@ -102,10 +105,49 @@ export function useAdminInboxMessages(conversationId: string | null) {
   )
 
   const sendMessage = useCallback(
-    async (content: string) => {
-      if (!conversationId || !content.trim()) return
+    async (content: string, options?: { type?: string; attachment?: SendAttachment }) => {
+      if (!conversationId) return
       const trimmed = content.trim()
+      if (!trimmed && !options?.attachment) return
+
+      const type = options?.type || (options?.attachment ? 'IMAGE' : 'TEXT')
+      const optimisticId = `opt_${Date.now()}`
       setSending(true)
+
+      mutate(
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            messages: [
+              ...current.messages,
+              {
+                id: optimisticId,
+                conversationId,
+                content: trimmed || (options?.attachment?.fileName ?? ''),
+                type,
+                senderType: 'AGENT',
+                senderId: null,
+                createdAt: new Date().toISOString(),
+                readAt: null,
+                attachments: options?.attachment
+                  ? [
+                      {
+                        id: 'opt',
+                        url: options.attachment.url,
+                        filename: options.attachment.fileName,
+                        mimetype: options.attachment.mimeType || '',
+                        size: options.attachment.fileSize || 0,
+                      },
+                    ]
+                  : [],
+              },
+            ],
+          }
+        },
+        { revalidate: false }
+      )
+
       try {
         const res = await fetch(
           `/api/admin/inbox/conversations/${conversationId}/messages`,
@@ -113,13 +155,51 @@ export function useAdminInboxMessages(conversationId: string | null) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ content: trimmed, type: 'TEXT' }),
+            body: JSON.stringify({
+              content: trimmed,
+              type,
+              ...(options?.attachment ? { attachment: options.attachment } : {}),
+            }),
           }
         )
         const saved = await res.json()
         if (!res.ok) throw new Error(saved.error || 'Gönderilemedi')
-        await mutate()
+
+        mutate(
+          (current) => {
+            if (!current) return current
+            return {
+              ...current,
+              messages: current.messages.map((m) =>
+                m.id === optimisticId
+                  ? {
+                      ...m,
+                      id: saved.id,
+                      senderId: saved.senderId ?? saved.sender?.id ?? null,
+                      createdAt: saved.createdAt,
+                      content: saved.content,
+                      type: saved.type,
+                      attachments: saved.attachments ?? [],
+                    }
+                  : m
+              ),
+            }
+          },
+          { revalidate: true }
+        )
         return saved
+      } catch (err) {
+        mutate(
+          (current) => {
+            if (!current) return current
+            return {
+              ...current,
+              messages: current.messages.filter((m) => m.id !== optimisticId),
+            }
+          },
+          { revalidate: false }
+        )
+        throw err
       } finally {
         setSending(false)
       }

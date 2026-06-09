@@ -1,30 +1,30 @@
 import type { Metadata } from 'next'
 import { MarketingProviders } from '@/components/marketing/marketing-providers'
 import { MarketingWidgetLoader } from '@/components/marketing/marketing-widget-loader'
+import { SITE_LEGAL } from '@/lib/site-legal'
 
 export const runtime = 'nodejs'
 export const revalidate = 600
 
 export const metadata: Metadata = {
   title: {
-    default: 'Gu Chat — Profesyonel Canlı Destek Platformu',
-    template: '%s | Gu Chat',
+    default: `${SITE_LEGAL.name} — ${SITE_LEGAL.tagline}`,
+    template: `%s | ${SITE_LEGAL.name}`,
   },
-  description:
-    'Web sitenize ekleyebileceğiniz profesyonel canlı destek sistemi. Gerçek zamanlı mesajlaşma, chatbot, ziyaretçi takibi ve analitik — Türk yapımı.',
-  keywords: ['canlı destek', 'live chat', 'chatbot', 'müşteri desteği', 'Gu Chat', 'guchat'],
+  description: SITE_LEGAL.metaDescription,
+  keywords: ['canlı destek', 'live chat', 'chatbot', 'müşteri desteği', 'Gu Chat', 'guchat', 'müşteri hizmetleri'],
   openGraph: {
     type: 'website',
     locale: 'tr_TR',
     url: 'https://guchat.org',
-    siteName: 'Gu Chat',
-    title: 'Gu Chat — Profesyonel Canlı Destek Platformu',
-    description: 'Müşterilerinizle anında bağlantı kurun. Türk yapımı canlı destek platformu.',
+    siteName: SITE_LEGAL.name,
+    title: `${SITE_LEGAL.name} — ${SITE_LEGAL.tagline}`,
+    description: SITE_LEGAL.metaDescription,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Gu Chat — Profesyonel Canlı Destek Platformu',
-    description: 'Müşterilerinizle anında bağlantı kurun.',
+    title: `${SITE_LEGAL.name} — ${SITE_LEGAL.tagline}`,
+    description: SITE_LEGAL.metaDescription,
   },
   robots: { index: true, follow: true },
 }
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <MarketingProviders>
-      <div className="min-h-screen bg-white text-foreground antialiased">
+      <div className="marketing-site min-h-screen bg-white text-foreground antialiased">
         {children}
         <MarketingWidgetLoader />
       </div>

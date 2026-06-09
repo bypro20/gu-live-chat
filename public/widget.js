@@ -60,7 +60,7 @@
 
   var chatBtn = document.createElement('div');
   chatBtn.id = 'gu-chat-button';
-  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#2B82FF 0%,#1565E0 100%);cursor:pointer;box-shadow:0 6px 20px rgba(25,114,245,0.4),0 2px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),box-shadow 0.28s ease;pointer-events:auto;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;animation:gu-pulse 3s ease-in-out infinite;';
+  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:62px;height:62px;border-radius:18px;background:linear-gradient(145deg,#3B8BFF 0%,#1565E0 55%,#0D47C9 100%);cursor:pointer;box-shadow:0 10px 32px rgba(25,114,245,0.45),0 2px 8px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),box-shadow 0.28s ease,border-radius 0.28s ease;pointer-events:auto;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;animation:gu-pulse 3s ease-in-out infinite;';
 
   // ─── Unread badge (shown when widget is closed and new messages arrive) ──
   var unreadBadge = document.createElement('span');
@@ -126,7 +126,7 @@
   var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:96px;right:24px;z-index:2147483647;width:384px;height:620px;max-height:calc(100vh - 120px);border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.04);display:none;opacity:0;transform:translateY(12px) scale(0.98);transform-origin:bottom right;transition:opacity 0.28s ease,transform 0.28s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:white;filter:none;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:100px;right:24px;z-index:2147483647;width:400px;height:min(680px,calc(100vh - 120px));max-height:calc(100vh - 120px);border-radius:22px;box-shadow:0 20px 60px rgba(15,23,42,0.22),0 0 0 1px rgba(15,23,42,0.06);display:none;opacity:0;transform:translateY(16px) scale(0.97);transform-origin:bottom right;transition:opacity 0.3s ease,transform 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:white;filter:none;overflow:hidden;';
   iframe.allow = 'microphone; camera';
   iframe.title = 'Canlı Sohbet';
   // DIRECTLY on body — no container wrapper

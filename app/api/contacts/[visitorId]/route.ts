@@ -45,10 +45,15 @@ export async function GET(
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
-  const { sessions: _sessions, conversations, ...rest } = visitor
+  const { sessions, conversations, ...rest } = visitor
+  const latestSession = sessions[0]
 
   return NextResponse.json({
     ...rest,
+    currentPage: latestSession?.currentPage ?? null,
+    landingPage: latestSession?.landingPage ?? null,
+    referrer: latestSession?.referrer ?? null,
+    deviceType: latestSession?.deviceType ?? null,
     conversations: conversations.map((c) => {
       const lastMsg = c.messages[0]
       return {

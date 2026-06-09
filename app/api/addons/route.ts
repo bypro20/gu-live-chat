@@ -5,6 +5,7 @@ import { getAddonMeta } from '@/lib/addon-catalog'
 import { ADDON_FEATURE_MAP } from '@/lib/addon-features'
 import { MIN_PLAN_FOR_FEATURE } from '@/lib/plan-gate'
 import { canPerformAction } from '@/lib/subscription'
+import { isPlatformAdminRole } from '@/lib/admin-website'
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,7 +53,9 @@ export async function GET(req: NextRequest) {
       const meta = getAddonMeta(addon.slug)
       const feature = ADDON_FEATURE_MAP[addon.slug] || meta.feature
       const requiredPlan = feature ? MIN_PLAN_FOR_FEATURE[feature] : meta.requiredPlan
-      const includedInPlan = plan && feature ? canPerformAction(plan as never, feature) : false
+      const includedInPlan =
+        isPlatformAdminRole(session.user.role) ||
+        (plan && feature ? canPerformAction(plan as never, feature) : false)
       return {
         ...addon,
         featureKey: feature || null,

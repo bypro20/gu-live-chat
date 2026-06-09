@@ -5,7 +5,7 @@ export type PlanFeature = keyof (typeof PLAN_LIMITS)[PlanType]
 
 /** Minimum paid plan that unlocks each feature (for upgrade UI). */
 export const MIN_PLAN_FOR_FEATURE: Partial<Record<PlanFeature, PlanType>> = {
-  chatbot: 'STARTER',
+  chatbot: 'PRO',
   visitorTracking: 'STARTER',
   cannedResponses: 'STARTER',
   knowledgeBase: 'STARTER',
@@ -29,7 +29,7 @@ export const MIN_PLAN_FOR_FEATURE: Partial<Record<PlanFeature, PlanType>> = {
 /** Primary addon slug shown in upgrade UI per feature. */
 export const FEATURE_ADDON_SLUG: Partial<Record<PlanFeature, string>> = {
   multiChannel: 'whatsapp-channel',
-  aiAssistant: 'ai-agent-pro',
+  aiAssistant: 'ai-sohbet-asistani',
   autoTranslate: 'live-translate-pro',
   chatbot: 'ai-chatbot',
   knowledgeBase: 'knowledge-base',

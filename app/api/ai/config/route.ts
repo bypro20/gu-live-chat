@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getEnvProviderStatus } from '@/lib/ai/provider'
+import { getEnvProviderStatus, hasAnyPlatformAiKey, pickDefaultProvider } from '@/lib/ai/provider'
+import { DEFAULT_MODEL } from '@/lib/ai/models'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
 
@@ -43,19 +44,21 @@ export async function GET(req: NextRequest) {
     const env = getEnvProviderStatus()
 
     if (!aiConfig) {
-      // Return default config
+      const defaultProvider = pickDefaultProvider() ?? 'OPENAI'
+      const platformReady = hasAnyPlatformAiKey()
       return NextResponse.json({
         env,
+        platformReady,
         aiConfig: {
           id: null,
-          isActive: false,
-          provider: 'OPENAI',
-          model: 'gpt-4o-mini',
+          isActive: platformReady,
+          provider: defaultProvider,
+          model: DEFAULT_MODEL[defaultProvider],
           apiKey: '',
-          temperature: 0.7,
+          temperature: 0.75,
           systemPrompt: '',
           autoSuggest: true,
-          autoReply: false,
+          autoReply: platformReady,
         },
       })
     }

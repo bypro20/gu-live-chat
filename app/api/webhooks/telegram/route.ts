@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       fingerprint: `tg_${chatId}`,
       visitorName: name,
       content,
+      source: 'TELEGRAM',
     })
 
     return NextResponse.json({ status: 'ok' })

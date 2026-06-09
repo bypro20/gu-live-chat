@@ -1,6 +1,6 @@
 import { prisma } from './db'
 import { emitBotMessage } from './socket-events'
-import { canPerformAction } from './subscription'
+import { websiteHasFeature } from './addon-features'
 
 interface RunChatbotParams {
   websiteDbId: string
@@ -345,7 +345,7 @@ export async function processChatbotOnVisitorMessage(
       where: { id: params.websiteDbId },
       select: { plan: true },
     })
-    if (!website || !canPerformAction(website.plan, 'chatbot')) {
+    if (!website || !(await websiteHasFeature(params.websiteDbId, website.plan, 'chatbot'))) {
       return { waitingForInput: false }
     }
 

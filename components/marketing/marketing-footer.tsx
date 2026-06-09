@@ -1,6 +1,9 @@
 import Link from 'next/link'
-import { Shield, Globe, Copyright } from 'lucide-react'
+import { Shield, Globe, Copyright, Lock } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
+import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
+import { PaymentLogos } from '@/components/marketing/payment-logos'
+import { SITE_LEGAL } from '@/lib/site-legal'
 
 const columns = [
   {
@@ -27,13 +30,17 @@ const columns = [
     links: [
       { label: 'Giriş Yap', href: '/login' },
       { label: 'Kayıt Ol', href: '/register' },
-      { label: 'Demo Talep Et', href: '/contact' },
+      { label: 'Demo Talep Et', href: '/contact?konu=demo' },
     ],
   },
   {
     title: 'Yasal',
     links: [
-      { label: 'Gizlilik Politikası', href: '/gizlilik' },
+      { label: 'Hakkımızda', href: '/hakkimizda' },
+      { label: 'Gizlilik Sözleşmesi', href: '/gizlilik' },
+      { label: 'Teslimat ve İade Şartları', href: '/teslimat-iade' },
+      { label: 'Mesafeli Satış Sözleşmesi', href: '/mesafeli-satis' },
+      { label: 'Ödeme Güvenliği (SSL)', href: '/odeme-guvenligi' },
       { label: 'Kullanım Şartları', href: '/kullanim-sartlari' },
       { label: 'KVKK Aydınlatma', href: '/kvkk' },
       { label: 'Çerez Politikası', href: '/cerez-politikasi' },
@@ -49,7 +56,7 @@ export function MarketingFooter() {
           <div className="col-span-2 lg:col-span-1">
             <Logo boyut="sm" linkOlsun animasyonlu={false} className="mb-4" />
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[220px]">
-              Türk yapımı profesyonel canlı destek platformu. Müşterilerinizle anında bağlantı kurun.
+              {SITE_LEGAL.tagline}. Canlı sohbet, AI asistan ve birleşik inbox — Türk yapımı.
             </p>
           </div>
           {columns.map((col) => (
@@ -66,17 +73,24 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Copyright className="w-3.5 h-3.5" />
-            <span>Gu Chat © 2026</span>
+        <div className="pt-8 border-t border-border space-y-8">
+          <IyzicoLegalBar />
+          <div className="flex justify-center">
+            <PaymentLogos variant="footer" />
           </div>
-          <div className="flex items-center gap-5 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />KVKK Uyumlu</span>
-            <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" />Türkiye&apos;de Üretildi</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-success rounded-full" />99.9% Uptime
-            </span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Copyright className="w-3.5 h-3.5" />
+              <span>Gu Chat © 2026</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" />256-bit SSL</span>
+              <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />KVKK Uyumlu</span>
+              <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" />Türkiye&apos;de Üretildi</span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-success rounded-full" />99.9% Uptime
+              </span>
+            </div>
           </div>
         </div>
       </div>

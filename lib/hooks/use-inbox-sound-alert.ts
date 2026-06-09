@@ -17,7 +17,9 @@ interface ConversationLike {
 
 export function useInboxSoundAlert(
   conversations: ConversationLike[],
-  enabled: boolean = true
+  enabled: boolean = true,
+  /** Socket bağlıyken anlık ses zaten çalıyor — polling yedek sesini kapat */
+  skipWhenSocketLive = false
 ) {
   const prevUnreadRef = useRef(0)
   const prevIdsRef = useRef<Set<string>>(new Set())
@@ -30,7 +32,7 @@ export function useInboxSoundAlert(
   }, [enabled])
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || skipWhenSocketLive) return
 
     const totalUnread = conversations.reduce((s, c) => s + (c.unreadCount || 0), 0)
     const currentIds = new Set(conversations.map((c) => c.id))
@@ -57,18 +59,13 @@ export function useInboxSoundAlert(
 
     prevUnreadRef.current = totalUnread
     prevIdsRef.current = currentIds
-  }, [conversations, enabled])
+  }, [conversations, enabled, skipWhenSocketLive])
 }
 
-/** Socket'ten gelen tekil mesaj için anında ses (polling beklemeden). */
-export function playNewMessageSound(
-  enabled: boolean,
-  senderType: string,
-  isSelectedConversation: boolean
-): void {
+/** Socket'ten gelen tekil mesaj için anında ses (mesajla eşzamanlı). */
+export function playNewMessageSound(enabled: boolean, senderType: string): void {
   if (!enabled) return
   if (senderType !== 'VISITOR') return
-  if (isSelectedConversation && document.hasFocus()) return
   unlockInboxAudio()
   playInboxNotificationSound()
 }

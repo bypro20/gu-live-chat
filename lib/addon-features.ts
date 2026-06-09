@@ -3,6 +3,7 @@ import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, type PlanType } from './constants'
 import type { PlanFeature } from './plan-shared'
 import type { Plan } from '@/app/generated/prisma/client'
+import { isAdminOwnedWebsite } from './admin-website'
 
 export { FEATURE_ADDON_SLUG } from './plan-shared'
 
@@ -14,6 +15,7 @@ export const ADDON_FEATURE_MAP: Record<string, PlanFeature> = {
   'instagram-channel': 'multiChannel',
   'email-channel': 'multiChannel',
   'ai-agent-pro': 'aiAssistant',
+  'ai-sohbet-asistani': 'aiAssistant',
   'ai-copilot': 'aiAssistant',
   'live-translate-pro': 'autoTranslate',
   'ai-chatbot': 'chatbot',
@@ -94,14 +96,23 @@ export async function hasActiveAddonForFeature(
   return !!purchase
 }
 
+/** AI Sohbet paketi hem akıllı asistan hem chatbot akışlarını açar. */
+const AI_BUNDLE_SLUGS = ['ai-agent-pro', 'ai-sohbet-asistani'] as const
+
 export async function websiteHasFeature(
   websiteDbId: string,
   plan: Plan | PlanType,
   feature: PlanFeature,
   currentCount?: number
 ): Promise<boolean> {
+  if (await isAdminOwnedWebsite(websiteDbId)) return true
   if (canPerformAction(plan as Plan, feature, currentCount)) return true
   try {
+    if (feature === 'chatbot' || feature === 'aiAssistant') {
+      for (const slug of AI_BUNDLE_SLUGS) {
+        if (await hasActiveAddonPurchase(websiteDbId, slug)) return true
+      }
+    }
     return await hasActiveAddonForFeature(websiteDbId, feature)
   } catch (e) {
     console.warn('[addon-features] hasActiveAddonForFeature failed:', e)

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { websiteHasFeature } from '@/lib/addon-features'
+import { isPlatformAdminRole } from '@/lib/admin-website'
 import { PLAN_LIMITS } from '@/lib/constants'
 import type { PlanFeature } from '@/lib/plan-shared'
 
@@ -38,11 +39,16 @@ export async function GET(
   }
 
   const features: Partial<Record<PlanFeature, boolean>> = {}
-  await Promise.all(
-    ALL_FEATURES.map(async (feature) => {
-      features[feature] = await websiteHasFeature(website.id, website.plan, feature)
-    })
-  )
+
+  if (isPlatformAdminRole(session.user.role)) {
+    for (const feature of ALL_FEATURES) features[feature] = true
+  } else {
+    await Promise.all(
+      ALL_FEATURES.map(async (feature) => {
+        features[feature] = await websiteHasFeature(website.id, website.plan, feature)
+      })
+    )
+  }
 
   return NextResponse.json({
     websiteId: website.websiteId,

@@ -5,10 +5,10 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { PLANS } from '@/lib/constants'
 import { getBillingPlanCta, type PlanId } from '@/lib/plan-cta'
-import { isPaytrEnabled } from '@/lib/paytr-client'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
-import PaytrFrame from './PaytrFrame'
+import IyzicoCheckout from './IyzicoCheckout'
+import { PaymentLogos } from '@/components/marketing/payment-logos'
 
 interface SubscriptionInfo {
   plan: string
@@ -44,17 +44,23 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [invoicesLoading, setInvoicesLoading] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [paytrToken, setPaytrToken] = useState<string | null>(null)
+  const [checkoutFormContent, setCheckoutFormContent] = useState<string | null>(null)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null) // planId being loaded
   const [cancelling, setCancelling] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [iyzicoEnabled, setIyzicoEnabled] = useState(false)
 
-  const paytrEnabled = isPaytrEnabled()
+  useEffect(() => {
+    fetch('/api/iyzico/status')
+      .then((res) => (res.ok ? res.json() : { enabled: false }))
+      .then((data) => setIyzicoEnabled(Boolean(data.enabled)))
+      .catch(() => setIyzicoEnabled(false))
+  }, [])
 
   const fetchSubscription = useCallback(async () => {
     if (!activeWebsite) return
     try {
-      const res = await fetch(`/api/paytr/subscription?websiteId=${activeWebsite.websiteId}`)
+      const res = await fetch(`/api/iyzico/subscription?websiteId=${activeWebsite.websiteId}`)
       if (res.ok) {
         const data = await res.json()
         setSubscription(data)
@@ -126,7 +132,7 @@ export default function BillingPage() {
   }, [fetchSubscription, fetchInvoices, fetchTrialInfo])
 
   const handleUpgrade = async (planId: string) => {
-    if (!paytrEnabled) {
+    if (!iyzicoEnabled) {
       setMessage({ type: 'error', text: 'Ödeme sistemi henüz yapılandırılmamış. Lütfen yöneticinizle iletişime geçin.' })
       return
     }
@@ -135,7 +141,7 @@ export default function BillingPage() {
     setMessage(null)
 
     try {
-      const res = await fetch('/api/paytr/token', {
+      const res = await fetch('/api/iyzico/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId, websiteId: activeWebsite?.websiteId }),
@@ -143,8 +149,13 @@ export default function BillingPage() {
 
       const data = await res.json()
 
-      if (data.token) {
-        setPaytrToken(data.token)
+      if (data.paymentPageUrl) {
+        window.location.href = data.paymentPageUrl
+        return
+      }
+
+      if (data.checkoutFormContent) {
+        setCheckoutFormContent(data.checkoutFormContent)
       } else {
         setMessage({ type: 'error', text: data.error || 'Ödeme başlatılamadı' })
       }
@@ -164,7 +175,7 @@ export default function BillingPage() {
     setMessage(null)
 
     try {
-      const res = await fetch('/api/paytr/subscription', {
+      const res = await fetch('/api/iyzico/subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ websiteId: activeWebsite?.websiteId }),
@@ -183,17 +194,6 @@ export default function BillingPage() {
       setCancelling(false)
     }
   }
-
-  const handlePaymentSuccess = useCallback(() => {
-    setPaytrToken(null)
-    setMessage({ type: 'success', text: 'Ödeme başarıyla tamamlandı! Planınız güncelleniyor...' })
-    setTimeout(() => { fetchSubscription(); fetchInvoices(); fetchTrialInfo() }, 2000)
-  }, [fetchSubscription, fetchInvoices, fetchTrialInfo])
-
-  const handlePaymentFailure = useCallback((reason?: string) => {
-    setPaytrToken(null)
-    setMessage({ type: 'error', text: reason || 'Ödeme başarısız oldu. Lütfen tekrar deneyin.' })
-  }, [])
 
   const currentPlan = (subscription?.plan || 'FREE') as PlanId
   const planStatus = subscription?.status || 'NONE'
@@ -276,12 +276,10 @@ export default function BillingPage() {
 
   return (
     <>
-      {paytrToken && (
-        <PaytrFrame
-          token={paytrToken}
-          onSuccess={handlePaymentSuccess}
-          onFailure={handlePaymentFailure}
-          onClose={() => setPaytrToken(null)}
+      {checkoutFormContent && (
+        <IyzicoCheckout
+          checkoutFormContent={checkoutFormContent}
+          onClose={() => setCheckoutFormContent(null)}
         />
       )}
 
@@ -444,8 +442,8 @@ export default function BillingPage() {
                     void handlePlanAction('BUSINESS')
                     return
                   }
-                  if (!paytrEnabled && plan.price > 0 && plan.id !== 'FREE') {
-                    setMessage({ type: 'error', text: 'Ödeme sistemi henüz aktif değil. PayTR API bilgileri girildiğinde ödeme yapabileceksiniz.' })
+                  if (!iyzicoEnabled && plan.price > 0 && plan.id !== 'FREE') {
+                    setMessage({ type: 'error', text: 'Ödeme sistemi henüz aktif değil. iyzico API bilgileri girildiğinde ödeme yapabileceksiniz.' })
                     return
                   }
                   if (plan.id !== currentPlan && plan.id !== 'FREE') {
@@ -462,7 +460,7 @@ export default function BillingPage() {
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
                     : plan.id === 'BUSINESS'
                     ? 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
-                    : !paytrEnabled
+                    : !iyzicoEnabled
                     ? 'bg-primary text-primary-foreground opacity-60 cursor-pointer hover:opacity-80'
                     : checkoutLoading === plan.id
                     ? 'bg-primary/70 text-primary-foreground cursor-wait'
@@ -475,15 +473,15 @@ export default function BillingPage() {
                       isCurrentPlan: plan.id === currentPlan,
                       trialUsed: trialInfo?.trialUsed,
                       currentPlan,
-                      paytrEnabled,
+                      iyzicoEnabled,
                     })}
               </button>
             </div>
           ))}
         </div>
 
-        {/* PayTR Disabled Notice */}
-        {!paytrEnabled && (
+        {/* iyzico Disabled Notice */}
+        {!iyzicoEnabled && (
           <div className="mt-6 p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -492,7 +490,7 @@ export default function BillingPage() {
               <div>
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Ödeme sistemi yapılandırılmamış</p>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                  PayTR API bilgileri henüz girilmemiş. Yöneticinizle iletişime geçin veya <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">.env</code> dosyasında PayTR ayarlarını yapılandırın.
+                  iyzico API bilgileri henüz girilmemiş. Yöneticinizle iletişime geçin veya <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">.env</code> dosyasında iyzico ayarlarını yapılandırın.
                 </p>
               </div>
             </div>
@@ -546,6 +544,10 @@ export default function BillingPage() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="mt-10 pt-8 border-t border-border">
+          <PaymentLogos variant="checkout" />
         </div>
       </div>
     </>

@@ -19,6 +19,11 @@ export interface LiveVisitor {
   sessionId?: string
   websiteId?: string
   websiteName?: string
+  ipAddress?: string | null
+  region?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  pages?: { title: string | null; url: string; viewedAt: string }[]
   // Cursor tracking
   cursorX?: number
   cursorY?: number

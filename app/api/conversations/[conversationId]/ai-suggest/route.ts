@@ -5,6 +5,7 @@ import { generateAiReply } from '@/lib/ai/provider'
 import { loadKnowledge, toChatMessages } from '@/lib/ai/knowledge'
 import { loadVisitorContext } from '@/lib/ai/visitor-context'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
+import { sessionIsPlatformAdmin } from '@/lib/platform-admin'
 
 const HISTORY_LIMIT = 12
 
@@ -62,10 +63,10 @@ export async function POST(
       })
     }
 
-    const hasAi = await websiteHasAiAssistant(
-      conversation.website.id,
-      conversation.website.plan
-    )
+    const adminBypass = await sessionIsPlatformAdmin()
+    const hasAi =
+      adminBypass ||
+      (await websiteHasAiAssistant(conversation.website.id, conversation.website.plan))
     if (!hasAi) {
       return NextResponse.json(
         { error: 'AI asistan bu plan kapsamında mevcut değil', upgradeRequired: true },

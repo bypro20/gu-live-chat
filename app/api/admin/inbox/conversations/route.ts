@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { prisma } from '@/lib/db'
 import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
+import type { ConversationSource } from '@/app/generated/prisma/client'
 
 /** Admin gelen kutusu — marketing widget sohbetleri (takım üyeliği gerekmez). */
 export async function GET(req: Request) {
@@ -16,8 +17,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
+    const source = searchParams.get('source')
 
-    const where = { websiteId: website.id }
+    const where: { websiteId: string; source?: ConversationSource } = { websiteId: website.id }
+    if (source && source !== 'all') where.source = source as ConversationSource
 
     const [conversations, total] = await Promise.all([
       prisma.conversation.findMany({
@@ -27,6 +30,8 @@ export async function GET(req: Request) {
           websiteId: true,
           visitorId: true,
           status: true,
+          source: true,
+          visitorLang: true,
           lastMessageAt: true,
           lastMessagePreview: true,
           unreadCount: true,

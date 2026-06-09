@@ -231,8 +231,8 @@ export async function requireWebsiteAccess(
     return forbiddenError('Bu işlem için yönetici yetkisi gerekli')
   }
 
-  // 7. Plan feature check
-  if (planFeature) {
+  // 7. Plan feature check (platform admin: tüm özellikler ücretsiz)
+  if (planFeature && session.user.role !== 'ADMIN') {
     const allowed = await websiteHasFeature(
       website.id,
       website.plan,

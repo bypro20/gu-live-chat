@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { LogoMark } from '@/components/brand/logo-mark'
 
 const boyutAyarları = {
   sm: { svg: 28, metin: 'text-sm', aralik: 'gap-1.5' },
@@ -29,32 +30,7 @@ export function Logo({
 
   const logoİçeriği = (
     <div className={cn('flex items-center', ayar.aralik, className)}>
-      <svg
-        width={ayar.svg}
-        height={ayar.svg}
-        viewBox="0 0 48 48"
-        fill="none"
-        aria-hidden
-      >
-        <defs>
-          <linearGradient id="gu-logo-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1972F5" />
-            <stop offset="100%" stopColor="#2563EB" />
-          </linearGradient>
-        </defs>
-        <rect x="2" y="2" width="44" height="44" rx="11" fill="url(#gu-logo-grad)" />
-        <path
-          d="M24 10h7a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3h-1.5l-2.5 2.5V19H24a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z"
-          fill="white"
-          fillOpacity="0.25"
-        />
-        <path
-          d="M13 17h16a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-4l-5 5v-5h-7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3z"
-          fill="white"
-          fillOpacity="0.95"
-        />
-        <path d="M22 20l-3 4h2l-1 4 5-5h-2l1-3z" fill="#1972F5" />
-      </svg>
+      <LogoMark size={ayar.svg} glow={animasyonlu} />
       {metinGoster && (
         <span className={cn(ayar.metin, 'font-bold tracking-tight text-foreground')}>
           Gu <span className="text-primary">Chat</span>

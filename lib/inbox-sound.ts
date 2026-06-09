@@ -16,31 +16,30 @@ export function unlockInboxAudio(): void {
   }
 }
 
-/** Crisp tarzı kısa çift ton bildirim sesi. */
+/** Telefon bildirimi tarzı kısa çift ton. */
 export function playInboxNotificationSound(): void {
   if (typeof window === 'undefined') return
   try {
     unlockInboxAudio()
     if (!audioCtx) return
 
-    const playTone = (freq: number, start: number, duration: number, volume = 0.15) => {
+    const playTone = (freq: number, start: number, duration: number, volume = 0.2) => {
       const osc = audioCtx!.createOscillator()
       const gain = audioCtx!.createGain()
       osc.type = 'sine'
       osc.frequency.value = freq
       gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(volume, start + 0.015)
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.008)
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
       osc.connect(gain)
       gain.connect(audioCtx!.destination)
       osc.start(start)
-      osc.stop(start + duration + 0.05)
+      osc.stop(start + duration + 0.04)
     }
 
     const t = audioCtx.currentTime
-    playTone(659.25, t, 0.1, 0.18)       // E5
-    playTone(783.99, t + 0.11, 0.14, 0.16) // G5
-    playTone(987.77, t + 0.24, 0.2, 0.12)  // B5
+    playTone(880, t, 0.09, 0.22)        // A5 — ilk ping
+    playTone(1174.66, t + 0.1, 0.11, 0.18) // D6 — ikinci ping
   } catch {
     // Sessizce geç
   }

@@ -1,19 +1,24 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
+import { SITE_LEGAL } from '@/lib/site-legal'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'),
   title: {
-    default: 'Gu Chat — Profesyonel Canlı Destek Platformu',
-    template: '%s | Gu Chat',
+    default: `${SITE_LEGAL.name} — ${SITE_LEGAL.tagline}`,
+    template: `%s | ${SITE_LEGAL.name}`,
   },
-  description:
-    'Web sitenize ekleyebileceğiniz profesyonel canlı destek sistemi. Gerçek zamanlı mesajlaşma, AI asistan ve analitik — Türk yapımı.',
+  description: SITE_LEGAL.metaDescription,
 }
 
 export default function RootLayout({
@@ -23,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-full bg-background text-foreground antialiased`}>
+      <body className={`${inter.variable} ${jakarta.variable} font-[family-name:var(--font-jakarta)] min-h-full bg-background text-foreground antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ToastProvider>
             {children}

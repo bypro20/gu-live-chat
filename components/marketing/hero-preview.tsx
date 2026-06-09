@@ -7,7 +7,7 @@ export function HeroPreview() {
   return (
     <div className="relative mx-auto max-w-5xl">
       <div className="absolute -inset-4 bg-gradient-brand opacity-[0.06] rounded-2xl blur-2xl pointer-events-none" />
-      <div className="relative rounded-xl border border-border bg-card shadow-2xl overflow-hidden">
+      <div className="relative rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         {/* Browser chrome */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/50">
           <div className="flex gap-1.5">

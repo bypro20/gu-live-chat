@@ -246,8 +246,8 @@ export default function AdminDashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-[#1972F5] to-[#2563EB] text-white rounded-md tracking-[0.08em] shadow-lg shadow-[#1972F5]/30">
-                    ADMIN
+                  <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-600 text-white rounded-md tracking-[0.08em]">
+                    GU CHAT ADMIN
                   </span>
                   <span className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
                     <span className="relative flex h-2 w-2">
@@ -258,7 +258,7 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Yönetim Paneli</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Gu Chat · Yönetim</h1>
                   <Sparkles className="w-5 h-5 text-amber-400/70" />
                 </div>
                 <p className="text-gray-500 mt-1 text-sm flex items-center gap-2">
@@ -283,7 +283,7 @@ export default function AdminDashboardPage() {
                 >
                   <Bell className="w-4 h-4" />
                   {inboxUnread > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 flex items-center justify-center text-[9px] font-bold bg-primary text-white rounded-full border-2 border-[#0d0d1a]">
+                    <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 flex items-center justify-center text-[9px] font-bold bg-violet-500 text-white rounded-full border-2 border-[#080C14]">
                       {inboxUnread > 99 ? '99+' : inboxUnread}
                     </span>
                   )}

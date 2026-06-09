@@ -8,6 +8,7 @@ import { PLAN_LIMITS, type PlanType } from '@/lib/constants'
 import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
+import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { FadeIn } from '@/components/marketing/fade-in'
 
 // ─── Plan definitions ────────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ function buildPlanCardFeatures(planId: PlanType): PlanCardFeature[] {
     { label: 'Proaktif mesajlar', included: l.proactiveMessages },
     { label: 'Dosya paylaşımı', included: l.fileUpload },
     { label: 'Ekran izleme & müdahale', included: l.overlayAI },
-    { label: 'AI otomatik yanıt & asistan', included: l.aiAssistant },
+    { label: 'AI Sohbet Asistanı (GPT/Gemini)', included: l.aiAssistant },
     { label: '50+ dil otomatik çeviri', included: l.autoTranslate },
     { label: 'E-posta kampanyaları', included: l.campaigns },
     { label: 'Çoklu kanal (WhatsApp, Telegram…)', included: l.multiChannel },
@@ -385,12 +386,12 @@ export default function PricingPage() {
                 <FadeIn key={plan.id} delay={i * 0.06}>
                   <div className={`relative h-full rounded-2xl border p-6 flex flex-col transition-all ${
                     plan.highlighted
-                      ? 'border-blue-500 shadow-[0_8px_40px_rgba(25,114,245,0.18)] ring-1 ring-blue-500/20'
-                      : 'border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md'
+                      ? 'border-blue-500 ring-1 ring-blue-500/20'
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}>
                     {plan.badge && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                        <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-md">
+                        <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
                           {plan.badge}
                         </span>
                       </div>
@@ -424,7 +425,7 @@ export default function PricingPage() {
                       href={planCta(plan.id as PlanId).href}
                       className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all ${
                         plan.highlighted
-                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/25'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
                       }`}
                     >
@@ -453,7 +454,7 @@ export default function PricingPage() {
                   Büyürken ekstra maliyet endişesi taşımadan işinize odaklanın.
                 </p>
               </div>
-              <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20">
+              <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl hover:bg-blue-700 transition-colors">
                 Ücretsiz Başla <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -468,7 +469,7 @@ export default function PricingPage() {
               <p className="text-slate-500 text-center text-sm mb-10">Şirketinize en uygun planı seçin.</p>
             </FadeIn>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
@@ -557,7 +558,7 @@ export default function PricingPage() {
                 </div>
                 <Link
                   href="/contact"
-                  className="flex-shrink-0 inline-flex items-center gap-2 bg-violet-600 text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-violet-700 transition-colors shadow-md shadow-violet-500/20"
+                  className="flex-shrink-0 inline-flex items-center gap-2 bg-violet-600 text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-violet-700 transition-colors"
                 >
                   İletişime Geç <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -594,7 +595,7 @@ export default function PricingPage() {
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Müşteri deneyiminizi geliştirmeye hazır mısınız?</h2>
               <p className="text-slate-500 mb-8">14 gün ücretsiz deneyin. Taahhüt yok, kredi kartı gerekmez.</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/25 text-sm">
+                <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors text-sm">
                   Ücretsiz Başla <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-200 transition-colors text-sm">
@@ -605,6 +606,11 @@ export default function PricingPage() {
           </section>
         </FadeIn>
 
+        <section className="py-12 px-4 border-t border-slate-200 bg-slate-50">
+          <div className="max-w-xl mx-auto">
+            <PaymentLogos variant="checkout" />
+          </div>
+        </section>
       </main>
       <MarketingFooter />
     </>

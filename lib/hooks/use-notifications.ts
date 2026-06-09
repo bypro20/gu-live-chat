@@ -28,7 +28,7 @@ export function useNotifications() {
     '/api/notifications',
     fetcher,
     {
-      refreshInterval: 30000, // 30s
+      refreshInterval: 15000,
       revalidateOnFocus: true,
     }
   )
@@ -55,14 +55,22 @@ export function useNotifications() {
   )
 
   const markAllAsRead = useCallback(async () => {
-    if (!data?.notifications) return
-    const unreadIds = data.notifications
-      .filter((n) => !n.readAt)
-      .map((n) => n.id)
-    if (unreadIds.length > 0) {
-      await markAsRead(unreadIds)
+    setMarkingAsRead(true)
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAll: true }),
+      })
+      if (res.ok) {
+        mutate()
+      }
+    } catch (err) {
+      console.error('Failed to mark notifications as read:', err)
+    } finally {
+      setMarkingAsRead(false)
     }
-  }, [data, markAsRead])
+  }, [mutate])
 
   const deleteNotification = useCallback(
     async (id: string) => {

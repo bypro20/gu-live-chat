@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { SessionProvider, useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import Link from 'next/link'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import NotificationBell from '@/components/dashboard/notification-bell'
+import { AppLogo } from '@/components/brand/app-logo'
 
 interface NavItem {
   href: string
@@ -43,26 +43,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!activeWebsite?.websiteId || status !== 'authenticated') return
+    if (pathname?.startsWith('/inbox')) return
+
     const poll = async () => {
       try {
         const res = await fetch(
-          `/api/conversations?websiteId=${encodeURIComponent(activeWebsite.websiteId)}&limit=50`
+          `/api/inbox/unread?websiteId=${encodeURIComponent(activeWebsite.websiteId)}`
         )
         if (!res.ok) return
         const data = await res.json()
-        const total = (data.conversations || []).reduce(
-          (sum: number, c: { unreadCount?: number }) => sum + (c.unreadCount || 0),
-          0
-        )
-        setInboxUnread(total)
+        setInboxUnread(data.unreadCount ?? 0)
       } catch {
         // polling fallback — sessizce devam
       }
     }
     poll()
-    const id = setInterval(poll, 10000)
+    const id = setInterval(poll, 15000)
     return () => clearInterval(id)
-  }, [activeWebsite?.websiteId, status])
+  }, [activeWebsite?.websiteId, status, pathname])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -171,32 +169,19 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background text-foreground">
+    <div className="app-shell h-screen flex overflow-hidden bg-background text-foreground">
       {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/70 z-40 lg:hidden backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
+        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-[272px] flex flex-col transform transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`app-sidebar relative fixed lg:static inset-y-0 left-0 z-50 flex flex-col transform transition-transform duration-200 ease-out ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
-        style={{ background: 'linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-end))' }}
       >
-        <div className="h-[68px] flex items-center px-5 border-b border-[var(--sidebar-border)] shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 group-hover:scale-105 bg-primary shadow-brand">
-              <svg className="w-[20px] h-[20px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-              </svg>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-[15px] tracking-tight">Gu Live Chat</span>
-                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--primary-glow)]" />
-              </div>
-              <p className="text-[10px] tracking-wide" style={{ color: 'var(--sidebar-foreground)' }}>Canlı Destek Platformu</p>
-            </div>
-          </Link>
+        <div className="relative h-[72px] flex items-center justify-between px-5 border-b border-[var(--sidebar-border)] shrink-0 gap-2">
+          <AppLogo variant="sidebar" href="/dashboard" />
+          <NotificationBell />
         </div>
 
         {activeWebsite && (
@@ -253,13 +238,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-5 scrollbar-thin">
+        <nav className="relative flex-1 overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin">
           {navGroups.map((group) => (
             <div key={group.title}>
-              <div className="flex items-center gap-3 px-2.5 mb-2">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]" style={{ textShadow: '0 0 10px rgba(255,255,255,0.1)' }}>{group.title}</span>
-                <div className="flex-1 h-[1px]" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08), transparent)' }} />
-              </div>
+              <p className="app-sidebar-group-label">{group.title}</p>
               <div className="space-y-0.5">
                 {group.items.map((item) => (
                   <SidebarLink
@@ -304,13 +286,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="p-3 border-t shrink-0" style={{ borderColor: 'var(--sidebar-border)' }}>
-          <div className="flex items-center justify-between px-2.5 mb-2.5">
-            <NotificationBell />
-            {mounted && (
+        <div className="relative p-3 border-t shrink-0 border-[var(--sidebar-border)]">
+          {mounted && (
+            <div className="flex items-center justify-end px-2.5 mb-2.5">
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200 cursor-pointer"
                 style={{ color: 'var(--sidebar-foreground)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#E4E3ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
@@ -326,14 +307,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 )}
                 {theme === 'dark' ? 'Açık Tema' : 'Koyu Tema'}
               </button>
-            )}
-          </div>
+            </div>
+          )}
           <div
             className="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-200 group cursor-pointer relative"
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.035)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = '' }}
           >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-primary shadow-brand">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
               {userInitial}
             </div>
             <div className="flex-1 min-w-0">
@@ -362,27 +343,17 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-background">
-        <div className="lg:hidden h-14 flex items-center px-4 gap-3 sticky top-0 z-30" style={{ background: 'color-mix(in srgb, var(--card) 80%, transparent)', backdropFilter: 'saturate(180%) blur(16px)', borderBottom: '1px solid var(--border)' }}>
-          <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--muted-foreground)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--foreground)'; e.currentTarget.style.background = 'var(--accent)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--muted-foreground)'; e.currentTarget.style.background = '' }}
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm bg-primary">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+      <main className="app-main flex-1 overflow-y-auto">
+        <div className="lg:hidden h-14 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 glass-strong border-b border-border">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
-            </div>
-            <div>
-              <span className="text-foreground font-bold text-sm tracking-tight">Gu Live Chat</span>
-              <p className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>Canlı Destek Platformu</p>
-            </div>
+            </button>
+            <AppLogo variant="light" size="sm" showTagline={false} />
           </div>
+          <NotificationBell variant="toolbar" />
         </div>
         {children}
       </main>
@@ -514,29 +485,12 @@ function SidebarLink({ href, icon, label, badge, active }: {
   return (
     <a
       href={href}
-      className="flex items-center gap-3 px-3 py-[10px] rounded-xl transition-all duration-200 group relative"
-      style={active
-        ? {
-            background: 'var(--sidebar-active)',
-            color: '#FFFFFF',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-          }
-        : { color: '#A8A5BA' }}
-      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#F0EFFF' }}}
-      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = ''; e.currentTarget.style.color = '#A8A5BA' }}}
+      className={`app-sidebar-link ${active ? 'app-sidebar-link--active' : ''}`}
     >
-      {active && (
-        <>
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full transition-all duration-200" style={{ background: 'var(--sidebar-active-border)', boxShadow: '0 0 16px var(--primary-glow), 0 0 32px var(--primary-glow)' }} />
-          <div className="absolute inset-0 rounded-xl bg-primary/5 pointer-events-none" />
-        </>
-      )}
-      <span className="shrink-0">{icons[icon]}</span>
-      <span className="flex-1 text-[14px] font-semibold tracking-wide">{label}</span>
+      <span className="shrink-0 opacity-90">{icons[icon]}</span>
+      <span className="flex-1 tracking-wide">{label}</span>
       {badge && (
-        <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full min-w-[20px] text-center bg-primary shadow-brand">
-          {badge}
-        </span>
+        <span className="app-sidebar-badge">{badge}</span>
       )}
     </a>
   )

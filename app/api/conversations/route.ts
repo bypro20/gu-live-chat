@@ -11,6 +11,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const websiteId = searchParams.get('websiteId')
   const status = searchParams.get('status')
+  const source = searchParams.get('source')
   const assignedTo = searchParams.get('assignedTo')
   const search = searchParams.get('search')
   const page = parseInt(searchParams.get('page') || '1')
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
   }
 
   if (status && status !== 'all') where.status = status
+  if (source && source !== 'all') where.source = source
   if (assignedTo === 'me') where.assignedToId = session.user.id
   if (assignedTo === 'unassigned') where.assignedToId = null
   if (search) {
@@ -61,7 +63,6 @@ export async function GET(req: Request) {
         visitor: { select: { id: true, name: true, email: true, avatarUrl: true } },
         assignedTo: { select: { id: true, name: true, image: true } },
         tags: { include: { tag: true } },
-        _count: { select: { messages: true } },
       },
       orderBy: { lastMessageAt: 'desc' },
       skip: (page - 1) * limit,

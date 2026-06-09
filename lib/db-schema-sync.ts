@@ -136,6 +136,33 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'conversations.chatbotStepIndex', sql: `ALTER TABLE "conversations" ADD COLUMN "chatbotStepIndex" INTEGER NOT NULL DEFAULT 0` },
     { label: 'conversations.chatbotCompleted', sql: `ALTER TABLE "conversations" ADD COLUMN "chatbotCompleted" BOOLEAN NOT NULL DEFAULT 0` },
     { label: 'conversations.chatbotHandedToAi', sql: `ALTER TABLE "conversations" ADD COLUMN "chatbotHandedToAi" BOOLEAN NOT NULL DEFAULT 0` },
+    {
+      label: 'chatbots',
+      sql: `CREATE TABLE IF NOT EXISTS "chatbots" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "websiteId" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "description" TEXT,
+        "isActive" BOOLEAN NOT NULL DEFAULT 1,
+        "trigger" TEXT NOT NULL DEFAULT 'ALL_CONVERSATIONS',
+        "triggerValue" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    {
+      label: 'chatbot_steps',
+      sql: `CREATE TABLE IF NOT EXISTS "chatbot_steps" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "chatbotId" TEXT NOT NULL,
+        "order" INTEGER NOT NULL,
+        "type" TEXT NOT NULL,
+        "message" TEXT,
+        "options" TEXT,
+        "nextStepId" TEXT
+      )`,
+    },
+    { label: 'chatbots.triggerValue', sql: `ALTER TABLE "chatbots" ADD COLUMN "triggerValue" TEXT` },
     // messages
     { label: 'messages.sentiment', sql: `ALTER TABLE "messages" ADD COLUMN "sentiment" TEXT` },
     { label: 'messages.status', sql: `ALTER TABLE "messages" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'SENT'` },

@@ -28,6 +28,7 @@ export default function ChatbotPage() {
   const { chatbots, isLoading, createChatbot, deleteChatbot, toggleChatbot } = useChatbots()
   const [showBuilder, setShowBuilder] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [botName, setBotName] = useState('')
   const [botTrigger, setBotTrigger] = useState('ALL_CONVERSATIONS')
   const [botTriggerValue, setBotTriggerValue] = useState('')
@@ -38,6 +39,7 @@ export default function ChatbotPage() {
   const handleCreate = async () => {
     if (!botName.trim() || saving) return
     setSaving(true)
+    setCreateError(null)
     try {
       await createChatbot({
         name: botName.trim(),
@@ -56,7 +58,7 @@ export default function ChatbotPage() {
       setBotTriggerValue('')
       setSteps([{ type: 'MESSAGE', message: 'Merhaba! Size nasıl yardımcı olabiliriz?', order: 0 }])
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Chatbot oluşturulamadı')
+      setCreateError(err instanceof Error ? err.message : 'Chatbot oluşturulamadı')
     } finally {
       setSaving(false)
     }
@@ -257,8 +259,14 @@ export default function ChatbotPage() {
             ))}
           </div>
 
+          {createError && (
+            <div className="rounded-lg bg-destructive/10 text-destructive text-sm px-4 py-2.5">
+              {createError}
+            </div>
+          )}
+
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
-            <button onClick={() => setShowBuilder(false)} className="btn-secondary">
+            <button onClick={() => { setShowBuilder(false); setCreateError(null) }} className="btn-secondary">
               İptal
             </button>
             <button onClick={handleCreate} disabled={saving || !botName.trim()} className="btn-primary disabled:opacity-50">

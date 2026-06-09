@@ -1,7 +1,7 @@
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import {
-  HomeHero, TrustStrip, FeatureGrid, AiShowcase, SharedInbox,
+  HomeHero, TrustStrip, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
   KnowledgeBaseSection, AiAutomationSection, ProductDeepDive,
   UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
 } from '@/components/marketing/home-sections'
@@ -14,6 +14,7 @@ export default function HomePage() {
       <TrustStrip />
       <FeatureGrid />
       <AiShowcase />
+      <LiveTranslateSection />
       <SharedInbox />
       <KnowledgeBaseSection />
       <AiAutomationSection />

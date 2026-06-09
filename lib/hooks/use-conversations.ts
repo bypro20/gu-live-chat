@@ -7,8 +7,8 @@ import { useActiveWebsite } from './use-active-website'
 
 // Conversation list refresh cadence: ~5s while polling, backing off when a
 // live socket connection is already streaming new conversations/messages.
-const POLL_LIST_MS = 2000
-const POLL_IDLE_MS = 5000
+const POLL_LIST_MS = 4000
+const POLL_IDLE_MS = 30000
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ export interface Conversation {
   visitorId: string
   status: string
   source: string
+  visitorLang: string | null
   subject: string | null
   lastMessageAt: string
   lastMessagePreview: string | null
@@ -83,6 +84,8 @@ export function useConversations(options?: {
   allWebsites?: boolean
   /** Sabit public websiteId (admin gelen kutusu vb.) */
   websiteId?: string
+  /** Kanal filtresi: WIDGET, WHATSAPP, … veya all */
+  source?: string
 }) {
   const { activeWebsite } = useActiveWebsite()
   const [pollInterval, setPollInterval] = useState(
@@ -97,7 +100,7 @@ export function useConversations(options?: {
     }
     connectSocket()
     const update = () =>
-      setPollInterval(isSocketConnected() ? POLL_IDLE_MS : POLL_LIST_MS)
+      setPollInterval(isSocketConnected() ? 0 : POLL_LIST_MS)
     update()
     const id = setInterval(update, 5000)
     return () => clearInterval(id)
@@ -105,6 +108,7 @@ export function useConversations(options?: {
 
   const params = new URLSearchParams()
   if (options?.status && options.status !== 'all') params.set('status', options.status)
+  if (options?.source && options.source !== 'all') params.set('source', options.source)
   if (options?.assignedTo) params.set('assignedTo', options.assignedTo)
   if (options?.search) params.set('search', options.search)
   if (options?.page) params.set('page', String(options.page))

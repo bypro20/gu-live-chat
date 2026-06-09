@@ -2,6 +2,7 @@ import { Server as SocketIOServer } from 'socket.io'
 import type { Server as HTTPServer } from 'http'
 import { prisma } from './db'
 import { socketCorsOrigins } from './socket-cors'
+import { websiteHasFeature } from './addon-features'
 
 let io: SocketIOServer
 
@@ -32,6 +33,50 @@ function isAgentAuthed(socket: { userId?: string; websiteIds?: string[] }, websi
   if (!socket.userId) return false
   if (websiteId && socket.websiteIds && !socket.websiteIds.includes(websiteId)) return false
   return true
+}
+
+type AgentSocket = {
+  userId?: string
+  websiteIds?: string[]
+  scope?: string
+}
+
+const overlayFeatureCache = new Map<string, { allowed: boolean; expires: number }>()
+
+async function agentCanUseOverlay(socket: AgentSocket, websiteId: string): Promise<boolean> {
+  if (!websiteId || !isAgentAuthed(socket, websiteId)) return false
+
+  if (socket.scope === 'platform' && socket.userId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: socket.userId },
+        select: { role: true },
+      })
+      if (user?.role === 'ADMIN') return true
+    } catch {
+      return false
+    }
+  }
+
+  const cached = overlayFeatureCache.get(websiteId)
+  if (cached && cached.expires > Date.now()) return cached.allowed
+
+  try {
+    const website = await prisma.website.findUnique({
+      where: { websiteId },
+      select: { id: true, plan: true },
+    })
+    if (!website) {
+      overlayFeatureCache.set(websiteId, { allowed: false, expires: Date.now() + 60_000 })
+      return false
+    }
+    const allowed = await websiteHasFeature(website.id, website.plan, 'overlayAI')
+    overlayFeatureCache.set(websiteId, { allowed, expires: Date.now() + 60_000 })
+    return allowed
+  } catch (err) {
+    console.error('[Socket] overlayAI feature check failed:', err)
+    return false
+  }
 }
 
 function getVisitorSession(socket: { id: string }): VisitorSessionInfo | undefined {
@@ -69,7 +114,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     console.log(`[Socket] Connected: ${socket.id}`)
 
     // ─── Agent Authentication ──────────────────────────────────
-    socket.on('agent:auth', async (data: { userId: string; websiteIds: string[] }) => {
+    socket.on('agent:auth', async (data: { userId: string; websiteIds: string[]; scope?: string }) => {
       const { userId } = data
       const requestedWebsiteIds = Array.isArray(data.websiteIds) ? data.websiteIds : []
 
@@ -80,36 +125,55 @@ export function initSocketServer(httpServer: HTTPServer) {
       let websiteIds: string[] = []
       if (userId && requestedWebsiteIds.length > 0) {
         try {
-          const memberships = await prisma.teamMember.findMany({
-            where: {
-              userId,
-              website: { websiteId: { in: requestedWebsiteIds } },
-            },
-            select: { website: { select: { websiteId: true } } },
-          })
-          websiteIds = memberships.map((m) => m.website.websiteId)
+          const [memberships, ownedWebsites] = await Promise.all([
+            prisma.teamMember.findMany({
+              where: {
+                userId,
+                website: { websiteId: { in: requestedWebsiteIds } },
+              },
+              select: { website: { select: { websiteId: true } } },
+            }),
+            prisma.website.findMany({
+              where: {
+                ownerId: userId,
+                websiteId: { in: requestedWebsiteIds },
+              },
+              select: { websiteId: true },
+            }),
+          ])
+          websiteIds = [
+            ...new Set([
+              ...memberships.map((m) => m.website.websiteId),
+              ...ownedWebsites.map((w) => w.websiteId),
+            ]),
+          ]
         } catch (err) {
           console.error('[Socket] agent:auth membership check failed:', err)
           return
         }
       }
 
-      // Platform admin: marketing sitesine otomatik erişim (gelen kutusu socket)
-      if (websiteIds.length === 0 && userId && requestedWebsiteIds.length > 0) {
+      // Platform admin: tüm siteler veya marketing sitesi
+      if (websiteIds.length === 0 && userId) {
         try {
           const user = await prisma.user.findUnique({
             where: { id: userId },
             select: { role: true },
           })
           if (user?.role === 'ADMIN') {
-            const { ensureAdminMarketingAccess } = await import('./marketing-website')
-            const marketingId = await ensureAdminMarketingAccess(userId)
-            if (requestedWebsiteIds.includes(marketingId)) {
-              websiteIds = [marketingId]
+            if (data.scope === 'platform') {
+              const allSites = await prisma.website.findMany({ select: { websiteId: true } })
+              websiteIds = allSites.map((w) => w.websiteId)
+            } else if (requestedWebsiteIds.length > 0) {
+              const { ensureAdminMarketingAccess } = await import('./marketing-website')
+              const marketingId = await ensureAdminMarketingAccess(userId)
+              if (requestedWebsiteIds.includes(marketingId)) {
+                websiteIds = [marketingId]
+              }
             }
           }
         } catch (err) {
-          console.error('[Socket] admin marketing auth failed:', err)
+          console.error('[Socket] admin auth failed:', err)
         }
       }
 
@@ -121,6 +185,7 @@ export function initSocketServer(httpServer: HTTPServer) {
       // Store userId on socket for cleanup
       ;(socket as any).userId = userId
       ;(socket as any).websiteIds = websiteIds
+      ;(socket as any).scope = data.scope
 
       // Join website rooms
       websiteIds.forEach((websiteId) => {
@@ -524,8 +589,17 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent requests screen capture start/stop ──────────────────
-    socket.on('agent:screen:start', (data: { visitorId: string; websiteId: string }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:screen:start', async (data: { visitorId: string; websiteId: string }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) {
+        socket.emit('agent:overlay:denied', {
+          websiteId: data.websiteId,
+          feature: 'overlayAI',
+          message: 'Ekran izleme mevcut paketinizde kullanılamaz.',
+        })
+        return
+      }
       // Forward to the specific visitor to start sending screenshots
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
@@ -549,8 +623,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent sends remote click to visitor (intervention) ────────
-    socket.on('agent:remote-cursor-move', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:remote-cursor-move', async (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -558,8 +634,10 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
     })
 
-    socket.on('agent:visitor:click', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:visitor:click', async (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -568,8 +646,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent sends mouse move to visitor (intervention mode) ──
-    socket.on('agent:visitor:mousemove', (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:visitor:mousemove', async (data: { visitorId: string; websiteId: string; x: number; y: number }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -578,8 +658,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent sends scroll to visitor (intervention mode) ──
-    socket.on('agent:visitor:scroll', (data: { visitorId: string; websiteId: string; deltaX: number; deltaY: number }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:visitor:scroll', async (data: { visitorId: string; websiteId: string; deltaX: number; deltaY: number }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -588,8 +670,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Agent sends keyboard events to visitor (intervention mode) ──
-    socket.on('agent:visitor:keydown', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:visitor:keydown', async (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -597,8 +681,10 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
     })
 
-    socket.on('agent:visitor:keyup', (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('agent:visitor:keyup', async (data: { visitorId: string; websiteId: string; key: string; code: string; keyCode: number; shiftKey: boolean; ctrlKey: boolean; altKey: boolean; metaKey: boolean }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) return
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -608,8 +694,17 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── WebRTC Signaling (screen sharing) ──────────────────────
     // Agent requests WebRTC screen sharing start
-    socket.on('webrtc:start', (data: { visitorId: string; websiteId: string; agentId: string }) => {
-      if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
+    socket.on('webrtc:start', async (data: { visitorId: string; websiteId: string; agentId: string }) => {
+      const agentSocket = socket as AgentSocket
+      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) {
+        socket.emit('agent:overlay:denied', {
+          websiteId: data.websiteId,
+          feature: 'overlayAI',
+          message: 'Ekran izleme mevcut paketinizde kullanılamaz.',
+        })
+        return
+      }
       const visitorSocket = Array.from(visitorSessions.entries())
         .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
       if (visitorSocket) {
@@ -781,20 +876,29 @@ export function getAgentsOnlineCount(websitePublicId: string): number {
 export function getLiveVisitors(websiteId: string) {
   return Array.from(visitorSessions.values())
     .filter((v) => v.websiteId === websiteId)
-    .map((v) => ({
-      visitorId: v.visitorId,
-      websiteId: v.websiteId,
-      currentPage: v.currentPage,
-      currentTitle: v.currentTitle,
-      cursorX: v.cursorX,
-      cursorY: v.cursorY,
-      viewportW: v.viewportW,
-      viewportH: v.viewportH,
-      scrollY: v.scrollY,
-      documentH: v.documentH,
-      lastScreenshotUrl: v.lastScreenshotUrl,
-      lastScreenshotAt: v.lastScreenshotAt?.toISOString() || null,
-      connectedAt: v.connectedAt.toISOString(),
-      lastActiveAt: v.lastActiveAt.toISOString(),
-    }))
+    .map(mapVisitorSessionToLive)
+}
+
+export function getAllLiveVisitors() {
+  return Array.from(visitorSessions.values()).map(mapVisitorSessionToLive)
+}
+
+function mapVisitorSessionToLive(v: VisitorSessionInfo) {
+  return {
+    visitorId: v.visitorId,
+    websiteId: v.websiteId,
+    currentPage: v.currentPage,
+    currentTitle: v.currentTitle,
+    cursorX: v.cursorX,
+    cursorY: v.cursorY,
+    viewportW: v.viewportW,
+    viewportH: v.viewportH,
+    scrollY: v.scrollY,
+    documentH: v.documentH,
+    screenshotUrl: v.lastScreenshotUrl,
+    screenshotAt: v.lastScreenshotAt?.toISOString() || null,
+    connectedAt: v.connectedAt.toISOString(),
+    lastActiveAt: v.lastActiveAt.toISOString(),
+    isLive: true,
+  }
 }

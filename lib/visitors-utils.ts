@@ -125,16 +125,16 @@ export type VisitorTheme = 'dashboard' | 'admin'
 export function getAccent(theme: VisitorTheme) {
   if (theme === 'admin') {
     return {
-      avatar: 'from-red-500 to-rose-600 shadow-red-500/25',
-      border: 'border-l-red-500',
-      borderFull: 'border-red-500/20',
-      text: 'text-red-400',
-      textDark: 'text-red-500',
-      badge: 'bg-red-500/10',
-      gradient: 'from-red-50 to-rose-50 dark:from-red-500/5 dark:to-rose-500/5',
-      gradientText: 'text-red-600 dark:text-red-400',
-      button: 'bg-red-500 hover:bg-red-600',
-      ring: 'ring-red-500/20',
+      avatar: 'from-violet-500 to-indigo-600 shadow-violet-500/25',
+      border: 'border-l-violet-500',
+      borderFull: 'border-violet-500/20',
+      text: 'text-violet-400',
+      textDark: 'text-violet-500',
+      badge: 'bg-violet-500/10',
+      gradient: 'from-violet-50 to-indigo-50 dark:from-violet-500/5 dark:to-indigo-500/5',
+      gradientText: 'text-violet-600 dark:text-violet-400',
+      button: 'bg-violet-600 hover:bg-violet-700',
+      ring: 'ring-violet-500/20',
     }
   }
   return {

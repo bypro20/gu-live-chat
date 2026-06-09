@@ -35,7 +35,7 @@ const apis = [
   { method: 'GET', path: '/api/conversations', expect: (_, s) => s === 401 },
   { method: 'GET', path: '/api/dashboard/stats', expect: (_, s) => s === 401 },
   { method: 'POST', path: '/api/widget/init', body: { websiteId: WID, fingerprint: 'audit-fp-1', currentPage: 'https://guchat.org/' }, expect: (d, s) => s === 200 && !!d.visitorToken },
-  { method: 'POST', path: '/api/contact', body: { name: 'Audit', email: 'audit@test.com', message: 'smoke test' }, expect: (_, s) => s === 200 || s === 201 || s === 400 },
+  { method: 'POST', path: '/api/contact', body: { name: 'Audit', email: 'audit@test.com', subject: 'Smoke', message: 'smoke test' }, expect: (d, s) => s === 200 && d.success },
   { method: 'GET', path: '/api/cron/seed-admin', expect: (_, s) => s === 401 },
 ]
 
@@ -105,12 +105,12 @@ try {
     path: '/api/widget/message',
     body: {
       websiteId: WID,
-      visitorToken: init.data.visitorToken,
+      fingerprint: `audit-fp-${Date.now()}`,
       content: `[audit] smoke ${Date.now()}`,
       type: 'TEXT',
     },
   })
-  if (msg.status === 200 && msg.data?.message?.id) pass('widget message', msg.data.message.id)
+  if ((msg.status === 200 || msg.status === 201) && msg.data?.message?.id) pass('widget message', msg.data.message.id)
   else fail('widget message', `${msg.status} ${JSON.stringify(msg.data).slice(0, 120)}`)
 } catch (e) {
   fail('widget message flow', e.message)

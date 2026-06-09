@@ -397,6 +397,13 @@ enum ConversationStatus {
 
 enum ConversationSource {
   WIDGET
+  WHATSAPP
+  TELEGRAM
+  INSTAGRAM
+  MESSENGER
+  EMAIL
+  SMS
+  SLACK
   API
   IMPORT
 }
@@ -676,6 +683,10 @@ model AIConfig {
 enum AIProvider {
   OPENAI
   ANTHROPIC
+  GEMINI
+  GROQ
+  OPENROUTER
+  OLLAMA
 }
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────

@@ -7,6 +7,7 @@ import { notifyWebsiteMembers } from '@/lib/notifications'
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { runWorkflows } from '@/lib/workflow-runner'
 import { deliverChannelReply } from '@/lib/channels/deliver-reply'
+import { buildMessageCreateData } from '@/lib/message-create'
 
 export async function GET(
   req: Request,
@@ -27,7 +28,7 @@ export async function GET(
   // user could read another tenant's messages by guessing a conversationId.
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
-    select: { websiteId: true },
+    select: { websiteId: true, unreadCount: true },
   })
 
   if (!conversation) {
@@ -43,10 +44,12 @@ export async function GET(
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
-  await prisma.conversation.update({
-    where: { id: conversationId },
-    data: { unreadCount: 0 },
-  })
+  if (conversation.unreadCount > 0) {
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { unreadCount: 0 },
+    })
+  }
 
   const messages = await prisma.message.findMany({
     where: { conversationId },
@@ -102,26 +105,22 @@ export async function POST(
     }
 
     const message = await prisma.message.create({
-      data: {
+      data: buildMessageCreateData(validated, {
         conversationId,
-        content: validated.content,
-        type: validated.type,
         senderType: 'AGENT',
         senderId: session.user.id,
-        status: 'SENT',
-      },
+      }),
       include: {
         sender: { select: { id: true, name: true, image: true } },
         attachments: true,
       },
     })
 
-    // Update conversation's lastMessageAt and preview
     await prisma.conversation.update({
       where: { id: conversationId },
       data: {
         lastMessageAt: new Date(),
-        lastMessagePreview: validated.content.substring(0, 100),
+        lastMessagePreview: message.content.substring(0, 100),
       },
     })
 

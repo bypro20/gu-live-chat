@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { translateText, isTranslationAvailable } from '@/lib/ai/translate'
+import { translateFast } from '@/lib/translate-engine'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
+import { isTranslationAvailable } from '@/lib/ai/translate'
+import { normalizeLangCode, resolveSourceLang, isTranslationEngineError } from '@/lib/translate-languages'
 import type { DbAiConfig } from '@/lib/ai/provider'
-
-// Public translation endpoint for the chat widget (visitors are NOT
-// authenticated). Scoped to a valid website. Uses lib/ai (OpenAI/Anthropic)
-// with a Google Translate fallback. When no engine is configured it returns
-// `available: false` so the widget hides its translate UI. Never throws.
 
 const schema = z.object({
   websiteId: z.string(),
@@ -54,28 +51,37 @@ export async function POST(req: Request) {
 
     const translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
     if (!translateAllowed) {
-      return NextResponse.json({ available: false, translatedText: parsed.data.text })
-    }
-
-    const dbConfig = await getWebsiteAiConfig(website.id)
-
-    if (!isTranslationAvailable(dbConfig)) {
       return NextResponse.json({
         available: false,
         translatedText: text,
-        note: 'Çeviri için AI anahtarı gerekli.',
+        upgradeRequired: true,
       })
     }
 
-    const result = await translateText({ text, targetLang, sourceLang, dbConfig })
+    const dbConfig = await getWebsiteAiConfig(website.id)
+    if (!isTranslationAvailable(dbConfig)) {
+      return NextResponse.json({ available: false, translatedText: text })
+    }
+
+    const result = await translateFast({
+      text,
+      targetLang: normalizeLangCode(targetLang),
+      sourceLang: resolveSourceLang(sourceLang),
+      dbConfig,
+    })
+
+    const translatedText =
+      result.translatedText && !isTranslationEngineError(result.translatedText)
+        ? result.translatedText
+        : text
+
     return NextResponse.json({
-      available: result.available,
-      translatedText: result.translatedText,
+      available: result.available && translatedText !== text,
+      translatedText,
       detectedLanguage: result.detectedLanguage,
     })
   } catch (error) {
     console.error('Widget translate error:', error)
-    // Graceful: never break the chat — report unavailable instead of erroring.
     return NextResponse.json({ available: false, translatedText: '' }, { status: 200 })
   }
 }

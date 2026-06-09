@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         fingerprint: `${prefix}${msg.senderId}`,
         visitorName: msg.senderId,
         content: msg.text,
+        source: msg.channelType === 'MESSENGER' ? 'MESSENGER' : 'INSTAGRAM',
       })
     }
 

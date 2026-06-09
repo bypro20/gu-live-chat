@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Globe, Search, MessageSquare, Users, Calendar } from 'lucide-react'
+import { Globe, Search, MessageSquare, Users, Calendar, Palette } from 'lucide-react'
+import Link from 'next/link'
 import { useToast } from '@/lib/toast'
 
 interface Website {
@@ -116,7 +117,7 @@ export default function AdminWebsitesPage() {
             <table className="w-full min-w-[760px]">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  {['Site', 'Sahip', 'Plan', 'Sohbet', 'Üye', 'Kayıt'].map(h => (
+                  {['Site', 'Sahip', 'Plan', 'Sohbet', 'Üye', 'Kayıt', 'Widget'].map(h => (
                     <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -170,6 +171,15 @@ export default function AdminWebsitesPage() {
                         <Calendar className="w-3.5 h-3.5" />
                         {new Date(website.createdAt).toLocaleDateString('tr-TR')}
                       </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <Link
+                        href={`/admin/widget?site=${website.id}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary hover:text-primary-hover bg-primary/10 hover:bg-primary/15 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Palette className="w-3.5 h-3.5" />
+                        Widget
+                      </Link>
                     </td>
                   </tr>
                 ))}

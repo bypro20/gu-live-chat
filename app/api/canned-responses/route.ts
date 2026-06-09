@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
+import { sessionIsPlatformAdmin } from '@/lib/platform-admin'
 import { z } from 'zod'
 
 const cannedResponseSchema = z.object({
@@ -31,8 +32,10 @@ export async function GET(req: Request) {
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
-  if (planDenied) return planDenied
+  if (!(await sessionIsPlatformAdmin())) {
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
+    if (planDenied) return planDenied
+  }
 
   const responses = await prisma.cannedResponse.findMany({
     where: { websiteId: website.id },
@@ -60,8 +63,10 @@ export async function POST(req: Request) {
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
-    if (planDenied) return planDenied
+    if (!(await sessionIsPlatformAdmin())) {
+      const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
+      if (planDenied) return planDenied
+    }
 
     const response = await prisma.cannedResponse.create({ data: { ...validated, websiteId: website.id } })
     return NextResponse.json(response, { status: 201 })
@@ -94,8 +99,10 @@ export async function DELETE(req: Request) {
   })
   if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
-  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
-  if (planDenied) return planDenied
+  if (!(await sessionIsPlatformAdmin())) {
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'cannedResponses')
+    if (planDenied) return planDenied
+  }
 
   const existing = await prisma.cannedResponse.findFirst({
     where: { id, websiteId: website.id },

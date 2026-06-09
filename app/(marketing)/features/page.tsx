@@ -1,22 +1,124 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, MessageCircle, Bot, Users, BarChart3, Workflow, Blocks, Shield, Zap } from 'lucide-react'
+import {
+  ArrowRight,
+  MessageCircle,
+  Bot,
+  Users,
+  BarChart3,
+  Workflow,
+  Blocks,
+  Shield,
+  Zap,
+  Sparkles,
+  Video,
+  Phone,
+  Megaphone,
+  Inbox,
+  BookOpen,
+  Code,
+  Languages,
+} from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 
 export const metadata: Metadata = {
   title: 'Özellikler',
-  description: 'Gu Chat canlı destek platformunun tüm özellikleri — gerçek zamanlı sohbet, chatbot, analitik ve daha fazlası.',
+  description:
+    'Gu Chat — AI Agent, birleşik inbox, WhatsApp, video destek ve 50+ entegrasyon. Müşteri hizmetleri için tek çözüm.',
 }
 
 const allFeatures = [
-  { id: 'widget', icon: MessageCircle, title: 'Gerçek Zamanlı Sohbet', desc: 'WebSocket tabanlı anlık mesajlaşma, yazıyor göstergesi, okundu onayı ve dosya paylaşımı.' },
-  { icon: Bot, title: 'AI Chatbot & Otomasyon', desc: 'Görsel editör ile chatbot akışları oluşturun. AI destekli akıllı yanıtlar.' },
-  { id: 'crm', icon: Users, title: 'Ziyaretçi İzleme', desc: 'Canlı ziyaretçi listesi, sayfa geçmişi, scroll derinliği ve davranış takibi.' },
-  { icon: Blocks, title: 'Çoklu Kanal', desc: 'Web widget, e-posta ve mesajlaşma kanallarını tek inbox\'ta birleştirin.' },
-  { icon: Workflow, title: 'Workflow Otomasyonu', desc: 'Tetikleyici ve aksiyon tabanlı otomatik yanıt akışları.' },
-  { id: 'analytics', icon: BarChart3, title: 'Gelişmiş Analitik', desc: 'Yanıt süreleri, çözüm oranları, ekip performansı ve CSV export.' },
-  { icon: Shield, title: 'Güvenlik & Uyumluluk', desc: 'SSL/TLS şifreleme, KVKK uyumu, IP ban sistemi ve rol tabanlı erişim.' },
-  { icon: Zap, title: 'Hızlı Kurulum', desc: 'Tek satır embed kodu ile 30 saniyede sitenize entegre edin.' },
+  {
+    id: 'ai-agent',
+    icon: Sparkles,
+    title: 'AI Agent',
+    desc: 'Standart talepleri anında işleyin. Bilgi bankası + LLM ile otomatik yanıt; temsilci atanınca devreye girer.',
+  },
+  {
+    id: 'widget',
+    icon: MessageCircle,
+    title: 'Canlı Sohbet Widget',
+    desc: 'WebSocket tabanlı anlık mesajlaşma, dosya paylaşımı, çeviri ve yazıyor göstergesi.',
+  },
+  {
+    id: 'translate',
+    icon: Languages,
+    title: 'Canlı Çeviri (PRO)',
+    desc: '50+ dilde çift yönlü anlık çeviri. Temsilci ve ziyaretçi farklı dillerde sorunsuz konuşur; admin panelde ücretsiz.',
+  },
+  {
+    id: 'inbox',
+    icon: Inbox,
+    title: 'Birleşik Gelen Kutusu',
+    desc: 'Widget, WhatsApp, Instagram, Telegram, Messenger ve e-posta — tek panel, kanal rozeti ve filtre.',
+  },
+  {
+    icon: Bot,
+    title: 'AI Sohbet & Chatbot',
+    desc: 'GPT/Gemini ile insan gibi yanıt (Profesyonel+). Görsel chatbot akışları, SSS ve workflow — alt paketlerde eklenti olarak.',
+  },
+  {
+    icon: Sparkles,
+    title: 'YZ Yazım Yardımcısı',
+    desc: 'Temsilcilere AI öneri ile daha hızlı ve etkili mesajlar yazma desteği.',
+  },
+  {
+    icon: Blocks,
+    title: 'Çoklu Kanal (PRO)',
+    desc: 'WhatsApp Business, Instagram DM, Facebook Messenger, Telegram ve e-posta entegrasyonu.',
+  },
+  {
+    icon: Megaphone,
+    title: 'Gu Pazarlama',
+    desc: 'Kampanyalar, hedefli mesajlar ve proaktif sohbet ile trafiği müşteriye dönüştürün.',
+  },
+  {
+    id: 'crm',
+    icon: Users,
+    title: 'Kişiler & Ziyaretçi CRM',
+    desc: 'Profil, sohbet geçmişi, etiketler ve canlı ziyaretçi takibi. Veriler güvenli platformda.',
+  },
+  {
+    icon: Video,
+    title: 'Video & Ekran İzleme',
+    desc: 'Ziyaretçi ekranını canlı izleyin, görüntülü destek ile ürünlerinizi gösterin (PRO).',
+  },
+  {
+    icon: Phone,
+    title: 'Telefon & SMS',
+    desc: 'Twilio SMS entegrasyonu. Telefon+ sesli kanal yakında.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Bilgi Bankası',
+    desc: 'SSS ve makaleler — AI Agent ve chatbot için bağlam kaynağı.',
+  },
+  {
+    icon: Workflow,
+    title: 'Workflow Otomasyonu',
+    desc: 'Tetikleyici ve aksiyon tabanlı otomatik yanıt akışları.',
+  },
+  {
+    id: 'analytics',
+    icon: BarChart3,
+    title: 'Analitik & Performans',
+    desc: 'Kanal dağılımı, temsilci sıralaması, yanıt süresi ve AI çözüm oranı.',
+  },
+  {
+    icon: Code,
+    title: 'API & Entegrasyonlar',
+    desc: 'REST API, webhook ve hazır entegrasyonlar. CRM ve özel yazılımlara bağlanın.',
+  },
+  {
+    icon: Shield,
+    title: 'Güvenlik',
+    desc: 'SSL/TLS, KVKK, rol tabanlı erişim. İş hesap şifrelerini paylaşmadan güvenli destek.',
+  },
+  {
+    icon: Zap,
+    title: 'Hızlı Kurulum',
+    desc: 'Tek satır embed kodu — 30 saniyede sitenize entegre edin.',
+  },
 ]
 
 export default function FeaturesPage() {
@@ -24,9 +126,11 @@ export default function FeaturesPage() {
     <MarketingPageShell>
       <div className="mb-12">
         <p className="section-label mb-4">Özellikler</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Gu Chat ile neler yapabilirsiniz?</h1>
-        <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-          Müşteri destek sürecinizi uçtan uca yönetmek için ihtiyacınız olan tüm araçlar.
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          Müşteri hizmetleri için tek çözüm
+        </h1>
+        <p className="mt-4 text-lg text-muted-foreground leading-relaxed max-w-2xl">
+          Çok kanallı destek, AI Agent ve birleşik inbox — Gu Chat ile hepsi tek platformda.
         </p>
       </div>
 
@@ -43,8 +147,8 @@ export default function FeaturesPage() {
       </div>
 
       <div className="surface p-8 text-center bg-gradient-brand-subtle">
-        <h2 className="text-xl font-bold mb-2">Hemen deneyin</h2>
-        <p className="text-sm text-muted-foreground mb-5">Ücretsiz plan ile tüm temel özelliklere erişin.</p>
+        <h2 className="text-xl font-bold mb-2">14 gün ücretsiz deneyin</h2>
+        <p className="text-sm text-muted-foreground mb-5">Kredi kartı gerekmez · Kurulum 30 saniye</p>
         <Link href="/register" className="btn-primary">
           Ücretsiz Başla <ArrowRight className="w-4 h-4" />
         </Link>

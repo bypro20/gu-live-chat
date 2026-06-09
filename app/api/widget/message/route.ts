@@ -7,6 +7,7 @@ import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
 import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
+import { maybeAutoResolveOnSatisfaction } from '@/lib/ai/satisfaction-detect'
 import { analyzeSentiment } from '@/lib/ai/sentiment'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
@@ -256,12 +257,15 @@ export async function POST(req: Request) {
           agentsOnline,
         })
 
-        await maybeRunAiAutoReply({
-          websiteDbId: website.id,
-          websitePublicId: website.websiteId,
-          conversationId,
-          visitorId: visitor.id,
-        })
+        const resolved = await maybeAutoResolveOnSatisfaction(conversationId, validated.content)
+        if (!resolved) {
+          await maybeRunAiAutoReply({
+            websiteDbId: website.id,
+            websitePublicId: website.websiteId,
+            conversationId,
+            visitorId: visitor.id,
+          })
+        }
       } catch (postErr) {
         console.error('[widget/message] post-process failed (message saved):', postErr)
       }

@@ -15,7 +15,7 @@ export interface PlanCtaContext {
   isLoggedIn?: boolean
   trialUsed?: boolean
   isCurrentPlan?: boolean
-  paytrEnabled?: boolean
+  iyzicoEnabled?: boolean
 }
 
 export function getMarketingPlanCta(
@@ -46,13 +46,13 @@ export function getBillingPlanCta(
     isCurrentPlan = false,
     trialUsed = false,
     currentPlan = 'FREE',
-    paytrEnabled = true,
+    iyzicoEnabled = true,
   }: PlanCtaContext & { currentPlan?: PlanId } = {}
 ): string {
   if (isCurrentPlan) return 'Mevcut Plan'
   if (planId === 'FREE') return 'Ücretsiz Plan'
   if (planId === 'BUSINESS') return 'İletişime Geç'
-  if (!paytrEnabled) return 'Yakında'
+  if (!iyzicoEnabled) return 'Yakında'
   if (currentPlan === 'FREE' && !trialUsed && planId === 'PRO') return 'Denemeyi Başlat'
   return 'Satın Al'
 }

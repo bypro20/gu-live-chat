@@ -1,10 +1,6 @@
 import { prisma } from './db'
-import {
-  createPaymentToken,
-  generateAddonMerchantOid,
-  getPaytrIframeUrl,
-  isPaytrConfigured,
-} from './paytr'
+import { generateAddonMerchantOid } from './payment-orders'
+import { initializeCheckoutForm, isIyzicoConfigured } from './iyzico'
 
 export async function initiateAddonCheckout(
   websitePublicId: string,
@@ -13,8 +9,16 @@ export async function initiateAddonCheckout(
   userName: string,
   userPhone: string,
   userIp: string
-): Promise<{ token: string; merchantOid: string; iframeUrl: string } | { error: string }> {
-  if (!isPaytrConfigured()) {
+): Promise<
+  | {
+      token: string
+      merchantOid: string
+      checkoutFormContent?: string
+      paymentPageUrl?: string
+    }
+  | { error: string }
+> {
+  if (!isIyzicoConfigured()) {
     return { error: 'Ödeme sistemi yapılandırılmamış' }
   }
 
@@ -36,31 +40,30 @@ export async function initiateAddonCheckout(
   if (existing?.isActive) return { error: 'Bu eklenti zaten aktif' }
 
   const merchantOid = generateAddonMerchantOid(website.websiteId, addon.slug)
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const amountTry = addon.price / 100
 
-  const result = await createPaymentToken({
-    merchantOid,
-    userEmail,
-    userName,
-    userPhone,
-    userIp,
-    paymentAmount: amountTry,
-    currency: 'TL',
-    installmentCount: 0,
-    okUrl: `${baseUrl}/settings/addons?payment=success`,
-    failUrl: `${baseUrl}/settings/addons?payment=failed`,
-    storeCard: addon.purchaseType === 'MONTHLY' || addon.purchaseType === 'YEARLY',
+  const result = await initializeCheckoutForm({
+    conversationId: merchantOid,
+    basketId: merchantOid,
+    priceTry: amountTry,
+    itemName: `Gu Chat Eklenti: ${addon.name}`,
+    callbackUrl: `${baseUrl}/api/iyzico/callback?return=addons`,
+    buyerEmail: userEmail,
+    buyerName: userName,
+    buyerPhone: userPhone,
+    buyerIp: userIp,
   })
 
-  if (result.status !== 'success' || !result.token) {
-    return { error: result.reason || 'Ödeme token alınamadı' }
+  if ('error' in result) {
+    return { error: result.error }
   }
 
   return {
     token: result.token,
     merchantOid,
-    iframeUrl: getPaytrIframeUrl(result.token),
+    checkoutFormContent: result.checkoutFormContent,
+    paymentPageUrl: result.paymentPageUrl,
   }
 }
 
@@ -90,12 +93,10 @@ export async function activateAddonFromPayment(
       websiteId: website.id,
       addonId: addon.id,
       isActive: true,
-      autoRenew: addon.purchaseType !== 'ONCE',
       expiresAt,
     },
     update: {
       isActive: true,
-      autoRenew: addon.purchaseType !== 'ONCE',
       expiresAt,
       cancelledAt: null,
     },

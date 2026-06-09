@@ -160,14 +160,22 @@ export default function AddonsPage() {
       const data = await res.json()
 
       if (res.status === 402 && data.paymentRequired) {
-        const payRes = await fetch('/api/paytr/addon-token', {
+        const payRes = await fetch('/api/iyzico/addon-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ websiteId: activeWebsite.websiteId, addonSlug: addon.slug }),
         })
         const payData = await payRes.json()
-        if (payRes.ok && payData.iframeUrl) {
-          window.location.href = payData.iframeUrl
+        if (payRes.ok && payData.paymentPageUrl) {
+          window.location.href = payData.paymentPageUrl
+          return
+        }
+        if (payRes.ok && payData.checkoutFormContent) {
+          const w = window.open('', '_blank')
+          if (w) {
+            w.document.write(payData.checkoutFormContent)
+            w.document.close()
+          }
           return
         }
         setPurchaseError(payData.error || 'Ödeme başlatılamadı')

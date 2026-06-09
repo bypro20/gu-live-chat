@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
+import { sessionIsPlatformAdmin } from '@/lib/platform-admin'
+import { translateFast } from '@/lib/translate-engine'
+import { normalizeLangCode, resolveSourceLang, isTranslationEngineError } from '@/lib/translate-languages'
 
 export async function POST(req: Request) {
-  // Auth required — this endpoint uses server-side API keys
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
@@ -12,12 +14,14 @@ export async function POST(req: Request) {
 
   const { text, fromLang, toLang, websiteId } = await req.json()
 
-  if (!text) {
+  if (!text?.trim()) {
     return NextResponse.json({ error: 'Metin gerekli' }, { status: 400 })
   }
 
-  // Plan gate: autoTranslate feature required (check active website when provided)
-  if (websiteId) {
+  const adminBypass = await sessionIsPlatformAdmin()
+  let dbConfig = null
+
+  if (websiteId && !adminBypass) {
     const website = await prisma.website.findUnique({
       where: { websiteId },
       select: { id: true, plan: true },
@@ -26,59 +30,68 @@ export async function POST(req: Request) {
       const allowed = await websiteHasAutoTranslate(website.id, website.plan)
       if (!allowed) {
         return NextResponse.json(
-          { error: 'Otomatik çeviri bu plan kapsamında mevcut değil', upgradeRequired: true, translatedText: text },
+          {
+            error: 'Canlı çeviri PRO plana dahildir',
+            upgradeRequired: true,
+            translatedText: text,
+            available: false,
+          },
           { status: 403 }
         )
       }
-    }
-  }
-
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
-
-  if (apiKey) {
-    try {
-      const res = await fetch(
-        `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            q: text,
-            target: toLang || 'tr',
-            ...(fromLang && fromLang !== 'auto' ? { source: fromLang } : {}),
-            format: 'text',
-          }),
-        }
-      )
-
-      const data = await res.json()
-
-      if (data.error) {
-        console.error('[Translate API] Google error:', data.error)
-        return NextResponse.json({
-          translatedText: text,
-          detectedLanguage: fromLang || 'tr',
-          note: 'Google Çeviri API hatası, orijinal metin gösteriliyor',
-        })
-      }
-
-      const translatedText = data.data?.translations?.[0]?.translatedText || text
-      const detectedLanguage = data.data?.translations?.[0]?.detectedSourceLanguage || fromLang || 'tr'
-
-      return NextResponse.json({ translatedText, detectedLanguage })
-    } catch (error) {
-      console.error('[Translate API] Error:', error)
-      return NextResponse.json({
-        translatedText: text,
-        detectedLanguage: fromLang || 'tr',
-        note: 'Çeviri hatası, orijinal metin gösteriliyor',
+      const cfg = await prisma.aIConfig.findUnique({
+        where: { websiteId: website.id },
+        select: { provider: true, model: true, apiKey: true, temperature: true },
       })
+      if (cfg) {
+        dbConfig = {
+          provider: cfg.provider as 'OPENAI' | 'ANTHROPIC',
+          model: cfg.model,
+          apiKey: cfg.apiKey,
+          temperature: cfg.temperature,
+        }
+      }
+    }
+  } else if (websiteId) {
+    const website = await prisma.website.findUnique({
+      where: { websiteId },
+      select: { id: true },
+    })
+    if (website) {
+      const cfg = await prisma.aIConfig.findUnique({
+        where: { websiteId: website.id },
+        select: { provider: true, model: true, apiKey: true, temperature: true },
+      })
+      if (cfg) {
+        dbConfig = {
+          provider: cfg.provider as 'OPENAI' | 'ANTHROPIC',
+          model: cfg.model,
+          apiKey: cfg.apiKey,
+          temperature: cfg.temperature,
+        }
+      }
     }
   }
+
+  const targetLang = normalizeLangCode(toLang || 'en')
+  const sourceLang = resolveSourceLang(fromLang)
+
+  const result = await translateFast({
+    text: text.trim(),
+    targetLang,
+    sourceLang,
+    dbConfig,
+  })
+
+  const translatedText =
+    result.translatedText && !isTranslationEngineError(result.translatedText)
+      ? result.translatedText
+      : text.trim()
 
   return NextResponse.json({
-    translatedText: text,
-    detectedLanguage: fromLang || 'tr',
-    note: 'Google Çeviri API anahtarı ayarlanmamış. GOOGLE_TRANSLATE_API_KEY ortam değişkenini ekleyin.',
+    translatedText,
+    detectedLanguage: result.detectedLanguage || sourceLang,
+    available: result.available && translatedText !== text.trim(),
+    note: result.note,
   })
 }

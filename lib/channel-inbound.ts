@@ -2,8 +2,10 @@ import { prisma } from './db'
 import { emitVisitorMessage } from './socket-events'
 import { processChatbotOnVisitorMessage } from './chatbot-runner'
 import { maybeRunAiAutoReply } from './ai/auto-reply'
+import { maybeAutoResolveOnSatisfaction } from './ai/satisfaction-detect'
 import { analyzeSentiment } from './ai/sentiment'
 import { resolveAgentsOnline } from './agents-online'
+import type { ConversationChannel } from './conversation-channels'
 
 export interface InboundChannelMessage {
   websiteDbId: string
@@ -12,6 +14,7 @@ export interface InboundChannelMessage {
   visitorName?: string
   content: string
   messageType?: 'TEXT' | 'FILE'
+  source?: ConversationChannel
 }
 
 /** Create visitor, conversation, message and trigger automations for channel webhooks. */
@@ -20,6 +23,7 @@ export async function handleInboundChannelMessage(
 ): Promise<{ conversationId: string; messageId: string }> {
   const { websiteDbId, websitePublicId, fingerprint, visitorName, content } = msg
   const messageType = msg.messageType || 'TEXT'
+  const source = msg.source || 'WIDGET'
 
   let visitor = await prisma.visitor.findUnique({
     where: { websiteId_fingerprint: { websiteId: websiteDbId, fingerprint } },
@@ -51,7 +55,7 @@ export async function handleInboundChannelMessage(
         websiteId: websiteDbId,
         visitorId: visitor.id,
         status: 'OPEN',
-        source: 'WIDGET',
+        source,
         lastMessageAt: new Date(),
         lastMessagePreview: content.substring(0, 100),
       },
@@ -110,12 +114,15 @@ export async function handleInboundChannelMessage(
     agentsOnline,
   })
 
-  await maybeRunAiAutoReply({
-    websiteDbId,
-    websitePublicId,
-    conversationId: conversation.id,
-    visitorId: visitor.id,
-  })
+  const resolved = await maybeAutoResolveOnSatisfaction(conversation.id, content)
+  if (!resolved) {
+    await maybeRunAiAutoReply({
+      websiteDbId,
+      websitePublicId,
+      conversationId: conversation.id,
+      visitorId: visitor.id,
+    })
+  }
 
   return { conversationId: conversation.id, messageId: message.id }
 }

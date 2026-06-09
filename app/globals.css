@@ -49,8 +49,8 @@
   --input: #E5E7EB;
   --ring: #1972F5;
 
-  --sidebar-bg: #0F172A;
-  --sidebar-bg-end: #1E293B;
+  --sidebar-bg: #070B14;
+  --sidebar-bg-end: #0F172A;
   --sidebar-foreground: #94A3B8;
   --sidebar-foreground-active: #F8FAFC;
   --sidebar-active: rgba(37, 99, 235, 0.12);
@@ -154,7 +154,7 @@
   --radius: var(--radius);
   --shadow-brand: var(--shadow-brand);
   --shadow-brand-lg: var(--shadow-brand-lg);
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
 * { border-color: var(--border); }
@@ -189,6 +189,29 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  select:not(:disabled),
+  summary,
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 @layer utilities {
@@ -247,13 +270,150 @@ body {
   .animate-float { animation: float 6s ease-in-out infinite; }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold text-sm rounded-lg shadow-brand hover:bg-primary-hover transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold text-sm rounded-lg shadow-brand hover:bg-primary-hover transition-colors cursor-pointer;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-card text-foreground font-semibold text-sm rounded-lg border border-border hover:bg-muted transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-card text-foreground font-semibold text-sm rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer;
   }
   .section-label {
     @apply inline-flex items-center px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full;
+  }
+
+  /* guchat.org — daha düz, hafif gölgeler */
+  .marketing-site {
+    --shadow-xs: 0 1px 1px 0 rgba(17, 24, 39, 0.02);
+    --shadow-sm: 0 1px 2px 0 rgba(17, 24, 39, 0.03);
+    --shadow-md: 0 1px 3px 0 rgba(17, 24, 39, 0.04);
+    --shadow-lg: 0 3px 6px -1px rgba(17, 24, 39, 0.05);
+    --shadow-xl: 0 4px 8px -2px rgba(17, 24, 39, 0.05);
+    --shadow-2xl: 0 6px 12px -3px rgba(17, 24, 39, 0.06);
+    --shadow-brand: 0 2px 6px -2px rgba(25, 114, 245, 0.12);
+    --shadow-brand-lg: 0 3px 8px -2px rgba(25, 114, 245, 0.15);
+  }
+
+  .marketing-site .surface-hover:hover {
+    box-shadow: var(--shadow-xs);
+    transform: none;
+  }
+
+  /* ── App shell (dashboard + admin) ── */
+  .app-shell {
+    --app-sidebar-width: 280px;
+  }
+
+  .app-sidebar {
+    width: var(--app-sidebar-width);
+    background:
+      linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-end) 100%);
+    border-right: 1px solid var(--sidebar-border);
+  }
+
+  .app-sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(37, 99, 235, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .app-main {
+    background:
+      radial-gradient(ellipse 70% 50% at 0% 0%, color-mix(in srgb, var(--primary) 4%, transparent) 0%, transparent 55%),
+      var(--background);
+  }
+
+  .app-sidebar-group-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-white/35 px-3 mb-2;
+  }
+
+  .app-sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-colors duration-150 relative cursor-pointer;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .app-sidebar-link:hover {
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .app-sidebar-link--active {
+    color: #fff;
+    background: var(--sidebar-active);
+    border: 1px solid rgba(59, 130, 246, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .app-sidebar-link--active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1.5rem;
+    border-radius: 0 4px 4px 0;
+    background: var(--sidebar-active-border);
+    box-shadow: 0 0 12px var(--primary-glow);
+  }
+
+  .app-sidebar-badge {
+    @apply px-2 py-0.5 text-[10px] font-bold text-white rounded-full min-w-[20px] text-center;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  }
+
+  .app-stat-card {
+    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-[border-color,box-shadow] duration-150;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .app-stat-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .app-stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--primary) 8%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .app-welcome-banner {
+    @apply relative overflow-hidden rounded-2xl border border-primary/15 p-6 sm:p-8 mb-8;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--card)) 0%, var(--card) 45%, color-mix(in srgb, var(--primary) 6%, var(--card)) 100%);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .app-welcome-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 100% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .app-panel {
+    @apply rounded-2xl border border-border bg-card;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-shell .app-sidebar::before {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(139, 92, 246, 0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+  }
+
+  .admin-shell .app-main {
+    background:
+      radial-gradient(ellipse 70% 50% at 0% 0%, rgba(139, 92, 246, 0.04) 0%, transparent 55%),
+      #080C14;
   }
 }
 

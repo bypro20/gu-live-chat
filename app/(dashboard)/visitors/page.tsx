@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { useSocket } from '@/lib/hooks/use-socket'
+import { connectSocket, getSocket } from '@/lib/socket-client'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo, formatDuration } from '@/lib/visitors-utils'
@@ -55,6 +56,7 @@ export default function VisitorsPage() {
   const [filterDevice, setFilterDevice] = useState<string>('all')
   const [upgradeRequired, setUpgradeRequired] = useState(false)
   const [overlayEnabled, setOverlayEnabled] = useState(false)
+  const [overlayDeniedMessage, setOverlayDeniedMessage] = useState<string | null>(null)
   const [screenCapturingId, setScreenCapturingId] = useState<string | null>(null)
   const userWebsiteIds = websites.map((w) => w.websiteId)
   const [webrtcStream, setWebrtcStream] = useState<MediaStream | null>(null)
@@ -108,8 +110,22 @@ export default function VisitorsPage() {
   useEffect(() => {
     if (!session?.user || userWebsiteIds.length === 0) return
 
-    // Authenticate as agent with user's website IDs
-    emit('agent:auth', { userId: session.user.id, websiteIds: userWebsiteIds })
+    const socket = getSocket() || connectSocket()
+    if (!socket) return
+
+    const authenticate = () => {
+      emit('agent:auth', { userId: session.user.id, websiteIds: userWebsiteIds })
+    }
+
+    if (socket.connected) authenticate()
+    else socket.on('connect', authenticate)
+
+    const handleOverlayDenied = (data: any) => {
+      setScreenCapturingId(null)
+      setWebrtcStream(null)
+      setWebrtcState('idle')
+      setOverlayDeniedMessage(data.message || 'Ekran izleme mevcut paketinizde kullanılamaz.')
+    }
 
     const handleVisitorOnline = (data: any) => {
       addVisitor({
@@ -206,14 +222,17 @@ export default function VisitorsPage() {
     const unsubCursor = on('agent:visitor:cursor', handleVisitorCursor)
     const unsubScreenshot = on('agent:visitor:screenshot', handleVisitorScreenshot)
     const unsubPrivacyMode = on('agent:visitor:privacy-mode', handlePrivacyMode)
+    const unsubOverlayDenied = on('agent:overlay:denied', handleOverlayDenied)
 
     return () => {
+      socket.off('connect', authenticate)
       unsubOnline()
       unsubOffline()
       unsubActivity()
       unsubCursor()
       unsubScreenshot()
       unsubPrivacyMode()
+      unsubOverlayDenied()
     }
   }, [session, on, emit, addVisitor, removeVisitor, updateVisitor, updateCursor, addActivity, userWebsiteIds])
 
@@ -221,8 +240,10 @@ export default function VisitorsPage() {
   // WebRTC HD mode is available separately but requires visitor permission.
   const handleScreenCaptureToggle = useCallback((visitorId: string, active: boolean) => {
     const visitor = visitors.get(visitorId)
-    const websiteId = visitor?.websiteId || selectedVisitor?.websiteId
+    const websiteId = visitor?.websiteId || selectedVisitor?.websiteId || activeWebsite?.websiteId
+    if (!websiteId) return
     if (active) {
+      setOverlayDeniedMessage(null)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
@@ -239,14 +260,15 @@ export default function VisitorsPage() {
       emit('agent:screen:stop', { visitorId, websiteId })
       updateVisitor(visitorId, { screenshotUrl: null, screenshotAt: null })
     }
-  }, [emit, visitors, selectedVisitor, updateVisitor, session])
+  }, [emit, visitors, selectedVisitor, activeWebsite?.websiteId, updateVisitor, session])
 
   // WebRTC HD mode toggle — switch between HD (WebRTC) and SD (screenshot) modes.
   // active=true → upgrade to HD (shows permission prompt on visitor side)
   // active=false → downgrade to SD (screenshot monitoring continues, no stop)
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
     const visitor = visitors.get(visitorId)
-    const websiteId = visitor?.websiteId || selectedVisitor?.websiteId
+    const websiteId = visitor?.websiteId || selectedVisitor?.websiteId || activeWebsite?.websiteId
+    if (!websiteId) return
     if (active) {
       // Upgrade to HD mode
       setWebrtcState('connecting')
@@ -259,7 +281,7 @@ export default function VisitorsPage() {
       emit('webrtc:stop', { visitorId, websiteId, agentId: session?.user?.id || 'dashboard' })
       // Screenshot monitoring stays active (screenCapturingId is still set)
     }
-  }, [emit, visitors, selectedVisitor, session])
+  }, [emit, visitors, selectedVisitor, activeWebsite?.websiteId, session])
 
   // WebRTC callbacks
   const handleWebrtcStreamReady = useCallback((stream: MediaStream) => {
@@ -288,6 +310,8 @@ export default function VisitorsPage() {
 
   // Reset privacy mode when switching visitors
   useEffect(() => { setPrivacyMode(false) }, [selectedVisitorId])
+
+  useEffect(() => { setOverlayDeniedMessage(null) }, [overlayEnabled, activeWebsite?.websiteId])
 
   // Filter visitors
   const filteredVisitors = Array.from(visitors.values()).filter((v) => {
@@ -504,13 +528,21 @@ export default function VisitorsPage() {
               recentClicks={recentClicks}
               activities={visitorActivities}
               theme="dashboard"
+              overlayEnabled={overlayEnabled}
               onScreenCaptureToggle={overlayEnabled ? handleScreenCaptureToggle : undefined}
               isScreenCapturing={overlayEnabled && screenCapturingId === selectedVisitorId}
               webrtcStream={webrtcStream}
               webrtcState={webrtcState}
               privacyMode={privacyMode}
-              onWebRTCHDToggle={handleWebRTCHDToggle}
+              onWebRTCHDToggle={overlayEnabled ? handleWebRTCHDToggle : undefined}
             />
+            {overlayDeniedMessage && overlayEnabled && (
+              <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300">
+                {overlayDeniedMessage}
+                {' '}
+                <Link href="/settings/billing?plan=PRO" className="font-semibold underline">Paketi yükselt</Link>
+              </div>
+            )}
           </>
         ) : (
           /* Empty State */

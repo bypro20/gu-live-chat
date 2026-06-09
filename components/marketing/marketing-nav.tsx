@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
@@ -16,18 +16,9 @@ const navLinks = [
 
 export function MarketingNav() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-background border-b border-border ${
-      scrolled ? 'shadow-sm' : ''
-    }`}>
+    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-background border-b border-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Logo boyut="default" linkOlsun animasyonlu={false} />

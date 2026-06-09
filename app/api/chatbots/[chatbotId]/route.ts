@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
+import { canManageChatbots } from '@/lib/chatbot-access'
 
 export async function PATCH(
   req: Request,
@@ -25,10 +26,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
   }
 
-  const member = await prisma.teamMember.findFirst({
-    where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
-  })
-  if (!member) {
+  const canManage = await canManageChatbots(website, session.user.id)
+  if (!canManage) {
     return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
   }
 
@@ -77,10 +76,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
   }
 
-  const member = await prisma.teamMember.findFirst({
-    where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
-  })
-  if (!member) {
+  const canManage = await canManageChatbots(website, session.user.id)
+  if (!canManage) {
     return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
   }
 

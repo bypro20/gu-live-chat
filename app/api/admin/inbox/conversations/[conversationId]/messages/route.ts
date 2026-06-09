@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { sendMessageSchema } from '@/lib/validators/message'
 import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
 import { emitAgentMessage } from '@/lib/socket-events'
+import { buildMessageCreateData } from '@/lib/message-create'
 
 async function getAdminInboxWebsite(adminUserId: string) {
   const site = await resolveAdminInboxSite(adminUserId)
@@ -26,16 +27,18 @@ export async function GET(
 
     const conversation = await prisma.conversation.findFirst({
       where: { id: conversationId, websiteId: website.id },
-      select: { id: true },
+      select: { id: true, unreadCount: true },
     })
     if (!conversation) {
       return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
     }
 
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { unreadCount: 0 },
-    })
+    if (conversation.unreadCount > 0) {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { unreadCount: 0 },
+      })
+    }
 
     const { searchParams } = new URL(req.url)
     const limit = parseInt(searchParams.get('limit') || '50', 10)
@@ -86,14 +89,11 @@ export async function POST(
     const validated = sendMessageSchema.parse(body)
 
     const message = await prisma.message.create({
-      data: {
+      data: buildMessageCreateData(validated, {
         conversationId,
-        content: validated.content,
-        type: validated.type,
         senderType: 'AGENT',
         senderId: check.user.id,
-        status: 'SENT',
-      },
+      }),
       include: {
         sender: { select: { id: true, name: true, image: true } },
         attachments: true,
@@ -104,7 +104,7 @@ export async function POST(
       where: { id: conversationId },
       data: {
         lastMessageAt: new Date(),
-        lastMessagePreview: validated.content.substring(0, 100),
+        lastMessagePreview: message.content.substring(0, 100),
       },
     })
 

@@ -7,7 +7,7 @@ import { getMarketingPlanCta } from '@/lib/plan-cta'
 import {
   ArrowRight, Bot, BookOpen, BarChart3, MessageCircle, Users,
   Workflow, Mail, Smartphone, MessageSquare, Sparkles, Inbox, Zap,
-  Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone,
+  Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroPreview } from '@/components/marketing/hero-preview'
@@ -16,8 +16,9 @@ const trustedBrands = ['TrendyShop', 'TeknoSoft', 'ModaVip', 'Evinİçin', 'Boos
 
 const featureGrid = [
   { icon: MessageCircle, title: 'Anlık Sohbet', desc: 'Milisaniyelik mesajlaşma, yazıyor göstergesi ve dosya paylaşımı.' },
-  { icon: Bot, title: 'AI Asistan', desc: 'Sık sorulara otomatik yanıt, gerektiğinde temsilciye aktarım.' },
+  { icon: Bot, title: 'AI Sohbet Asistanı', desc: 'GPT/Gemini ile insan gibi yanıt — Profesyonel pakette dahil, alt paketlerde eklenti.' },
   { icon: Inbox, title: 'Birleşik Inbox', desc: 'Widget, e-posta ve mesajlaşma kanalları tek ekranda.' },
+  { icon: Languages, title: 'Canlı Çeviri', desc: '50+ dilde çift yönlü anlık çeviri — temsilci ve ziyaretçi kendi dilinde konuşur.' },
   { icon: Users, title: 'Ziyaretçi Takibi', desc: 'Canlı ziyaretçi listesi, sayfa geçmişi ve davranış analizi.' },
   { icon: BookOpen, title: 'Bilgi Bankası', desc: 'Self-servis yardım merkezi ile destek yükünü azaltın.' },
   { icon: BarChart3, title: 'Analitik', desc: 'Yanıt süreleri, çözüm oranları ve ekip performansı.' },
@@ -35,6 +36,8 @@ const channels = [
   { icon: Mail, label: 'E-posta', active: true },
   { icon: Smartphone, label: 'WhatsApp', active: true },
   { icon: MessageSquare, label: 'Messenger', active: true },
+  { icon: MessageCircle, label: 'Instagram', active: true },
+  { icon: MessageCircle, label: 'Telegram', active: true },
 ]
 
 const products = [
@@ -79,9 +82,9 @@ const testimonials = [
 
 const plans = [
   { id: 'FREE' as const, name: 'Ücretsiz', monthly: 0, desc: 'Başlamak için ideal', features: ['2 Temsilci', '100 Sohbet / Ay', 'Temel Widget', 'E-posta Bildirimleri'], highlighted: false },
-  { id: 'STARTER' as const, name: 'Başlangıç', monthly: 1790, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Chatbot', 'Ziyaretçi Takibi', 'Hazır Cevaplar', 'Dosya Yükleme', 'Bilgi Bankası'], highlighted: false },
-  { id: 'PRO' as const, name: 'Profesyonel', monthly: 3790, desc: 'Profesyonel ekipler', features: ['25 Temsilci', 'Sınırsız Sohbet', 'AI Yardım & Otomatik Yanıt', '50+ Dil Çeviri', 'WhatsApp / E-posta / Messenger', 'API & Webhook', 'Analitik & Raporlar', 'Kampanyalar', 'Durum Sayfası'], highlighted: true },
-  { id: 'BUSINESS' as const, name: 'Kurumsal', monthly: 11990, desc: 'Büyük ölçekli çözüm', features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'Özel Marka (White-label)', 'SLA Garantisi (%99.9)', 'Özel Entegrasyon', '7/24 Öncelikli Destek', 'Gelişmiş API Limitleri'], highlighted: false },
+  { id: 'STARTER' as const, name: 'Başlangıç', monthly: 1790, desc: 'Büyüyen işletmeler', features: ['5 Temsilci', '1.000 Sohbet / Ay', 'Ziyaretçi Takibi', 'Bilgi Bankası & Bilet', 'Hazır Cevaplar', 'AI Sohbet (eklenti ile)'], highlighted: false },
+  { id: 'PRO' as const, name: 'Profesyonel', monthly: 3790, desc: 'Profesyonel ekipler', features: ['25 Temsilci', 'Sınırsız Sohbet', 'AI Sohbet Asistanı (GPT/Gemini)', 'Chatbot Oluşturucu', '50+ Dil Çeviri', 'WhatsApp / E-posta / Messenger', 'API & Webhook', 'Analitik & Raporlar'], highlighted: true },
+  { id: 'BUSINESS' as const, name: 'Kurumsal', monthly: 11990, desc: 'Büyük ölçekli çözüm', features: ['Sınırsız Temsilci', 'Sınırsız Sohbet', 'AI Sohbet Asistanı & Chatbot', 'Özel Marka (White-label)', 'SLA Garantisi (%99.9)', '7/24 Öncelikli Destek', 'Özel Entegrasyon'], highlighted: false },
 ]
 
 const faqs = [
@@ -101,7 +104,7 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
 
   return (
     <FadeIn delay={idx * 0.06} className="h-full">
-      <div className={`h-full surface p-6 flex flex-col ${plan.highlighted ? 'border-primary shadow-brand ring-1 ring-primary/20' : ''}`}>
+      <div className={`h-full surface p-6 flex flex-col ${plan.highlighted ? 'border-primary ring-1 ring-primary/20' : ''}`}>
         {plan.highlighted && (
           <span className="self-start mb-3 px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-wide">Popüler</span>
         )}
@@ -142,26 +145,25 @@ export function HomeHero() {
       <div className="relative max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
           <FadeIn>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-8 bg-primary-light text-primary border border-primary/10">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 bg-primary-light text-primary border border-primary/10">
               <Sparkles className="w-3.5 h-3.5" />
-              Yapay zeka destekli canlı sohbet platformu
+              Ziyaretçi takibi · Canlı sohbet · AI
             </span>
           </FadeIn>
           <FadeIn delay={0.06}>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.06] text-foreground">
-              Müşteri deneyiminizi{' '}
-              <span className="text-primary">güçlendirin</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-bold tracking-tight leading-[1.12] text-foreground">
+              Ziyaretçinizi müşteriye dönüştürmenin{' '}
+              <span className="text-primary">en etkili yolu</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.12}>
-            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Canlı sohbet, AI asistan ve birleşik inbox — ekibiniz ve müşterileriniz için
-              tek, sade platform.
+            <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Ziyaretçi sitedeyken canlı sohbet ve proaktif mesajlarla müdahale edin. AI destekli, tüm kanallar tek inbox&apos;ta.
             </p>
           </FadeIn>
           <FadeIn delay={0.18}>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register" className="btn-primary px-8 py-3.5 text-base shadow-brand-lg">
+              <Link href="/register" className="btn-primary px-8 py-3.5 text-base">
                 Ücretsiz Başla <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/ai" className="btn-secondary px-8 py-3.5 text-base">
@@ -238,10 +240,13 @@ export function AiShowcase() {
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <FadeIn>
-            <span className="section-label mb-4">Yapay Zeka</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">AI asistanınız 4 adımda hazır</h2>
+            <span className="section-label mb-4">AI Agent</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">
+              Sohbetlerin büyük kısmını otomatik çözün
+            </h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
-              Bilgi bankanızı besleyin, akışları tanımlayın ve müşterilerinize 7/24 akıllı destek sunun.
+              Gu Chat AI Agent standart talepleri anında işler, bilgi bankasından yanıt verir ve
+              ekibinizin çalışma saatlerinden tasarruf sağlar — yeni personel işe almadan desteği ölçeklendirin.
             </p>
             <div className="mt-8 space-y-3">
               {aiSteps.map((s, i) => (
@@ -249,7 +254,7 @@ export function AiShowcase() {
                   key={s.step}
                   onClick={() => setActiveStep(i)}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    activeStep === i ? 'border-primary bg-primary-light/50 shadow-sm' : 'border-border bg-card hover:border-border-strong'
+                    activeStep === i ? 'border-primary bg-primary-light/50' : 'border-border bg-card hover:border-border-strong'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -269,10 +274,10 @@ export function AiShowcase() {
             </Link>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <div className="relative rounded-2xl border border-border bg-card shadow-xl overflow-hidden aspect-video flex items-center justify-center bg-gradient-brand-subtle">
+            <div className="relative rounded-2xl border border-border bg-card shadow-sm overflow-hidden aspect-video flex items-center justify-center bg-gradient-brand-subtle">
               <div className="absolute inset-0 bg-grid opacity-40" />
               <div className="relative text-center p-8">
-                <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-4 shadow-brand animate-float">
+                <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-4 animate-float">
                   <Sparkles className="w-8 h-8" />
                 </div>
                 <p className="font-semibold text-lg">{aiSteps[activeStep].title}</p>
@@ -283,6 +288,58 @@ export function AiShowcase() {
                   ))}
                 </div>
               </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const translateDemo = [
+  { lang: '🇩🇪 Almanca', msg: 'Wo ist meine Bestellung?', tr: 'Siparişim nerede?' },
+  { lang: '🇬🇧 English', msg: 'I need a refund please', tr: 'İade talep ediyorum lütfen' },
+  { lang: '🇫🇷 Français', msg: 'Pouvez-vous m\'aider?', tr: 'Bana yardım edebilir misiniz?' },
+]
+
+export function LiveTranslateSection() {
+  return (
+    <section id="translate" className="py-20 px-4 sm:px-6 bg-muted/30">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <FadeIn>
+            <span className="section-label mb-4">Canlı Çeviri</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">
+              Dünyanın her yerinden müşteriyle konuşun
+            </h2>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              Supsis ve JivoChat tarzı gerçek zamanlı çift yönlü çeviri. Temsilci kendi dilinde yazar,
+              ziyaretçi kendi dilinde okur — widget, gelen kutusu ve admin panelde aynı motor.
+            </p>
+            <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
+              {['20+ dil desteği (Google + AI motor)', 'Gelen kutusunda otomatik algılama', 'Widget\'ta tek tık çeviri', 'PRO pakette sınırsız'].map((b) => (
+                <li key={b} className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0" />{b}
+                </li>
+              ))}
+            </ul>
+            <Link href="/pricing" className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-6 hover:text-primary-hover">
+              PRO paketini incele <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </FadeIn>
+          <FadeIn delay={0.08}>
+            <div className="surface p-5 lg:p-6 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-primary mb-1">
+                <Globe className="w-4 h-4" />
+                Canlı çeviri aktif · TR ↔ EN
+              </div>
+              {translateDemo.map((d) => (
+                <div key={d.lang} className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+                  <span className="text-[10px] font-medium text-muted-foreground">{d.lang}</span>
+                  <p className="text-sm font-medium">{d.msg}</p>
+                  <p className="text-xs text-primary/90 border-t border-border pt-2 italic">↳ {d.tr}</p>
+                </div>
+              ))}
             </div>
           </FadeIn>
         </div>
@@ -331,10 +388,12 @@ export function SharedInbox() {
           </FadeIn>
           <FadeIn>
             <span className="section-label mb-4">Birleşik Inbox</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">Tüm kanallar, tek panel</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">
+              Sohbetler, müşteriler ve talepler tek yerde
+            </h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
-              Widget, e-posta ve WhatsApp mesajlarını aynı inbox’ta yönetin.
-              Kanal fark etmeksizin tutarlı müşteri deneyimi sunun.
+              Widget, WhatsApp, Instagram, Telegram ve e-postayı aynı gelen kutusunda yönetin.
+              Masaüstü bildirimleriyle hiçbir isteği kaçırmayın; ziyaretçi profilleri ve geçmiş tek ekranda.
             </p>
             <Link href="/integrations" className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-6 hover:text-primary-hover">
               Entegrasyonları incele <ArrowRight className="w-3.5 h-3.5" />
@@ -475,7 +534,7 @@ export function UseCasesTabs() {
               key={uc.id}
               onClick={() => setActive(uc.id)}
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                active === uc.id ? 'bg-primary text-white shadow-brand' : 'bg-muted text-muted-foreground hover:text-foreground'
+                active === uc.id ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
               <uc.icon className="w-4 h-4" />{uc.label}

@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
+import { canManageChatbots, canViewChatbots } from '@/lib/chatbot-access'
+import { syncProductionSchema } from '@/lib/db-schema-sync'
 import { z } from 'zod'
 
 const chatbotSchema = z.object({
@@ -32,10 +34,8 @@ export async function GET(req: Request) {
   const website = await resolveWebsite(websiteIdParam)
   if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
 
-  const member = await prisma.teamMember.findFirst({
-    where: { websiteId: website.id, userId: session.user.id },
-  })
-  if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+  const canView = await canViewChatbots(website, session.user.id)
+  if (!canView) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
   const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'chatbot')
   if (planDenied) return planDenied
@@ -56,16 +56,18 @@ export async function POST(req: Request) {
   }
 
   try {
+    await syncProductionSchema()
+
     const body = await req.json()
     const validated = chatbotSchema.parse(body)
 
     const website = await resolveWebsite(validated.websiteId)
     if (!website) return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
 
-    const member = await prisma.teamMember.findFirst({
-      where: { websiteId: website.id, userId: session.user.id, role: { in: ['OWNER', 'ADMIN'] } },
-    })
-    if (!member) return NextResponse.json({ error: 'Chatbot oluşturma yetkiniz yok' }, { status: 403 })
+    const canManage = await canManageChatbots(website, session.user.id)
+    if (!canManage) {
+      return NextResponse.json({ error: 'Chatbot oluşturma yetkiniz yok (sadece site sahibi veya yönetici)' }, { status: 403 })
+    }
 
     const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'chatbot')
     if (planDenied) return planDenied
@@ -99,6 +101,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Geçersiz veri', details: (error as { issues: unknown[] }).issues }, { status: 400 })
     }
     console.error('Create chatbot error:', error)
-    return NextResponse.json({ error: 'Chatbot oluşturulamadı' }, { status: 500 })
+    const detail = error instanceof Error ? error.message : 'unknown'
+    return NextResponse.json(
+      { error: detail.includes('no such column') ? 'Veritabanı şeması güncelleniyor — lütfen tekrar deneyin' : 'Chatbot oluşturulamadı', detail },
+      { status: 500 }
+    )
   }
 }

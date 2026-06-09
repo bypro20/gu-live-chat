@@ -9,6 +9,9 @@ import {
 import { findWebsiteForWidget } from './website-widget-safe'
 
 const BOT_STATE_KEY = 'site_health_bot_last_run'
+const BOT_ALERT_KEY = 'site_health_bot_last_alert'
+/** Aynı hata için tekrar bildirim minimum aralığı (ms) */
+const ALERT_COOLDOWN_MS = 6 * 60 * 60 * 1000
 
 export type HealthCheck = {
   id: string
@@ -167,7 +170,45 @@ function checkIntegrations(): HealthCheck[] {
   ]
 }
 
+function criticalFingerprint(checks: HealthCheck[]): string {
+  return checks
+    .filter((c) => !c.ok && c.severity === 'critical')
+    .map((c) => `${c.id}:${c.message}`)
+    .sort()
+    .join('|')
+}
+
+async function shouldSendAlert(fingerprint: string): Promise<boolean> {
+  if (!fingerprint) return false
+  try {
+    const row = await prisma.platformSetting.findUnique({ where: { key: BOT_ALERT_KEY } })
+    if (!row?.value) return true
+    const prev = JSON.parse(row.value) as { at: string; fingerprint: string }
+    const elapsed = Date.now() - new Date(prev.at).getTime()
+    if (prev.fingerprint !== fingerprint) return true
+    return elapsed >= ALERT_COOLDOWN_MS
+  } catch {
+    return true
+  }
+}
+
+async function markAlertSent(fingerprint: string): Promise<void> {
+  try {
+    const value = JSON.stringify({ at: new Date().toISOString(), fingerprint })
+    await prisma.platformSetting.upsert({
+      where: { key: BOT_ALERT_KEY },
+      create: { key: BOT_ALERT_KEY, value },
+      update: { value },
+    })
+  } catch {
+    /* ignore */
+  }
+}
+
 async function notifyAdminsCritical(summary: string, report: SiteHealthBotReport) {
+  const fingerprint = criticalFingerprint(report.checks)
+  if (!(await shouldSendAlert(fingerprint))) return
+
   const marketingId = await resolveMarketingWebsiteId()
   if (!marketingId) return
 
@@ -197,6 +238,8 @@ async function notifyAdminsCritical(summary: string, report: SiteHealthBotReport
       })
     )
   )
+
+  await markAlertSent(fingerprint)
 }
 
 async function remediateMarketingSite(): Promise<Remediation> {

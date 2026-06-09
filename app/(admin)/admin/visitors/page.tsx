@@ -1,32 +1,13 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import {
-  Globe, Monitor, Smartphone, Tablet, Globe2, Clock, Link as LinkIcon,
-  Users, Search, X, ExternalLink, Activity, Eye,
-  ChevronDown, ChevronUp, MessageSquare,
-  Ban, RefreshCw, MousePointer2
+  Globe, Monitor, Smartphone, Tablet, Globe2, Clock,
+  Users, Activity, Eye, RefreshCw,
 } from 'lucide-react'
-import { getDeviceLabel, getBrowserLabel, formatTimeAgo, formatDuration } from '@/lib/visitors-utils'
+import { getDeviceLabel, getBrowserLabel, formatDuration } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
-import { useToast } from '@/lib/toast'
-
-interface VisitorDetail extends LiveVisitor {
-  visitorName?: string
-  visitorEmail?: string
-  visitorPhone?: string
-  timezone?: string
-  isp?: string
-  region?: string
-  latitude?: number
-  longitude?: number
-  utm_source?: string
-  utm_medium?: string
-  utm_campaign?: string
-  hasConversation?: boolean
-  pages?: { title: string; url: string; viewedAt: string }[]
-}
+import { AdminVisitorsMonitor } from '@/components/admin/admin-visitors-monitor'
 
 interface HistorySession {
   id: string
@@ -105,41 +86,10 @@ const countryMap: Record<string, { flag: string; x: number; y: number }> = {
   NZ: { flag: '🇳🇿', x: 90, y: 70 },
 }
 
-function DeviceIcon({ device }: { device?: string | null }) {
-  const d = (device || '').toLowerCase()
-  if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return <Smartphone className="w-4 h-4" />
-  if (d.includes('tablet') || d.includes('ipad')) return <Tablet className="w-4 h-4" />
-  return <Monitor className="w-4 h-4" />
-}
-
-function maskIP(ip?: string | null): string {
-  if (!ip) return '—'
-  const parts = ip.split('.')
-  if (parts.length === 4) return `${parts[0]}.${parts[1]}.xxx.xxx`
-  return ip.slice(0, 8) + '...'
-}
-
 function getFlag(country?: string | null): string {
   if (!country) return '🌍'
   const c = country.toUpperCase()
-  return countryMap[c]?.flag || getFlagFromCode(c)
-}
-
-function getFlagFromCode(code: string): string {
-  if (code.length !== 2) return '🌍'
-  const offset = 0x1F1E6 - 65
-  return String.fromCodePoint(code.charCodeAt(0) + offset, code.charCodeAt(1) + offset)
-}
-
-function getTimeSince(date?: string | null): string {
-  if (!date) return ''
-  const diff = Date.now() - new Date(date).getTime()
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return 'Az önce'
-  if (min < 60) return `${min} dk önce`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr} sa önce`
-  return `${Math.floor(hr / 24)} gün önce`
+  return countryMap[c]?.flag || '🌍'
 }
 
 function getCountryCounts(visitors: LiveVisitor[]): Record<string, { count: number; visitors: LiveVisitor[] }> {
@@ -160,16 +110,11 @@ const TIME_SINCE: Record<string, string | null> = {
 }
 
 export default function AdminVisitorsPage() {
-  const router = useRouter()
-  const { toast } = useToast()
   const [visitors, setVisitors] = useState<LiveVisitor[]>([])
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedVisitor, setSelectedVisitor] = useState<LiveVisitor | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [timeFilter, setTimeFilter] = useState('24h')
   const [mapHover, setMapHover] = useState<string | null>(null)
-  const [detailedData, setDetailedData] = useState<Record<string, VisitorDetail>>({})
 
   const fetchData = useCallback(async () => {
     try {
@@ -216,17 +161,7 @@ export default function AdminVisitorsPage() {
     if (timeFilter === '1s' && v.lastActiveAt) {
       if (Date.now() - new Date(v.lastActiveAt).getTime() > 300000) return false
     }
-    if (!searchQuery) return true
-    const q = searchQuery.toLowerCase()
-    return (
-      (v.name || '').toLowerCase().includes(q) ||
-      (v.email || '').toLowerCase().includes(q) ||
-      (v.country || '').toLowerCase().includes(q) ||
-      (v.city || '').toLowerCase().includes(q) ||
-      v.currentPage.toLowerCase().includes(q) ||
-      (v.browser || '').toLowerCase().includes(q) ||
-      (v.os || '').toLowerCase().includes(q)
-    )
+    return true
   })
 
   const sortedVisitors = [...filteredVisitors].sort((a, b) => {
@@ -272,56 +207,6 @@ export default function AdminVisitorsPage() {
     browsers[label] = (browsers[label] || 0) + 1
   }
   const browserTotal = Object.values(browsers).reduce((a, b) => a + b, 0) || 1
-
-  const handleVisitorClick = async (v: LiveVisitor) => {
-    if (selectedVisitor?.visitorId === v.visitorId) {
-      setSelectedVisitor(null)
-      return
-    }
-    setSelectedVisitor(v)
-    if (!detailedData[v.visitorId]) {
-      try {
-        const res = await fetch(`/api/admin/visitors/detail?visitorId=${v.visitorId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setDetailedData(prev => ({
-            ...prev,
-            [v.visitorId]: {
-              ...v,
-              visitorName: data.visitor?.name,
-              visitorEmail: data.visitor?.email,
-              visitorPhone: data.visitor?.phone,
-              timezone: data.visitor?.timezone,
-              isp: data.visitor?.isp,
-              region: data.visitor?.region,
-              pages: data.pages || [],
-              hasConversation: data.hasConversation,
-              conversationId: data.conversationId,
-            } as VisitorDetail & { conversationId?: string | null },
-          }))
-        }
-      } catch {}
-    }
-  }
-
-  const handleBan = async (ip?: string | null) => {
-    if (!ip || !confirm(`${ip} adresini engellemek istediğinize emin misiniz?`)) return
-    try {
-      const res = await fetch('/api/admin/ip-bans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ipAddress: ip, reason: 'Ziyaretçi panelinden engellendi' }),
-      })
-      if (res.ok) {
-        toast({ title: 'IP engellendi', description: ip, variant: 'success' })
-      } else {
-        const data = await res.json().catch(() => ({}))
-        toast({ title: data.error || 'IP engellenemedi', variant: 'error' })
-      }
-    } catch {
-      toast({ title: 'İşlem başarısız', variant: 'error' })
-    }
-  }
 
   return (
     <div className="p-4 lg:p-6 xl:p-8 max-w-[1440px] mx-auto min-h-screen">
@@ -481,6 +366,21 @@ export default function AdminVisitorsPage() {
               )
             })}
 
+            {sortedVisitors
+              .filter((v) => v.latitude != null && v.longitude != null)
+              .map((v) => {
+                const x = ((v.longitude! + 180) / 360) * 100
+                const y = ((90 - v.latitude!) / 180) * 100
+                return (
+                  <div
+                    key={`geo-${v.visitorId}`}
+                    className="absolute w-2 h-2 rounded-full bg-sky-400 ring-2 ring-sky-300/40 -translate-x-1/2 -translate-y-1/2 animate-pulse"
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                    title={`${v.name || 'Anonim'} — ${v.city || v.country || ''}`}
+                  />
+                )
+              })}
+
             {Object.keys(countryData).length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-sm">
                 <div className="text-center">
@@ -567,263 +467,8 @@ export default function AdminVisitorsPage() {
         </div>
       </div>
 
-      {/* VISITOR LIST */}
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="p-4 lg:p-5 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              Ziyaretçi Listesi
-            </h2>
-            <span className="text-xs text-gray-500 bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/[0.06] tabular-nums">
-              {sortedVisitors.length}
-            </span>
-          </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="İsim, ülke, sayfa ara..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-white/10 bg-white/[0.04] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {loading && sortedVisitors.length === 0 ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm text-gray-500">Ziyaretçiler yükleniyor...</span>
-            </div>
-          </div>
-        ) : sortedVisitors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center px-6">
-            <div className="w-20 h-20 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
-              <Eye className="w-10 h-10 text-gray-600" />
-            </div>
-            <p className="text-lg font-semibold text-gray-400">Henüz ziyaretçi yok</p>
-            <p className="text-sm text-gray-600 mt-1 max-w-sm">
-              Ziyaretçiler sitenizi görüntülemeye başladığında burada görünecekler
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-white/[0.04]">
-            {sortedVisitors.map((visitor) => {
-              const isOnline = visitor.lastActiveAt
-                ? Date.now() - new Date(visitor.lastActiveAt).getTime() < 300000
-                : false
-              const isExpanded = selectedVisitor?.visitorId === visitor.visitorId
-              const detail = detailedData[visitor.visitorId]
-              return (
-                <div key={visitor.visitorId}>
-                  <button
-                    onClick={() => handleVisitorClick(visitor)}
-                    className={`w-full text-left p-4 hover:bg-white/[0.02] transition-all duration-200 ${
-                      isExpanded ? 'bg-white/[0.03]' : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3 lg:gap-4">
-                      <div className="relative shrink-0">
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-sm shadow-lg ${
-                          isOnline
-                            ? 'from-emerald-500 to-teal-600 shadow-emerald-500/25'
-                            : 'from-gray-500 to-gray-600 shadow-gray-500/25'
-                        }`}>
-                          {(visitor.name || 'A')[0].toUpperCase()}
-                        </div>
-                        {isOnline && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0d0d1a] rounded-full">
-                            <div className="w-full h-full bg-emerald-500 rounded-full animate-ping opacity-75" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">
-                              {visitor.name || 'Anonim'}
-                            </p>
-                            {visitor.email && (
-                              <span className="text-[10px] text-gray-500 truncate hidden sm:inline">({visitor.email})</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isOnline && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-                            )}
-                            <span className="text-[10px] text-gray-500 tabular-nums">
-                              {getTimeSince(visitor.lastActiveAt)}
-                            </span>
-                            {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          <DeviceIcon device={visitor.device} />
-                          <span className="text-[10px] text-gray-400">{getDeviceLabel(visitor.device)}</span>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-[10px] text-gray-400">{getBrowserLabel(visitor.browser)}</span>
-                          {visitor.country && (
-                            <>
-                              <span className="text-gray-600">·</span>
-                              <span className="text-[10px]">{getFlag(visitor.country)}</span>
-                              <span className="text-[10px] text-gray-400">{visitor.country}{visitor.city ? `, ${visitor.city}` : ''}</span>
-                            </>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] text-gray-600 font-mono">{maskIP((visitor as any).ipAddress)}</span>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-[10px] text-gray-500 truncate flex items-center gap-1">
-                            <MousePointer2 className="w-3 h-3" />
-                            {visitor.currentTitle || visitor.currentPage || '—'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* EXPANDED DETAIL */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 lg:px-5 lg:pb-5 bg-white/[0.02] border-t border-white/[0.04] animate-in-up">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4">
-                        {/* Visitor Info */}
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5" />
-                            Ziyaretçi Bilgileri
-                          </h4>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">İsim</span>
-                              <p className="text-white font-medium mt-0.5">{detail?.visitorName || visitor.name || 'Anonim'}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">E-posta</span>
-                              <p className="text-white font-medium mt-0.5 truncate">{detail?.visitorEmail || visitor.email || '—'}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">Telefon</span>
-                              <p className="text-white font-medium mt-0.5">{detail?.visitorPhone || '—'}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">IP Adresi</span>
-                              <p className="text-white font-medium mt-0.5 font-mono text-[10px]">{(visitor as any).ipAddress || '—'}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Session Info */}
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            Oturum Bilgileri
-                          </h4>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">Tarayıcı</span>
-                              <p className="text-white font-medium mt-0.5">{getBrowserLabel(visitor.browser)}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">İşletim Sistemi</span>
-                              <p className="text-white font-medium mt-0.5">{visitor.os || '—'}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">Cihaz</span>
-                              <p className="text-white font-medium mt-0.5">{visitor.device || getDeviceLabel(visitor.device)}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04]">
-                              <span className="text-gray-500">Cihaz Tipi</span>
-                              <p className="text-white font-medium mt-0.5 capitalize">{getDeviceLabel(visitor.device)}</p>
-                            </div>
-                            <div className="bg-white/[0.03] rounded-lg p-2.5 border border-white/[0.04] col-span-2">
-                              <span className="text-gray-500">Konum</span>
-                              <p className="text-white font-medium mt-0.5">
-                                {getFlag(visitor.country)} {visitor.country || 'Bilinmiyor'}
-                                {visitor.city ? `, ${visitor.city}` : ''}
-                                {(visitor as any).region ? ` (${(visitor as any).region})` : ''}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Page History */}
-                      {detail?.pages && detail.pages.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <LinkIcon className="w-3.5 h-3.5" />
-                            Sayfa Geçmişi
-                          </h4>
-                          <div className="space-y-1.5">
-                            {detail.pages.slice(0, 5).map((p: any, i: number) => (
-                              <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.04] text-xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
-                                <span className="text-gray-300 truncate flex-1">{p.title || p.url || '—'}</span>
-                                <span className="text-gray-600 shrink-0 text-[10px]">{formatTimeAgo(p.viewedAt)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Referrer */}
-                      {visitor.referrer && (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.04] text-xs">
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
-                          <span className="text-gray-500">Yönlendiren:</span>
-                          <span className="text-gray-300 truncate">{visitor.referrer}</span>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/[0.04]">
-                        {(detail as { conversationId?: string | null })?.conversationId && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              const cid = (detail as { conversationId?: string }).conversationId
-                              if (cid) router.push(`/admin/inbox?conversation=${cid}`)
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-xs font-medium transition-all"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            Sohbete Git
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleBan((visitor as any).ipAddress) }}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-xs font-medium transition-all"
-                        >
-                          <Ban className="w-3.5 h-3.5" />
-                          Ziyaretçiyi Engelle
-                        </button>
-                        <span className="text-[10px] text-gray-600 ml-auto">
-                          {visitor.startedAt && `Başlangıç: ${new Date(visitor.startedAt).toLocaleString('tr-TR')}`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {/* CANLI İZLEME — ekran, sayfa geçmişi, konum */}
+      <AdminVisitorsMonitor />
     </div>
   )
 }

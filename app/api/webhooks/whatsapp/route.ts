@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
             websiteId: integration.websiteId,
             visitorId: visitor.id,
             status: 'OPEN',
-            source: 'WIDGET', // closest available enum value
+            source: 'WHATSAPP',
             lastMessageAt: new Date(),
             lastMessagePreview: content.substring(0, 100),
           },

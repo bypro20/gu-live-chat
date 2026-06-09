@@ -1043,7 +1043,7 @@ export default function WidgetPage() {
 
   // Supsis-style: auto-translate agent/bot messages to visitor's language
   useEffect(() => {
-    if (!aiTranslateAvailable || !autoTranslateOn || lang === 'tr') return
+    if (!aiTranslateAvailable || !autoTranslateOn) return
     const pending = messages.filter(
       (m) =>
         (m.senderType === 'AGENT' || m.senderType === 'BOT') &&
