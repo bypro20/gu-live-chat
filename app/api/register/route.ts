@@ -6,6 +6,7 @@ import { generateWebsiteId } from '@/lib/utils'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { acceptTeamInvite } from '@/lib/team-invite'
+import { startTrial } from '@/lib/trial'
 
 export async function POST(req: Request) {
   try {
@@ -99,6 +100,12 @@ export async function POST(req: Request) {
 
       return { user, website }
     })
+
+    try {
+      await startTrial(result.website.websiteId)
+    } catch (trialErr) {
+      console.error('[register] trial start failed:', trialErr)
+    }
 
     return NextResponse.json({
       user: {

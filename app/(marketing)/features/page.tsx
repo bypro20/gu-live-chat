@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { buildMetadata, PAGE_SEO } from '@/lib/seo'
+import { trialShortLabel } from '@/lib/trial-config'
 
 export const metadata: Metadata = buildMetadata(PAGE_SEO.features)
 
@@ -144,7 +145,7 @@ export default function FeaturesPage() {
       </div>
 
       <div className="surface p-8 text-center bg-gradient-brand-subtle">
-        <h2 className="text-xl font-bold mb-2">14 gün ücretsiz deneyin</h2>
+        <h2 className="text-xl font-bold mb-2">{trialShortLabel()} — hemen başlayın</h2>
         <p className="text-sm text-muted-foreground mb-5">Kredi kartı gerekmez · Kurulum 30 saniye</p>
         <Link href="/register" className="btn-primary">
           Ücretsiz Başla <ArrowRight className="w-4 h-4" />

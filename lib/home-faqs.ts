@@ -1,7 +1,9 @@
 /** Ana sayfa SSS — SEO schema ve FAQ bölümü için paylaşımlı */
+import { trialFreeTierFaqLine } from '@/lib/trial-config'
+
 export const HOME_FAQS = [
   { q: 'Gu Chat\'i siteme eklemek ne kadar sürer?', a: 'Tek satır kodu sitenize ekleyin — 30 saniyede çalışmaya başlar. Teknik bilgi gerekmez. WordPress, Shopify ve tüm web siteleri desteklenir.' },
-  { q: 'Canlı destek yazılımı ücretsiz mi?', a: 'Evet, ücretsiz paket ile 2 temsilci, ayda 100 sohbet, temel widget ve e-posta bildirimleri sunulur. Kredi kartı gerekmez, 14 gün tüm özellikleri deneyebilirsiniz.' },
+  { q: 'Canlı destek yazılımı ücretsiz mi?', a: `Evet, ücretsiz paket ile 2 temsilci, ayda 100 sohbet, temel widget ve e-posta bildirimleri sunulur. ${trialFreeTierFaqLine()}` },
   { q: 'WhatsApp canlı destek destekleniyor mu?', a: 'Evet, Profesyonel pakette WhatsApp Business entegrasyonu ile WhatsApp mesajlarını birleşik inbox\'ta yönetirsiniz.' },
   { q: 'Chatbot ve AI destek var mı?', a: 'Evet, görsel chatbot editörü ve GPT/Gemini destekli AI asistan Profesyonel pakette yer alır. Tekrarlayan soruları 7/24 otomatik yanıtlayın.' },
   { q: 'Paket değiştirebilir miyim?', a: 'Evet, istediğiniz zaman yükseltme veya düşürme yapabilirsiniz. Veri kaybı olmaz, geçiş anında gerçekleşir.' },

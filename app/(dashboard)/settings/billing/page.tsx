@@ -9,6 +9,12 @@ import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
 import IyzicoCheckout from './IyzicoCheckout'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
+import {
+  TRIAL_BONUS_FIRST_CHAT_DAYS,
+  TRIAL_BONUS_WIDGET_DAYS,
+  trialBillingSubtitle,
+  trialBillingTitle,
+} from '@/lib/trial-config'
 
 interface SubscriptionInfo {
   plan: string
@@ -23,6 +29,8 @@ interface TrialInfo {
   trialEndsAt: string | null
   trialPlan: string | null
   trialUsed: boolean
+  bonusWidgetGranted?: boolean
+  bonusChatGranted?: boolean
 }
 
 interface Invoice {
@@ -220,17 +228,7 @@ export default function BillingPage() {
   }
 
   const handlePlanAction = async (planId: PlanId) => {
-    if (planId === 'BUSINESS') {
-      window.location.href = '/contact'
-      return
-    }
     if (planId === currentPlan || planId === 'FREE') return
-
-    if (currentPlan === 'FREE' && !trialInfo?.trialUsed && planId === 'PRO') {
-      await startTrial()
-      return
-    }
-
     await handleUpgrade(planId)
   }
 
@@ -326,6 +324,12 @@ export default function BillingPage() {
                   <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">PRO Plan Deneme Süresi Aktif</p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
                     Deneme sürenizin dolmasına <strong>{trialInfo?.daysLeft ?? 0} gün</strong> kaldı
+                    {!trialInfo?.bonusWidgetGranted && (
+                      <> · Widget kurunca +{TRIAL_BONUS_WIDGET_DAYS} gün</>
+                    )}
+                    {!trialInfo?.bonusChatGranted && (
+                      <> · İlk sohbetle +{TRIAL_BONUS_FIRST_CHAT_DAYS} gün</>
+                    )}
                   </p>
                 </div>
               </div>
@@ -342,9 +346,9 @@ export default function BillingPage() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">14 Gün Ücretsiz PRO Deneyin</p>
+                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{trialBillingTitle()}</p>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                    Tüm PRO özelliklerini 14 gün boyunca ücretsiz kullanın
+                    {trialBillingSubtitle()}
                   </p>
                 </div>
                 <button
@@ -372,6 +376,7 @@ export default function BillingPage() {
               {subscription?.currentPeriodEnd && planStatus === 'ACTIVE' && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Yenileme tarihi: {new Date(subscription.currentPeriodEnd).toLocaleDateString('tr-TR')}
+                  {currentPlan !== 'FREE' && ' — kayıtlı kartınızdan otomatik tahsil edilir'}
                 </p>
               )}
               {planStatus === 'PAST_DUE' && (
@@ -402,12 +407,15 @@ export default function BillingPage() {
         </div>
 
         {/* Plans */}
-        <h2 className="text-lg font-semibold text-foreground mb-4">Plan Yükseltme</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-1">Plan Yükseltme</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          İlk ödemede kartınız güvenle kaydedilir; abonelik her ay otomatik yenilenir.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`surface p-5 !border-2 transition ${
+              className={`surface p-5 !border-2 transition flex flex-col h-full ${
                 plan.id === currentPlan
                   ? '!border-primary bg-primary/5'
                   : plan.id === 'PRO'
@@ -426,7 +434,7 @@ export default function BillingPage() {
                 {plan.price > 0 && <span className="text-muted-foreground text-sm">/ay</span>}
               </div>
               <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
-              <ul className="mt-4 space-y-1.5">
+              <ul className="mt-4 space-y-1.5 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className="text-xs text-foreground flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -438,10 +446,6 @@ export default function BillingPage() {
               </ul>
               <button
                 onClick={() => {
-                  if (plan.id === 'BUSINESS') {
-                    void handlePlanAction('BUSINESS')
-                    return
-                  }
                   if (!iyzicoEnabled && plan.price > 0 && plan.id !== 'FREE') {
                     setMessage({ type: 'error', text: 'Ödeme sistemi henüz aktif değil. iyzico API bilgileri girildiğinde ödeme yapabileceksiniz.' })
                     return
@@ -455,11 +459,9 @@ export default function BillingPage() {
                   plan.id === 'FREE' ||
                   (checkoutLoading !== null && checkoutLoading !== plan.id)
                 }
-                className={`w-full mt-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`w-full mt-5 py-3.5 rounded-xl text-base font-bold transition-all duration-200 ${
                   plan.id === currentPlan || plan.id === 'FREE'
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : plan.id === 'BUSINESS'
-                    ? 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
                     : !iyzicoEnabled
                     ? 'bg-primary text-primary-foreground opacity-60 cursor-pointer hover:opacity-80'
                     : checkoutLoading === plan.id
@@ -471,13 +473,44 @@ export default function BillingPage() {
                   ? 'Yönlendiriliyor...'
                   : getBillingPlanCta(plan.id as PlanId, {
                       isCurrentPlan: plan.id === currentPlan,
-                      trialUsed: trialInfo?.trialUsed,
-                      currentPlan,
-                      iyzicoEnabled,
                     })}
               </button>
             </div>
           ))}
+        </div>
+
+        {/* Enterprise contact */}
+        <div className="mt-6 rounded-2xl border-2 border-violet-200 dark:border-violet-800 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/40 dark:to-purple-950/30 p-6 sm:p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex-1">
+              <span className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">Kurumsal</span>
+              <h3 className="mt-2 text-lg font-bold text-foreground">
+                Daha büyük ekip çalışmaları için bizimle iletişime geçin
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Özel entegrasyon, white-label, kişiselleştirilmiş SLA ve ekip eğitimi için kurumsal çözümler sunuyoruz.
+              </p>
+              <ul className="mt-4 space-y-1.5">
+                {['Özel onboarding programı', 'Kişiselleştirilmiş SLA', 'Özel özellik geliştirme', 'Benzersiz fiyatlandırma', 'Ekip eğitimi & danışmanlık'].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-foreground">
+                    <svg className="w-4 h-4 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link
+              href="/contact"
+              className="flex-shrink-0 inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-base font-bold px-8 py-3.5 rounded-xl transition-colors shadow-brand hover:shadow-brand-lg"
+            >
+              İletişime Geç
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* iyzico Disabled Notice */}

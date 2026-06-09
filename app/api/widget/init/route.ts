@@ -9,6 +9,7 @@ import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import type { DbAiConfig } from '@/lib/ai/provider'
+import { extendTrialForActivation } from '@/lib/trial'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -237,6 +238,10 @@ export async function POST(req: Request) {
     }
 
     const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+
+    void extendTrialForActivation(website.websiteId, 'widget').catch((err) => {
+      console.warn('[widget/init] trial widget bonus skipped:', err)
+    })
 
     if (isNewVisitor) {
       try {

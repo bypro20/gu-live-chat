@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SITE_LEGAL } from '@/lib/site-legal'
+import { trialSeoHome, trialSeoPricing, TRIAL_DAYS } from '@/lib/trial-config'
 
 export const SITE_URL = SITE_LEGAL.url.replace(/\/$/, '')
 
@@ -92,7 +93,7 @@ export const PAGE_SEO = {
   home: {
     title: SITE_LEGAL.tagline,
     description:
-      'Gu Chat — Türkiye\'nin canlı destek ve chatbot platformu. Web sitenize 30 saniyede canlı sohbet ekleyin, WhatsApp ve AI ile müşterilerinize anında ulaşın. 14 gün ücretsiz deneyin.',
+      'Gu Chat — Türkiye\'nin canlı destek ve chatbot platformu. Web sitenize 30 saniyede canlı sohbet ekleyin, WhatsApp ve AI ile müşterilerinize anında ulaşın. ' + trialSeoHome(),
     path: '',
     keywords: ['canlı destek yazılımı', 'live chat türkiye', 'ücretsiz canlı destek'],
   },
@@ -106,7 +107,7 @@ export const PAGE_SEO = {
   pricing: {
     title: 'Fiyatlandırma — Ücretsiz Canlı Destek Paketi ile Başlayın',
     description:
-      'Gu Chat fiyatları: Ücretsiz, Başlangıç (₺1.790/ay), Profesyonel (₺3.790/ay) ve Kurumsal paketler. Canlı destek, chatbot ve AI — ihtiyacınıza göre ölçeklenin. 14 gün ücretsiz deneme.',
+      'Gu Chat fiyatları: Ücretsiz, Başlangıç (₺1.790/ay), Profesyonel (₺3.790/ay) ve Kurumsal paketler. Canlı destek, chatbot ve AI — ihtiyacınıza göre ölçeklenin. ' + trialSeoPricing(),
     path: '/pricing',
     keywords: ['canlı destek fiyat', 'live chat ücret', 'chatbot fiyatlandırma'],
   },
@@ -118,11 +119,18 @@ export const PAGE_SEO = {
     keywords: ['AI müşteri hizmetleri', 'yapay zeka chatbot', 'otomatik müşteri desteği'],
   },
   integrations: {
-    title: 'Entegrasyonlar — WhatsApp, API, Webhook & E-posta',
+    title: 'Entegrasyonlar — WhatsApp, E-ticaret, API & Webhook',
     description:
-      'Gu Chat entegrasyonları: WhatsApp Business, Facebook Messenger, Telegram, REST API, webhook, e-posta kanalı. Mevcut sistemlerinize kolayca bağlanın.',
+      'Gu Chat entegrasyonları: Shopify, WooCommerce, İkas, Ticimax, IdeaSoft, WhatsApp, Messenger, Telegram, Slack, Zapier, REST API ve webhook. Tüm e-ticaret platformlarında çalışır.',
     path: '/integrations',
-    keywords: ['whatsapp entegrasyonu', 'canlı destek API', 'messenger entegrasyonu'],
+    keywords: [
+      'whatsapp entegrasyonu',
+      'shopify canlı destek',
+      'woocommerce chatbot',
+      'ikas entegrasyonu',
+      'ticimax canlı destek',
+      'e-ticaret müşteri hizmetleri',
+    ],
   },
   blog: {
     title: 'Blog — Canlı Destek, Chatbot & Müşteri Deneyimi Rehberleri',
@@ -211,7 +219,7 @@ export function softwareApplicationJsonLd() {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'TRY',
-      description: 'Ücretsiz paket mevcut — 14 gün deneme',
+      description: `Ücretsiz paket mevcut — ${TRIAL_DAYS} gün deneme`,
     },
     aggregateRating: {
       '@type': 'AggregateRating',

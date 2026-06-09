@@ -4,6 +4,7 @@ import { ArrowRight, Check } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { buildMetadata, breadcrumbJsonLd, faqJsonLd, softwareApplicationJsonLd, type PageMeta } from '@/lib/seo'
+import { trialHeroLine, trialShortLabel } from '@/lib/trial-config'
 
 export type SeoLandingConfig = {
   meta: PageMeta
@@ -51,7 +52,7 @@ export function SeoLandingPage({ config }: { config: SeoLandingConfig }) {
             Fiyatları Gör
           </Link>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">14 gün ücretsiz · Kredi kartı gerekmez · Kurulum 30 saniye</p>
+        <p className="mt-4 text-sm text-muted-foreground">{trialHeroLine()}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
@@ -95,7 +96,7 @@ export function SeoLandingPage({ config }: { config: SeoLandingConfig }) {
       <section className="surface p-8 text-center">
         <h2 className="text-xl font-bold mb-3">Hemen ücretsiz deneyin</h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Gu Chat ile müşterilerinize anında ulaşın. Kurulum 30 saniye, 14 gün ücretsiz deneme.
+          Gu Chat ile müşterilerinize anında ulaşın. Kurulum 30 saniye, {trialShortLabel()}.
         </p>
         <Link href="/register" className="btn-primary px-8 py-3.5 inline-flex">
           Ücretsiz Başla <ArrowRight className="w-4 h-4" />

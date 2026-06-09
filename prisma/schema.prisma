@@ -159,6 +159,8 @@ model Website {
   trialStartsAt         DateTime?
   trialEndsAt           DateTime?
   trialUsed             Boolean            @default(false)
+  trialBonusWidgetGranted Boolean          @default(false)
+  trialBonusChatGranted   Boolean          @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

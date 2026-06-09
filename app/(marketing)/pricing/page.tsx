@@ -4,6 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta, type PlanId } from '@/lib/plan-cta'
+import {
+  trialFaqQuestion,
+  trialFaqAnswer,
+  trialPricingHeadline,
+  trialPricingCta,
+} from '@/lib/trial-config'
 import { PLAN_LIMITS, type PlanType } from '@/lib/constants'
 import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
@@ -259,8 +265,8 @@ const FAQS = [
     a: 'Gösterilen fiyatlar KDV hariçtir. Fatura aşamasında geçerli KDV oranı (%20) eklenecektir. Kurumsal mükelleflerin KDV iade süreci için muhasebe ekibinize danışabilirsiniz.',
   },
   {
-    q: '14 günlük deneme nasıl çalışır?',
-    a: 'Kayıt olduğunuzda seçtiğiniz planın tüm özelliklerine 14 gün boyunca ücretsiz erişim sağlarsınız. Süre sonunda ödeme yapmaz iseniz otomatik olarak Ücretsiz plana geçilir.',
+    q: trialFaqQuestion(),
+    a: trialFaqAnswer(),
   },
   {
     q: 'İstediğim zaman plan değiştirebilir miyim?',
@@ -339,7 +345,7 @@ export default function PricingPage() {
           <FadeIn>
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 mb-6">
               <Sparkles className="w-3 h-3" />
-              Her planı 14 gün boyunca ücretsiz deneyin
+              {trialPricingHeadline()}
             </span>
           </FadeIn>
           <FadeIn delay={0.05}>
@@ -593,7 +599,7 @@ export default function PricingPage() {
           <section className="py-20 px-4 sm:px-6 text-center">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Müşteri deneyiminizi geliştirmeye hazır mısınız?</h2>
-              <p className="text-slate-500 mb-8">14 gün ücretsiz deneyin. Taahhüt yok, kredi kartı gerekmez.</p>
+              <p className="text-slate-500 mb-8">{trialPricingCta()}</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors text-sm">
                   Ücretsiz Başla <ArrowRight className="w-4 h-4" />

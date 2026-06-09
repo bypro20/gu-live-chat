@@ -172,6 +172,8 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'team_members.acceptedAt', sql: `ALTER TABLE "team_members" ADD COLUMN "acceptedAt" DATETIME` },
     { label: 'team_members.invitedAt', sql: `ALTER TABLE "team_members" ADD COLUMN "invitedAt" DATETIME` },
     { label: 'team_members.invitedBy', sql: `ALTER TABLE "team_members" ADD COLUMN "invitedBy" TEXT` },
+    { label: 'websites.trialBonusWidgetGranted', sql: `ALTER TABLE "websites" ADD COLUMN "trialBonusWidgetGranted" BOOLEAN NOT NULL DEFAULT 0` },
+    { label: 'websites.trialBonusChatGranted', sql: `ALTER TABLE "websites" ADD COLUMN "trialBonusChatGranted" BOOLEAN NOT NULL DEFAULT 0` },
   ]
 
   for (const { label, sql } of statements) {

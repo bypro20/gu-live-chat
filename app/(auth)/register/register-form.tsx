@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Zap, Shield, BarChart3, Users } from 'lucide-react'
+import { trialRegisterLine } from '@/lib/trial-config'
 
 const markaOzellikleri = [
   { simge: Zap, metin: 'Ücretsiz başlayın, kredi kartı gerekmez' },
@@ -154,8 +155,8 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               {inviteInfo
                 ? `${inviteInfo.websiteName} takımına katılmak için hesap oluşturun`
                 : selectedPlanLabel
-                  ? `${selectedPlanLabel} planı için kayıt olun — 14 gün ücretsiz deneyin`
-                  : '2 dakikada ücretsiz başlayın'}
+                  ? trialRegisterLine(selectedPlanLabel)
+                  : '2 dakikada ücretsiz başlayın — kayıtta PRO deneme başlar'}
             </p>
             {selectedPlanLabel && (
               <span className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">

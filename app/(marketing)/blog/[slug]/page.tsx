@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/marketing/json-ld'
 import { notFound } from 'next/navigation'
 import { BLOG_POSTS, BLOG_BY_SLUG } from '@/lib/blog-posts'
 import { articleJsonLd, buildMetadata, breadcrumbJsonLd } from '@/lib/seo'
+import { trialShortLabel } from '@/lib/trial-config'
 
 export async function generateStaticParams() {
   return BLOG_POSTS.map((post) => ({ slug: post.slug }))
@@ -58,7 +59,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
         <div className="mt-12 p-6 surface text-center">
           <p className="font-semibold mb-3">Gu Chat ile hemen başlayın</p>
-          <p className="text-sm text-muted-foreground mb-4">14 gün ücretsiz deneme — kredi kartı gerekmez</p>
+          <p className="text-sm text-muted-foreground mb-4">{trialShortLabel()} — kredi kartı gerekmez</p>
           <Link href="/register" className="btn-primary px-6 py-2.5 inline-flex">
             Ücretsiz Kayıt Ol
           </Link>

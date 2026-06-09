@@ -1,5 +1,6 @@
 import { SeoLandingPage, createSeoLandingMetadata } from '@/components/marketing/seo-landing-page'
 import { PAGE_SEO } from '@/lib/seo'
+import { trialFreeTierFaqLine } from '@/lib/trial-config'
 
 export const metadata = createSeoLandingMetadata(PAGE_SEO.canliDestek)
 
@@ -36,7 +37,7 @@ const config = {
     },
   ],
   faqs: [
-    { q: 'Canlı destek ücretsiz mi?', a: 'Evet, Gu Chat ücretsiz paket ile 2 temsilci ve ayda 100 sohbet sunar. Kredi kartı gerekmez, 14 gün tüm özellikleri deneyebilirsiniz.' },
+    { q: 'Canlı destek ücretsiz mi?', a: `Evet, Gu Chat ücretsiz paket ile 2 temsilci ve ayda 100 sohbet sunar. ${trialFreeTierFaqLine()}` },
     { q: 'Kurulum ne kadar sürer?', a: 'Widget kodunu sitenize yapıştırmanız yeterli — 30 saniyede canlı destek aktif olur. WordPress, Shopify ve özel siteler desteklenir.' },
     { q: 'Mobil uyumlu mu?', a: 'Evet, Gu Chat widget\'ı tüm cihazlarda sorunsuz çalışır. Responsive tasarım ile mobil ziyaretçiler de kolayca mesaj gönderebilir.' },
     { q: 'WhatsApp ile birlikte kullanılabilir mi?', a: 'Evet, WhatsApp Business entegrasyonu ile WhatsApp mesajlarını aynı inbox\'ta yönetirsiniz.' },

@@ -13,6 +13,7 @@ import {
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroPreview } from '@/components/marketing/hero-preview'
 import { HOME_FAQS } from '@/lib/home-faqs'
+import { trialHeroLine } from '@/lib/trial-config'
 
 const trustedBrands = ['TrendyShop', 'TeknoSoft', 'ModaVip', 'Evinİçin', 'BoostAI', 'HızlıMarket']
 
@@ -176,7 +177,7 @@ export function HomeHero() {
               </Link>
             </div>
             <p className="mt-5 text-sm text-muted-foreground">
-              14 gün ücretsiz · Kredi kartı gerekmez · Kurulum 30 saniye
+              {trialHeroLine()}
             </p>
           </FadeIn>
         </div>

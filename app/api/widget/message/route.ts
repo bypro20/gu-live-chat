@@ -14,6 +14,7 @@ import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
+import { extendTrialForActivation } from '@/lib/trial'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -140,6 +141,10 @@ export async function POST(req: Request) {
         })
         conversationId = conversation.id
         isNewConversation = true
+
+        void extendTrialForActivation(website.websiteId, 'first_chat').catch((err) => {
+          console.warn('[widget/message] trial chat bonus skipped:', err)
+        })
       }
     }
 
