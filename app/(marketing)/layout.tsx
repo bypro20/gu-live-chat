@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { MarketingProviders } from '@/components/marketing/marketing-providers'
 import { MarketingWidgetLoader } from '@/components/marketing/marketing-widget-loader'
 import { JsonLd } from '@/components/marketing/json-ld'
+import { SourceProtection } from '@/components/marketing/source-protection'
 import { buildMetadata, organizationJsonLd, PAGE_SEO } from '@/lib/seo'
 
 export const runtime = 'nodejs'
@@ -15,6 +16,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <JsonLd data={organizationJsonLd()} />
       <MarketingProviders>
         <div className="marketing-site min-h-screen bg-white text-foreground antialiased">
+          <SourceProtection />
           {children}
           <MarketingWidgetLoader />
         </div>
