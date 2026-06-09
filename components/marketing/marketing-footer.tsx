@@ -9,6 +9,7 @@ const columns = [
   {
     title: 'Ürün',
     links: [
+      { label: 'Mobil Uygulama', href: '/mobil-indir' },
       { label: 'Canlı Destek', href: '/canli-destek' },
       { label: 'Chatbot', href: '/chatbot' },
       { label: 'WhatsApp Destek', href: '/whatsapp-destek' },

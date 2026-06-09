@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta } from '@/lib/plan-cta'
 import {
   ArrowRight, Bot, BookOpen, BarChart3, MessageCircle, Users,
   Workflow, Mail, Smartphone, MessageSquare, Sparkles, Inbox, Zap,
-  Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe,
+  Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroPreview } from '@/components/marketing/hero-preview'
@@ -189,6 +190,68 @@ export function TrustStrip() {
             <span key={name} className="text-base font-semibold text-muted-foreground/50 select-none">{name}</span>
           ))}
         </div>
+      </div>
+    </section>
+  )
+}
+
+export function MobileAppSection() {
+  return (
+    <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 px-6 py-10 sm:px-10 sm:py-14">
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-green-400/10 blur-3xl pointer-events-none" />
+
+            <div className="relative grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+              <div className="text-center lg:text-left">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/20 mb-5">
+                  <Smartphone className="w-3.5 h-3.5" />
+                  Android Uygulama
+                </span>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+                  Android uygulamamızı buradan yükleyin
+                </h2>
+                <p className="mt-4 text-base sm:text-lg text-emerald-100/80 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  Evde, işte, her yerde — dışarıda bile müşterilerinizle konuşmaya devam edin.
+                  Gelen kutusu, bildirimler ve hızlı yanıt cebinizde.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
+                  <Link
+                    href="/mobil-indir"
+                    className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-base font-bold text-emerald-950 bg-white hover:bg-emerald-50 shadow-xl shadow-black/20 transition-colors w-full sm:w-auto"
+                  >
+                    <Download className="w-5 h-5" />
+                    APK İndir — Ücretsiz
+                  </Link>
+                  <Link
+                    href="/mobil-indir"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-sm font-semibold text-white/90 border border-white/20 hover:bg-white/10 transition-colors w-full sm:w-auto"
+                  >
+                    Kurulum adımları <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <p className="mt-4 text-xs text-emerald-200/60">Android 7.0+ · Gu Chat hesabınızla giriş yapın</p>
+              </div>
+
+              <div className="flex justify-center lg:justify-end">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-[2rem] bg-emerald-400/20 blur-2xl scale-110" />
+                  <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-[2rem] overflow-hidden ring-2 ring-white/20 shadow-2xl shadow-black/40">
+                    <Image
+                      src="/app-icon.png"
+                      alt="Gu Chat Android uygulama ikonu"
+                      width={176}
+                      height={176}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
       </div>
     </section>
   )

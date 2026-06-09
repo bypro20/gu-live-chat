@@ -2,7 +2,7 @@ import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
 import {
-  HomeHero, TrustStrip, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
+  HomeHero, TrustStrip, MobileAppSection, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
   KnowledgeBaseSection, AiAutomationSection, ProductDeepDive,
   UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
 } from '@/components/marketing/home-sections'
@@ -19,6 +19,7 @@ export default function HomePage() {
       <MarketingNav />
       <HomeHero />
       <TrustStrip />
+      <MobileAppSection />
       <FeatureGrid />
       <AiShowcase />
       <LiveTranslateSection />

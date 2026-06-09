@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { ArrowRight, Download, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
 
 const navLinks = [
@@ -36,6 +36,13 @@ export function MarketingNav() {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
+            <Link
+              href="/mobil-indir"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 shadow-lg shadow-emerald-500/25 hover:from-emerald-500 hover:to-green-400 transition-all"
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              Android Uygulama
+            </Link>
             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">
               Giriş Yap
             </Link>
@@ -66,6 +73,14 @@ export function MarketingNav() {
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/mobil-indir"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center gap-2 mx-4 mb-3 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500"
+          >
+            <Download className="w-4 h-4" />
+            Android Uygulamamızı Yükleyin
+          </Link>
           <div className="border-t border-border mt-3 pt-3 space-y-2">
             <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-muted-foreground">
               Giriş Yap
