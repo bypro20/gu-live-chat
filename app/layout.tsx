@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
 import { buildMetadata, PAGE_SEO } from '@/lib/seo'
+import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -33,6 +34,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ToastProvider>
             {children}
+            <SiteAnalytics />
           </ToastProvider>
         </ThemeProvider>
       </body>
