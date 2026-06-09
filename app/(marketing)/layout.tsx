@@ -11,12 +11,14 @@ export const metadata: Metadata = buildMetadata(PAGE_SEO.home)
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <MarketingProviders>
+    <>
       <JsonLd data={organizationJsonLd()} />
-      <div className="marketing-site min-h-screen bg-white text-foreground antialiased">
-        {children}
-        <MarketingWidgetLoader />
-      </div>
-    </MarketingProviders>
+      <MarketingProviders>
+        <div className="marketing-site min-h-screen bg-white text-foreground antialiased">
+          {children}
+          <MarketingWidgetLoader />
+        </div>
+      </MarketingProviders>
+    </>
   )
 }

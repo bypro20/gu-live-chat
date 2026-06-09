@@ -205,7 +205,7 @@ export function softwareApplicationJsonLd() {
   }
 }
 
-export function faqJsonLd(faqs: Array<{ q: string; a: string }>) {
+export function faqJsonLd(faqs: ReadonlyArray<{ q: string; a: string }>) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

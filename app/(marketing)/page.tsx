@@ -5,8 +5,8 @@ import {
   HomeHero, TrustStrip, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
   KnowledgeBaseSection, AiAutomationSection, ProductDeepDive,
   UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
-  HOME_FAQS,
 } from '@/components/marketing/home-sections'
+import { HOME_FAQS } from '@/lib/home-faqs'
 import { buildMetadata, faqJsonLd, softwareApplicationJsonLd, PAGE_SEO } from '@/lib/seo'
 import type { Metadata } from 'next'
 
