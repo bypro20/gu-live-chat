@@ -52,7 +52,7 @@ export function ChatHeader({
     conversation.status === 'RESOLVED' || conversation.status === 'CLOSED'
 
   return (
-    <div className="px-4 py-3 border-b border-border bg-card flex items-center gap-3 shrink-0">
+    <div className="px-3 sm:px-4 py-3 border-b border-border bg-card flex items-center gap-2 shrink-0 min-w-0 overflow-hidden">
       {onBack && (
         <Button type="button" variant="ghost" size="icon-sm" className="lg:hidden -ml-1" onClick={onBack}>
           <ArrowLeft className="w-5 h-5" />
@@ -79,7 +79,7 @@ export function ChatHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 ml-auto">
         {showAssign && onAssignToMe && (
           <Button
             type="button"

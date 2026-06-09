@@ -445,7 +445,7 @@ function InboxPageContent() {
   })
 
   return (
-    <div className="h-[calc(100dvh-3.5rem)] lg:h-screen flex bg-background">
+    <div className="h-full min-h-0 w-full max-w-full flex overflow-hidden bg-background">
       {/* Sidebar */}
       <div
         className={`w-full lg:w-[340px] xl:w-[380px] border-r border-border flex-col bg-card shrink-0 ${

@@ -7,7 +7,7 @@ export default function VisitorsPage() {
   const { activeWebsite, websites } = useActiveWebsite()
 
   return (
-    <div className="h-[calc(100dvh-3.5rem)] lg:h-screen flex flex-col overflow-hidden bg-[#080C14] p-2 lg:p-4">
+    <div className="h-full min-h-0 w-full max-w-full flex flex-col overflow-hidden bg-[#080C14] p-2 lg:p-4">
       <AdminVisitorsMonitor
         variant="dashboard"
         websiteId={activeWebsite?.websiteId ?? null}

@@ -7,7 +7,6 @@ import { useTheme } from 'next-themes'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import NotificationBell from '@/components/dashboard/notification-bell'
 import { AppLogo } from '@/components/brand/app-logo'
-import { NativeBottomNav } from '@/components/app/native-bottom-nav'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { nativeAppHomePath } from '@/lib/native-app'
 
@@ -173,7 +172,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`app-shell h-screen flex overflow-hidden bg-background text-foreground ${isNativeApp ? 'native-app-shell' : ''}`}>
+    <div className={`app-shell flex overflow-hidden bg-background text-foreground w-full max-w-[100vw] ${isNativeApp ? 'native-app-shell h-[100dvh]' : 'h-screen'}`}>
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}
@@ -349,23 +348,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className={`app-main flex-1 overflow-y-auto ${isNativeApp ? 'native-app-main' : ''}`}>
-        <div className={`lg:hidden h-14 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 glass-strong border-b border-border ${isNativeApp ? 'native-app-topbar' : ''}`}>
-          <div className="flex items-center gap-3 min-w-0">
-            {!isNativeApp && (
-            <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            </button>
-            )}
-            <AppLogo variant="light" size="sm" showTagline={false} />
+      <main className={`app-main flex-1 flex flex-col min-w-0 overflow-hidden ${isNativeApp ? 'native-app-main' : ''}`}>
+        <div className={`lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border ${isNativeApp ? 'native-app-topbar' : ''}`}>
+          <button onClick={() => setMobileMenuOpen(true)} className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer" aria-label="Menü">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <AppLogo variant="light" size="sm" showTagline={false} className="max-w-full" />
           </div>
-          <NotificationBell variant="toolbar" />
+          <div className="shrink-0">
+            <NotificationBell variant="toolbar" />
+          </div>
         </div>
-        {children}
+        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+          {children}
+        </div>
       </main>
-      <NativeBottomNav />
     </div>
   )
 }
