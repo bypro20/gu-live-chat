@@ -135,13 +135,13 @@ export default function AdminLayout({
 
   return (
     <SessionProvider>
-      <div className="app-shell admin-shell h-screen flex overflow-hidden text-white">
+      <div className="app-shell admin-shell relative lg:flex h-screen overflow-hidden text-white">
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
 
         <aside
-          className={`app-sidebar relative fixed lg:static inset-y-0 left-0 z-50 flex flex-col transform transition-transform duration-200 ease-out ${
+          className={`app-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col h-full transform transition-transform duration-200 ease-out ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
         >
@@ -195,27 +195,32 @@ export default function AdminLayout({
         </aside>
 
         <main
-          className={`app-main flex-1 text-white ${
+          className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full text-white ${
             pathname.startsWith('/admin/inbox')
-              ? 'flex flex-col min-h-0 overflow-hidden'
+              ? 'min-h-0 overflow-hidden'
               : 'overflow-y-auto'
           }`}
         >
-          <div className="lg:hidden h-14 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 glass-strong border-b border-border">
-            <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <AppLogo variant="admin" size="sm" showTagline={false} />
+          <div className="lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+              aria-label="Menü"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <AppLogo variant="admin" size="sm" showTagline={false} className="max-w-full" />
             </div>
-            <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" />
+            <div className="shrink-0">
+              <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" />
+            </div>
           </div>
-          {children}
+          <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+            {children}
+          </div>
         </main>
       </div>
     </SessionProvider>

@@ -172,13 +172,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`app-shell flex overflow-hidden bg-background text-foreground w-full max-w-[100vw] ${isNativeApp ? 'native-app-shell h-[100dvh]' : 'h-screen'}`}>
+    <div className={`app-shell relative lg:flex overflow-hidden bg-background text-foreground w-full max-w-[100vw] ${isNativeApp ? 'native-app-shell h-[100dvh]' : 'h-screen'}`}>
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}
 
       <aside
-        className={`app-sidebar relative fixed lg:static inset-y-0 left-0 z-50 flex flex-col transform transition-transform duration-200 ease-out ${
+        className={`app-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col h-full transform transition-transform duration-200 ease-out ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -348,7 +348,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className={`app-main flex-1 flex flex-col min-w-0 overflow-hidden ${isNativeApp ? 'native-app-main' : ''}`}>
+      <main className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full overflow-hidden ${isNativeApp ? 'native-app-main' : ''}`}>
         <div className={`lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border ${isNativeApp ? 'native-app-topbar' : ''}`}>
           <button onClick={() => setMobileMenuOpen(true)} className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer" aria-label="Menü">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
