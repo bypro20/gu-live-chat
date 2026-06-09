@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  RESELLER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(RESELLER)
+  createdAt DateTime @default(now())
+  reseller  ResellerProfile?
+}
+
+model ResellerProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agencyName      String
+  phone           String?
+  whatsapp        String?
+  referralCode    String   @unique
+  commissionRate  Float    @default(20)
+  totalEarnings   Float    @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  orders          Order[]
+  leads           Lead[]
+}
+
+model Package {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  platform     String   @default("INSTAGRAM")
+  category     String   @default("Takipçi")
+  tag          String?
+  price        Float
+  description  String
+  features     String
+  isPopular    Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  smmProvider  String?
+  smmServiceId Int?
+  smmQuantity  Int?
+  orders       Order[]
+}
+
+enum RefillStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model RefillRequest {
+  id        String       @id @default(cuid())
+  orderCode String
+  username  String
+  note      String?
+  status    RefillStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  @@index([orderCode])
+  @@index([status])
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  orderCode     String         @unique
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  targetLink    String?
+  packageId     String
+  package       Package        @relation(fields: [packageId], references: [id])
+  resellerId    String?
+  reseller      ResellerProfile? @relation(fields: [resellerId], references: [id])
+  amount        Float
+  commission    Float          @default(0)
+  status        OrderStatus    @default(PENDING)
+  paymentStatus PaymentStatus  @default(PENDING)
+  iyzicoToken   String?
+  paidAt        DateTime?
+  notes         String?
+  smmProvider   String?
+  smmOrderId    Int?
+  smmServiceId  Int?
+  smmQuantity   Int?
+  smmStatus     String?
+  createdAt     DateTime       @default(now())
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  message    String?
+  source     String   @default("website")
+  resellerId String?
+  reseller   ResellerProfile? @relation(fields: [resellerId], references: [id])
+  createdAt  DateTime @default(now())
+}
