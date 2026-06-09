@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
@@ -22,6 +22,16 @@ export const metadata: Metadata = {
   publisher: 'Gu Chat',
   formatDetection: { email: false, address: false, telephone: false },
   category: 'technology',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B1220' },
+  ],
 }
 
 export default function RootLayout({

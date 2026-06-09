@@ -84,7 +84,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
   }
 
   return (
-    <div className={`min-h-screen flex ${isNativeApp ? 'native-app-auth bg-[#0B1220]' : ''}`}>
+    <div className={`min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden flex ${isNativeApp ? 'native-app-auth bg-[#0B1220]' : 'mobile-safe-area'}`}>
       {/* Sol Panel — Crisp tarzı beyaz/mavi */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
         <div className="absolute inset-0 bg-mesh pointer-events-none" />

@@ -14,7 +14,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
     <>
       <JsonLd data={organizationJsonLd()} />
       <MarketingProviders>
-        <div className="marketing-site min-h-screen bg-white text-foreground antialiased pb-28 lg:pb-0">
+        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased pb-28 lg:pb-0">
           <SourceProtection />
           {children}
           <MarketingWidgetLoader />
