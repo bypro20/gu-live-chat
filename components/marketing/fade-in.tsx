@@ -12,19 +12,20 @@ export function FadeIn({
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
+  const [animated, setAnimated] = useState(false)
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || typeof IntersectionObserver === 'undefined') return
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true)
+          setAnimated(true)
           observer.disconnect()
         }
       },
-      { threshold: 0.06 }
+      { threshold: 0.05, rootMargin: '24px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -34,11 +35,13 @@ export function FadeIn({
     <div
       ref={ref}
       className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transition: `opacity 0.5s ease, transform 0.5s ease ${delay}s`,
-      }}
+      style={
+        animated
+          ? {
+              animation: `slide-up 0.5s ease ${delay}s both`,
+            }
+          : undefined
+      }
     >
       {children}
     </div>

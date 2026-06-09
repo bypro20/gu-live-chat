@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Zap, Shield, Bot, Globe } from 'lucide-react'
+import { useNativeApp } from '@/lib/hooks/use-native-app'
+import { nativeAppHomePath } from '@/lib/native-app'
 
 const markaÖzellikleri = [
   { simge: Zap, metin: '30 saniyede kurulum' },
@@ -28,6 +30,7 @@ const oauthHataMesajlari: Record<string, string> = {
 export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isNativeApp } = useNativeApp()
   const [eposta, setEposta] = useState('')
   const [sifre, setSifre] = useState('')
   const [hata, setHata] = useState('')
@@ -69,7 +72,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
         if (oturum?.user?.role === 'ADMIN') {
           router.push('/admin')
         } else {
-          router.push('/dashboard')
+          router.push(isNativeApp ? nativeAppHomePath() : (searchParams.get('callbackUrl') || '/dashboard'))
         }
         router.refresh()
       }
@@ -81,7 +84,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className={`min-h-screen flex ${isNativeApp ? 'native-app-auth bg-[#0B1220]' : ''}`}>
       {/* Sol Panel — Crisp tarzı beyaz/mavi */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
@@ -110,17 +113,19 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
       </div>
 
       {/* Sağ Panel - Beyaz Form Bölümü (tamamen dolar) */}
-      <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-950 p-6 sm:p-8 min-h-screen lg:min-h-0">
+      <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 min-h-screen lg:min-h-0 ${isNativeApp ? 'bg-[#0B1220]' : 'bg-white dark:bg-gray-950'}`}>
         <div className="w-full max-w-md">
-          {/* Mobilde logo göster */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <Logo boyut="default" animasyonlu />
+          <div className={`${isNativeApp ? 'flex' : 'lg:hidden flex'} justify-center mb-8`}>
+            <Logo boyut={isNativeApp ? 'lg' : 'default'} animasyonlu={isNativeApp} />
           </div>
 
-          {/* Başlık */}
           <div className="mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Hoş Geldiniz</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Hesabınıza giriş yapın</p>
+            <h1 className={`text-2xl lg:text-3xl font-bold ${isNativeApp ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+              {isNativeApp ? 'Gu Chat' : 'Hoş Geldiniz'}
+            </h1>
+            <p className={`mt-2 ${isNativeApp ? 'text-slate-400' : 'text-gray-500 dark:text-gray-400'}`}>
+              {isNativeApp ? 'Hesabınıza giriş yapın' : 'Hesabınıza giriş yapın'}
+            </p>
           </div>
 
           {/* Hata mesajı */}
@@ -235,7 +240,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
             </p>
           </div>
 
-          {/* Siteye dönüş */}
+          {!isNativeApp && (
           <div className="mt-6 pt-6 border-t border-border text-center">
             <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -244,6 +249,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
               Siteye Dön
             </Link>
           </div>
+          )}
         </div>
       </div>
     </div>

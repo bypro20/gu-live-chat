@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
 import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
+import { NativeAppBootstrap } from '@/components/app/native-app-bootstrap'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jakarta.variable} font-[family-name:var(--font-jakarta)] min-h-full bg-background text-foreground antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ToastProvider>
+            <NativeAppBootstrap />
             {children}
             <SiteAnalytics />
           </ToastProvider>

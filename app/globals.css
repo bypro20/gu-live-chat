@@ -458,3 +458,35 @@ html { scroll-behavior: smooth; }
   bottom: 24px !important;
   z-index: 2147483647 !important;
 }
+
+/* ── Native app (Capacitor APK) ── */
+html.native-app {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+html.native-app body {
+  overscroll-behavior: none;
+}
+
+html.native-app .native-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.native-app .native-app-main {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app .native-app-topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+}
+
+html.native-app .native-app-auth {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.native-app #gu-live-chat-widget-root {
+  display: none !important;
+}

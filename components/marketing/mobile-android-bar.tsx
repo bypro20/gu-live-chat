@@ -2,11 +2,15 @@
 
 import Link from 'next/link'
 import { Download } from 'lucide-react'
+import { useNativeApp } from '@/lib/hooks/use-native-app'
 
 const APK_URL = '/downloads/guchat.apk'
 
-/** Mobilde her zaman görünen sabit Android indirme çubuğu */
+/** Mobilde web tarayıcısında sabit Android indirme çubuğu */
 export function MobileAndroidBar() {
+  const { isNativeApp } = useNativeApp()
+  if (isNativeApp) return null
+
   return (
     <div className="lg:hidden fixed bottom-0 inset-x-0 z-[60] border-t border-emerald-500/20 bg-background/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
       <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -26,8 +30,11 @@ export function MobileAndroidBar() {
   )
 }
 
-/** Üst bar — mobil header içinde her zaman görünür */
+/** Üst bar — mobil header içinde her zaman görünür (web) */
 export function MobileAndroidNavButton({ onClick }: { onClick?: () => void }) {
+  const { isNativeApp } = useNativeApp()
+  if (isNativeApp) return null
+
   return (
     <Link
       href="/mobil-indir"

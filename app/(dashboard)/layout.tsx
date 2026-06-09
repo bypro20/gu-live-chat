@@ -7,6 +7,9 @@ import { useTheme } from 'next-themes'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import NotificationBell from '@/components/dashboard/notification-bell'
 import { AppLogo } from '@/components/brand/app-logo'
+import { NativeBottomNav } from '@/components/app/native-bottom-nav'
+import { useNativeApp } from '@/lib/hooks/use-native-app'
+import { nativeAppHomePath } from '@/lib/native-app'
 
 interface NavItem {
   href: string
@@ -31,6 +34,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [websiteDropdownOpen, setWebsiteDropdownOpen] = useState(false)
   const [inboxUnread, setInboxUnread] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { isNativeApp } = useNativeApp()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -142,7 +146,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
-    router.push('/')
+    router.push(isNativeApp ? '/login' : '/')
     router.refresh()
   }
 
@@ -169,7 +173,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="app-shell h-screen flex overflow-hidden bg-background text-foreground">
+    <div className={`app-shell h-screen flex overflow-hidden bg-background text-foreground ${isNativeApp ? 'native-app-shell' : ''}`}>
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}
@@ -321,7 +325,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <p className="text-[13px] font-semibold text-white truncate leading-tight">{session?.user?.name || 'Kullanıcı'}</p>
               <p className="text-[10px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{session?.user?.email}</p>
             </div>
-            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+            <div className={`flex items-center gap-0.5 ${isNativeApp ? 'hidden' : 'opacity-0 group-hover:opacity-100'} transition-all duration-200`}>
+              {!isNativeApp && (
               <a href="/" className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title="Siteye Dön"
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#E4E3ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
@@ -330,6 +335,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h-2z" />
                 </svg>
               </a>
+              )}
               <button onClick={handleSignOut} className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title="Çıkış Yap"
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#FB7185'; e.currentTarget.style.background = 'rgba(251,113,133,0.1)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
@@ -343,20 +349,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="app-main flex-1 overflow-y-auto">
-        <div className="lg:hidden h-14 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 glass-strong border-b border-border">
+      <main className={`app-main flex-1 overflow-y-auto ${isNativeApp ? 'native-app-main' : ''}`}>
+        <div className={`lg:hidden h-14 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 glass-strong border-b border-border ${isNativeApp ? 'native-app-topbar' : ''}`}>
           <div className="flex items-center gap-3 min-w-0">
+            {!isNativeApp && (
             <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             </button>
+            )}
             <AppLogo variant="light" size="sm" showTagline={false} />
           </div>
           <NotificationBell variant="toolbar" />
         </div>
         {children}
       </main>
+      <NativeBottomNav />
     </div>
   )
 }
