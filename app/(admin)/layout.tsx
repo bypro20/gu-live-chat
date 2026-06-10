@@ -11,6 +11,8 @@ import {
 } from '@/lib/inbox-sound'
 import { AppLogo } from '@/components/brand/app-logo'
 import NotificationBell from '@/components/dashboard/notification-bell'
+import { useNativeApp } from '@/lib/hooks/use-native-app'
+import { clearNativeAppMark } from '@/lib/native-app'
 
 interface AdminUser {
   id: string
@@ -32,10 +34,12 @@ export default function AdminLayout({
   const [inboxUnread, setInboxUnread] = useState(0)
   const prevInboxUnreadRef = useRef(0)
   const inboxUnreadInitRef = useRef(false)
+  const { isNativeAdminApp } = useNativeApp()
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
-    router.push('/')
+    clearNativeAppMark()
+    router.push(isNativeAdminApp ? '/admin-login' : '/')
     router.refresh()
   }
 
@@ -166,13 +170,15 @@ export default function AdminLayout({
               />
             ))}
 
+            {!isNativeAdminApp && (
             <div className="pt-5 mt-5 border-t border-white/[0.06]">
               <p className="app-sidebar-group-label mb-2">Geçiş</p>
               <NavLink href="/dashboard" icon="back" label="Müşteri Paneli" active={false} />
             </div>
+            )}
           </nav>
 
-          <div className="relative p-3 border-t border-[var(--sidebar-border)] shrink-0">
+          <div className="relative p-3 border-t border-[var(--sidebar-border)] shrink-0 native-sidebar-footer">
             <div className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.04] transition-colors group">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
                 {userInitial}
@@ -182,8 +188,8 @@ export default function AdminLayout({
                 <p className="text-[10px] text-white/40 truncate">{admin?.email}</p>
               </div>
               <button
-                onClick={handleSignOut}
-                className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                onClick={() => void handleSignOut()}
+                className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-colors lg:opacity-0 lg:group-hover:opacity-100"
                 title="Çıkış Yap"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,6 +197,13 @@ export default function AdminLayout({
                 </svg>
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              className="lg:hidden w-full mt-2 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[13px] font-semibold text-white bg-red-500/90 hover:bg-red-500 transition-all"
+            >
+              Çıkış Yap
+            </button>
           </div>
         </aside>
 

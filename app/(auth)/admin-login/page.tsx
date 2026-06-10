@@ -6,6 +6,8 @@ import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Shield } from 'lucide-react'
+import { useNativeApp } from '@/lib/hooks/use-native-app'
+import { nativeAdminHomePath } from '@/lib/native-app'
 
 /** signIn(redirect:false) sets the cookie asynchronously — poll until the session is readable. */
 async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boolean> {
@@ -25,7 +27,8 @@ async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boo
 
 function AdminLoginForm() {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/admin'
+  const { isNativeCustomerApp, isNativeAdminApp } = useNativeApp()
+  const callbackUrl = searchParams.get('callbackUrl') || nativeAdminHomePath()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -63,8 +66,26 @@ function AdminLoginForm() {
     }
   }
 
+  if (isNativeCustomerApp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0B1220] px-4 native-app-auth">
+        <div className="w-full max-w-md text-center space-y-4">
+          <Shield className="w-12 h-12 text-violet-400 mx-auto" />
+          <h1 className="text-xl font-bold text-white">Yönetici paneli bu uygulamada yok</h1>
+          <p className="text-sm text-slate-400">
+            Müşteri uygulamasından platform yönetimine erişilemez. Yönetici girişi için tarayıcıdan
+            guchat.org/admin-login adresini veya Gu Chat Yönetim uygulamasını kullanın.
+          </p>
+          <Link href="/inbox" className="inline-flex px-6 py-3 rounded-xl bg-primary text-white font-semibold">
+            Gelen Kutusuna Dön
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className={`min-h-screen flex items-center justify-center px-4 ${isNativeAdminApp ? 'bg-[#080C14] native-app-auth' : 'bg-background'}`}>
       <div className="w-full max-w-md">
         <div className="surface p-6 sm:p-8">
           <div className="text-center mb-8">
@@ -74,9 +95,9 @@ function AdminLoginForm() {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-light rounded-xl mb-4">
               <Shield className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Guchat Yönetim Paneli</h1>
+            <h1 className="text-2xl font-bold text-foreground">Gu Chat Yönetim</h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              guchat.org · Sadece platform yöneticileri
+              {isNativeAdminApp ? 'Yönetici uygulaması · Sadece sizin için' : 'guchat.org · Sadece platform yöneticileri'}
             </p>
           </div>
 
@@ -141,9 +162,11 @@ function AdminLoginForm() {
           </p>
 
           <div className="mt-4 text-center">
+            {!isNativeAdminApp && (
             <Link href="/login" className="text-sm text-muted-foreground hover:text-primary transition">
               ← Müşteri girişi
             </Link>
+            )}
           </div>
         </div>
       </div>

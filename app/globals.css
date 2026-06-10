@@ -533,3 +533,21 @@ html.native-app .native-app-auth {
 html.native-app #gu-live-chat-widget-root {
   display: none !important;
 }
+
+html.native-app .native-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  min-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app .native-app-content {
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app .native-sidebar-footer {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app-admin .native-app-shell,
+html.native-app-admin body {
+  background: #080C14;
+}

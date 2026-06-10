@@ -42,10 +42,19 @@ export async function proxy(req: NextRequest) {
   if (ipBlock) return ipBlock
 
   const { pathname } = req.nextUrl
+  const ua = req.headers.get('user-agent') || ''
+  const isCustomerApp = ua.includes('GuChatApp') && !ua.includes('GuChatAdminApp')
 
   // Legacy admin login URL alias
   if (pathname === '/panel-giris') {
     return NextResponse.redirect(new URL('/admin-login', req.url))
+  }
+
+  // Müşteri APK — admin rotalarına erişim yok
+  if (isCustomerApp) {
+    if (pathname.startsWith('/admin') || pathname === '/admin-login' || pathname === '/panel-giris') {
+      return NextResponse.redirect(new URL('/inbox', req.url))
+    }
   }
 
   // Allow widget routes (public chat widget)

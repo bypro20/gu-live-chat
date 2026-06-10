@@ -69,7 +69,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
       } else {
         const oturumSonucu = await fetch('/api/auth/session')
         const oturum = await oturumSonucu.json()
-        if (oturum?.user?.role === 'ADMIN') {
+        if (oturum?.user?.role === 'ADMIN' && !isNativeApp) {
           router.push('/admin')
         } else {
           router.push(isNativeApp ? nativeAppHomePath() : (searchParams.get('callbackUrl') || '/dashboard'))

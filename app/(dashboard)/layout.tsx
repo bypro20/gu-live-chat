@@ -8,7 +8,9 @@ import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import NotificationBell from '@/components/dashboard/notification-bell'
 import { AppLogo } from '@/components/brand/app-logo'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
-import { nativeAppHomePath } from '@/lib/native-app'
+import { clearNativeAppMark, nativeAppHomePath } from '@/lib/native-app'
+import { NativeBottomNav } from '@/components/app/native-bottom-nav'
+import { NativeSidebarFooter } from '@/components/app/native-sidebar-footer'
 
 interface NavItem {
   href: string
@@ -33,7 +35,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [websiteDropdownOpen, setWebsiteDropdownOpen] = useState(false)
   const [inboxUnread, setInboxUnread] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { isNativeApp } = useNativeApp()
+  const { isNativeApp, isNativeCustomerApp } = useNativeApp()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -145,6 +147,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
+    clearNativeAppMark()
     router.push(isNativeApp ? '/login' : '/')
     router.refresh()
   }
@@ -266,7 +269,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             </div>
           ))}
 
-          {isAdmin && (
+          {isAdmin && !isNativeCustomerApp && (
             <div>
               <div className="flex items-center gap-2 px-2.5 mb-1.5">
                 <span className="text-[9px] font-semibold uppercase tracking-[0.12em]" style={{ color: 'rgba(96,165,250,0.7)' }}>Yönetim</span>
@@ -289,6 +292,15 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
+        {isNativeCustomerApp ? (
+          <NativeSidebarFooter
+            userName={session?.user?.name}
+            userEmail={session?.user?.email}
+            userInitial={userInitial}
+            onSignOut={() => void handleSignOut()}
+            onNavigate={() => setMobileMenuOpen(false)}
+          />
+        ) : (
         <div className="relative p-3 border-t shrink-0 border-[var(--sidebar-border)]">
           {mounted && (
             <div className="flex items-center justify-end px-2.5 mb-2.5">
@@ -346,6 +358,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
+        )}
       </aside>
 
       <main className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full overflow-hidden ${isNativeApp ? 'native-app-main' : ''}`}>
@@ -362,9 +375,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             <NotificationBell variant="toolbar" />
           </div>
         </div>
-        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+        <div className={`flex-1 min-h-0 min-w-0 overflow-hidden ${isNativeCustomerApp ? 'native-app-content' : ''}`}>
           {children}
         </div>
+        {isNativeCustomerApp && <NativeBottomNav />}
       </main>
     </div>
   )

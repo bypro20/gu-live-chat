@@ -4,8 +4,11 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   getNativeAppPlatform,
+  isNativeBlockedPath,
   markNativeApp,
   nativeAppHomePath,
+  nativeAppRedirectForBlocked,
+  nativeAdminHomePath,
   parseNativeAppFromSearch,
 } from '@/lib/native-app'
 
@@ -23,7 +26,7 @@ const MARKETING_PATHS = new Set([
   '/integrations',
 ])
 
-/** Capacitor / APK modunu başlatır; marketing sayfalarından uygulama kabuğuna yönlendirir */
+/** Capacitor modunu başlatır; müşteri ve yönetici uygulaması rotalarını ayırır */
 export function NativeAppBootstrap() {
   const pathname = usePathname()
   const router = useRouter()
@@ -48,8 +51,17 @@ export function NativeAppBootstrap() {
   }, [])
 
   useEffect(() => {
-    if (!getNativeAppPlatform()) return
-    if (!pathname || !MARKETING_PATHS.has(pathname)) return
+    const platform = getNativeAppPlatform()
+    if (!platform || !pathname) return
+
+    if (isNativeBlockedPath(pathname, platform)) {
+      router.replace(nativeAppRedirectForBlocked(pathname, platform))
+      return
+    }
+
+    if (platform === 'admin') return
+
+    if (!MARKETING_PATHS.has(pathname)) return
 
     fetch('/api/auth/session')
       .then((res) => (res.ok ? res.json() : null))
@@ -61,6 +73,21 @@ export function NativeAppBootstrap() {
         }
       })
       .catch(() => router.replace('/login'))
+  }, [pathname, router])
+
+  useEffect(() => {
+    const platform = getNativeAppPlatform()
+    if (platform !== 'admin' || !pathname) return
+    if (pathname !== '/admin-login' && pathname !== '/panel-giris') return
+
+    fetch('/api/auth/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((session) => {
+        if (session?.user?.role === 'ADMIN') {
+          router.replace(nativeAdminHomePath())
+        }
+      })
+      .catch(() => {})
   }, [pathname, router])
 
   return null

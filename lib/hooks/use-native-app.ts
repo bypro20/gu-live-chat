@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getNativeAppPlatform, type NativeAppPlatform } from '@/lib/native-app'
+import {
+  getNativeAppPlatform,
+  type NativeAppPlatform,
+} from '@/lib/native-app'
 
 export function useNativeApp() {
   const [platform, setPlatform] = useState<NativeAppPlatform | null>(null)
@@ -12,6 +15,8 @@ export function useNativeApp() {
 
   return {
     isNativeApp: platform !== null,
+    isNativeAdminApp: platform === 'admin',
+    isNativeCustomerApp: platform === 'android' || platform === 'ios',
     platform,
   }
 }

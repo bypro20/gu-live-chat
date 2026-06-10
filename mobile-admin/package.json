@@ -1,0 +1,23 @@
+{
+  "name": "guchat-admin-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gu Chat yönetici uygulaması (Capacitor) — sadece admin panel",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "build:apk": "cd android && ./gradlew assembleRelease",
+    "build:apk:debug": "cd android && ./gradlew assembleDebug",
+    "setup:android": "bash scripts/setup-android.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.2.0",
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/core": "^7.2.0",
+    "@capacitor/splash-screen": "^7.0.1",
+    "@capacitor/status-bar": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.2.0"
+  }
+}
