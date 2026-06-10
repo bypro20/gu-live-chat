@@ -7,8 +7,39 @@ import {
   TrendingUp, Activity, Shield, Database, Wifi, Settings,
   ChevronDown, Bell, RefreshCw, ArrowRight, UserCog, LayoutGrid,
   ExternalLink, BarChart3, DollarSign, Sparkles, Zap, CheckCircle2,
-  Server, HardDrive, Circle, MoreHorizontal
+  Server, HardDrive, Circle, MoreHorizontal, Target, Timer, MousePointerClick,
 } from 'lucide-react'
+import { TRIAL_DAYS, TRIAL_BONUS_WIDGET_DAYS, TRIAL_BONUS_FIRST_CHAT_DAYS } from '@/lib/trial-config'
+
+interface TrialFunnelStats {
+  totalStarted: number
+  activeTrials: number
+  convertedToPaid: number
+  churnedAfterTrial: number
+  expiringWithin48h: number
+  startedLast7Days: number
+  convertedLast30Days: number
+  widgetBonusGranted: number
+  chatBonusGranted: number
+  bothBonusesGranted: number
+  conversionRate: number
+  widgetBonusRate: number
+  chatBonusRate: number
+  activationRate: number
+}
+
+interface RecentTrialWebsite {
+  id: string
+  name: string
+  domain: string
+  plan: string
+  subscriptionStatus: string
+  trialStartsAt: string | null
+  trialEndsAt: string | null
+  trialBonusWidgetGranted: boolean
+  trialBonusChatGranted: boolean
+  owner: { email: string } | null
+}
 
 interface AdminStats {
   totalUsers: number
@@ -26,6 +57,8 @@ interface AdminStats {
   recentWebsites: Array<{ id: string; name: string; domain: string; plan: string; owner: { email: string } | null; createdAt: string }>
   addonPurchases: number
   addonRevenue: number
+  trialFunnel: TrialFunnelStats
+  recentTrials: RecentTrialWebsite[]
 }
 
 function useCounter(end: number, duration = 1500) {
@@ -131,6 +164,23 @@ const planColors: Record<string, { bg: string; text: string; bar: string }> = {
   BUSINESS: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-gradient-to-r from-emerald-400 to-emerald-500' },
 }
 
+const emptyTrialFunnel: TrialFunnelStats = {
+  totalStarted: 0,
+  activeTrials: 0,
+  convertedToPaid: 0,
+  churnedAfterTrial: 0,
+  expiringWithin48h: 0,
+  startedLast7Days: 0,
+  convertedLast30Days: 0,
+  widgetBonusGranted: 0,
+  chatBonusGranted: 0,
+  bothBonusesGranted: 0,
+  conversionRate: 0,
+  widgetBonusRate: 0,
+  chatBonusRate: 0,
+  activationRate: 0,
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0, totalWebsites: 0, totalConversations: 0, totalMessages: 0,
@@ -138,6 +188,8 @@ export default function AdminDashboardPage() {
     bannedUsers: 0, totalIpBans: 0,
     planDistribution: [], recentUsers: [], recentWebsites: [],
     addonPurchases: 0, addonRevenue: 0,
+    trialFunnel: emptyTrialFunnel,
+    recentTrials: [],
   })
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
@@ -151,7 +203,11 @@ export default function AdminDashboardPage() {
       const res = await fetch('/api/admin/stats')
       if (res.ok) {
         const data = await res.json()
-        setStats(data)
+        setStats({
+          ...data,
+          trialFunnel: data.trialFunnel ?? emptyTrialFunnel,
+          recentTrials: data.recentTrials ?? [],
+        })
       }
     } catch {}
     try {
@@ -348,6 +404,120 @@ export default function AdminDashboardPage() {
                 />
               )
             })}
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 lg:p-7 animate-in-up" style={{ animationDelay: '280ms' }}>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                  <Target className="w-4 h-4 text-violet-400" />
+                  Deneme → Ödeme Hunisi
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {TRIAL_DAYS} gün PRO deneme · widget +{TRIAL_BONUS_WIDGET_DAYS} gün · ilk sohbet +{TRIAL_BONUS_FIRST_CHAT_DAYS} gün
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 font-semibold">
+                  Dönüşüm %{stats.trialFunnel.conversionRate}
+                </span>
+                <span className="text-xs px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-gray-400">
+                  Son 7 gün: {stats.trialFunnel.startedLast7Days} yeni deneme
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <TrialMetric label="Deneme Başlatan" value={stats.trialFunnel.totalStarted} sub="toplam" />
+              <TrialMetric label="Aktif Deneme" value={stats.trialFunnel.activeTrials} sub={`${stats.trialFunnel.expiringWithin48h} süresi 48s içinde bitiyor`} accent="blue" />
+              <TrialMetric label="Ödemeye Dönüşen" value={stats.trialFunnel.convertedToPaid} sub={`%${stats.trialFunnel.conversionRate} dönüşüm`} accent="emerald" />
+              <TrialMetric label="Free'ye Düşen" value={stats.trialFunnel.churnedAfterTrial} sub="deneme bitti, ödeme yok" accent="amber" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+              <FunnelStep
+                title="Widget kurulumu"
+                count={stats.trialFunnel.widgetBonusGranted}
+                rate={stats.trialFunnel.widgetBonusRate}
+                total={stats.trialFunnel.totalStarted}
+                icon={MousePointerClick}
+              />
+              <FunnelStep
+                title="İlk sohbet"
+                count={stats.trialFunnel.chatBonusGranted}
+                rate={stats.trialFunnel.chatBonusRate}
+                total={stats.trialFunnel.totalStarted}
+                icon={MessageSquare}
+              />
+              <FunnelStep
+                title="Her iki aktivasyon"
+                count={stats.trialFunnel.bothBonusesGranted}
+                rate={stats.trialFunnel.totalStarted > 0 ? Math.round((stats.trialFunnel.bothBonusesGranted / stats.trialFunnel.totalStarted) * 1000) / 10 : 0}
+                total={stats.trialFunnel.totalStarted}
+                icon={CheckCircle2}
+              />
+            </div>
+
+            <div className="border-t border-white/[0.06] pt-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Timer className="w-4 h-4 text-sky-400" />
+                  Son Denemeler
+                </h3>
+                <Link href="/admin/websites" className="text-xs text-primary hover:text-primary-hover font-medium">
+                  Tüm siteler
+                </Link>
+              </div>
+              {stats.recentTrials.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">Henüz deneme kaydı yok</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500 border-b border-white/[0.06]">
+                        <th className="pb-3 pr-4 font-medium">Site</th>
+                        <th className="pb-3 pr-4 font-medium">Durum</th>
+                        <th className="pb-3 pr-4 font-medium">Bonus</th>
+                        <th className="pb-3 font-medium">Bitiş</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.04]">
+                      {stats.recentTrials.map((site) => (
+                        <tr key={site.id} className="text-gray-300">
+                          <td className="py-3 pr-4 min-w-[180px]">
+                            <p className="font-medium text-white truncate">{site.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{site.owner?.email || site.domain}</p>
+                          </td>
+                          <td className="py-3 pr-4">
+                            <TrialStatusBadge
+                              status={site.subscriptionStatus}
+                              plan={site.plan}
+                              trialEndsAt={site.trialEndsAt}
+                            />
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="flex flex-wrap gap-1">
+                              {site.trialBonusWidgetGranted && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded bg-sky-500/15 text-sky-300">Widget</span>
+                              )}
+                              {site.trialBonusChatGranted && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/15 text-emerald-300">Sohbet</span>
+                              )}
+                              {!site.trialBonusWidgetGranted && !site.trialBonusChatGranted && (
+                                <span className="text-xs text-gray-600">—</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 text-xs text-gray-500 whitespace-nowrap">
+                            {formatTrialEnd(site.trialEndsAt, site.subscriptionStatus)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -585,6 +755,18 @@ export default function AdminDashboardPage() {
                 <span className="text-xs text-gray-400">Ücretli Site</span>
                 <span className="text-sm font-bold text-white">{stats.paidWebsites}</span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">Aktif Deneme</span>
+                <span className="text-sm font-bold text-violet-400">{stats.trialFunnel.activeTrials}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">Deneme Dönüşümü</span>
+                <span className="text-sm font-bold text-emerald-400">%{stats.trialFunnel.conversionRate}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">Widget Aktivasyonu</span>
+                <span className="text-sm font-bold text-white">%{stats.trialFunnel.widgetBonusRate}</span>
+              </div>
               <div className="pt-2 border-t border-white/10">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">Gelir</span>
@@ -670,4 +852,68 @@ function QuickActionButton({ href, icon: Icon, label, color }: {
       <ExternalLink className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
     </Link>
   )
+}
+
+function TrialMetric({ label, value, sub, accent = 'violet' }: {
+  label: string; value: number; sub: string; accent?: 'violet' | 'blue' | 'emerald' | 'amber'
+}) {
+  const colors = {
+    violet: 'from-violet-500/10 border-violet-500/20',
+    blue: 'from-blue-500/10 border-blue-500/20',
+    emerald: 'from-emerald-500/10 border-emerald-500/20',
+    amber: 'from-amber-500/10 border-amber-500/20',
+  }
+  return (
+    <div className={`rounded-xl border bg-gradient-to-br to-transparent p-4 ${colors[accent]}`}>
+      <p className="text-[11px] text-gray-500 font-medium">{label}</p>
+      <p className="text-2xl font-bold text-white mt-1 tabular-nums">{value.toLocaleString()}</p>
+      <p className="text-[11px] text-gray-500 mt-1">{sub}</p>
+    </div>
+  )
+}
+
+function FunnelStep({ title, count, rate, total, icon: Icon }: {
+  title: string; count: number; rate: number; total: number; icon: React.ComponentType<{ className?: string }>
+}) {
+  const width = total > 0 ? Math.max(8, Math.round((count / total) * 100)) : 0
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm font-medium text-white">{title}</span>
+        </div>
+        <span className="text-xs font-semibold text-gray-400">%{rate}</span>
+      </div>
+      <p className="text-xl font-bold text-white tabular-nums mb-2">{count}</p>
+      <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-700" style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function TrialStatusBadge({ status, plan, trialEndsAt }: {
+  status: string; plan: string; trialEndsAt: string | null
+}) {
+  if (status === 'TRIALING' && trialEndsAt && new Date(trialEndsAt) > new Date()) {
+    return <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/20">Deneme</span>
+  }
+  if (status === 'ACTIVE' && plan !== 'FREE') {
+    return <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">Ödeme</span>
+  }
+  if (plan === 'FREE') {
+    return <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20">Free</span>
+  }
+  return <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-white/[0.06] text-gray-400">{status}</span>
+}
+
+function formatTrialEnd(trialEndsAt: string | null, status: string): string {
+  if (!trialEndsAt) return '—'
+  const end = new Date(trialEndsAt)
+  if (status === 'TRIALING' && end > new Date()) {
+    const days = Math.ceil((end.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+    return `${days} gün kaldı`
+  }
+  return end.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
 }

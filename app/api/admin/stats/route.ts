@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin-auth'
+import { getTrialFunnelStats, getRecentTrialWebsites } from '@/lib/trial-analytics'
 
 export async function GET() {
   try {
@@ -49,6 +50,11 @@ export async function GET() {
       },
     })
 
+    const [trialFunnel, recentTrials] = await Promise.all([
+      getTrialFunnelStats(),
+      getRecentTrialWebsites(8),
+    ])
+
     return NextResponse.json({
       totalUsers,
       totalWebsites,
@@ -68,6 +74,12 @@ export async function GET() {
       recentWebsites,
       addonPurchases,
       addonRevenue: addonPurchases * 0,
+      trialFunnel,
+      recentTrials: recentTrials.map((w) => ({
+        ...w,
+        trialStartsAt: w.trialStartsAt?.toISOString() ?? null,
+        trialEndsAt: w.trialEndsAt?.toISOString() ?? null,
+      })),
     })
   } catch (error) {
     console.error('Admin stats error:', error)
