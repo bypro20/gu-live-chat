@@ -8,7 +8,11 @@ declare global {
   }
 }
 
-import { GA_MEASUREMENT_ID, GOOGLE_ADS_CONVERSIONS } from '@/lib/analytics-config'
+import {
+  GA_MEASUREMENT_ID,
+  GOOGLE_ADS_CONVERSIONS,
+  GOOGLE_ADS_ID,
+} from '@/lib/analytics-config'
 
 const ADS_REGISTER = GOOGLE_ADS_CONVERSIONS.register
 const ADS_PURCHASE = GOOGLE_ADS_CONVERSIONS.purchase
@@ -34,10 +38,11 @@ function fbqEvent(name: string, params?: Record<string, unknown>) {
 
 /** Kayıt tamamlandı */
 export function trackSignUp(props?: { plan?: string; method?: string }) {
-  gtagEvent('sign_up', {
+  const params = {
     method: props?.method ?? 'email',
     plan: props?.plan,
-  })
+  }
+  gtagEvent('sign_up', params)
   adsConversion(ADS_REGISTER)
   fbqEvent('CompleteRegistration', {
     content_name: props?.plan ?? 'register',
@@ -50,12 +55,13 @@ export function trackPurchase(props: { value?: number; currency?: string; plan?:
   const value = props.value
   const currency = props.currency ?? 'TRY'
 
-  gtagEvent('purchase', {
+  const purchaseParams = {
     transaction_id: `purchase_${Date.now()}`,
     value,
     currency,
     items: props.plan ? [{ item_name: props.plan }] : undefined,
-  })
+  }
+  gtagEvent('purchase', purchaseParams)
   adsConversion(ADS_PURCHASE, value, currency)
   fbqEvent('Purchase', {
     value,
@@ -66,9 +72,8 @@ export function trackPurchase(props: { value?: number; currency?: string; plan?:
 
 /** İletişim / demo formu */
 export function trackLead(props?: { subject?: string }) {
-  gtagEvent('generate_lead', {
-    lead_type: props?.subject ?? 'contact',
-  })
+  const leadParams = { lead_type: props?.subject ?? 'contact' }
+  gtagEvent('generate_lead', leadParams)
   adsConversion(ADS_LEAD)
   fbqEvent('Lead', {
     content_name: props?.subject ?? 'contact',
@@ -89,6 +94,7 @@ export function trackViewContent(props: { contentName: string; path?: string }) 
 export function isMarketingTrackingConfigured() {
   return Boolean(
     GA_MEASUREMENT_ID ||
+      GOOGLE_ADS_ID ||
       process.env.NEXT_PUBLIC_META_PIXEL_ID ||
       process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID ||
       GOOGLE_ADS_CONVERSIONS.register

@@ -19,23 +19,23 @@ function GaPageViews() {
   return null
 }
 
-/** Google Analytics 4 + opsiyonel Google Ads tag */
+/** Google Analytics 4 + Google Ads tag (aynı gtag — dönüşüm + remarketing) */
 export function GoogleAnalytics() {
   if (!GA_MEASUREMENT_ID && !GOOGLE_ADS_ID) return null
 
-  const primaryId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID
+  const loaderId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID
 
   return (
     <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${primaryId}`} strategy="afterInteractive" />
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${loaderId}`} strategy="afterInteractive" />
       <Script id="google-analytics" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
-          ${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true, send_page_view: true });` : ''}
-          ${GOOGLE_ADS_ID ? `gtag('config', '${GOOGLE_ADS_ID}');` : ''}
+          ${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true, send_page_view: true, allow_google_signals: true });` : ''}
+          ${GOOGLE_ADS_ID ? `gtag('config', '${GOOGLE_ADS_ID}', { allow_enhanced_conversions: true });` : ''}
         `}
       </Script>
       <Suspense fallback={null}>
