@@ -58,7 +58,7 @@ export function showDesktopNotification(title: string, body: string): void {
   if (Notification.permission !== 'granted') return
   if (document.visibilityState === 'visible') return
   try {
-    new Notification(title, { body, icon: '/favicon.ico', tag: 'gu-inbox' })
+    new Notification(title, { body, icon: '/app-icon.png', tag: 'gu-inbox' })
   } catch {
     // ignore
   }

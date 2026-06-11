@@ -17,6 +17,16 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   ...buildMetadata(PAGE_SEO.home),
   metadataBase: new URL('https://guchat.org'),
+  applicationName: 'Gu Chat',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/favicon.ico',
+  },
   authors: [{ name: 'Gu Chat', url: 'https://guchat.org' }],
   creator: 'Gu Chat',
   publisher: 'Gu Chat',
