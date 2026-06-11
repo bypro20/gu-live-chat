@@ -93,7 +93,7 @@ export function buildMetadata({
 }
 
 /** Varsayılan OG görseli — app/opengraph-image.tsx */
-export const DEFAULT_OG_IMAGE = '/opengraph-image'
+export const DEFAULT_OG_IMAGE = '/og-image.png'
 
 export const PAGE_SEO = {
   home: {
