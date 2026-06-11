@@ -19,11 +19,21 @@ function withUtm(path: string, source: string, medium: string, campaign: string,
   return url.toString()
 }
 
+/** Google Ads için ana dönüşüm landing — en yüksek niyet */
+export const GOOGLE_ADS_PRIMARY_URL = withUtm('/basla', 'google', 'cpc', 'search-canli-destek')
+
 /** Hazır reklam / sosyal medya linkleri — panellere yapıştırın */
 export const MARKETING_CAMPAIGN_LINKS: CampaignLink[] = [
   {
+    id: 'google-search-primary',
+    label: '⭐ Google Ads — ANA (en yüksek dönüşüm)',
+    channel: 'Google Ads',
+    url: GOOGLE_ADS_PRIMARY_URL,
+    tip: 'Önce bunu kullanın. Anahtar kelime: [canlı destek yazılımı], [live chat türkiye], [chatbot yazılımı]',
+  },
+  {
     id: 'google-search-pro',
-    label: 'Google Ads — Profesyonel paket',
+    label: 'Google Ads — Direkt kayıt (PRO)',
     channel: 'Google Ads',
     url: withUtm('/register?plan=PRO', 'google', 'cpc', 'search-pro-trial'),
     tip: 'Anahtar kelime: canlı destek yazılımı, live chat türkiye',

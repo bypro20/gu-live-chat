@@ -107,12 +107,24 @@ export default function AdminMarketingPage() {
         </div>
       </section>
 
+      <section className="rounded-2xl border border-emerald-700/50 bg-emerald-950/30 p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-emerald-300">⭐ Öncelik: Google Arama Ads</h2>
+        <p className="text-sm text-slate-300">
+          En hızlı dönüşüm + en düşük kayıt maliyeti. Soğuk Instagram trafiğinden 2–3x daha verimli.
+        </p>
+        <div className="p-3 rounded-xl bg-slate-950 border border-emerald-800/50">
+          <p className="text-xs text-slate-500 mb-1">Landing URL (Google Ads&apos;e yapıştır)</p>
+          <code className="text-sm text-emerald-300 break-all">https://guchat.org/basla?utm_source=google&utm_medium=cpc&utm_campaign=search-canli-destek</code>
+        </div>
+        <p className="text-xs text-slate-500">Günlük bütçe: ₺80 · Sadece Arama ağı · Negatif kelimeler ekleyin</p>
+      </section>
+
       <section className="rounded-2xl border border-slate-700/80 bg-slate-900/60 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-white">3. Önerilen aylık bütçe</h2>
+        <h2 className="text-lg font-semibold text-white">3. Önerilen aylık bütçe (başlangıç)</h2>
         <ul className="text-sm text-slate-300 space-y-2 list-disc pl-5">
-          <li><strong className="text-white">Google Ads:</strong> ₺3.000–5.000 — arama reklamları</li>
-          <li><strong className="text-white">Meta (IG/FB):</strong> ₺2.000–4.000 — video + retargeting</li>
-          <li><strong className="text-white">LinkedIn:</strong> ₺2.000 — B2B hedefleme</li>
+          <li><strong className="text-emerald-400">Google Ads (önce):</strong> ₺2.400/ay (₺80/gün) — arama reklamları</li>
+          <li><strong className="text-white">Meta retargeting (2. hafta):</strong> ₺1.500/ay — site ziyaretçileri</li>
+          <li><strong className="text-slate-400">LinkedIn (sonra):</strong> bütçe artınca</li>
         </ul>
       </section>
     </div>
