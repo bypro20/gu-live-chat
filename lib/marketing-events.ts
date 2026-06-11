@@ -8,11 +8,11 @@ declare global {
   }
 }
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
-const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
-const ADS_REGISTER = process.env.NEXT_PUBLIC_GOOGLE_ADS_REGISTER_CONVERSION
-const ADS_PURCHASE = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION
-const ADS_LEAD = process.env.NEXT_PUBLIC_GOOGLE_ADS_LEAD_CONVERSION
+import { GA_MEASUREMENT_ID, GOOGLE_ADS_CONVERSIONS } from '@/lib/analytics-config'
+
+const ADS_REGISTER = GOOGLE_ADS_CONVERSIONS.register
+const ADS_PURCHASE = GOOGLE_ADS_CONVERSIONS.purchase
+const ADS_LEAD = GOOGLE_ADS_CONVERSIONS.lead
 
 function gtagEvent(name: string, params?: Record<string, unknown>) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
@@ -88,9 +88,9 @@ export function trackViewContent(props: { contentName: string; path?: string }) 
 
 export function isMarketingTrackingConfigured() {
   return Boolean(
-    GA_ID ||
+    GA_MEASUREMENT_ID ||
       process.env.NEXT_PUBLIC_META_PIXEL_ID ||
       process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID ||
-      ADS_ID
+      GOOGLE_ADS_CONVERSIONS.register
   )
 }

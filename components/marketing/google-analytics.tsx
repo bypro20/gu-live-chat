@@ -1,15 +1,29 @@
 'use client'
 
 import Script from 'next/script'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect, Suspense } from 'react'
+import { GA_MEASUREMENT_ID, GOOGLE_ADS_ID } from '@/lib/analytics-config'
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
-const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
+function GaPageViews() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (!GA_MEASUREMENT_ID || typeof window.gtag !== 'function') return
+    const query = searchParams.toString()
+    const page_path = query ? `${pathname}?${query}` : pathname
+    window.gtag('config', GA_MEASUREMENT_ID, { page_path })
+  }, [pathname, searchParams])
+
+  return null
+}
 
 /** Google Analytics 4 + opsiyonel Google Ads tag */
 export function GoogleAnalytics() {
-  if (!GA_ID && !ADS_ID) return null
+  if (!GA_MEASUREMENT_ID && !GOOGLE_ADS_ID) return null
 
-  const primaryId = GA_ID ?? ADS_ID
+  const primaryId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID
 
   return (
     <>
@@ -18,11 +32,15 @@ export function GoogleAnalytics() {
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
           gtag('js', new Date());
-          ${GA_ID ? `gtag('config', '${GA_ID}', { anonymize_ip: true });` : ''}
-          ${ADS_ID ? `gtag('config', '${ADS_ID}');` : ''}
+          ${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true, send_page_view: true });` : ''}
+          ${GOOGLE_ADS_ID ? `gtag('config', '${GOOGLE_ADS_ID}');` : ''}
         `}
       </Script>
+      <Suspense fallback={null}>
+        <GaPageViews />
+      </Suspense>
     </>
   )
 }
