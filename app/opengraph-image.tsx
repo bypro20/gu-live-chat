@@ -35,8 +35,9 @@ export default function OpenGraphImage() {
           >
             💬
           </div>
-          <div style={{ fontSize: 64, fontWeight: 800, letterSpacing: -2 }}>
-            Gu <span style={{ color: '#93C5FD' }}>Chat</span>
+          <div style={{ display: 'flex', fontSize: 64, fontWeight: 800, letterSpacing: -2 }}>
+            <span>Gu </span>
+            <span style={{ color: '#93C5FD' }}>Chat</span>
           </div>
         </div>
         <div style={{ fontSize: 40, fontWeight: 600, lineHeight: 1.25, maxWidth: 900 }}>
