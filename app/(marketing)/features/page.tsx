@@ -84,7 +84,7 @@ const allFeatures = [
   {
     icon: Phone,
     title: 'Telefon & SMS',
-    desc: 'Twilio SMS entegrasyonu. Telefon+ sesli kanal yakında.',
+    desc: 'Twilio SMS entegrasyonu ile otomatik SMS bildirimleri (Profesyonel paket ve üzeri).',
   },
   {
     icon: BookOpen,

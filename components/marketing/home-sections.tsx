@@ -44,10 +44,10 @@ const channels = [
 ]
 
 const products = [
-  { icon: MessageCircle, title: 'Sohbet Widget\'ı', desc: 'Sitenize saniyeler içinde ekleyin. Tam özelleştirilebilir.', href: '/features#widget' },
-  { icon: Users, title: 'Müşteri CRM', desc: 'Kişi profilleri, sohbet geçmişi ve etiketlerle ilişkileri yönetin.', href: '/features#crm' },
-  { icon: Bot, title: 'AI Motoru', desc: 'Akıllı yanıtlar, otomatik sınıflandırma ve öneri sistemi.', href: '/ai' },
-  { icon: BarChart3, title: 'Analitik Panel', desc: 'Gerçek zamanlı metrikler ve dışa aktarılabilir raporlar.', href: '/features#analytics' },
+  { icon: MessageCircle, title: 'Sohbet Widget\'ı', desc: 'Sitenize saniyeler içinde ekleyin. Ücretsiz paketten başlayın.', href: '/urunler#paketler', price: '₺0\'dan' },
+  { icon: Users, title: 'Müşteri CRM', desc: 'Kişi profilleri, sohbet geçmişi ve etiketlerle ilişkileri yönetin.', href: '/features#crm', price: 'Başlangıç ₺1.790/ay' },
+  { icon: Bot, title: 'AI Motoru', desc: 'Akıllı yanıtlar, otomatik sınıflandırma ve öneri sistemi.', href: '/ai', price: 'Profesyonel ₺3.790/ay' },
+  { icon: BarChart3, title: 'Analitik Panel', desc: 'Gerçek zamanlı metrikler ve dışa aktarılabilir raporlar.', href: '/urunler#eklentiler', price: 'Eklenti ₺79/ay' },
 ]
 
 const useCases = [
@@ -172,8 +172,11 @@ export function HomeHero() {
               <Link href="/register" className="btn-primary px-8 py-3.5 text-base w-full sm:w-auto">
                 Ücretsiz Başla <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/ai" className="btn-secondary px-8 py-3.5 text-base w-full sm:w-auto">
-                AI özelliklerini keşfet
+              <Link href="/urunler" className="btn-secondary px-8 py-3.5 text-base w-full sm:w-auto">
+                Paketleri Gör & Satın Al
+              </Link>
+              <Link href="/ai" className="text-sm font-medium text-primary hover:underline">
+                AI özelliklerini keşfet →
               </Link>
             </div>
             <p className="mt-5 text-sm text-muted-foreground">
@@ -428,7 +431,6 @@ export function SharedInbox() {
                     ch.active ? 'bg-primary-light text-primary border-primary/20' : 'bg-muted text-muted-foreground border-border'
                   }`}>
                     <ch.icon className="w-3.5 h-3.5" />{ch.label}
-                    {!ch.active && <span className="text-[10px] opacity-60">(yakında)</span>}
                   </span>
                 ))}
               </div>
@@ -564,16 +566,19 @@ export function ProductDeepDive() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {products.map((p, i) => (
             <FadeIn key={p.title} delay={i * 0.05}>
-              <Link href={p.href} className="surface-hover p-5 h-full flex flex-col group">
+              <div className="surface-hover p-5 h-full flex flex-col group">
                 <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                   <p.icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-semibold mb-1.5">{p.title}</h3>
                 <p className="text-sm text-muted-foreground flex-1">{p.desc}</p>
-                <span className="text-xs font-medium text-primary mt-4 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                  Detaylar <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-foreground">{p.price}</span>
+                  <Link href={p.href} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors">
+                    Satın Al
+                  </Link>
+                </div>
+              </div>
             </FadeIn>
           ))}
         </div>

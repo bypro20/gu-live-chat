@@ -7,6 +7,7 @@ import { Logo } from '@/components/marketing/logo'
 import { MobileAndroidNavButton } from '@/components/marketing/mobile-android-bar'
 
 const navLinks = [
+  { label: 'Ürünler', href: '/urunler' },
   { label: 'Canlı Destek', href: '/canli-destek' },
   { label: 'Özellikler', href: '/features' },
   { label: 'Yapay Zeka', href: '/ai' },

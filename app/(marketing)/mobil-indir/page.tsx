@@ -91,7 +91,7 @@ export default function MobilIndirPage() {
       </section>
 
       <section className="text-center p-6 rounded-2xl bg-muted/40 border border-border">
-        <p className="text-sm text-muted-foreground mb-4">iPhone kullanıyorsanız — yakında App Store. Şimdilik tarayıcıdan kullanabilirsiniz.</p>
+        <p className="text-sm text-muted-foreground mb-4">iPhone kullanıcıları web paneli ve PWA ile Gu Chat&apos;e erişebilir.</p>
         <Link href="/login" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
           Web panelden giriş <ArrowRight className="w-4 h-4" />
         </Link>

@@ -3,9 +3,11 @@ import Link from 'next/link'
 /** iyzico başvurusu için zorunlu yasal sayfa linkleri — footer üst bandı */
 export const IYZICO_REQUIRED_LINKS = [
   { href: '/hakkimizda', label: 'Hakkımızda' },
+  { href: '/urunler', label: 'Ürünler' },
   { href: '/gizlilik', label: 'Gizlilik Sözleşmesi' },
   { href: '/teslimat-iade', label: 'Teslimat ve İade Şartları' },
   { href: '/mesafeli-satis', label: 'Mesafeli Satış Sözleşmesi' },
+  { href: '/odeme-guvenligi', label: 'Ödeme Güvenliği' },
 ] as const
 
 export function IyzicoLegalBar() {

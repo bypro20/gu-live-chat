@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/chatbot', priority: 0.95, changeFrequency: 'weekly' },
     { path: '/whatsapp-destek', priority: 0.95, changeFrequency: 'weekly' },
     { path: '/pricing', priority: 0.9, changeFrequency: 'weekly' },
+    { path: '/urunler', priority: 0.95, changeFrequency: 'weekly' },
     { path: '/features', priority: 0.85, changeFrequency: 'monthly' },
     { path: '/ai', priority: 0.85, changeFrequency: 'monthly' },
     { path: '/integrations', priority: 0.8, changeFrequency: 'monthly' },

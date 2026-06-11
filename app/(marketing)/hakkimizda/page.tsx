@@ -52,6 +52,17 @@ export default function HakkimizdaPage() {
         </section>
 
         <section>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Satış Modeli</h2>
+          <p>
+            Gu Chat üzerinden <strong className="text-foreground">dijital abonelik paketleri</strong> ve{' '}
+            <strong className="text-foreground">eklentiler</strong> satılmaktadır. Fiziksel ürün
+            bulunmamaktadır; satın alma sonrası hizmet anında hesabınıza tanımlanır. Tüm fiyatlar{' '}
+            <a href="/urunler" className="text-primary hover:underline">ürünler sayfamızda</a>{' '}
+            açıkça listelenmiştir.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-lg font-semibold text-foreground mb-2">Güvenli Ödeme (iyzico)</h2>
           <p>
             Abonelik ödemeleri <strong className="text-foreground">iyzico</strong> güvenli ödeme

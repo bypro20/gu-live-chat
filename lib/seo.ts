@@ -111,6 +111,13 @@ export const PAGE_SEO = {
     path: '/pricing',
     keywords: ['canlı destek fiyat', 'live chat ücret', 'chatbot fiyatlandırma'],
   },
+  urunler: {
+    title: 'Ürünler — Abonelik Paketleri & Eklentiler | Satın Al',
+    description:
+      'Gu Chat dijital abonelik paketleri ve eklentileri. Başlangıç (₺1.790/ay), Profesyonel (₺3.790/ay), WhatsApp kanalı, AI asistan ve daha fazlası — iyzico ile güvenli ödeme, anında dijital teslimat.',
+    path: '/urunler',
+    keywords: ['canlı destek abonelik', 'saas satın al', 'gu chat paketleri'],
+  },
   ai: {
     title: 'AI Müşteri Desteği — Yapay Zeka Chatbot & Otomatik Yanıt',
     description:
