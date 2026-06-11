@@ -5,6 +5,7 @@ import { ToastProvider } from '@/lib/toast'
 import { buildMetadata, PAGE_SEO } from '@/lib/seo'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import { NativeAppBootstrap } from '@/components/app/native-app-bootstrap'
+import { AttributionBootstrap } from '@/components/marketing/attribution-bootstrap'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -55,6 +56,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ToastProvider>
             <NativeAppBootstrap />
+            <AttributionBootstrap />
             {children}
             <SiteAnalytics />
           </ToastProvider>

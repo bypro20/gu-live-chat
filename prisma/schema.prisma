@@ -162,6 +162,16 @@ model Website {
   trialBonusWidgetGranted Boolean          @default(false)
   trialBonusChatGranted   Boolean          @default(false)
 
+  // Marketing attribution (kayıt anı)
+  signupUtmSource    String?
+  signupUtmMedium    String?
+  signupUtmCampaign  String?
+  signupUtmContent   String?
+  signupUtmTerm      String?
+  signupReferrer     String?
+  referralCode       String?
+  signupLandingPage  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

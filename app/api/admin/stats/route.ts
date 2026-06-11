@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getTrialFunnelStats, getRecentTrialWebsites } from '@/lib/trial-analytics'
+import { getSignupSourceStats, getReferralSignupCount, getRecentAttributedSignups } from '@/lib/marketing-analytics'
 
 export async function GET() {
   try {
@@ -50,9 +51,12 @@ export async function GET() {
       },
     })
 
-    const [trialFunnel, recentTrials] = await Promise.all([
+    const [trialFunnel, recentTrials, signupSources, referralSignups, recentAttributedSignups] = await Promise.all([
       getTrialFunnelStats(),
       getRecentTrialWebsites(8),
+      getSignupSourceStats(10),
+      getReferralSignupCount(),
+      getRecentAttributedSignups(8),
     ])
 
     return NextResponse.json({
@@ -80,6 +84,14 @@ export async function GET() {
         trialStartsAt: w.trialStartsAt?.toISOString() ?? null,
         trialEndsAt: w.trialEndsAt?.toISOString() ?? null,
       })),
+      marketing: {
+        signupSources,
+        referralSignups,
+        recentAttributedSignups: recentAttributedSignups.map((w) => ({
+          ...w,
+          createdAt: w.createdAt.toISOString(),
+        })),
+      },
     })
   } catch (error) {
     console.error('Admin stats error:', error)

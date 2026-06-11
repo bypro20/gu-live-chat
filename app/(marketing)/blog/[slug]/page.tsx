@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/marketing/json-ld'
 import { notFound } from 'next/navigation'
 import { BLOG_POSTS, BLOG_BY_SLUG } from '@/lib/blog-posts'
 import { articleJsonLd, buildMetadata, breadcrumbJsonLd } from '@/lib/seo'
+import { SocialShare } from '@/components/marketing/social-share'
 import { trialShortLabel } from '@/lib/trial-config'
 
 export async function generateStaticParams() {
@@ -51,7 +52,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </Link>
       <article itemScope itemType="https://schema.org/Article">
         <time className="text-xs text-muted-foreground" dateTime={post.dateIso} itemProp="datePublished">{post.date}</time>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-2 mb-8" itemProp="headline">{post.title}</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-2 mb-4" itemProp="headline">{post.title}</h1>
+        <SocialShare title={post.title} path={`/blog/${slug}`} className="mb-8" />
         <div className="prose prose-neutral max-w-none space-y-4" itemProp="articleBody">
           {post.content.map((p, i) => (
             <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>

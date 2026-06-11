@@ -9,6 +9,14 @@ export const registerSchema = z
     websiteName: z.string().optional(),
     websiteDomain: z.string().optional(),
     inviteToken: z.string().optional(),
+    utmSource: z.string().max(120).optional(),
+    utmMedium: z.string().max(120).optional(),
+    utmCampaign: z.string().max(120).optional(),
+    utmContent: z.string().max(120).optional(),
+    utmTerm: z.string().max(120).optional(),
+    signupReferrer: z.string().max(500).optional(),
+    referralCode: z.string().max(64).optional(),
+    signupLandingPage: z.string().max(200).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {

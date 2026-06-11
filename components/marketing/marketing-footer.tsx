@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Shield, Globe, Copyright, Lock } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
 import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
+import { SocialLinksBar } from '@/components/marketing/social-links-bar'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { SITE_LEGAL } from '@/lib/site-legal'
 
@@ -80,6 +81,7 @@ export function MarketingFooter() {
 
         <div className="pt-8 border-t border-border space-y-8">
           <IyzicoLegalBar />
+          <SocialLinksBar />
           <div className="flex justify-center">
             <PaymentLogos variant="footer" />
           </div>

@@ -174,6 +174,14 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'team_members.invitedBy', sql: `ALTER TABLE "team_members" ADD COLUMN "invitedBy" TEXT` },
     { label: 'websites.trialBonusWidgetGranted', sql: `ALTER TABLE "websites" ADD COLUMN "trialBonusWidgetGranted" BOOLEAN NOT NULL DEFAULT 0` },
     { label: 'websites.trialBonusChatGranted', sql: `ALTER TABLE "websites" ADD COLUMN "trialBonusChatGranted" BOOLEAN NOT NULL DEFAULT 0` },
+    { label: 'websites.signupUtmSource', sql: `ALTER TABLE "websites" ADD COLUMN "signupUtmSource" TEXT` },
+    { label: 'websites.signupUtmMedium', sql: `ALTER TABLE "websites" ADD COLUMN "signupUtmMedium" TEXT` },
+    { label: 'websites.signupUtmCampaign', sql: `ALTER TABLE "websites" ADD COLUMN "signupUtmCampaign" TEXT` },
+    { label: 'websites.signupUtmContent', sql: `ALTER TABLE "websites" ADD COLUMN "signupUtmContent" TEXT` },
+    { label: 'websites.signupUtmTerm', sql: `ALTER TABLE "websites" ADD COLUMN "signupUtmTerm" TEXT` },
+    { label: 'websites.signupReferrer', sql: `ALTER TABLE "websites" ADD COLUMN "signupReferrer" TEXT` },
+    { label: 'websites.referralCode', sql: `ALTER TABLE "websites" ADD COLUMN "referralCode" TEXT` },
+    { label: 'websites.signupLandingPage', sql: `ALTER TABLE "websites" ADD COLUMN "signupLandingPage" TEXT` },
   ]
 
   for (const { label, sql } of statements) {

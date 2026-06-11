@@ -7,6 +7,9 @@ import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Zap, Shield, BarChart3, Users } from 'lucide-react'
 import { trialRegisterLine } from '@/lib/trial-config'
+import { readStoredAttribution, captureAttributionFromCurrentUrl } from '@/lib/marketing-attribution-client'
+import { attributionForApi } from '@/lib/marketing-attribution'
+import { trackSignUp } from '@/lib/marketing-events'
 
 const markaOzellikleri = [
   { simge: Zap, metin: 'Ücretsiz başlayın, kredi kartı gerekmez' },
@@ -40,6 +43,10 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
   const [yukleniyor, setYukleniyor] = useState(false)
 
   useEffect(() => {
+    captureAttributionFromCurrentUrl()
+  }, [])
+
+  useEffect(() => {
     if (!inviteToken) return
     fetch(`/api/team/invite?token=${encodeURIComponent(inviteToken)}`)
       .then((res) => (res.ok ? res.json() : null))
@@ -64,12 +71,23 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
     }
 
     try {
+      const stored = readStoredAttribution()
+      const attribution = attributionForApi(stored, typeof document !== 'undefined' ? document.referrer : undefined)
+
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
           ...(inviteToken ? { inviteToken } : {}),
+          ...(attribution.utmSource ? { utmSource: attribution.utmSource } : {}),
+          ...(attribution.utmMedium ? { utmMedium: attribution.utmMedium } : {}),
+          ...(attribution.utmCampaign ? { utmCampaign: attribution.utmCampaign } : {}),
+          ...(attribution.utmContent ? { utmContent: attribution.utmContent } : {}),
+          ...(attribution.utmTerm ? { utmTerm: attribution.utmTerm } : {}),
+          ...(attribution.signupReferrer ? { signupReferrer: attribution.signupReferrer } : {}),
+          ...(attribution.referralCode ? { referralCode: attribution.referralCode } : {}),
+          ...(attribution.signupLandingPage ? { signupLandingPage: attribution.signupLandingPage } : {}),
         }),
       })
 
@@ -88,6 +106,9 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
       })
 
       if (sonuc?.ok) {
+        if (!data.invited) {
+          trackSignUp({ plan: selectedPlan ?? undefined, method: 'email' })
+        }
         const afterRegister = data.invited
           ? '/dashboard'
           : selectedPlan && ['STARTER', 'PRO', 'BUSINESS'].includes(selectedPlan)

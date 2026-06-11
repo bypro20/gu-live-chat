@@ -81,6 +81,14 @@ export async function POST(req: Request) {
           domain: validated.websiteDomain!,
           websiteId: generateWebsiteId(),
           ownerId: user.id,
+          signupUtmSource: validated.utmSource,
+          signupUtmMedium: validated.utmMedium,
+          signupUtmCampaign: validated.utmCampaign,
+          signupUtmContent: validated.utmContent,
+          signupUtmTerm: validated.utmTerm,
+          signupReferrer: validated.signupReferrer,
+          referralCode: validated.referralCode,
+          signupLandingPage: validated.signupLandingPage,
         },
       })
 

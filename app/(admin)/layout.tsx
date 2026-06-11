@@ -53,7 +53,11 @@ export default function AdminLayout({
         }
         const data = await res.json()
         if (data.role !== 'ADMIN') {
-          router.push('/dashboard')
+          if (isNativeAdminApp) {
+            router.push('/admin-login')
+          } else {
+            router.push('/dashboard')
+          }
           return
         }
         setAdmin(data)
@@ -73,6 +77,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!admin) return
+    if (isNativeAdminApp) return
+
     requestDesktopNotificationPermission()
 
     const poll = async () => {
@@ -105,7 +111,7 @@ export default function AdminLayout({
     poll()
     const id = setInterval(poll, 5000)
     return () => clearInterval(id)
-  }, [admin, pathname])
+  }, [admin, pathname, isNativeAdminApp])
 
   if (loading) {
     return (
@@ -126,6 +132,7 @@ export default function AdminLayout({
 
   const navItems = [
     { href: '/admin', icon: 'dashboard', label: 'Genel Bakış' },
+    { href: '/admin/marketing', icon: 'settings', label: 'Pazarlama' },
     { href: '/admin/inbox', icon: 'inbox', label: 'Gelen Kutusu' },
     { href: '/admin/visitors', icon: 'visitors', label: 'Ekran İzleme' },
     { href: '/admin/users', icon: 'users', label: 'Kullanıcılar' },
@@ -139,14 +146,22 @@ export default function AdminLayout({
 
   return (
     <SessionProvider>
-      <div className="app-shell admin-shell relative lg:flex h-screen overflow-hidden text-white">
+      <div
+        className={`app-shell admin-shell relative lg:flex overflow-hidden text-white ${
+          isNativeAdminApp ? 'native-app-shell h-[100dvh]' : 'h-screen'
+        }`}
+      >
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden touch-manipulation"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden
+          />
         )}
 
         <aside
           className={`app-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col h-full transform transition-transform duration-200 ease-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto'
           }`}
         >
           <div className="relative h-[72px] flex items-center justify-between px-5 border-b border-[var(--sidebar-border)] shrink-0 gap-2">
@@ -167,6 +182,7 @@ export default function AdminLayout({
                   pathname === item.href ||
                   (item.href === '/admin/inbox' && pathname.startsWith('/admin/inbox'))
                 }
+                onNavigate={() => setSidebarOpen(false)}
               />
             ))}
 
@@ -208,16 +224,23 @@ export default function AdminLayout({
         </aside>
 
         <main
-          className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full text-white ${
+          className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full min-h-0 text-white ${
+            isNativeAdminApp ? 'native-app-main z-10' : ''
+          } ${
             pathname.startsWith('/admin/inbox')
-              ? 'min-h-0 overflow-hidden'
-              : 'overflow-y-auto'
+              ? 'overflow-hidden'
+              : 'overflow-y-auto overscroll-contain'
           }`}
         >
-          <div className="lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border">
+          <div
+            className={`lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border ${
+              isNativeAdminApp ? 'native-app-topbar' : ''
+            }`}
+          >
             <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
-              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+              className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer touch-manipulation"
               aria-label="Menü"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -231,7 +254,11 @@ export default function AdminLayout({
               <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" />
             </div>
           </div>
-          <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+          <div
+            className={`flex-1 min-h-0 min-w-0 ${
+              pathname.startsWith('/admin/inbox') ? 'overflow-hidden' : 'overflow-visible'
+            } ${isNativeAdminApp ? 'native-app-admin-content' : ''}`}
+          >
             {children}
           </div>
         </main>
@@ -246,12 +273,14 @@ function NavLink({
   label,
   active,
   badge,
+  onNavigate,
 }: {
   href: string
   icon: string
   label: string
   active: boolean
   badge?: number
+  onNavigate?: () => void
 }) {
   const icons: Record<string, React.ReactNode> = {
     dashboard: (
@@ -306,7 +335,8 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`app-sidebar-link ${active ? 'app-sidebar-link--active' : ''}`}
+      onClick={onNavigate}
+      className={`app-sidebar-link touch-manipulation ${active ? 'app-sidebar-link--active' : ''}`}
     >
       <span className="shrink-0 opacity-90">{icons[icon]}</span>
       <span className="flex-1">{label}</span>

@@ -14,4 +14,10 @@ export const SITE_LEGAL = {
   taxOffice: process.env.COMPANY_TAX_OFFICE || '—',
   taxNo: process.env.COMPANY_TAX_NO || '—',
   workingHours: '7/24 online destek',
+  social: {
+    instagram: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM || '',
+    linkedin: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN || '',
+    youtube: process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE || '',
+    x: process.env.NEXT_PUBLIC_SOCIAL_X || '',
+  },
 } as const

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { useToast } from '@/lib/toast'
 import { SITE_LEGAL } from '@/lib/site-legal'
+import { trackLead } from '@/lib/marketing-events'
 import { Mail, MessageSquare, Building2, MapPin, Phone, Clock } from 'lucide-react'
 
 declare global {
@@ -53,6 +54,7 @@ export function ContactPageClient() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Gönderilemedi')
+      trackLead({ subject: String(fd.get('subject') ?? 'contact') })
       toast({
         title: 'Mesajınız alındı',
         description: 'En kısa sürede size dönüş yapacağız.',

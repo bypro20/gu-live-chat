@@ -15,6 +15,7 @@ import {
   trialBillingSubtitle,
   trialBillingTitle,
 } from '@/lib/trial-config'
+import { trackPurchase } from '@/lib/marketing-events'
 
 interface SubscriptionInfo {
   plan: string
@@ -129,6 +130,7 @@ export default function BillingPage() {
     const paymentStatus = params.get('payment')
     if (paymentStatus === 'success') {
       setMessage({ type: 'success', text: 'Ödeme başarıyla tamamlandı! Planınız güncelleniyor...' })
+      trackPurchase({ currency: 'TRY' })
       // Clean URL
       window.history.replaceState({}, '', '/settings/billing')
       // Refresh subscription status
