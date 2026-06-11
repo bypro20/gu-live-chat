@@ -514,7 +514,7 @@ export function AdminVisitorsMonitor({
                   {isDashboard && !overlayEnabled && (
                     <>
                       {' '}
-                      <Link href="/settings/billing?plan=PRO" className="font-semibold underline">Paketi yükselt</Link>
+                      <Link href="/settings/plans?plan=PRO" className="font-semibold underline">Paketi yükselt</Link>
                     </>
                   )}
                 </div>

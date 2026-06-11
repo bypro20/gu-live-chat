@@ -112,7 +112,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
         const afterRegister = data.invited
           ? '/dashboard'
           : selectedPlan && ['STARTER', 'PRO', 'BUSINESS'].includes(selectedPlan)
-            ? `/settings/billing?plan=${selectedPlan}`
+            ? `/settings/plans?plan=${selectedPlan}`
             : '/dashboard'
         router.push(afterRegister)
         router.refresh()
@@ -199,7 +199,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               <button
                 onClick={() => signIn('google', {
                   callbackUrl: selectedPlan && ['STARTER', 'PRO', 'BUSINESS'].includes(selectedPlan)
-                    ? `/settings/billing?plan=${selectedPlan}`
+                    ? `/settings/plans?plan=${selectedPlan}`
                     : '/dashboard',
                 })}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-muted dark:hover:bg-gray-700 transition font-medium"

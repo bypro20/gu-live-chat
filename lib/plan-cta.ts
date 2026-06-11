@@ -34,7 +34,7 @@ export function getMarketingPlanCta(
   }
 
   if (isLoggedIn) {
-    return { label: 'Satın Al', href: `/settings/billing?plan=${planId}` }
+    return { label: 'Satın Al', href: `/settings/plans?plan=${planId}` }
   }
 
   return { label: 'Satın Al', href: `/register?plan=${planId}` }

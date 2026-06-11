@@ -123,7 +123,7 @@ export function formatTry(amount: number): string {
 export function subscriptionBuyHref(planId: PlanId, isLoggedIn = false): string {
   if (planId === 'FREE') return isLoggedIn ? '/dashboard' : '/register'
   if (planId === 'BUSINESS') return '/contact?konu=kurumsal'
-  return isLoggedIn ? `/settings/billing?plan=${planId}` : `/register?plan=${planId}`
+  return isLoggedIn ? `/settings/plans?plan=${planId}` : `/register?plan=${planId}`
 }
 
 export function addonBuyHref(isLoggedIn = false): string {

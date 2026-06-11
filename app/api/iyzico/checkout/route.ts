@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId, websiteId: requestedId } = body
+    const { planId, websiteId: requestedId, returnTo } = body
 
     if (!planId || !['STARTER', 'PRO', 'BUSINESS'].includes(planId)) {
       return NextResponse.json({ error: 'Geçersiz plan' }, { status: 400 })
@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
       session.user.email,
       session.user.name || session.user.email.split('@')[0],
       '',
-      userIp
+      userIp,
+      returnTo === 'plans' ? 'plans' : 'billing'
     )
 
     if ('error' in result) {

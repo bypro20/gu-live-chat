@@ -6,6 +6,8 @@ function redirectUrl(request: NextRequest, status: 'success' | 'failed', returnT
   const path =
     returnTo === 'addons'
       ? `/settings/addons?payment=${status}`
+      : returnTo === 'plans'
+        ? `/settings/plans?payment=${status}`
       : `/settings/billing?payment=${status}`
   return NextResponse.redirect(new URL(path, base))
 }

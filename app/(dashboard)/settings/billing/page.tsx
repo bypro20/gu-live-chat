@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { PLANS } from '@/lib/constants'
-import { getBillingPlanCta, type PlanId } from '@/lib/plan-cta'
+import type { PlanId } from '@/lib/plan-cta'
+import { PlanPackagesPanel } from '@/components/dashboard/plan-packages-panel'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
 import IyzicoCheckout from './IyzicoCheckout'
@@ -154,7 +155,7 @@ export default function BillingPage() {
       const res = await fetch('/api/iyzico/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, websiteId: activeWebsite?.websiteId }),
+        body: JSON.stringify({ planId, websiteId: activeWebsite?.websiteId, returnTo: 'billing' }),
       })
 
       const data = await res.json()
@@ -234,17 +235,15 @@ export default function BillingPage() {
     await handleUpgrade(planId)
   }
 
-  // Deep link from pricing page: /settings/billing?plan=PRO
+  // Deep link: /settings/billing?plan=PRO → paketler sayfasına yönlendir
   useEffect(() => {
     if (!activeWebsite || loading) return
     const params = new URLSearchParams(window.location.search)
     const targetPlan = params.get('plan') as PlanId | null
     if (!targetPlan || !['STARTER', 'PRO', 'BUSINESS'].includes(targetPlan)) return
 
-    window.history.replaceState({}, '', '/settings/billing')
-    void handlePlanAction(targetPlan)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWebsite, loading, trialInfo?.trialUsed, currentPlan])
+    window.location.replace(`/settings/plans?plan=${targetPlan}`)
+  }, [activeWebsite, loading])
 
   const getStatusBadge = () => {
     switch (planStatus) {
@@ -409,77 +408,30 @@ export default function BillingPage() {
         </div>
 
         {/* Plans */}
-        <h2 className="text-lg font-semibold text-foreground mb-1">Plan Yükseltme</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          İlk ödemede kartınız güvenle kaydedilir; abonelik her ay otomatik yenilenir.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`surface p-5 !border-2 transition flex flex-col h-full ${
-                plan.id === currentPlan
-                  ? '!border-primary bg-primary/5'
-                  : plan.id === 'PRO'
-                  ? '!border-primary/30 hover:!border-primary/60'
-                  : 'hover:!border-primary/30'
-              }`}
-            >
-              {plan.id === 'PRO' && (
-                <span className="inline-block px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full mb-2">
-                  Popüler
-                </span>
-              )}
-              <h3 className="font-bold text-foreground">{plan.name}</h3>
-              <div className="mt-2">
-                <span className="text-2xl font-bold text-foreground">₺{plan.price}</span>
-                {plan.price > 0 && <span className="text-muted-foreground text-sm">/ay</span>}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
-              <ul className="mt-4 space-y-1.5 flex-1">
-                {plan.features.map((f) => (
-                  <li key={f} className="text-xs text-foreground flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => {
-                  if (!iyzicoEnabled && plan.price > 0 && plan.id !== 'FREE') {
-                    setMessage({ type: 'error', text: 'Ödeme sistemi henüz aktif değil. iyzico API bilgileri girildiğinde ödeme yapabileceksiniz.' })
-                    return
-                  }
-                  if (plan.id !== currentPlan && plan.id !== 'FREE') {
-                    void handlePlanAction(plan.id as PlanId)
-                  }
-                }}
-                disabled={
-                  plan.id === currentPlan ||
-                  plan.id === 'FREE' ||
-                  (checkoutLoading !== null && checkoutLoading !== plan.id)
-                }
-                className={`w-full mt-5 py-3.5 rounded-xl text-base font-bold transition-all duration-200 ${
-                  plan.id === currentPlan || plan.id === 'FREE'
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : !iyzicoEnabled
-                    ? 'bg-primary text-primary-foreground opacity-60 cursor-pointer hover:opacity-80'
-                    : checkoutLoading === plan.id
-                    ? 'bg-primary/70 text-primary-foreground cursor-wait'
-                    : 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand hover:shadow-brand-lg hover:scale-[1.02]'
-                }`}
-              >
-                {checkoutLoading === plan.id
-                  ? 'Yönlendiriliyor...'
-                  : getBillingPlanCta(plan.id as PlanId, {
-                      isCurrentPlan: plan.id === currentPlan,
-                    })}
-              </button>
-            </div>
-          ))}
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Plan Yükseltme</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Paket satın almak için Paketler sayfasına gidin — ödeme iyzico ile güvenli alınır.
+            </p>
+          </div>
+          <Link
+            href="/settings/plans"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-hover transition"
+          >
+            Paketleri Gör
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
         </div>
+        <PlanPackagesPanel
+          currentPlan={currentPlan}
+          iyzicoEnabled={iyzicoEnabled}
+          checkoutLoading={checkoutLoading}
+          onPurchase={(planId) => void handlePlanAction(planId)}
+          compact
+        />
 
         {/* Enterprise contact */}
         <div className="mt-6 rounded-2xl border-2 border-violet-200 dark:border-violet-800 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/40 dark:to-purple-950/30 p-6 sm:p-8">

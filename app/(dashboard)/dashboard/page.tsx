@@ -378,7 +378,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold">Plan</h2>
               <Link
-                href="/settings/billing"
+                href="/settings/plans"
                 className="text-xs font-semibold text-primary hover:text-primary-hover"
               >
                 Yükselt →

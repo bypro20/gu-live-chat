@@ -1,7 +1,7 @@
 import { prisma } from './db'
 import { Plan, SubscriptionStatus } from '../app/generated/prisma/client'
 import { generateMerchantOid } from './payment-orders'
-import { initializeCheckoutForm, isIyzicoConfigured } from './iyzico'
+import { initializeCheckoutForm, isIyzicoConfigured, chargeStoredCard, deleteStoredCard } from './iyzico'
 import { PLANS, PLAN_LIMITS } from './constants'
 
 interface SubscriptionInfo {
@@ -42,7 +42,9 @@ export async function getSubscriptionStatus(
 export async function activateSubscription(
   websiteId: string,
   plan: Plan,
-  merchantOid: string
+  merchantOid: string,
+  cardUserKey?: string,
+  cardToken?: string
 ): Promise<void> {
   const planData = PLANS.find((p) => p.id === plan)
   if (!planData) {
@@ -60,6 +62,8 @@ export async function activateSubscription(
       subscriptionStatus: 'ACTIVE',
       currentPeriodEnd: planData.price > 0 ? currentPeriodEnd : null,
       paytrMerchantOid: merchantOid,
+      paytrUserToken: cardUserKey || undefined,
+      paytrCardToken: cardToken || undefined,
       failedPayments: 0,
     },
     select: { id: true },
@@ -88,11 +92,19 @@ export async function activateSubscription(
 export async function cancelSubscription(websiteId: string): Promise<void> {
   const website = await prisma.website.findUnique({
     where: { websiteId },
-    select: { plan: true },
+    select: {
+      paytrUserToken: true,
+      paytrCardToken: true,
+      plan: true,
+    },
   })
 
   if (!website) {
     throw new Error('Website not found')
+  }
+
+  if (website.paytrUserToken && website.paytrCardToken) {
+    await deleteStoredCard(website.paytrUserToken, website.paytrCardToken)
   }
 
   await prisma.website.update({
@@ -146,18 +158,70 @@ export async function handleFailedPayment(
   return { downgraded: false, failedPayments: newFailedCount }
 }
 
-/** Recurring auto-charge is not supported without stored cards — manual renewal via checkout. */
+/** Auto-charge stored card via iyzico (cron renewal). */
 export async function renewSubscription(
   websiteId: string
 ): Promise<{ success: boolean; msg?: string }> {
-  console.log(`[Subscription] Auto-renew skipped for ${websiteId} — iyzico manual checkout required`)
-  return { success: false, msg: 'Manual renewal required' }
+  const website = await prisma.website.findUnique({
+    where: { websiteId },
+    select: {
+      id: true,
+      plan: true,
+      paytrUserToken: true,
+      paytrCardToken: true,
+      owner: { select: { email: true, name: true } },
+    },
+  })
+
+  if (!website) {
+    throw new Error('Website not found')
+  }
+
+  if (!website.paytrUserToken || !website.paytrCardToken) {
+    console.error(`[Subscription] No stored card for ${websiteId}`)
+    return { success: false, msg: 'Kayıtlı kart yok' }
+  }
+
+  const planData = PLANS.find((p) => p.id === website.plan)
+  if (!planData || planData.price <= 0) {
+    return { success: false, msg: 'Geçersiz plan' }
+  }
+
+  if (!isIyzicoConfigured()) {
+    return { success: false, msg: 'iyzico yapılandırılmamış' }
+  }
+
+  const merchantOid = generateMerchantOid(websiteId, website.plan)
+  const buyerEmail = website.owner?.email || ''
+  const buyerName = website.owner?.name || buyerEmail.split('@')[0] || 'Müşteri'
+
+  const result = await chargeStoredCard({
+    conversationId: merchantOid,
+    basketId: merchantOid,
+    priceTry: planData.price,
+    itemName: `Gu Chat ${planData.name} Planı — Yenileme`,
+    cardUserKey: website.paytrUserToken,
+    cardToken: website.paytrCardToken,
+    buyerEmail,
+    buyerName,
+    buyerIp: '127.0.0.1',
+  })
+
+  if (result.status === 'success') {
+    await renewSubscriptionFromCallback(websiteId, merchantOid, website.plan)
+    return { success: true }
+  }
+
+  await handleFailedPayment(websiteId)
+  return { success: false, msg: result.errorMessage || 'Otomatik ödeme başarısız' }
 }
 
 export async function renewSubscriptionFromCallback(
   websiteId: string,
   merchantOid: string,
-  plan: Plan
+  plan: Plan,
+  cardUserKey?: string,
+  cardToken?: string
 ): Promise<void> {
   const planData = PLANS.find((p) => p.id === plan)
   if (!planData) {
@@ -187,6 +251,9 @@ export async function renewSubscriptionFromCallback(
       subscriptionStatus: 'ACTIVE',
       currentPeriodEnd: newPeriodEnd,
       paytrMerchantOid: merchantOid,
+      ...(cardUserKey && cardToken
+        ? { paytrUserToken: cardUserKey, paytrCardToken: cardToken }
+        : {}),
       failedPayments: 0,
     },
   })
@@ -217,7 +284,8 @@ export async function initiateCheckout(
   userEmail: string,
   userName: string,
   userPhone: string,
-  userIp: string
+  userIp: string,
+  returnTo: 'billing' | 'plans' = 'billing'
 ): Promise<
   | {
       token: string
@@ -259,7 +327,7 @@ export async function initiateCheckout(
     basketId: merchantOid,
     priceTry: plan.price,
     itemName: `Gu Chat ${plan.name} Planı`,
-    callbackUrl: `${baseUrl}/api/iyzico/callback`,
+    callbackUrl: `${baseUrl}/api/iyzico/callback${returnTo === 'plans' ? '?return=plans' : ''}`,
     buyerEmail: userEmail,
     buyerName: userName,
     buyerPhone: userPhone,
