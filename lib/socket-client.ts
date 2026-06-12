@@ -12,7 +12,9 @@ const SOCKET_PROXY_HOSTS = new Set([
   SITE_DOMAIN,
   `www.${SITE_DOMAIN}`,
   'guchat.org',
+  'www.guchat.org',
   'localhost',
+  '127.0.0.1',
 ])
 
 function useSocketProxy(): boolean {

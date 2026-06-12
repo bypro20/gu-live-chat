@@ -17,9 +17,22 @@
     return;
   }
 
-  // Same-origin when embedded on gulivechat.com; override with window.GU_WIDGET_URL for cross-domain installs
+  // Widget her zaman Gu Live Chat sunucusundan yüklenir — müşteri sitesinde origin yanlış olur
   function getWidgetBaseUrl() {
-    return window.GU_WIDGET_URL || window.location.origin || 'https://gulivechat.com';
+    if (window.GU_WIDGET_URL) return String(window.GU_WIDGET_URL).replace(/\/$/, '');
+    var scripts = document.getElementsByTagName('script');
+    for (var i = scripts.length - 1; i >= 0; i--) {
+      var src = scripts[i].src || '';
+      if (src.indexOf('widget.js') !== -1) {
+        try {
+          return new URL(src).origin;
+        } catch (e) { /* ignore */ }
+      }
+    }
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return window.location.origin;
+    }
+    return 'https://www.gulivechat.com';
   }
 
   // ─── Force widget visibility with !important CSS ──────────────────────
@@ -539,6 +552,8 @@
     } else if (event.data.type === 'gu:unread') {
       // The chat UI reports how many unread messages arrived while closed.
       if (!chatOpen) setUnread(parseInt(event.data.count, 10) || 0);
+    } else if (event.data.type === 'gu:request-pageview') {
+      trackPageView();
     }
   });
 

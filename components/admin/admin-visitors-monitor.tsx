@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
-import { connectSocket, getSocket, isSocketEnabled } from '@/lib/socket-client'
+import { connectSocket, getSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
@@ -73,6 +73,7 @@ export function AdminVisitorsMonitor({
   const [webrtcStream, setWebrtcStream] = useState<MediaStream | null>(null)
   const [webrtcState, setWebrtcState] = useState<WebRTCConnectionState | 'idle' | 'denied'>('idle')
   const [privacyMode, setPrivacyMode] = useState(false)
+  const [liveConnected, setLiveConnected] = useState(false)
   const selectedVisitorIdRef = useRef<string | null>(selectedVisitorId)
   const screenCaptureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => { selectedVisitorIdRef.current = selectedVisitorId }, [selectedVisitorId])
@@ -126,6 +127,17 @@ export function AdminVisitorsMonitor({
   useEffect(() => {
     if (isDashboard && overlayFeature) setOverlayEnabled(true)
   }, [isDashboard, overlayFeature])
+
+  useEffect(() => {
+    if (!isSocketEnabled()) {
+      setLiveConnected(false)
+      return
+    }
+    const tick = () => setLiveConnected(isSocketConnected())
+    tick()
+    const id = setInterval(tick, 2000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     if (!initialVisitorId) return
@@ -295,6 +307,10 @@ export function AdminVisitorsMonitor({
       setOverlayDeniedMessage(m.socketOffline)
       return
     }
+    if (active && !liveConnected) {
+      authenticateAgent()
+      setOverlayDeniedMessage(m.socketConnecting)
+    }
     if (active && isDashboard && !overlayEnabled) {
       setOverlayDeniedMessage(m.overlayDeniedPro)
       return
@@ -302,13 +318,13 @@ export function AdminVisitorsMonitor({
     const visitor = visitors.get(visitorId)
     const targetWebsiteId = visitor?.websiteId || websiteId || undefined
     if (!targetWebsiteId) return
-    if (active && visitor && !visitor.isLive) {
-      setOverlayDeniedMessage(m.visitorNotLive)
-      return
-    }
     if (active) {
       authenticateAgent()
-      setOverlayDeniedMessage(null)
+      if (!visitor?.isLive) {
+        setOverlayDeniedMessage(m.visitorNotLive)
+      } else {
+        setOverlayDeniedMessage(null)
+      }
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
@@ -337,7 +353,7 @@ export function AdminVisitorsMonitor({
       emit('agent:screen:stop', { visitorId, websiteId: targetWebsiteId })
       updateVisitor(visitorId, { screenshotUrl: null, screenshotAt: null })
     }
-  }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel, authenticateAgent, m])
+  }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel, authenticateAgent, m, liveConnected])
 
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
     if (active && isDashboard && !overlayEnabled) {
@@ -366,7 +382,7 @@ export function AdminVisitorsMonitor({
     }
   }, [])
 
-  const socketReady = isSocketEnabled()
+  const socketReady = isSocketEnabled() && liveConnected
 
   const filtered = Array.from(visitors.values())
     .filter((v) => {

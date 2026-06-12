@@ -588,18 +588,27 @@ export default function WidgetPage() {
       return () => { releaseSocket() }
     }
 
-    socket.on('connect', () => {
+    const authenticateVisitor = () => {
       setSocketConnected(true)
       socket.emit('visitor:auth', {
         visitorToken: visitorTokenRef.current,
         websiteId,
         conversationId: conversationId || undefined,
       })
-    })
+      window.parent.postMessage({ type: 'gu:request-pageview' }, '*')
+    }
 
-    socket.on('disconnect', () => {
+    const onDisconnect = () => setSocketConnected(false)
+    const onConnectError = (err: Error) => {
+      console.warn('[Gu Widget] Socket connect_error:', err.message)
       setSocketConnected(false)
-    })
+    }
+
+    socket.on('connect', authenticateVisitor)
+    socket.on('disconnect', onDisconnect)
+    socket.on('connect_error', onConnectError)
+
+    if (socket.connected) authenticateVisitor()
 
     socket.on('visitor:typing', (data: { agentName: string }) => {
       setIsTyping(true)
@@ -676,6 +685,9 @@ export default function WidgetPage() {
     })
 
     return () => {
+      socket.off('connect', authenticateVisitor)
+      socket.off('disconnect', onDisconnect)
+      socket.off('connect_error', onConnectError)
       releaseSocket()
     }
   }, [isInitialized, websiteId, conversationId])

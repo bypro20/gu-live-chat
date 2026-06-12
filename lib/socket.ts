@@ -213,6 +213,7 @@ export function initSocketServer(httpServer: HTTPServer) {
       })
 
       console.log(`[Socket] Agent ${userId} authenticated for websites: ${websiteIds.join(', ')}`)
+      socket.emit('agent:auth:ok', { websiteIds })
     })
 
     // ─── Agent requests current live visitors ──────────────────
@@ -299,6 +300,7 @@ export function initSocketServer(httpServer: HTTPServer) {
       })
 
       console.log(`[Socket] Visitor ${visitorId.substring(0, 8)}... connected to website ${websiteId} (room: website:${websiteId})`)
+      socket.emit('visitor:auth:ok', { visitorId, websiteId })
     })
 
     // ─── Join Conversation Rooms ───────────────────────────────
