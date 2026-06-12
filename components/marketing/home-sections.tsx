@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroPreview } from '@/components/marketing/hero-preview'
+import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { trialHeroLine } from '@/lib/trial-config'
 import { useT, useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
@@ -44,36 +45,36 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
 
   return (
     <FadeIn delay={idx * 0.06} className="h-full">
-      <div className={`h-full surface p-6 flex flex-col ${plan.highlighted ? 'border-primary ring-1 ring-primary/20' : ''}`}>
-        {plan.highlighted && (
-          <span className="self-start mb-3 px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-wide">{t.pricing.popular}</span>
-        )}
-        <h3 className="text-lg font-bold">{planMeta.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1">{planMeta.desc}</p>
-        <div className="mt-5 mb-6">
-          {plan.monthly === 0 ? (
-            <span className="text-3xl font-bold">{t.pricing.free}</span>
+      <PlanPricingCard
+        tier={plan.id}
+        name={planMeta.name}
+        description={planMeta.desc}
+        highlighted={plan.highlighted}
+        badge={plan.highlighted ? t.pricing.popular : null}
+        price={
+          plan.monthly === 0 ? (
+            <span className="text-3xl font-bold tracking-tight">{t.pricing.free}</span>
           ) : (
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold">{regional.formatted}</span>
-              <span className="text-sm text-muted-foreground">{t.pricing.perMonth}</span>
+              <span className="text-3xl font-bold tracking-tight">{regional.formatted}</span>
+              <span className="text-sm text-muted-foreground font-medium">{t.pricing.perMonth}</span>
             </div>
-          )}
-        </div>
-        <Link href={cta.href}
-          className={`text-center py-2.5 rounded-lg font-semibold text-sm transition-colors ${
-            plan.highlighted ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-primary-light text-primary hover:bg-primary hover:text-white'
-          }`}>
-          {cta.label}
-        </Link>
-        <ul className="space-y-2.5 mt-6 flex-1">
-          {features.map((f) => (
-            <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-              <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />{f}
-            </li>
-          ))}
-        </ul>
-      </div>
+          )
+        }
+        cta={
+          <Link
+            href={cta.href}
+            className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition-colors ${
+              plan.highlighted
+                ? 'bg-primary text-white hover:bg-primary-hover'
+                : 'bg-muted text-foreground hover:bg-muted/80 border border-border'
+            }`}
+          >
+            {cta.label}
+          </Link>
+        }
+        features={features}
+      />
     </FadeIn>
   )
 }

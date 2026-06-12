@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Check, ArrowRight, ShoppingCart, Package, Puzzle } from 'lucide-react'
+import { ArrowRight, ShoppingCart, Package, Puzzle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
 import { FadeIn } from '@/components/marketing/fade-in'
+import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
@@ -99,37 +100,43 @@ export function UrunlerPageContent() {
 
               return (
                 <FadeIn key={planId} delay={i * 0.05} className="h-full">
-                  <article className={`h-full surface p-6 flex flex-col ${highlighted ? 'border-primary ring-1 ring-primary/20' : ''}`}>
-                    {highlighted && (
-                      <span className="self-start mb-3 px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full uppercase">
-                        {common.popular}
-                      </span>
-                    )}
-                    <div className="w-12 h-12 rounded-xl bg-primary-light text-primary flex items-center justify-center text-xl mb-4">📦</div>
-                    <h3 className="text-lg font-bold">{planMeta.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{planMeta.description}</p>
-                    <div className="mt-4 mb-4">
-                      <span className="text-2xl font-bold">
-                        {planId === 'FREE' ? u.freeProduct : regional.formatted}
-                      </span>
-                      {planId !== 'FREE' && <span className="text-sm text-muted-foreground">{u.perMonth}</span>}
-                    </div>
-                    <Link href={buyHref} className={`inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-semibold text-sm transition-colors ${highlighted ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-primary-light text-primary hover:bg-primary hover:text-white'}`}>
-                      <ShoppingCart className="w-4 h-4" />
-                      {buyLabel}
-                    </Link>
-                    <Link href={DETAIL_HREFS[planId]} className="mt-2 text-center text-xs text-primary hover:underline">
-                      {u.productDetails} →
-                    </Link>
-                    <ul className="space-y-2 mt-5 flex-1 border-t border-border pt-4">
-                      {planMeta.features.slice(0, 5).map((f) => (
-                        <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  </article>
+                  <PlanPricingCard
+                    tier={planId}
+                    name={planMeta.name}
+                    description={planMeta.description}
+                    highlighted={highlighted}
+                    badge={highlighted ? common.popular : null}
+                    maxFeatures={6}
+                    price={
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold tracking-tight text-foreground">
+                          {planId === 'FREE' ? u.freeProduct : regional.formatted}
+                        </span>
+                        {planId !== 'FREE' && (
+                          <span className="text-sm text-muted-foreground font-medium">{u.perMonth}</span>
+                        )}
+                      </div>
+                    }
+                    cta={
+                      <Link
+                        href={buyHref}
+                        className={`inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-semibold text-sm transition-colors ${
+                          highlighted
+                            ? 'bg-primary text-white hover:bg-primary-hover'
+                            : 'bg-muted text-foreground hover:bg-muted/80 border border-border'
+                        }`}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        {buyLabel}
+                      </Link>
+                    }
+                    footer={
+                      <Link href={DETAIL_HREFS[planId]} className="block text-center text-xs text-primary hover:underline">
+                        {u.productDetails} →
+                      </Link>
+                    }
+                    features={planMeta.features}
+                  />
                 </FadeIn>
               )
             })}
@@ -153,19 +160,29 @@ export function UrunlerPageContent() {
 
               return (
                 <FadeIn key={addon.slug} delay={i * 0.04}>
-                  <article className="surface p-5 flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-11 h-11 rounded-lg bg-primary-light flex items-center justify-center text-xl">{addon.icon}</div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success-light text-success">{u.active}</span>
-                    </div>
-                    <h3 className="font-semibold mt-1 mb-1">{name}</h3>
-                    <p className="text-sm text-muted-foreground flex-1 mb-4">{desc}</p>
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <span className="font-bold">{price}</span>
-                      <Link href={addonBuyHref(isLoggedIn)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors">
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        {u.buyNow}
-                      </Link>
+                  <article className="h-full flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="h-1 w-full bg-gradient-to-r from-primary/80 to-primary" aria-hidden />
+                    <div className="p-5 flex flex-col flex-1">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          {addon.category}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                          {u.active}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-base tracking-tight">{name}</h3>
+                      <p className="text-sm text-muted-foreground flex-1 mt-2 mb-4 leading-relaxed">{desc}</p>
+                      <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
+                        <span className="text-lg font-bold tracking-tight">{price}</span>
+                        <Link
+                          href={addonBuyHref(isLoggedIn)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          {u.buyNow}
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 </FadeIn>
