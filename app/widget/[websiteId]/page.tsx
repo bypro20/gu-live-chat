@@ -23,6 +23,8 @@ import {
   WIDGET_FONT,
 } from '@/lib/widget-theme'
 import type { Socket } from 'socket.io-client'
+import { useWidgetTranslations } from '@/lib/hooks/use-widget-translations'
+import { readAutoTranslatePref, writeAutoTranslatePref } from '@/lib/widget-translate-cache'
 
 interface WidgetConfig {
   primaryColor: string
@@ -147,7 +149,11 @@ const WIDGET_STRINGS = {
     download: 'İndir',
     translate: 'Çevir',
     showOriginal: 'Orijinali göster',
+    showTranslation: 'Çeviriyi göster',
     translating: 'Çevriliyor...',
+    autoTranslateOn: 'Canlı çeviri AÇIK',
+    autoTranslateOff: 'Canlı çeviri',
+    originalLabel: 'Orijinal',
     emoji: 'Emoji',
     langName: 'Türkçe',
   },
@@ -187,7 +193,11 @@ const WIDGET_STRINGS = {
     download: 'Download',
     translate: 'Translate',
     showOriginal: 'Show original',
+    showTranslation: 'Show translation',
     translating: 'Translating...',
+    autoTranslateOn: 'Live translate ON',
+    autoTranslateOff: 'Live translate',
+    originalLabel: 'Original',
     emoji: 'Emoji',
     langName: 'English',
   },
@@ -299,8 +309,20 @@ export default function WidgetPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
-  const [translations, setTranslations] = useState<Record<string, string>>({})
-  const [translatingId, setTranslatingId] = useState<string | null>(null)
+
+  const {
+    translatingId,
+    translateMessage,
+    autoTranslateIncoming,
+    isShowingOriginal,
+    getDisplayText,
+    hasTranslation,
+  } = useWidgetTranslations({
+    websiteId,
+    lang,
+    enabled: aiTranslateAvailable,
+    autoTranslateOn,
+  })
 
   // UI dictionary only ships TR/EN; any other selected language falls back to
   // English for interface labels while message translation still targets it.
@@ -321,6 +343,7 @@ export default function WidgetPage() {
     try {
       const saved = localStorage.getItem(`gu_widget_lang_${websiteId}`)
       if (saved) setLang(saved)
+      setAutoTranslateOn(readAutoTranslatePref(websiteId))
     } catch { /* ignore */ }
   }, [websiteId])
 
@@ -1030,68 +1053,25 @@ export default function WidgetPage() {
     }
   }, [websiteId, conversationId, visitorInfo, inputMessage, t])
 
-  const handleTranslateMessage = useCallback(async (msg: Message) => {
-    if (translations[msg.id]) {
-      // Toggle off — show original.
-      setTranslations((prev) => {
-        const next = { ...prev }
-        delete next[msg.id]
-        return next
-      })
-      return
-    }
-    if (!msg.content?.trim()) return
-    setTranslatingId(msg.id)
-    try {
-      const res = await fetch('/api/widget/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          websiteId,
-          text: msg.content,
-          targetLang: lang,
-        }),
-      })
-      const data = await res.json()
-      if (data.available && data.translatedText) {
-        setTranslations((prev) => ({ ...prev, [msg.id]: data.translatedText }))
-      } else if (data.available === false) {
-        // No engine configured — hide the feature going forward.
-        setAiTranslateAvailable(false)
-      }
-    } catch {
-      // Silent — never break the chat over a translation hiccup.
-    } finally {
-      setTranslatingId(null)
-    }
-  }, [translations, websiteId, lang])
-
-  // Supsis-style: auto-translate agent/bot messages to visitor's language
+  // Gelen temsilci/bot mesajlarını otomatik çevir (Supsis tarzı)
   useEffect(() => {
-    if (!aiTranslateAvailable || !autoTranslateOn) return
-    const pending = messages.filter(
-      (m) =>
-        (m.senderType === 'AGENT' || m.senderType === 'BOT') &&
-        m.content?.trim() &&
-        !translations[m.id]
-    )
-    pending.slice(-5).forEach((msg) => {
-      setTranslatingId(msg.id)
-      fetch('/api/widget/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId, text: msg.content, targetLang: lang }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.available && data.translatedText) {
-            setTranslations((prev) => ({ ...prev, [msg.id]: data.translatedText }))
-          }
-        })
-        .catch(() => {})
-        .finally(() => setTranslatingId(null))
+    autoTranslateIncoming(messages)
+  }, [messages, autoTranslateIncoming])
+
+  const handleTranslateMessage = useCallback(
+    (msg: Message) => {
+      void translateMessage(msg.id, msg.content)
+    },
+    [translateMessage]
+  )
+
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslateOn((v) => {
+      const next = !v
+      writeAutoTranslatePref(websiteId, next)
+      return next
     })
-  }, [messages, lang, aiTranslateAvailable, autoTranslateOn, translations, websiteId])
+  }, [websiteId])
 
   const primaryColor = config?.primaryColor || '#1972F5'
   const agentsOnline = config?.agentsOnline ?? 3
@@ -1243,31 +1223,34 @@ export default function WidgetPage() {
                 {aiTranslateAvailable && (
                   <button
                     type="button"
-                    onClick={() => setAutoTranslateOn((v) => !v)}
+                    onClick={toggleAutoTranslate}
+                    title={autoTranslateOn ? t.autoTranslateOn : t.autoTranslateOff}
                     style={{
                       background: autoTranslateOn ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.12)',
                       color: '#fff', border: '1px solid rgba(255,255,255,0.25)',
                       borderRadius: '10px', padding: '5px 8px', fontSize: '10px', fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'inherit',
+                      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
                     }}
                   >
-                    {autoTranslateOn ? '🌐 Auto' : '🌐'}
+                    {autoTranslateOn ? '🌐 ✓' : '🌐'}
                   </button>
                 )}
                 <select
                   value={lang}
-                  onChange={(e) => { setLang(e.target.value); setTranslations({}) }}
+                  onChange={(e) => { setLang(e.target.value) }}
                   aria-label="Dil seçin"
                   style={{
                     appearance: 'none', WebkitAppearance: 'none',
                     background: 'rgba(255,255,255,0.15)', color: '#fff',
                     border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px',
                     padding: '5px 22px 5px 8px', fontSize: '11px', fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', outline: 'none', maxWidth: '90px',
+                    cursor: 'pointer', fontFamily: 'inherit', outline: 'none', maxWidth: '110px',
                   }}
                 >
-                  {WIDGET_LANGUAGES.slice(0, 8).map((l) => (
-                    <option key={l.code} value={l.code} style={{ color: '#0F172A' }}>{l.code.toUpperCase()}</option>
+                  {WIDGET_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code} style={{ color: '#0F172A' }}>
+                      {l.name}
+                    </option>
                   ))}
                 </select>
                 {!isEmbedded && (
@@ -1519,16 +1502,26 @@ export default function WidgetPage() {
                             </p>
                           )}
                           <div style={agentBubbleStyle()}>
-                            {msg.content}
-                            {translations[msg.id] && (
-                              <span style={{
-                                display: 'block', marginTop: '8px', paddingTop: '8px',
-                                borderTop: '1px solid #F1F5F9',
-                                fontSize: '13px', color: '#475569', fontStyle: 'italic', lineHeight: 1.5,
-                              }}>
-                                <span style={{ fontSize: '12px' }}>🌐</span> {translations[msg.id]}
-                              </span>
-                            )}
+                            {(() => {
+                              const { primary, secondary, mode } = getDisplayText(msg.id, msg.content)
+                              return (
+                                <>
+                                  <span>{primary}</span>
+                                  {secondary && hasTranslation(msg.id) && (
+                                    <span style={{
+                                      display: 'block', marginTop: '8px', paddingTop: '8px',
+                                      borderTop: '1px solid #F1F5F9',
+                                      fontSize: '12px', color: '#64748B', lineHeight: 1.45,
+                                    }}>
+                                      <span style={{ fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                        {mode === 'translated' ? `${t.originalLabel}: ` : '🌐 '}
+                                      </span>
+                                      {secondary}
+                                    </span>
+                                  )}
+                                </>
+                              )
+                            })()}
                           </div>
                           {renderAttachments(msg, false)}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0 0 2px' }}>
@@ -1538,18 +1531,28 @@ export default function WidgetPage() {
                                 className="gw-msg-btn"
                                 onClick={() => handleTranslateMessage(msg)}
                                 disabled={translatingId === msg.id}
-                                aria-label={translations[msg.id] ? t.showOriginal : t.translate}
+                                aria-label={
+                                  translatingId === msg.id
+                                    ? t.translating
+                                    : hasTranslation(msg.id)
+                                      ? (isShowingOriginal(msg.id) ? t.showTranslation : t.showOriginal)
+                                      : t.translate
+                                }
                                 style={{
                                   background: 'none', border: 'none', cursor: 'pointer',
                                   padding: 0, fontSize: '10px', fontWeight: 600,
-                                  color: translations[msg.id] ? primaryColor : '#94A3B8',
+                                  color: hasTranslation(msg.id) ? primaryColor : '#94A3B8',
                                   display: 'flex', alignItems: 'center', gap: '3px',
-                                  fontFamily: 'inherit', lineHeight: 1, opacity: 0.7,
+                                  fontFamily: 'inherit', lineHeight: 1, opacity: 0.85,
                                   transition: 'opacity 0.15s',
                                 }}
                               >
                                 <span style={{ fontSize: '11px' }}>🌐</span>
-                                {translatingId === msg.id ? t.translating : (translations[msg.id] ? t.showOriginal : t.translate)}
+                                {translatingId === msg.id
+                                  ? t.translating
+                                  : hasTranslation(msg.id)
+                                    ? (isShowingOriginal(msg.id) ? t.showTranslation : t.showOriginal)
+                                    : t.translate}
                               </button>
                             )}
                           </div>

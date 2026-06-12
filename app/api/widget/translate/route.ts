@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { translateFast } from '@/lib/translate-engine'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { isTranslationAvailable } from '@/lib/ai/translate'
-import { normalizeLangCode, resolveSourceLang, isTranslationEngineError } from '@/lib/translate-languages'
+import { normalizeLangCode, resolveSourceLang, isTranslationEngineError, detectLanguageHint, languagesDiffer } from '@/lib/translate-languages'
 import type { DbAiConfig } from '@/lib/ai/provider'
 
 const schema = z.object({
@@ -63,6 +63,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ available: false, translatedText: text })
     }
 
+    const target = normalizeLangCode(targetLang)
+    const srcHint = resolveSourceLang(sourceLang) || detectLanguageHint(text)
+    if (!languagesDiffer(srcHint, target)) {
+      return NextResponse.json({
+        available: true,
+        translatedText: text,
+        sameLanguage: true,
+        detectedLanguage: srcHint,
+      })
+    }
+
     const result = await translateFast({
       text,
       targetLang: normalizeLangCode(targetLang),
@@ -76,9 +87,10 @@ export async function POST(req: Request) {
         : text
 
     return NextResponse.json({
-      available: result.available && translatedText !== text,
+      available: result.available !== false,
       translatedText,
       detectedLanguage: result.detectedLanguage,
+      sameLanguage: translatedText === text,
     })
   } catch (error) {
     console.error('Widget translate error:', error)

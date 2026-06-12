@@ -8,7 +8,6 @@ import { PLAN_LIMITS } from '@/lib/constants'
 import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
-import type { DbAiConfig } from '@/lib/ai/provider'
 import { extendTrialForActivation } from '@/lib/trial'
 
 const widgetInitSchema = z.object({
@@ -217,25 +216,7 @@ export async function POST(req: Request) {
     } catch (translateErr) {
       console.warn('[widget/init] translate check skipped:', translateErr)
     }
-    if (translateAllowed) {
-      try {
-        const aiCfg = await prisma.aIConfig.findUnique({
-          where: { websiteId: website.id },
-          select: { provider: true, model: true, apiKey: true, temperature: true },
-        })
-        const dbConfig: DbAiConfig | null = aiCfg
-          ? {
-              provider: aiCfg.provider as DbAiConfig['provider'],
-              model: aiCfg.model ?? null,
-              apiKey: aiCfg.apiKey ?? null,
-              temperature: aiCfg.temperature ?? null,
-            }
-          : null
-        aiTranslate = isTranslationAvailable(dbConfig)
-      } catch {
-        aiTranslate = false
-      }
-    }
+    aiTranslate = translateAllowed && isTranslationAvailable(null)
 
     const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
 
