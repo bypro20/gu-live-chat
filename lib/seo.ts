@@ -10,7 +10,7 @@ export { SEO_KEYWORDS_TR as SEO_KEYWORDS }
 
 /** Google Search Console doğrulama — env ile override edilebilir */
 export const GOOGLE_SITE_VERIFICATION_CODE =
-  process.env.GOOGLE_SITE_VERIFICATION || '6rvC_wtUp9XHeIa0nxjGglIILkJjEW440tlaGqFbXVQ'
+  process.env.GOOGLE_SITE_VERIFICATION || 'PuI4LA0pzgjODjKhje4b8QMkmg7UwvJDaP-vs59zwEY'
 
 export function getSiteVerificationMetadata(): Pick<Metadata, 'verification'> {
   const google = GOOGLE_SITE_VERIFICATION_CODE
