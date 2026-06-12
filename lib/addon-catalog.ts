@@ -150,14 +150,16 @@ export const ADDON_SEED_CATALOG: AddonSeed[] = [
   {
     slug: 'live-translate-pro',
     name: 'Canlı Çeviri Pro',
-    description: 'Widget\'ta otomatik çift yönlü çeviri ve 50+ dil desteği.',
-    longDescription: 'Ziyaretçi dilini seçer; temsilci ve bot mesajları otomatik çevrilir.',
+    description: 'Dünyanın her yerinden müşterilerinizle kendi dilinizde konuşun — çift yönlü otomatik çeviri.',
+    longDescription:
+      'Ziyaretçi kendi dilini seçer; mesajlar anında çevrilir. Temsilci Türkçe yazar, ziyaretçi Almanca okur — ve tam tersi. Gelen kutusu ve widget\'ta 50+ dil desteği. Başlangıç paketi için bu eklentiyle global sohbet açılır.',
     category: AddonCategory.AI,
     icon: '🌐',
     price: 9900,
     purchaseType: PurchaseType.MONTHLY,
     isFeatured: true,
-    setupGuide: '1. Widget dil seçicisini etkinleştirin\n2. Otomatik çeviriyi açın',
+    setupGuide:
+      '1. Eklentiyi satın alın\n2. Widget\'ta ziyaretçi dil seçicisini açın\n3. Gelen kutusunda otomatik çeviri varsayılan olarak açıktır',
   },
   {
     slug: 'sentiment-analysis',

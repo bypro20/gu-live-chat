@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAgentLanguage } from '@/lib/hooks/use-agent-language'
+import { useInboxAutoTranslate } from '@/lib/hooks/use-inbox-auto-translate'
 import { translateClient } from '@/lib/translate-client'
 import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
 import { INBOX_CHANNEL_FILTERS } from '@/lib/conversation-channels'
@@ -57,7 +58,7 @@ export function AdminInboxPanel() {
   const [liveConnected, setLiveConnected] = useState(false)
   const [updatingConversation, setUpdatingConversation] = useState(false)
   const { agentLang, setAgentLang } = useAgentLanguage()
-  const [autoTranslate, setAutoTranslate] = useState(false)
+  const { autoTranslate, toggleAutoTranslate } = useInboxAutoTranslate(true)
   const [detectedVisitorLang, setDetectedVisitorLang] = useState<string | null>(null)
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
@@ -603,7 +604,7 @@ export function AdminInboxPanel() {
               onBack={() => setSelectedId(null)}
               canTranslate
               autoTranslate={autoTranslate}
-              onToggleTranslate={() => setAutoTranslate((v) => !v)}
+              onToggleTranslate={toggleAutoTranslate}
               detectedLang={normalizedVisitorLang}
               agentLang={agentLang}
               primaryColor={inboxPrimary}

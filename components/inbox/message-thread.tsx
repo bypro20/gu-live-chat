@@ -28,9 +28,8 @@ export const MessageThread = memo(function MessageThread({
   const { locale } = useLocale()
   let lastDateKey = ''
 
-  const visitorIds = new Set(
-    messages.filter((m) => m.senderType === 'VISITOR').slice(-5).map((m) => m.id)
-  )
+  const shouldAutoTranslate = (senderType: InboxMessage['senderType']) =>
+    senderType === 'VISITOR' || senderType === 'BOT'
 
   return (
     <>
@@ -57,7 +56,7 @@ export const MessageThread = memo(function MessageThread({
             )}
             <MessageBubble
               message={msg}
-              autoTranslate={autoTranslate && visitorIds.has(msg.id)}
+              autoTranslate={autoTranslate && shouldAutoTranslate(msg.senderType)}
               canTranslate={canTranslate}
               websiteId={websiteId}
               agentLang={agentLang}

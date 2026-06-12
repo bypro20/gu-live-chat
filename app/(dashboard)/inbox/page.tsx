@@ -30,6 +30,7 @@ import { unlockInboxAudio } from '@/lib/inbox-sound'
 import { ConnectionBadge } from '@/components/inbox/connection-badge'
 import { InboxMessageArea } from '@/components/inbox/inbox-message-area'
 import { useAgentLanguage } from '@/lib/hooks/use-agent-language'
+import { useInboxAutoTranslate } from '@/lib/hooks/use-inbox-auto-translate'
 import { LanguageBar } from '@/components/inbox/language-bar'
 import { translateClient } from '@/lib/translate-client'
 import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
@@ -51,6 +52,7 @@ function InboxPageContent() {
   const canCannedResponses = inboxCanCanned(activeWebsite?.plan, userRole)
   const canUpload = inboxCanUpload(activeWebsite?.plan, userRole)
   const { agentLang, setAgentLang } = useAgentLanguage()
+  const { autoTranslate, toggleAutoTranslate } = useInboxAutoTranslate(canTranslate)
 
   const [aiSuggestEnabled, setAiSuggestEnabled] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -60,7 +62,6 @@ function InboxPageContent() {
   const [search, setSearch] = useState('')
   const [messageText, setMessageText] = useState('')
   const [typingPreview, setTypingPreview] = useState<{ conversationId: string; content: string } | null>(null)
-  const [autoTranslate, setAutoTranslate] = useState(false)
   const [detectedVisitorLang, setDetectedVisitorLang] = useState<string | null>(null)
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [aiSuggesting, setAiSuggesting] = useState(false)
@@ -648,7 +649,7 @@ function InboxPageContent() {
               onBack={() => setSelectedId(null)}
               canTranslate={canTranslate}
               autoTranslate={autoTranslate}
-              onToggleTranslate={() => setAutoTranslate((v) => !v)}
+              onToggleTranslate={toggleAutoTranslate}
               detectedLang={normalizedVisitorLang}
               agentLang={agentLang}
               primaryColor={inboxPrimary}
