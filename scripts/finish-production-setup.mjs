@@ -60,14 +60,15 @@ async function main() {
 
   console.log('\n3) Railway socket CORS...')
   try {
-    execSync(
-      `npx --yes @railway/cli variables set NEXT_PUBLIC_APP_URL=https://${WWW} SOCKET_CORS_ORIGINS="${CORS}" --service gu-live-chat-socket-production 2>&1 || npx --yes @railway/cli variables set NEXT_PUBLIC_APP_URL=https://${WWW} SOCKET_CORS_ORIGINS="${CORS}" 2>&1`,
-      { stdio: 'inherit', cwd: join(homedir(), 'gu-live-chat'), env: process.env }
-    )
-    console.log('  ✓ Railway env güncellendi')
-  } catch (e) {
-    console.log('  ⚠ Railway CLI ile güncellenemedi — panelden ekleyin:')
-    console.log(`     NEXT_PUBLIC_APP_URL=https://${WWW}`)
+    execSync('node scripts/set-railway-socket-env.mjs', {
+      stdio: 'inherit',
+      cwd: join(homedir(), 'gu-live-chat'),
+      env: process.env,
+    })
+  } catch {
+    console.log('  ⚠ Railway güncellenemedi — token: https://railway.com/account/tokens')
+    console.log(`     RAILWAY_TOKEN=... node scripts/set-railway-socket-env.mjs`)
+    console.log(`     veya panelden: NEXT_PUBLIC_APP_URL=https://${WWW}`)
     console.log(`     SOCKET_CORS_ORIGINS=${CORS}`)
   }
 

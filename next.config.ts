@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+/** Railway socket — Vercel rewrite ile aynı origin (CORS sorunu olmadan) */
+const SOCKET_UPSTREAM = (
+  process.env.SOCKET_SERVER_URL ||
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  "https://gu-live-chat-socket-production.up.railway.app"
+).replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
@@ -28,6 +35,14 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
     ]
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/socket.io/:path*",
+        destination: `${SOCKET_UPSTREAM}/socket.io/:path*`,
+      },
+    ];
   },
   async headers() {
     return [

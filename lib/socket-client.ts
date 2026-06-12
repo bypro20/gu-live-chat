@@ -1,30 +1,43 @@
 'use client'
 
 import { io, Socket } from 'socket.io-client'
+import { SITE_DOMAIN } from '@/lib/site-config'
 
 let socket: Socket | null = null
 let retainCount = 0
 let socketConnected = false
 
-/** Vercel / ana site URL'si socket sunucusu değildir — yanıltıcı env'yi yoksay. */
-function isUsableSocketUrl(url: string): boolean {
+/** Vercel rewrite ile socket aynı origin üzerinden proxy edilir */
+const SOCKET_PROXY_HOSTS = new Set([
+  SITE_DOMAIN,
+  `www.${SITE_DOMAIN}`,
+  'guchat.org',
+  'localhost',
+])
+
+function useSocketProxy(): boolean {
+  if (typeof window === 'undefined') return false
+  return SOCKET_PROXY_HOSTS.has(window.location.hostname)
+}
+
+/** Vercel preview hostları doğrudan Railway'e bağlanır (rewrite yok) */
+function isUsableDirectSocketUrl(url: string): boolean {
   const normalized = url.replace(/\/$/, '').toLowerCase()
   if (!normalized) return false
-  // Vercel preview/production app hostları Socket.io çalıştıramaz
   if (normalized.includes('.vercel.app')) return false
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '').toLowerCase()
-  if (appUrl && normalized === appUrl) return false
-  if (appUrl && normalized === appUrl.replace('://www.', '://')) return false
   return true
 }
 
 /**
- * Dedicated Socket.io server URL (Railway / local custom server).
- * Geçersiz veya eksik URL'de undefined döner → REST polling devreye girer.
+ * Socket.io URL — gulivechat.com'da same-origin proxy, aksi halde Railway.
  */
 function getSocketUrl(): string | undefined {
+  if (typeof window !== 'undefined' && useSocketProxy()) {
+    return window.location.origin
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
-  if (envUrl && isUsableSocketUrl(envUrl)) return envUrl
+  if (envUrl && isUsableDirectSocketUrl(envUrl)) return envUrl
 
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     return window.location.origin
@@ -51,12 +64,15 @@ export function connectSocket(): Socket | null {
   const socketUrl = getSocketUrl()
   if (!socketUrl) return null
 
+  const proxied = typeof window !== 'undefined' && useSocketProxy()
+
   socket = io(socketUrl, {
     path: '/socket.io',
-    transports: ['websocket', 'polling'],
+    // Vercel rewrite websocket upgrade desteklemez — polling yeterli
+    transports: proxied ? ['polling'] : ['websocket', 'polling'],
     autoConnect: true,
-    upgrade: true,
-    rememberUpgrade: true,
+    upgrade: !proxied,
+    rememberUpgrade: !proxied,
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 2000,
