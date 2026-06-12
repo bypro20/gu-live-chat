@@ -58,6 +58,7 @@ export function AdminVisitorsMonitor({
     updateVisitor,
     removeVisitor,
     updateCursor,
+    updateScreenshot,
     addActivity,
     selectVisitor,
     setLoading,
@@ -238,13 +239,16 @@ export function AdminVisitorsMonitor({
         clearTimeout(screenCaptureTimeoutRef.current)
         screenCaptureTimeoutRef.current = null
       }
-      updateVisitor(data.visitorId as string, {
-        screenshotUrl: data.screenshot as string,
-        screenshotAt: (data.timestamp as string) || new Date().toISOString(),
-        ...(data.viewportW != null ? { viewportW: data.viewportW as number } : {}),
-        ...(data.viewportH != null ? { viewportH: data.viewportH as number } : {}),
-        ...(data.scrollY != null ? { scrollY: data.scrollY as number } : {}),
-      })
+      updateScreenshot(
+        data.visitorId as string,
+        data.screenshot as string,
+        (data.timestamp as string) || undefined,
+        {
+          ...(data.viewportW != null ? { viewportW: data.viewportW as number } : {}),
+          ...(data.viewportH != null ? { viewportH: data.viewportH as number } : {}),
+          ...(data.scrollY != null ? { scrollY: data.scrollY as number } : {}),
+        }
+      )
     }
 
     const handlePrivacyMode = (data: any) => {
@@ -285,7 +289,7 @@ export function AdminVisitorsMonitor({
       socket?.off('connect', authenticate)
       unsubs.forEach((u) => u())
     }
-  }, [session, websiteIds, websiteId, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, addActivity, isDashboard, m])
+  }, [session, websiteIds, websiteId, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, updateScreenshot, addActivity, isDashboard, m])
 
   const authenticateAgent = useCallback(() => {
     if (!session?.user?.id) return

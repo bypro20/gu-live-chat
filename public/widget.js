@@ -511,7 +511,7 @@
   // ─── Rate-limited event sender ─────────────────────────────────────
   var activityThrottle = {};
   var THROTTLE_MS = 500;
-  var CURSOR_THROTTLE_MS = 80;
+  var CURSOR_THROTTLE_MS = 48;
 
   function sendActivity(eventType, data) {
     if (!iframe.contentWindow) return;
@@ -722,13 +722,20 @@
   }
 
   // ─── Screen Monitoring (Ekran İzleme) ─────────────────────────────────
-  var SCREENSHOT_THROTTLE_MS = 150;
-  var SCREENSHOT_QUALITY = 0.55;
+  var SCREENSHOT_THROTTLE_MS = 90;
+  var SCREENSHOT_BURST_MS = 45;
+  var SCREENSHOT_BURST_COUNT = 4;
+  var SCREENSHOT_QUALITY = 0.52;
+  var CAPTURE_MAX_WIDTH = 1366;
   var screenshotTimer = null;
   var htmlToImageLoaded = false;
   var lastScreenshotLength = 0;
   var screenCaptureActive = false;
   var screenshotInProgress = false;
+  var screenshotBurstLeft = 0;
+  var screenshotPending = false;
+  var cachedFixedElementIds = [];
+  var fixedElementScanCounter = 0;
 
   // Dynamically load html-to-image library (same origin first, then CDN fallback)
   function loadHtmlToImage(callback) {
@@ -766,6 +773,34 @@
   // are the heaviest DOM subtrees; skipping them makes screenshots 5-10× faster.
   var HIDDEN_ELEMENT_IDS = ['gu-widget-iframe', 'gu-chat-button', 'gu-greeting-bubble'];
 
+  function getCaptureScale(width) {
+    if (width <= CAPTURE_MAX_WIDTH) return 1;
+    return CAPTURE_MAX_WIDTH / width;
+  }
+
+  function scanFixedElements() {
+    cachedFixedElementIds = [];
+    try {
+      var allEls = document.querySelectorAll('body > *, header, nav, footer, [style*="position:fixed"]');
+      for (var i = 0; i < allEls.length; i++) {
+        if (window.getComputedStyle(allEls[i]).position === 'fixed' && allEls[i].id && HIDDEN_ELEMENT_IDS.indexOf(allEls[i].id) === -1) {
+          cachedFixedElementIds.push(allEls[i].id);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function finishCaptureCycle() {
+    screenshotInProgress = false;
+    if (!screenCaptureActive) return;
+    if (screenshotPending) {
+      screenshotPending = false;
+      setTimeout(captureScreenshot, 0);
+      return;
+    }
+    scheduleNextScreenshot();
+  }
+
   // Capture screenshot — uses onclone (never modifies original DOM)
   var _captureCount = 0;
   function captureScreenshot() {
@@ -776,7 +811,7 @@
     }
     if (!screenCaptureActive) return;
     if (screenshotInProgress) {
-      scheduleNextScreenshot();
+      screenshotPending = true;
       return;
     }
 
@@ -786,24 +821,32 @@
     var vpHeight = window.innerHeight;
     var scrollX = window.scrollX || window.pageXOffset || 0;
     var scrollY = window.scrollY || window.pageYOffset || 0;
+    var scale = getCaptureScale(vpWidth);
+    var captureW = Math.max(320, Math.round(vpWidth * scale));
+    var captureH = Math.max(240, Math.round(vpHeight * scale));
+
+    fixedElementScanCounter++;
+    if (fixedElementScanCounter === 1 || fixedElementScanCounter % 12 === 0) {
+      scanFixedElements();
+    }
 
     // If privacy mode is active, send a black frame instead of a real screenshot
     if (privacyModeActive) {
       var privacyCanvas = document.createElement('canvas');
-      privacyCanvas.width = vpWidth;
-      privacyCanvas.height = vpHeight;
+      privacyCanvas.width = captureW;
+      privacyCanvas.height = captureH;
       var privacyCtx = privacyCanvas.getContext('2d');
       privacyCtx.fillStyle = '#0a0a12';
-      privacyCtx.fillRect(0, 0, vpWidth, vpHeight);
+      privacyCtx.fillRect(0, 0, captureW, captureH);
       privacyCtx.fillStyle = '#6b7280';
-      privacyCtx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      privacyCtx.font = Math.round(16 * scale) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       privacyCtx.textAlign = 'center';
-      privacyCtx.fillText('🔒 Gizlilik nedeniyle ekran geçici olarak gizlendi', vpWidth / 2, vpHeight / 2 - 10);
-      privacyCtx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      privacyCtx.fillText('🔒 Gizlilik nedeniyle ekran geçici olarak gizlendi', captureW / 2, captureH / 2 - 10);
+      privacyCtx.font = Math.round(12 * scale) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       privacyCtx.fillStyle = '#4b5563';
-      privacyCtx.fillText('Hassas bilgi girişi tamamlandığında izleme devam edecek', vpWidth / 2, vpHeight / 2 + 15);
+      privacyCtx.fillText('Hassas bilgi girişi tamamlandığında izleme devam edecek', captureW / 2, captureH / 2 + 15);
 
-      var privacyDataUrl = privacyCanvas.toDataURL('image/jpeg', 0.5);
+      var privacyDataUrl = privacyCanvas.toDataURL('image/jpeg', 0.45);
       if (iframe.contentWindow) {
         iframe.contentWindow.postMessage({
           type: 'gu:visitor:screenshot',
@@ -815,48 +858,28 @@
           privacyMode: true,
         }, '*');
       }
-      screenshotInProgress = false;
-      scheduleNextScreenshot();
+      finishCaptureCycle();
       return;
     }
 
-    // Pre-scan position:fixed elements — only scan visible elements, skip heavy subtrees
-    var fixedElementIds = [];
-    try {
-      var allEls = document.querySelectorAll('body > *, header, nav, footer, [style*="position:fixed"]');
-      for (var i = 0; i < allEls.length; i++) {
-        if (window.getComputedStyle(allEls[i]).position === 'fixed' && allEls[i].id && HIDDEN_ELEMENT_IDS.indexOf(allEls[i].id) === -1) {
-          fixedElementIds.push(allEls[i].id);
-        }
-      }
-    } catch(e) {}
-
-    // filter: Skip heavy subtrees (widget iframe/button/tracking banner) and
-    // Gu-injected style/link elements. This makes screenshots 5-10× faster because
-    // html-to-image no longer has to render the entire React app inside the iframe.
     function filterNode(node) {
       if (node.nodeType === 1) {
-        // Skip elements by ID
         if (node.id && HIDDEN_ELEMENT_IDS.indexOf(node.id) !== -1) return false;
-        // Skip Gu-injected style elements (force-style, widget CSS)
         if (node.tagName === 'STYLE' && node.id && node.id.indexOf('gu-') === 0) return false;
       }
       return true;
     }
 
-    // onclone: Modify the CLONED document only — safe
     function oncloneCallback(clonedDoc) {
-      // Blur sensitive fields in the clone
       try {
         var sensitiveFields = clonedDoc.querySelectorAll(SENSITIVE_SELECTORS);
         for (var s = 0; s < sensitiveFields.length; s++) {
           sensitiveFields[s].style.filter = 'blur(6px)';
         }
-      } catch(e) {}
+      } catch (e) {}
 
-      // Counter-transform for position:fixed elements in the clone
-      for (var f = 0; f < fixedElementIds.length; f++) {
-        var clonedEl = clonedDoc.getElementById(fixedElementIds[f]);
+      for (var f = 0; f < cachedFixedElementIds.length; f++) {
+        var clonedEl = clonedDoc.getElementById(cachedFixedElementIds[f]);
         if (clonedEl) {
           var existingTransform = clonedEl.style.transform || '';
           var counterTransform = 'translate(' + scrollX + 'px, ' + scrollY + 'px)';
@@ -865,24 +888,24 @@
       }
     }
 
-    window.htmlToImage.toJpeg(document.documentElement, {
+    window.htmlToImage.toJpeg(document.body, {
       quality: SCREENSHOT_QUALITY,
       backgroundColor: '#ffffff',
-      width: vpWidth,
-      height: vpHeight,
-      canvasWidth: vpWidth,
-      canvasHeight: vpHeight,
+      width: captureW,
+      height: captureH,
+      canvasWidth: captureW,
+      canvasHeight: captureH,
       pixelRatio: 1,
       skipAutoScale: true,
       filter: filterNode,
       onclone: oncloneCallback,
       style: {
-        transform: 'translate(-' + scrollX + 'px, -' + scrollY + 'px)',
+        transform: 'translate(-' + scrollX + 'px, -' + scrollY + 'px) scale(' + scale + ')',
         transformOrigin: '0 0',
+        width: vpWidth + 'px',
+        height: vpHeight + 'px',
       },
     }).then(function(dataUrl) {
-      screenshotInProgress = false;
-
       if (iframe.contentWindow) {
         iframe.contentWindow.postMessage({
           type: 'gu:visitor:screenshot',
@@ -893,17 +916,17 @@
           documentH: document.documentElement.scrollHeight,
         }, '*');
       }
-
-      scheduleNextScreenshot();
-    }).catch(function(err) {
-      screenshotInProgress = false;
-      scheduleNextScreenshot();
+      finishCaptureCycle();
+    }).catch(function() {
+      finishCaptureCycle();
     });
   }
 
   function scheduleNextScreenshot() {
     if (!screenCaptureActive) return;
-    screenshotTimer = setTimeout(captureScreenshot, SCREENSHOT_THROTTLE_MS);
+    var delay = screenshotBurstLeft > 0 ? SCREENSHOT_BURST_MS : SCREENSHOT_THROTTLE_MS;
+    if (screenshotBurstLeft > 0) screenshotBurstLeft--;
+    screenshotTimer = setTimeout(captureScreenshot, delay);
   }
 
   function startScreenCapture() {
@@ -911,6 +934,9 @@
     ensureWidgetMounted();
     screenCaptureActive = true;
     screenshotInProgress = false;
+    screenshotPending = false;
+    screenshotBurstLeft = SCREENSHOT_BURST_COUNT;
+    fixedElementScanCounter = 0;
     loadHtmlToImage(function() {
       captureScreenshot();
     });
@@ -918,6 +944,8 @@
 
   function stopScreenCapture() {
     screenCaptureActive = false;
+    screenshotPending = false;
+    screenshotBurstLeft = 0;
     if (screenshotTimer) {
       clearTimeout(screenshotTimer);
       screenshotTimer = null;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
 import type { LiveVisitor, VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { getAccent, type VisitorTheme } from '@/lib/visitors-utils'
 import { useSocket } from '@/lib/hooks/use-socket'
@@ -44,6 +44,9 @@ export function OverlayPreview({
   const [remoteClicks, setRemoteClicks] = useState<Array<{ x: number; y: number; timestamp: number }>>([])
   const [interventionMode, setInterventionMode] = useState(false)
   const lastScreenshotRef = useRef<string | null>(null)
+  const frameCountRef = useRef(0)
+  const lastFrameAtRef = useRef(0)
+  const [liveFps, setLiveFps] = useState(0)
   const { emit: socketEmit } = useSocket()
 
   const viewportW = visitor.viewportW || 1920
@@ -144,22 +147,37 @@ export function OverlayPreview({
     ? Math.min(100, Math.round(((visitor.scrollY || 0) / (visitor.documentH - viewportH)) * 100))
     : 0
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const img = screenshotImgRef.current
     if (!img || !visitor.screenshotUrl) return
-    if (visitor.screenshotUrl !== lastScreenshotRef.current) {
-      img.src = visitor.screenshotUrl
-      lastScreenshotRef.current = visitor.screenshotUrl
-      setScreenshotReady(true)
+    if (visitor.screenshotUrl === lastScreenshotRef.current) return
+
+    lastScreenshotRef.current = visitor.screenshotUrl
+    img.src = visitor.screenshotUrl
+
+    const now = performance.now()
+    if (lastFrameAtRef.current > 0) {
+      const dt = now - lastFrameAtRef.current
+      if (dt > 0) {
+        const fps = Math.round(1000 / dt)
+        setLiveFps((prev) => Math.round(prev * 0.65 + fps * 0.35))
+      }
     }
-  }, [visitor.screenshotUrl])
+    lastFrameAtRef.current = now
+    frameCountRef.current += 1
+
+    if (!screenshotReady) setScreenshotReady(true)
+  }, [visitor.screenshotUrl, screenshotReady])
 
   useEffect(() => {
     if (!isScreenCapturing) {
       setScreenshotReady(false)
+      setLiveFps(0)
       lastScreenshotRef.current = null
+      lastFrameAtRef.current = 0
+      frameCountRef.current = 0
       const img = screenshotImgRef.current
-      if (img) img.src = ''
+      if (img) img.removeAttribute('src')
     }
   }, [isScreenCapturing])
 
@@ -273,7 +291,7 @@ export function OverlayPreview({
         )}
         <span className="h-4 w-px bg-white/[0.08]" />
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${isConnected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-          {isConnected ? 'HD' : 'SD'}
+          {isConnected ? (liveFps > 0 ? `${liveFps} FPS` : 'SD') : 'SD'}
         </span>
       </div>
 
@@ -438,13 +456,15 @@ export function OverlayPreview({
         <img
           ref={screenshotImgRef}
           alt={o.liveScreenAlt}
+          decoding="async"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full block"
           style={{
             objectFit: 'contain',
             background: '#000',
             transform: zoom > 1 ? `scale(${zoom})` : undefined,
             transformOrigin: 'center center',
-            transition: 'transform 0.15s ease-out',
+            imageRendering: 'auto',
           }}
           draggable={false}
         />

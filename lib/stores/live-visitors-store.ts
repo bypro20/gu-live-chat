@@ -66,7 +66,7 @@ interface LiveVisitorsState {
   updateVisitor: (visitorId: string, updates: Partial<LiveVisitor>) => void
   removeVisitor: (visitorId: string) => void
   updateCursor: (visitorId: string, x: number, y: number, viewportW?: number, viewportH?: number) => void
-  updateScreenshot: (visitorId: string, screenshotUrl: string, timestamp?: string) => void
+  updateScreenshot: (visitorId: string, screenshotUrl: string, timestamp?: string, extras?: Pick<LiveVisitor, 'viewportW' | 'viewportH' | 'scrollY'>) => void
   addActivity: (activity: VisitorActivity) => void
   selectVisitor: (visitorId: string | null) => void
   setLoading: (loading: boolean) => void
@@ -154,7 +154,7 @@ export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
       return { visitors: newMap }
     }),
 
-  updateScreenshot: (visitorId, screenshotUrl, timestamp) =>
+  updateScreenshot: (visitorId, screenshotUrl, timestamp, extras) =>
     set((state) => {
       const newMap = new Map(state.visitors)
       const existing = newMap.get(visitorId)
@@ -163,6 +163,7 @@ export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
           ...existing,
           screenshotUrl,
           screenshotAt: timestamp || new Date().toISOString(),
+          ...(extras || {}),
         })
       }
       return { visitors: newMap }
