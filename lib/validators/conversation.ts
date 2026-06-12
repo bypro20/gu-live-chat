@@ -8,6 +8,7 @@ export const createConversationSchema = z.object({
 export const updateConversationSchema = z.object({
   status: z.enum(['OPEN', 'PENDING', 'RESOLVED', 'CLOSED']).optional(),
   assignedToId: z.string().nullable().optional(),
+  visitorLang: z.string().min(2).max(10).optional(),
 })
 
 export const assignConversationSchema = z.object({

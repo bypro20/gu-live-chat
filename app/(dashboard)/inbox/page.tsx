@@ -11,9 +11,10 @@ import { connectSocket, retainSocket, releaseSocket, isSocketConnected, isSocket
 import {
   inboxCanAi,
   inboxCanCanned,
-  inboxCanTranslate,
   inboxCanUpload,
 } from '@/lib/inbox-features'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { uploadInboxFile, attachmentContent } from '@/lib/inbox-upload'
 import { ConversationListItem } from '@/components/inbox/conversation-list-item'
 import { MessageThread } from '@/components/inbox/message-thread'
@@ -47,7 +48,8 @@ function InboxPageContent() {
   const { activeWebsite, websites } = useActiveWebsite()
   const [allWebsites, setAllWebsites] = useState(false)
 
-  const canTranslate = inboxCanTranslate(activeWebsite?.plan, userRole)
+  const { allowed: translateFeature } = usePlanFeature('autoTranslate')
+  const canTranslate = isPlatformAdminRole(userRole) || translateFeature
   const canAiAssistant = inboxCanAi(activeWebsite?.plan, userRole)
   const canCannedResponses = inboxCanCanned(activeWebsite?.plan, userRole)
   const canUpload = inboxCanUpload(activeWebsite?.plan, userRole)
@@ -309,13 +311,8 @@ function InboxPageContent() {
       return
     }
     if (!autoTranslate || !canTranslate || !activeWebsite) return
-    const visitorText = messages
-      .filter((m) => m.senderType === 'VISITOR')
-      .slice(-3)
-      .map((m) => m.content)
-      .join(' ')
-      .trim()
-      .slice(0, 300)
+    const lastVisitor = messages.filter((m) => m.senderType === 'VISITOR').at(-1)
+    const visitorText = lastVisitor?.content?.trim().slice(0, 300)
     if (!visitorText) return
 
     translateClient({
@@ -325,12 +322,28 @@ function InboxPageContent() {
     })
       .then((data) => {
         const lang = data.detectedLanguage
-        if (lang && languagesDiffer(lang, agentLang)) {
-          setDetectedVisitorLang(normalizeLangCode(lang))
+        if (!lang || !languagesDiffer(lang, agentLang)) return
+        const normalized = normalizeLangCode(lang)
+        setDetectedVisitorLang(normalized)
+        if (selectedId && !selectedConversation?.visitorLang) {
+          void fetch(`/api/conversations/${selectedId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitorLang: normalized }),
+          }).then(() => mutateConversations())
         }
       })
       .catch(() => {})
-  }, [autoTranslate, messages, canTranslate, activeWebsite, agentLang, selectedConversation?.visitorLang])
+  }, [
+    autoTranslate,
+    messages,
+    canTranslate,
+    activeWebsite,
+    agentLang,
+    selectedConversation?.visitorLang,
+    selectedId,
+    mutateConversations,
+  ])
 
   const lastVisitorSentiment = messages.filter((m) => m.senderType === 'VISITOR').slice(-1)[0]?.sentiment
 

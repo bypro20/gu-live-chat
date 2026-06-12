@@ -42,15 +42,19 @@ export const MessageBubble = memo(function MessageBubble({
   const isVisitor = message.senderType === 'VISITOR'
   const isSystem = message.senderType === 'SYSTEM' || message.type === 'SYSTEM'
   const isBot = message.senderType === 'BOT'
+  const isIncoming = isVisitor || isBot
   const [translatedText, setTranslatedText] = useState<string | null>(null)
+  const [showOriginal, setShowOriginal] = useState(false)
   const [translating, setTranslating] = useState(false)
-  const [showTranslate, setShowTranslate] = useState(false)
 
-  const handleTranslate = useCallback(async () => {
+  const runTranslate = useCallback(async () => {
+    if (!canTranslate || !message.content?.trim()) return
+
     if (translatedText) {
-      setShowTranslate((v) => !v)
+      setShowOriginal((v) => !v)
       return
     }
+
     setTranslating(true)
     try {
       const data = await translateClient({
@@ -58,27 +62,43 @@ export const MessageBubble = memo(function MessageBubble({
         toLang: agentLang,
         websiteId,
       })
-      if (data.translatedText && data.translatedText !== message.content) {
-        setTranslatedText(data.translatedText)
-        setShowTranslate(true)
+      const next = (data.translatedText || message.content).trim()
+      if (next) {
+        setTranslatedText(next)
+        setShowOriginal(false)
       }
     } catch {
       /* ignore */
     } finally {
       setTranslating(false)
     }
-  }, [message.content, translatedText, websiteId, agentLang])
+  }, [message.content, translatedText, websiteId, agentLang, canTranslate])
 
   useEffect(() => {
     setTranslatedText(null)
-    setShowTranslate(false)
+    setShowOriginal(false)
   }, [agentLang, message.id])
 
   useEffect(() => {
-    if (autoTranslate && isVisitor && canTranslate && message.content && !translatedText && !translating) {
-      void handleTranslate()
+    if (
+      autoTranslate &&
+      isIncoming &&
+      canTranslate &&
+      message.content &&
+      !translatedText &&
+      !translating
+    ) {
+      void runTranslate()
     }
-  }, [autoTranslate, isVisitor, canTranslate, message.content, translatedText, translating, handleTranslate])
+  }, [
+    autoTranslate,
+    isIncoming,
+    canTranslate,
+    message.content,
+    translatedText,
+    translating,
+    runTranslate,
+  ])
 
   if (isSystem) {
     return (
@@ -93,6 +113,16 @@ export const MessageBubble = memo(function MessageBubble({
   const hasAtt = !!(message.attachments && message.attachments.length > 0)
   const hideText = hasAtt && /^(🖼️|📎)\s/u.test(message.content)
   const agentLabel = isBot ? 'Bot' : senderName || inbox.agentLabel
+
+  const hasTranslation =
+    !!translatedText && translatedText.trim() !== message.content.trim()
+  const showTranslatedPrimary = hasTranslation && !showOriginal
+  const primaryText = showTranslatedPrimary ? translatedText! : message.content
+  const secondaryText = hasTranslation
+    ? showTranslatedPrimary
+      ? message.content
+      : translatedText!
+    : null
 
   return (
     <div className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${grouped ? 'mt-0.5' : 'mt-2'}`}>
@@ -134,7 +164,7 @@ export const MessageBubble = memo(function MessageBubble({
             style={isVisitor ? inboxVisitorBubbleStyle() : inboxAgentBubbleStyle(primary)}
           >
             {!hideText && message.content && (
-              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+              <p className="whitespace-pre-wrap break-words">{primaryText}</p>
             )}
             {hasAtt && (
               <AttachmentList
@@ -142,7 +172,7 @@ export const MessageBubble = memo(function MessageBubble({
                 variant={isVisitor ? 'light' : 'dark'}
               />
             )}
-            {showTranslate && translatedText && (
+            {secondaryText && (
               <p
                 className={`text-xs mt-2 pt-2 border-t italic ${
                   isVisitor
@@ -150,7 +180,8 @@ export const MessageBubble = memo(function MessageBubble({
                     : 'text-white/85 border-white/25'
                 }`}
               >
-                {translatedText}
+                {showTranslatedPrimary ? `${inbox.originalLabel}: ` : '🌐 '}
+                {secondaryText}
               </p>
             )}
           </div>
@@ -163,15 +194,15 @@ export const MessageBubble = memo(function MessageBubble({
           <span className="text-[10px] text-slate-400 tabular-nums">
             {formatMessageTime(message.createdAt, locale)}
           </span>
-          {isVisitor && canTranslate && message.content && (
+          {isIncoming && canTranslate && message.content && (
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
               className="h-6 w-6 text-slate-400 hover:text-indigo-600"
-              onClick={() => void handleTranslate()}
+              onClick={() => void runTranslate()}
               disabled={translating}
-              title={inbox.translateMessage}
+              title={hasTranslation ? inbox.showOriginal : inbox.translateMessage}
             >
               {translating ? (
                 <Loader2 className="w-3 h-3 animate-spin" />

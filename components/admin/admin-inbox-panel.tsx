@@ -207,24 +207,26 @@ export function AdminInboxPanel() {
       return
     }
     if (!autoTranslate || !websiteId) return
-    const visitorText = messages
-      .filter((m) => m.senderType === 'VISITOR')
-      .slice(-3)
-      .map((m) => m.content)
-      .join(' ')
-      .trim()
-      .slice(0, 300)
+    const lastVisitor = messages.filter((m) => m.senderType === 'VISITOR').at(-1)
+    const visitorText = lastVisitor?.content?.trim().slice(0, 300)
     if (!visitorText) return
 
     translateClient({ text: visitorText, toLang: agentLang, websiteId })
       .then((data) => {
         const lang = data.detectedLanguage
-        if (lang && languagesDiffer(lang, agentLang)) {
-          setDetectedVisitorLang(normalizeLangCode(lang))
+        if (!lang || !languagesDiffer(lang, agentLang)) return
+        const normalized = normalizeLangCode(lang)
+        setDetectedVisitorLang(normalized)
+        if (selectedId && !selected?.visitorLang) {
+          void fetch(`/api/conversations/${selectedId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitorLang: normalized }),
+          })
         }
       })
       .catch(() => {})
-  }, [autoTranslate, messages, websiteId, agentLang, selected?.visitorLang])
+  }, [autoTranslate, messages, websiteId, agentLang, selected?.visitorLang, selectedId])
 
   const updateConversation = async (patch: { status?: string; assignedToId?: string | null }) => {
     if (!selectedId) return

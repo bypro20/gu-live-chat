@@ -198,6 +198,8 @@ export type DashboardMessages = {
     openCrm: string
     download: string
     translateMessage: string
+    originalLabel: string
+    showOriginal: string
     agentLabel: string
     pageSection: string
     sourceLabel: string
@@ -434,7 +436,7 @@ const tr: DashboardMessages = {
     reopen: 'Yeniden aç',
     translate: 'Çeviri',
     translateOff: 'Çeviriyi kapat',
-    translatePro: 'Otomatik çeviri (PRO)',
+    translatePro: 'Otomatik çeviri aç',
     profile: 'Profil',
     live: 'Canlı',
     connecting: 'Bağlanıyor',
@@ -466,11 +468,13 @@ const tr: DashboardMessages = {
     openCrm: 'CRM profilini aç',
     download: 'İndir',
     translateMessage: 'Çevir',
+    originalLabel: 'Orijinal',
+    showOriginal: 'Orijinali göster',
     agentLabel: 'Temsilci',
     pageSection: 'Sayfa',
     sourceLabel: 'Kaynak',
     assignedSection: 'Atanan',
-    langPairHint: (incoming, outgoing) => `Gelen ${incoming} · Giden ${outgoing}`,
+    langPairHint: (incoming, outgoing) => `Gelen mesajlar ${incoming} · Yanıtlarınız ${outgoing}`,
   },
   growth: {
     title: 'İşletmeniz için fırsatlar',
@@ -733,7 +737,7 @@ const en: DashboardMessages = {
     reopen: 'Reopen',
     translate: 'Translate',
     translateOff: 'Turn off translation',
-    translatePro: 'Auto-translate (PRO)',
+    translatePro: 'Turn on auto-translate',
     profile: 'Profile',
     live: 'Live',
     connecting: 'Connecting',
@@ -765,11 +769,13 @@ const en: DashboardMessages = {
     openCrm: 'Open CRM profile',
     download: 'Download',
     translateMessage: 'Translate',
+    originalLabel: 'Original',
+    showOriginal: 'Show original',
     agentLabel: 'Agent',
     pageSection: 'Page',
     sourceLabel: 'Source',
     assignedSection: 'Assigned',
-    langPairHint: (incoming, outgoing) => `Incoming ${incoming} · Outgoing ${outgoing}`,
+    langPairHint: (incoming, outgoing) => `Incoming in ${incoming} · Your replies in ${outgoing}`,
   },
   growth: {
     title: 'Growth opportunities',

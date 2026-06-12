@@ -126,7 +126,7 @@ export function MessageComposer({
       {autoTranslate && detectedLang && (
         <div className="flex items-center gap-1.5 px-4 pt-2 text-[11px] text-muted-foreground">
           <Languages className="w-3 h-3 shrink-0" />
-          {inbox.langPairHint(languageLabel(detectedLang), languageLabel(agentLang))}
+          {inbox.langPairHint(languageLabel(agentLang), languageLabel(detectedLang))}
         </div>
       )}
       {sendError && <p className="px-4 pt-2 text-xs text-destructive">{sendError}</p>}
