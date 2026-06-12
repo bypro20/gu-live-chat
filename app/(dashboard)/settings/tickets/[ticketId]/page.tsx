@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import {
+  ticketStatusLabels,
+  ticketPriorityLabels,
+  ticketChannelLabels,
+} from '@/lib/settings-i18n'
 import { useParams, useRouter } from 'next/navigation'
 
 interface TicketMessage {
@@ -37,34 +43,19 @@ interface TeamMember {
   user: { id: string; name: string | null; email: string; image: string | null }
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  NEW: 'Yeni',
-  OPEN: 'Açık',
-  PENDING_CUSTOMER: 'Müşteri Bekliyor',
-  PENDING_AGENT: 'Temsilci Bekliyor',
-  ON_HOLD: 'Beklemede',
-  RESOLVED: 'Çözüldü',
-  CLOSED: 'Kapalı',
-}
-
-const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  LOW: { label: 'Düşük', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
-  MEDIUM: { label: 'Orta', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-  HIGH: { label: 'Yüksek', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
-  URGENT: { label: 'Acil', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-}
-
-const CHANNEL_LABELS: Record<string, string> = {
-  EMAIL: 'E-posta',
-  WIDGET: 'Widget',
-  API: 'API',
-  WHATSAPP: 'WhatsApp',
-  MESSENGER: 'Messenger',
-  INSTAGRAM: 'Instagram',
-  IMPORT: 'İçe Aktarma',
+const PRIORITY_COLORS: Record<string, string> = {
+  LOW: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  MEDIUM: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  URGENT: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 export default function TicketDetailPage() {
+  const i18n = useSettingsI18n()
+  const { tickets: tk, common: c } = i18n
+  const STATUS_LABELS = ticketStatusLabels(i18n)
+  const PRIORITY_LABELS = ticketPriorityLabels(i18n)
+  const CHANNEL_LABELS = ticketChannelLabels(i18n)
   const params = useParams()
   const router = useRouter()
   const { activeWebsite } = useActiveWebsite()
@@ -165,14 +156,14 @@ export default function TicketDetailPage() {
     const now = new Date()
     const d = new Date(date)
     const diff = Math.floor((now.getTime() - d.getTime()) / 1000)
-    if (diff < 60) return 'şimdi'
+    if (diff < 60) return c.now
     if (diff < 3600) return `${Math.floor(diff / 60)}dk`
     if (diff < 86400) return `${Math.floor(diff / 3600)}sa`
     return `${Math.floor(diff / 86400)}g`
   }
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('tr-TR', {
+    return new Date(date).toLocaleDateString(i18n.dateLocale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -192,9 +183,9 @@ export default function TicketDetailPage() {
   if (!ticket) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 text-center">
-        <h2 className="text-lg font-medium text-foreground">Ticket bulunamadı</h2>
+        <h2 className="text-lg font-medium text-foreground">{tk.notFound}</h2>
         <button onClick={() => router.back()} className="mt-4 text-primary hover:underline text-sm">
-          Geri dön
+          {tk.goBack}
         </button>
       </div>
     )
@@ -213,7 +204,7 @@ export default function TicketDetailPage() {
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        Ticketlere Dön
+        {tk.backToList}
       </button>
 
       {/* Header */}
@@ -226,8 +217,8 @@ export default function TicketDetailPage() {
             </p>
           </div>
           <div className="flex items-center flex-wrap gap-2 shrink-0">
-            <span className={`px-3 py-1.5 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
-              {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
+            <span className={`px-3 py-1.5 text-xs font-medium rounded-full ${PRIORITY_COLORS[ticket.priority] || PRIORITY_COLORS.MEDIUM}`}>
+              {PRIORITY_LABELS[ticket.priority] || ticket.priority}
             </span>
             <span className="px-3 py-1.5 text-xs font-medium rounded-full bg-muted text-foreground">
               {STATUS_LABELS[ticket.status] || ticket.status}
@@ -242,17 +233,17 @@ export default function TicketDetailPage() {
         )}
 
         <div className="text-xs text-muted-foreground">
-          Oluşturulma: {formatDate(ticket.createdAt)}
-          {ticket.firstResponseAt && <> &middot; İlk yanıt: {formatDate(ticket.firstResponseAt)}</>}
-          {ticket.resolvedAt && <> &middot; Çözüm: {formatDate(ticket.resolvedAt)}</>}
-          {ticket.closedAt && <> &middot; Kapanış: {formatDate(ticket.closedAt)}</>}
+          {tk.created}: {formatDate(ticket.createdAt)}
+          {ticket.firstResponseAt && <> &middot; {tk.firstResponse}: {formatDate(ticket.firstResponseAt)}</>}
+          {ticket.resolvedAt && <> &middot; {tk.resolved}: {formatDate(ticket.resolvedAt)}</>}
+          {ticket.closedAt && <> &middot; {tk.closed}: {formatDate(ticket.closedAt)}</>}
         </div>
       </div>
 
       {/* Actions Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Durum</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">{tk.status}</label>
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); handleUpdate({ status: e.target.value }) }}
@@ -264,25 +255,25 @@ export default function TicketDetailPage() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Öncelik</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">{tk.priority}</label>
           <select
             value={priority}
             onChange={(e) => { setPriority(e.target.value); handleUpdate({ priority: e.target.value }) }}
             className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           >
-            {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-              <option key={key} value={key}>{config.label}</option>
+            {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">Atanan Temsilci</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5">{tk.assignee}</label>
           <select
             value={assignedToId}
             onChange={(e) => { setAssignedToId(e.target.value); handleUpdate({ assignedToId: e.target.value || null }) }}
             className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           >
-            <option value="">Atanmamış</option>
+            <option value="">{tk.unassigned}</option>
             {teamMembers.map((member) => (
               <option key={member.id} value={member.user.id}>
                 {member.user.name || member.user.email}
@@ -295,10 +286,10 @@ export default function TicketDetailPage() {
       {/* Message Thread */}
       <div className="surface mb-6">
         <div className="p-5 sm:p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Mesajlar</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-4">{tk.messages}</h2>
 
           {publicMessages.length === 0 && !showInternal && (
-            <p className="text-sm text-muted-foreground text-center py-8">Henüz mesaj yok</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{tk.noMessages}</p>
           )}
 
           <div className="space-y-4">
@@ -310,7 +301,7 @@ export default function TicketDetailPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-foreground">
-                      {msg.sender?.name || 'Temsilci'}
+                      {msg.sender?.name || tk.agent}
                     </span>
                     <span className="text-xs text-muted-foreground">{timeAgo(msg.createdAt)}</span>
                   </div>
@@ -345,7 +336,7 @@ export default function TicketDetailPage() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={showInternal ? 'M19 9l-7 7-7-7' : 'M9 5l7 7-7 7'} />
                 </svg>
-                {internalMessages.length} iç not
+                {tk.internalNotes(internalMessages.length)}
               </button>
 
               {showInternal && (
@@ -358,7 +349,7 @@ export default function TicketDetailPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                            {msg.sender?.name || 'Not'} <span className="text-xs text-yellow-600 dark:text-yellow-500 font-normal">(iç not)</span>
+                            {msg.sender?.name || tk.internalNote} <span className="text-xs text-yellow-600 dark:text-yellow-500 font-normal">{tk.internalNoteTag}</span>
                           </span>
                           <span className="text-xs text-yellow-600 dark:text-yellow-500">{timeAgo(msg.createdAt)}</span>
                         </div>
@@ -383,7 +374,7 @@ export default function TicketDetailPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              Yanıtla
+              {tk.reply}
             </button>
             <button
               onClick={() => setIsInternal(true)}
@@ -393,7 +384,7 @@ export default function TicketDetailPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              İç Not
+              {tk.internalNote}
             </button>
           </div>
           <div className="flex gap-3">
@@ -406,21 +397,21 @@ export default function TicketDetailPage() {
                   handleSendReply()
                 }
               }}
-              placeholder={isInternal ? 'İç not ekleyin...' : 'Yanıtınızı yazın...'}
+              placeholder={isInternal ? tk.internalNotePlaceholder : tk.replyPlaceholder}
               rows={3}
               className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none text-sm"
             />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
             <span className="text-xs text-muted-foreground">
-              {isInternal ? 'Sadece temsilciler görebilir' : 'Müşteriye gönderilecek'} &middot; Cmd/Ctrl+Enter
+              {isInternal ? tk.internalOnly : tk.customerVisible} &middot; {tk.sendHint}
             </span>
             <button
               onClick={handleSendReply}
               disabled={!reply.trim() || sending}
               className="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {sending ? 'Gönderiliyor...' : isInternal ? 'Not Ekle' : 'Gönder'}
+              {sending ? tk.sending : isInternal ? tk.addNote : tk.send}
             </button>
           </div>
         </div>

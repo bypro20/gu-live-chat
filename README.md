@@ -49,12 +49,12 @@ npm run start:socket
 |-------------|----------|
 | `DATABASE_URL` | Vercel ile aynı (Turso/Postgres) |
 | `TURSO_AUTH_TOKEN` | Turso kullanıyorsanız |
-| `NEXT_PUBLIC_APP_URL` | `https://guchat.org` (CORS) |
+| `NEXT_PUBLIC_APP_URL` | `https://gulivechat.com` (CORS) |
 | `PORT` | Railway otomatik atar |
 
 Health check: `GET /health` → `{"status":"ok"}`
 
-> **Hızlı kontrol:** [VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md) — `.env` değerlerini Vercel'e kopyalarken URL'leri `guchat.org` yapın.
+> **Hızlı kontrol:** [VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md) — `.env` değerlerini Vercel'e kopyalarken URL'leri `gulivechat.com` yapın.
 
 ### 3. Vercel ortam değişkenleri
 
@@ -63,13 +63,13 @@ Health check: `GET /health` → `{"status":"ok"}`
 | `DATABASE_URL` | ✅ | Turso `libsql://...` veya Postgres |
 | `TURSO_AUTH_TOKEN` | Turso ise ✅ | Turso auth token |
 | `AUTH_SECRET` | ✅ | NextAuth secret |
-| `NEXT_PUBLIC_APP_URL` | ✅ | `https://guchat.org` |
-| `NEXT_PUBLIC_SOCKET_URL` | ✅ | Railway socket URL, örn. `https://socket.guchat.org` |
-| `NEXT_PUBLIC_MARKETING_WEBSITE_ID` | Önerilen | guchat.org widget WEBSITE_ID |
+| `NEXT_PUBLIC_APP_URL` | ✅ | `https://gulivechat.com` |
+| `NEXT_PUBLIC_SOCKET_URL` | ✅ | Railway socket URL, örn. `https://socket.gulivechat.com` |
+| `NEXT_PUBLIC_MARKETING_WEBSITE_ID` | Önerilen | gulivechat.com widget WEBSITE_ID |
 | `AWS_*` | Opsiyonel | S3 dosya yükleme (yoksa `/public/uploads`) |
 | `GOOGLE_CLIENT_ID` | Google OAuth için ✅ | [Google Cloud Console](https://console.cloud.google.com/) OAuth 2.0 Client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth için ✅ | İlgili client secret |
-| `AUTH_URL` veya `NEXTAUTH_URL` | Google OAuth için ✅ | `https://guchat.org` (callback: `/api/auth/callback/google`) |
+| `AUTH_URL` veya `NEXTAUTH_URL` | Google OAuth için ✅ | `https://gulivechat.com` (callback: `/api/auth/callback/google`) |
 | `PAYTR_*` | Opsiyonel | Ödeme entegrasyonu |
 | `SMTP_*` | Opsiyonel | E-posta bildirimleri |
 | `OPENAI_API_KEY` | Opsiyonel | AI önerileri |
@@ -77,8 +77,12 @@ Health check: `GET /health` → `{"status":"ok"}`
 ### Google OAuth kurulumu (Vercel)
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → **OAuth 2.0 Client ID** (Web application)
-2. **Authorized JavaScript origins:** `https://guchat.org`
-3. **Authorized redirect URIs:** `https://guchat.org/api/auth/callback/google`
+2. **Authorized JavaScript origins:**
+   - `https://www.gulivechat.com`
+   - `https://gulivechat.com`
+3. **Authorized redirect URIs:**
+   - `https://www.gulivechat.com/api/auth/callback/google`
+   - `https://gulivechat.com/api/auth/callback/google`
 4. Vercel Environment Variables (Production):
 
 | Değişken | Değer |
@@ -86,7 +90,8 @@ Health check: `GET /health` → `{"status":"ok"}`
 | `GOOGLE_CLIENT_ID` | `xxxxx.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Google client secret |
 | `AUTH_SECRET` | `openssl rand -base64 32` ile üretin |
-| `AUTH_URL` | `https://guchat.org` |
+| `AUTH_URL` | `https://www.gulivechat.com` |
+| `NEXTAUTH_URL` | `https://www.gulivechat.com` |
 
 5. Deploy sonrası `/login` sayfasında **Google ile devam et** butonu görünmeli (`/api/auth/providers` → `google: true`).
 6. Giriş hatası alırsanız Vercel logs'ta `Configuration` veya `OAuthCallback` kontrol edin; `AUTH_URL` ve redirect URI'nin birebir eşleştiğinden emin olun.
@@ -99,11 +104,11 @@ Mesajlar REST API ile kaydedilir; gelen kutusu socket bağlı değilken 4 sn pol
 
 ```html
 <script>
-  window.GU_WIDGET_URL = 'https://guchat.org';
+  window.GU_WIDGET_URL = 'https://gulivechat.com';
   window.$gu = window.$gu || function() { (window.$gu.q = window.$gu.q || []).push(arguments); };
   $gu('set', 'WEBSITE_ID', 'YOUR_WEBSITE_ID');
 </script>
-<script async src="https://guchat.org/widget.js"></script>
+<script async src="https://gulivechat.com/widget.js"></script>
 ```
 
 ## Özellikler
@@ -116,7 +121,7 @@ Mesajlar REST API ile kaydedilir; gelen kutusu socket bağlı değilken 4 sn pol
 - **Workflow engine** — Tetikleyici bazlı otomasyon (`lib/workflow-runner.ts`)
 - **Ban sistemi** — Kullanıcı + IP ban (`/api/admin/ip-bans`)
 - **Bildirimler** — Mesaj/konuşma olaylarında DB bildirimi
-- **Admin panel** — `https://guchat.org/admin-login` (ADMIN rolü; `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile seed)
+- **Admin panel** — `https://gulivechat.com/admin-login` (ADMIN rolü; `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile seed)
 
 Admin hesabı: Vercel'de `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CRON_SECRET` tanımlayın, ardından `GET /api/cron/seed-admin` (Bearer `CRON_SECRET`). Yerel: `npm run db:seed-admin`. Ayrıntı: [VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md).
 

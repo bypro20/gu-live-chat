@@ -10,6 +10,8 @@ import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
+import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
+import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
 import {
   Eye, Users, Search, X, Monitor, Smartphone, Tablet,
   Globe2, MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
@@ -28,17 +30,8 @@ function DeviceIcon({ device }: { device?: string | null }) {
   return <Monitor className="w-3.5 h-3.5" />
 }
 
-function activityLabel(a: VisitorActivity): string {
-  switch (a.eventType) {
-    case 'pageview': return `Sayfa: ${a.title || a.url || '—'}`
-    case 'click': return `Tıklama${a.selector ? `: ${a.selector}` : ''}`
-    case 'scroll': return `Kaydırma %${a.scrollPercentage ?? 0}`
-    case 'input': return `Yazıyor: ${a.fieldName || 'alan'}`
-    case 'typing': return 'Yazıyor…'
-    case 'online': return 'Çevrimiçi oldu'
-    case 'offline': return 'Ayrıldı'
-    default: return a.eventType
-  }
+function activityLabel(a: VisitorActivity, m: ReturnType<typeof useVisitorsI18n>['monitor']): string {
+  return formatVisitorActivityLabel(a, m)
 }
 
 export function AdminVisitorsMonitor({
@@ -48,6 +41,7 @@ export function AdminVisitorsMonitor({
 }: AdminVisitorsMonitorProps = {}) {
   const isDashboard = variant === 'dashboard'
   const agentLabel = isDashboard ? 'dashboard' : 'admin'
+  const { monitor: m, locale } = useVisitorsI18n()
   const { data: session } = useSession()
   const {
     visitors,
@@ -101,7 +95,7 @@ export function AdminVisitorsMonitor({
           return
         }
       }
-      if (!res.ok) throw new Error('Ziyaretçiler alınamadı')
+      if (!res.ok) throw new Error(m.fetchFailed)
       const data = await res.json()
       setUpgradeRequired(false)
       setVisitors(
@@ -149,7 +143,7 @@ export function AdminVisitorsMonitor({
     const handleVisitorOnline = (data: any) => {
       addVisitor({
         visitorId: data.visitorId as string,
-        name: (data.name as string) || 'Anonim',
+        name: (data.name as string) || m.anonymous,
         currentPage: (data.currentPage as string) || '',
         currentTitle: (data.currentTitle as string) || '',
         isLive: true,
@@ -224,7 +218,7 @@ export function AdminVisitorsMonitor({
       setScreenCapturingId(null)
       setWebrtcStream(null)
       setWebrtcState('idle')
-      setOverlayDeniedMessage(data.message || 'Ekran izleme mevcut paketinizde kullanılamaz.')
+      setOverlayDeniedMessage(data.message || m.overlayDenied)
     }
 
     const unsubs = [
@@ -245,7 +239,7 @@ export function AdminVisitorsMonitor({
 
   const handleScreenCaptureToggle = useCallback((visitorId: string, active: boolean) => {
     if (active && isDashboard && !overlayEnabled) {
-      setOverlayDeniedMessage('Ekran izleme Profesyonel pakette veya ekran izleme eklentisi ile kullanılabilir.')
+      setOverlayDeniedMessage(m.overlayDeniedPro)
       return
     }
     const visitor = visitors.get(visitorId)
@@ -271,7 +265,7 @@ export function AdminVisitorsMonitor({
 
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
     if (active && isDashboard && !overlayEnabled) {
-      setOverlayDeniedMessage('HD ekran paylaşımı Profesyonel pakette kullanılabilir.')
+      setOverlayDeniedMessage(m.hdDeniedPro)
       return
     }
     const visitor = visitors.get(visitorId)
@@ -319,15 +313,15 @@ export function AdminVisitorsMonitor({
           <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
             <Eye className="w-10 h-10 text-violet-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Ziyaretçi Takibi</h2>
+          <h2 className="text-xl font-bold text-white mb-2">{m.upgradeTitle}</h2>
           <p className="text-gray-400 mb-4 text-sm">
-            Canlı ziyaretçi listesi ve sayfa takibi başlangıç paketinde veya ziyaretçi takibi eklentisi ile kullanılabilir.
+            {m.upgradeDesc}
           </p>
           <Link
             href="/settings/billing"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:opacity-90"
           >
-            Paketi Yükselt
+            {m.upgradeCta}
           </Link>
         </div>
       </div>
@@ -342,7 +336,7 @@ export function AdminVisitorsMonitor({
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-400" />
-              Canlı Ziyaretçiler
+              {m.liveVisitors}
               <span className="text-xs font-bold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full tabular-nums">{filtered.length}</span>
             </h2>
           </div>
@@ -350,7 +344,7 @@ export function AdminVisitorsMonitor({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
             <input
               type="text"
-              placeholder="İsim, sayfa, site ara..."
+              placeholder={m.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-white/10 bg-white/[0.04] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
@@ -371,7 +365,7 @@ export function AdminVisitorsMonitor({
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-gray-500 text-sm">
               <Eye className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              Henüz aktif ziyaretçi yok
+              {m.noActiveVisitors}
             </div>
           ) : (
             filtered.map((visitor) => {
@@ -393,8 +387,8 @@ export function AdminVisitorsMonitor({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-white truncate">{visitor.name || 'Anonim'}</p>
-                          <span className="text-[10px] text-gray-500 shrink-0">{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt) : ''}</span>
+                          <p className="text-sm font-semibold text-white truncate">{visitor.name || m.anonymous}</p>
+                          <span className="text-[10px] text-gray-500 shrink-0">{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
                         </div>
                         <p className="text-[11px] text-violet-300 truncate mt-0.5 flex items-center gap-1">
                           <MousePointer2 className="w-3 h-3 shrink-0" />
@@ -433,7 +427,7 @@ export function AdminVisitorsMonitor({
         {geoVisitors.length > 0 && (
           <div className="p-3 border-t border-white/[0.06] shrink-0">
             <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Globe2 className="w-3 h-3" /> Anlık Konum ({geoVisitors.length})
+              <Globe2 className="w-3 h-3" /> {m.liveLocation(geoVisitors.length)}
             </p>
             <div className="relative w-full aspect-[2/1] bg-white/[0.02] rounded-lg border border-white/[0.06] overflow-hidden">
               {geoVisitors.map((v) => {
@@ -444,7 +438,7 @@ export function AdminVisitorsMonitor({
                     key={v.visitorId}
                     className="absolute w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50 -translate-x-1/2 -translate-y-1/2"
                     style={{ left: `${x}%`, top: `${y}%` }}
-                    title={`${v.name || 'Anonim'} — ${v.city || v.country || ''}`}
+                    title={`${v.name || m.anonymous} — ${v.city || v.country || ''}`}
                   />
                 )
               })}
@@ -456,13 +450,13 @@ export function AdminVisitorsMonitor({
         {selectedVisitorId && visitorActivities.length > 0 && (
           <div className="p-3 border-t border-white/[0.06] max-h-36 overflow-y-auto shrink-0">
             <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Activity className="w-3 h-3" /> Hareketler
+              <Activity className="w-3 h-3" /> {m.movements}
             </p>
             <div className="space-y-1">
               {visitorActivities.slice(0, 12).map((a, i) => (
                 <div key={i} className="text-[10px] text-gray-400 flex justify-between gap-2">
-                  <span className="truncate">{activityLabel(a)}</span>
-                  <span className="text-gray-600 shrink-0">{formatTimeAgo(a.timestamp)}</span>
+                  <span className="truncate">{activityLabel(a, m)}</span>
+                  <span className="text-gray-600 shrink-0">{formatTimeAgo(a.timestamp, locale)}</span>
                 </div>
               ))}
             </div>
@@ -477,7 +471,7 @@ export function AdminVisitorsMonitor({
             onClick={() => selectVisitor(null)}
             className="xl:hidden flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 border-b border-white/[0.06] shrink-0"
           >
-            ← Listeye dön
+            {m.backToList}
           </button>
         )}
         <div className="flex-1 min-h-0 p-2 flex flex-col">
@@ -514,7 +508,7 @@ export function AdminVisitorsMonitor({
                   {isDashboard && !overlayEnabled && (
                     <>
                       {' '}
-                      <Link href="/settings/plans?plan=PRO" className="font-semibold underline">Paketi yükselt</Link>
+                      <Link href="/settings/plans?plan=PRO" className="font-semibold underline">{m.upgradePlanLink}</Link>
                     </>
                   )}
                 </div>
@@ -526,12 +520,12 @@ export function AdminVisitorsMonitor({
                 <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                   <Eye className="w-10 h-10 text-violet-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Ekran İzleme</h3>
+                <h3 className="text-lg font-bold text-white mb-2">{m.screenWatchTitle}</h3>
                 <p className="text-sm text-gray-500 max-w-sm">
-                  Soldan bir ziyaretçi seçin. Canlı ekran görüntüsü, sayfa geçmişi ve hareketleri anlık izleyin.
+                  {m.screenWatchDesc}
                 </p>
                 {filtered.length > 0 && (
-                  <p className="text-xs text-emerald-400 mt-3 font-medium">● {filtered.filter((v) => v.isLive).length} ziyaretçi çevrimiçi</p>
+                  <p className="text-xs text-emerald-400 mt-3 font-medium">{m.visitorsOnline(filtered.filter((v) => v.isLive).length)}</p>
                 )}
               </div>
             </div>

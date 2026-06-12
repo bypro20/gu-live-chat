@@ -1,8 +1,10 @@
 'use client'
 
 import Script from 'next/script'
+import { WIDGET_ASSET_VERSION } from '@/lib/widget-theme'
+import { getSiteUrl } from '@/lib/site-config'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
+const FALLBACK_APP_URL = getSiteUrl()
 
 interface SiteWidgetProps {
   /** Panelden alınan public Website ID. Boşsa widget hiç render edilmez. */
@@ -10,33 +12,39 @@ interface SiteWidgetProps {
 }
 
 /**
- * guchat.org tanıtım sayfasında kendi canlı sohbet widget'ımızı sağ alt köşede
- * gösterir (dogfooding). settings/widget sayfasındaki resmi embed snippet'iyle
- * aynı mantığı kullanır: önce $gu kuyruğu + GU_WIDGET_URL ayarlanır, ardından
- * public/widget.js yüklenir. Konumlandırma (sağ alt) widget.js içinde yapılır.
- *
- * websiteId, ana sayfa (server component) tarafından veritabanından çözülüp
- * prop olarak verilir; env değişkenine bağımlılık yoktur.
+ * Marketing sayfalarında sağ alttaki canlı widget.
+ * Config + widget.js tek blokta yüklenir (sıra hatası / kaybolma önlenir).
  */
 export function SiteWidget({ websiteId }: SiteWidgetProps) {
   if (!websiteId) return null
 
+  const loaderScript = `
+(function () {
+  var websiteId = ${JSON.stringify(websiteId)};
+  var fallbackBase = ${JSON.stringify(FALLBACK_APP_URL)};
+  var version = ${JSON.stringify(WIDGET_ASSET_VERSION)};
+
+  window.$gu = window.$gu || function () {
+    (window.$gu.q = window.$gu.q || []).push(arguments);
+  };
+  window.GU_WIDGET_URL = window.location.origin || fallbackBase;
+  $gu('set', 'WEBSITE_ID', websiteId);
+
+  if (document.getElementById('gu-widget-loader-external')) return;
+
+  var s = document.createElement('script');
+  s.id = 'gu-widget-loader-external';
+  s.async = true;
+  s.src = window.GU_WIDGET_URL + '/widget.js?v=' + encodeURIComponent(version);
+  (document.body || document.documentElement).appendChild(s);
+})();
+`.trim()
+
   return (
-    <>
-      <Script id="gu-widget-config" strategy="afterInteractive">
-        {`
-          window.$gu = window.$gu || function() {
-            (window.$gu.q = window.$gu.q || []).push(arguments);
-          };
-          window.GU_WIDGET_URL = '${APP_URL}';
-          $gu('set', 'WEBSITE_ID', '${websiteId}');
-        `}
-      </Script>
-      <Script
-        id="gu-widget-loader"
-        src={`${APP_URL}/widget.js`}
-        strategy="afterInteractive"
-      />
-    </>
+    <Script
+      id="gu-widget-loader"
+      strategy="afterInteractive"
+      dangerouslySetInnerHTML={{ __html: loaderScript }}
+    />
   )
 }

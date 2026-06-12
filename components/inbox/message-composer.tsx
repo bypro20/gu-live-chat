@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { languageLabel } from '@/lib/translate-languages'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { inboxComposerRowStyle, inboxComposerShellStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 export type PendingUpload = {
   file: File
@@ -48,6 +50,7 @@ type MessageComposerProps = {
   sendError?: string | null
   placeholder?: string
   className?: string
+  primaryColor?: string | null
 }
 
 export function MessageComposer({
@@ -74,9 +77,13 @@ export function MessageComposer({
   detectedLang,
   agentLang = 'tr',
   sendError,
-  placeholder = 'Mesaj yazın…',
+  placeholder,
   className,
+  primaryColor,
 }: MessageComposerProps) {
+  const inbox = useDashboardI18n().inbox
+  const primary = resolveInboxPrimary(primaryColor)
+  const resolvedPlaceholder = placeholder ?? inbox.writeMessage
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -115,11 +122,11 @@ export function MessageComposer({
   }
 
   return (
-    <div className={cn('border-t border-border bg-card', className)}>
+    <div className={cn('shrink-0', className)} style={inboxComposerShellStyle()}>
       {autoTranslate && detectedLang && (
         <div className="flex items-center gap-1.5 px-4 pt-2 text-[11px] text-muted-foreground">
           <Languages className="w-3 h-3 shrink-0" />
-          Gelen {languageLabel(detectedLang)} · Giden {languageLabel(agentLang)}
+          {inbox.langPairHint(languageLabel(detectedLang), languageLabel(agentLang))}
         </div>
       )}
       {sendError && <p className="px-4 pt-2 text-xs text-destructive">{sendError}</p>}
@@ -163,7 +170,7 @@ export function MessageComposer({
               type="button"
               variant="ghost"
               size="icon-sm"
-              title="Dosya ekle"
+              title={inbox.addFile}
               disabled={disabled || uploading}
               onClick={() => fileRef.current?.click()}
             >
@@ -185,16 +192,17 @@ export function MessageComposer({
             ) : (
               <Sparkles className="w-3.5 h-3.5" />
             )}
-            AI öneri
+            {inbox.aiSuggest}
           </Button>
         )}
       </div>
 
       <div
         className={cn(
-          'relative flex items-end gap-2 p-3 pt-1',
-          dragOver && canUpload && 'ring-2 ring-primary/30 ring-inset rounded-lg'
+          'relative flex items-end gap-2 p-3 pt-2 mx-3 mb-3 rounded-3xl transition-shadow',
+          dragOver && canUpload && 'ring-2 ring-indigo-300'
         )}
+        style={inboxComposerRowStyle(primary)}
         onDragOver={(e) => {
           if (!canUpload) return
           e.preventDefault()
@@ -226,18 +234,22 @@ export function MessageComposer({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled || sending}
           rows={1}
-          className="flex-1 min-h-[44px] max-h-32 px-3.5 py-2.5 bg-muted/50 border border-border rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition"
+          className="flex-1 min-h-[44px] max-h-32 px-1 py-2.5 bg-transparent border-0 resize-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
         />
         <Button
           type="button"
           size="icon"
-          className="h-11 w-11 shrink-0 rounded-xl"
+          className="h-11 w-11 shrink-0 rounded-2xl border-0 shadow-lg text-white hover:opacity-95"
+          style={{
+            background: `linear-gradient(135deg, ${primary}, #818CF8)`,
+            boxShadow: `0 8px 24px ${primary}55`,
+          }}
           disabled={(!value.trim() && !pendingUpload) || sending || translating || uploading || disabled}
           onClick={() => void onSend()}
-          title="Gönder"
+          title={inbox.send}
         >
           {sending || translating || uploading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -246,8 +258,8 @@ export function MessageComposer({
           )}
         </Button>
       </div>
-      <p className="px-4 pb-2 text-[10px] text-muted-foreground">
-        Enter gönder · Shift+Enter yeni satır
+      <p className="px-4 pb-2.5 text-[10px] text-slate-400 text-center font-medium">
+        {inbox.sendHint}
       </p>
     </div>
   )

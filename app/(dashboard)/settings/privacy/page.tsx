@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 
 interface PrivacySettings {
   showConsentBanner: boolean
@@ -17,14 +18,15 @@ interface PrivacySettings {
 
 export default function PrivacySettingsPage() {
   const { activeWebsite } = useActiveWebsite()
+  const { privacy: t, common, dateLocale } = useSettingsI18n()
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const [settings, setSettings] = useState<PrivacySettings>({
     showConsentBanner: true,
-    consentBannerText: 'Bu site, size daha iyi hizmet verebilmek için çerezler ve kişisel verilerinizi işlemektedir. Devam ederek bunu kabul etmiş olursunuz.',
+    consentBannerText: t.defaultConsentBannerText,
     cookieConsentEnabled: true,
-    cookieConsentText: 'Bu site, deneyiminizi iyileştirmek için çerezler kullanmaktadır.',
+    cookieConsentText: t.defaultCookieConsentText,
     privacyPolicyUrl: '',
     visitorDataDays: 365,
     sessionDataDays: 90,
@@ -41,9 +43,9 @@ export default function PrivacySettingsPage() {
         if (data) {
           setSettings({
             showConsentBanner: data.showConsentBanner ?? true,
-            consentBannerText: data.consentBannerText || settings.consentBannerText,
+            consentBannerText: data.consentBannerText || t.defaultConsentBannerText,
             cookieConsentEnabled: data.cookieConsentEnabled ?? true,
-            cookieConsentText: data.cookieConsentText || settings.cookieConsentText,
+            cookieConsentText: data.cookieConsentText || t.defaultCookieConsentText,
             privacyPolicyUrl: data.privacyPolicyUrl || '',
             visitorDataDays: data.retentionPolicy?.visitorDataDays ?? 365,
             sessionDataDays: data.retentionPolicy?.sessionDataDays ?? 90,
@@ -57,7 +59,7 @@ export default function PrivacySettingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [activeWebsite])
+  }, [activeWebsite, t.defaultConsentBannerText, t.defaultCookieConsentText])
 
   useEffect(() => { fetchSettings() }, [fetchSettings])
 
@@ -90,12 +92,18 @@ export default function PrivacySettingsPage() {
   }
 
   const handleDownloadDPA = () => {
-    const content = `VERİ İŞLEME SÖZLEŞMESİ (DPA)\n\nTaraflar:\n${activeWebsite?.name || 'Website'} (Veri Sorumlusu)\nGu Live Chat (Veri İşleyen)\n\nKapsam:\nBu sözleşme, Gu Live Chat hizmetleri kapsamında kişisel verilerin işlenmesini düzenler.\n\nVeri Kategorileri:\n- İletişim bilgileri (isim, e-posta, telefon)\n- Sohbet mesajları ve konuşma geçmişi\n- Ziyaretçi oturum verileri\n- Teknik veriler (IP adresi, tarayıcı bilgileri)\n\nAmaç:\nMüşteri desteği ve iletişim hizmetlerinin sağlanması.\n\nSaklama Süreleri:\n- Ziyaretçi verileri: ${settings.visitorDataDays} gün\n- Oturum verileri: ${settings.sessionDataDays} gün\n- Sohbet geçmişi: ${settings.chatHistoryDays} gün\n\nİmza:\nTarih: ${new Date().toLocaleDateString('tr-TR')}`
+    const content = t.buildDpaContent({
+      websiteName: activeWebsite?.name || 'Website',
+      visitorDataDays: settings.visitorDataDays,
+      sessionDataDays: settings.sessionDataDays,
+      chatHistoryDays: settings.chatHistoryDays,
+      date: new Date().toLocaleDateString(dateLocale),
+    })
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'veri-isleme-sozlesmesi-dpa.txt'
+    a.download = t.dpaFilename
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -113,17 +121,14 @@ export default function PrivacySettingsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Gizlilik & KVKK/GDPR</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Gizlilik politikası, veri saklama ve onay ayarlarını yönetin
-        </p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.title}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t.subtitle}</p>
       </div>
 
       <div className="space-y-6">
-        {/* Consent Banner */}
         <div className="surface p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h3 className="text-lg font-semibold text-foreground">KVKK/GDPR Onay Bannerı</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t.consentBannerTitle}</h3>
             <button
               onClick={() => setSettings({ ...settings, showConsentBanner: !settings.showConsentBanner })}
               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${settings.showConsentBanner ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -131,11 +136,9 @@ export default function PrivacySettingsPage() {
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${settings.showConsentBanner ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Ziyaretçilere veri işleme ve çerez politikası hakkında bilgi veren onay bannerı gösterin
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{t.consentBannerDesc}</p>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Banner Metni</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t.bannerTextLabel}</label>
             <textarea
               value={settings.consentBannerText}
               onChange={(e) => setSettings({ ...settings, consentBannerText: e.target.value })}
@@ -145,10 +148,9 @@ export default function PrivacySettingsPage() {
           </div>
         </div>
 
-        {/* Cookie Consent */}
         <div className="surface p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Çerez Onayı</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t.cookieConsentTitle}</h3>
             <button
               onClick={() => setSettings({ ...settings, cookieConsentEnabled: !settings.cookieConsentEnabled })}
               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${settings.cookieConsentEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -157,7 +159,7 @@ export default function PrivacySettingsPage() {
             </button>
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Çerez Açıklaması</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t.cookieTextLabel}</label>
             <textarea
               value={settings.cookieConsentText}
               onChange={(e) => setSettings({ ...settings, cookieConsentText: e.target.value })}
@@ -167,30 +169,26 @@ export default function PrivacySettingsPage() {
           </div>
         </div>
 
-        {/* Privacy Policy URL */}
         <div className="surface p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Gizlilik Politikası</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t.privacyPolicyTitle}</h3>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Gizlilik Politikası URL</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t.privacyPolicyUrlLabel}</label>
             <input
               type="url"
               value={settings.privacyPolicyUrl}
               onChange={(e) => setSettings({ ...settings, privacyPolicyUrl: e.target.value })}
               className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-              placeholder="https://ornek.com/gizlilik-politikasi"
+              placeholder={t.privacyPolicyUrlPlaceholder}
             />
           </div>
         </div>
 
-        {/* Data Retention Policy */}
         <div className="surface p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Veri Saklama Politikası</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            Veri türlerine göre saklama sürelerini belirleyin. Süresi dolan veriler otomatik olarak temizlenir.
-          </p>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t.dataRetentionTitle}</h3>
+          <p className="text-sm text-muted-foreground mb-6">{t.dataRetentionDesc}</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Ziyaretçi Verileri (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">{t.visitorDataDays}</label>
               <input
                 type="number"
                 min={1}
@@ -201,7 +199,7 @@ export default function PrivacySettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Oturum Verileri (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">{t.sessionDataDays}</label>
               <input
                 type="number"
                 min={1}
@@ -212,7 +210,7 @@ export default function PrivacySettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Sohbet Geçmişi (gün)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">{t.chatHistoryDays}</label>
               <input
                 type="number"
                 min={1}
@@ -225,8 +223,8 @@ export default function PrivacySettingsPage() {
           </div>
           <div className="flex items-center justify-between gap-3 pt-4 border-t border-border">
             <div>
-              <p className="text-sm font-medium text-foreground">Otomatik Silme</p>
-              <p className="text-xs text-muted-foreground">Süresi dolan verileri otomatik olarak temizle</p>
+              <p className="text-sm font-medium text-foreground">{t.autoDelete}</p>
+              <p className="text-xs text-muted-foreground">{t.autoDeleteDesc}</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, autoDelete: !settings.autoDelete })}
@@ -237,27 +235,23 @@ export default function PrivacySettingsPage() {
           </div>
         </div>
 
-        {/* Data Processing Agreement */}
         <div className="surface p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Veri İşleme Sözleşmesi (DPA)</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            KVKK ve GDPR uyumlu Veri İşleme Sözleşmesi’ni indirin
-          </p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t.dpaTitle}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{t.dpaDesc}</p>
           <button
             onClick={handleDownloadDPA}
             className="btn-secondary"
           >
-            DPA Sözleşmesini İndir
+            {t.downloadDpa}
           </button>
         </div>
 
-        {/* Save */}
         <div className="flex justify-end">
           <button
             onClick={handleSave}
             className={`btn-primary w-full sm:w-auto ${saved ? '!bg-success' : ''}`}
           >
-            {saved ? '✓ Kaydedildi' : 'Kaydet'}
+            {saved ? common.saved : common.save}
           </button>
         </div>
       </div>

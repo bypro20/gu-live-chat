@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Gu Chat markasından favicon, apple-touch-icon ve app-icon PNG/ICO üretir.
+ * Gu Live Chat markasından favicon, apple-touch-icon ve app-icon PNG/ICO üretir.
  * Çalıştır: node scripts/generate-brand-icons.mjs
  */
 import { readFileSync, writeFileSync, copyFileSync } from 'node:fs'

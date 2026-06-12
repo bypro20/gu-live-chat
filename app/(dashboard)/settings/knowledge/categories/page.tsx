@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useWebsite } from '@/lib/hooks/use-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import Link from 'next/link'
 
 interface Category {
@@ -24,6 +25,8 @@ function slugify(text: string) {
 }
 
 export default function CategoriesPage() {
+  const i18n = useSettingsI18n()
+  const { knowledge: k, common: c } = i18n
   const { website } = useWebsite()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +76,7 @@ export default function CategoriesPage() {
 
   const handleSave = async () => {
     if (!website || !name.trim() || !slug.trim()) {
-      setMessage({ type: 'error', text: 'Ad ve slug zorunludur' })
+      setMessage({ type: 'error', text: k.nameSlugRequired })
       return
     }
 
@@ -106,22 +109,22 @@ export default function CategoriesPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Kaydetme başarısız')
+        throw new Error(data.error || c.saveFailed)
       }
 
-      setMessage({ type: 'success', text: editingId ? 'Kategori güncellendi' : 'Kategori oluşturuldu' })
+      setMessage({ type: 'success', text: editingId ? k.categoryUpdated : k.categoryCreated })
       resetForm()
       loadCategories()
       setTimeout(() => setMessage(null), 3000)
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Kaydetme başarısız' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : c.saveFailed })
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu kategoriyi silmek istediğinize emin misiniz? Kategoriye bağlı makaleler kategorisiz kalacaktır.')) return
+    if (!confirm(k.deleteCategoryConfirm)) return
     try {
       const res = await fetch(`/api/knowledge/categories?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
@@ -143,18 +146,18 @@ export default function CategoriesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/settings/knowledge" className="hover:text-primary">Bilgi Bankası</Link>
+            <Link href="/settings/knowledge" className="hover:text-primary">{k.title}</Link>
             <span>/</span>
-            <span className="text-foreground">Kategoriler</span>
+            <span className="text-foreground">{k.categoriesTitle}</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Kategoriler</h1>
-          <p className="text-sm text-muted-foreground mt-1">Makale kategorilerini yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{k.categoriesTitle}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{k.categoriesSubtitle}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
           className="w-full sm:w-auto px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
         >
-          + Yeni Kategori
+          {k.newCategory}
         </button>
       </div>
 
@@ -170,24 +173,24 @@ export default function CategoriesPage() {
 
       {showForm && (
         <div className="surface p-5 sm:p-6 mb-6 animate-in">
-          <h3 className="text-lg font-semibold text-foreground mb-4">{editingId ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{editingId ? k.editCategory : k.newCategory.replace('+ ', '')}</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Ad</label>
+                <label className="block text-sm font-medium text-foreground mb-1">{k.name}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => { setName(e.target.value); if (autoSlug) setSlug(slugify(e.target.value)) }}
                   className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                  placeholder="Kategori adı"
+                  placeholder={k.categoryNamePlaceholder}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
-                  Slug
+                  {k.slug}
                   <button onClick={() => setAutoSlug(!autoSlug)} className="ml-2 text-xs text-muted-foreground hover:text-primary">
-                    {autoSlug ? 'Otomatik' : 'Manuel'}
+                    {autoSlug ? c.auto : c.manual}
                   </button>
                 </label>
                 <input
@@ -195,38 +198,38 @@ export default function CategoriesPage() {
                   value={slug}
                   onChange={(e) => { setSlug(e.target.value); setAutoSlug(false) }}
                   className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                  placeholder="kategori-slugu"
+                  placeholder={k.slugPlaceholder}
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Açıklama</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{k.description}</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Kısa açıklama (opsiyonel)"
+                placeholder={k.descriptionPlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Emoji / İkon</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{k.icon}</label>
               <input
                 type="text"
                 value={icon}
                 onChange={(e) => setIcon(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="📁 (opsiyonel)"
+                placeholder={k.iconPlaceholder}
                 maxLength={2}
               />
             </div>
           </div>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
             <button onClick={resetForm} className="px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-accent transition">
-              İptal
+              {c.cancel}
             </button>
             <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary-hover transition disabled:opacity-50">
-              {saving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Oluştur'}
+              {saving ? c.saving : editingId ? c.update : c.create}
             </button>
           </div>
         </div>
@@ -244,8 +247,8 @@ export default function CategoriesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3 className="font-medium text-foreground">Henüz kategori yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">Makaleleri kategorilere ayırmak için bir kategori oluşturun</p>
+            <h3 className="font-medium text-foreground">{k.noCategories}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{k.noCategoriesHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -256,7 +259,7 @@ export default function CategoriesPage() {
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-foreground truncate">{cat.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      /{cat.slug} • {cat._count.articles} makale{cat.description ? ` • ${cat.description}` : ''}
+                      /{cat.slug} • {c.articles(cat._count.articles)}{cat.description ? ` • ${cat.description}` : ''}
                     </p>
                   </div>
                 </div>

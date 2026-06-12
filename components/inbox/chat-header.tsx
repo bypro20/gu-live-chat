@@ -9,7 +9,9 @@ import { cn } from '@/lib/utils'
 import { ChannelBadge } from './channel-badge'
 import type { InboxConversation } from './types'
 import { languageLabel, languagesDiffer } from '@/lib/translate-languages'
-import { STATUS_LABELS, visitorDisplayName } from './utils'
+import { getStatusLabels, visitorDisplayName } from './utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { inboxHeaderStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 type ChatHeaderProps = {
   conversation: InboxConversation
@@ -27,6 +29,7 @@ type ChatHeaderProps = {
   extra?: React.ReactNode
   visitorId?: string
   showVisitorLinks?: boolean
+  primaryColor?: string | null
 }
 
 export function ChatHeader({
@@ -45,16 +48,25 @@ export function ChatHeader({
   extra,
   visitorId,
   showVisitorLinks,
+  primaryColor,
 }: ChatHeaderProps) {
-  const name = visitorDisplayName(conversation.visitor.name, conversation.visitor.email)
+  const d = useDashboardI18n()
+  const i = d.inbox
+  const primary = resolveInboxPrimary(primaryColor)
+  const statusLabels = getStatusLabels(d)
+  const name = visitorDisplayName(conversation.visitor.name, conversation.visitor.email, d)
   const initial = name.charAt(0).toUpperCase()
   const isClosed =
     conversation.status === 'RESOLVED' || conversation.status === 'CLOSED'
 
   return (
-    <div className="px-3 sm:px-4 py-3 border-b border-border bg-card flex items-center gap-2 shrink-0 min-w-0 overflow-hidden">
+    <div
+      className="px-3 sm:px-4 py-3.5 flex items-center gap-2 shrink-0 min-w-0 overflow-hidden shadow-md relative"
+      style={inboxHeaderStyle(primary)}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       {onBack && (
-        <Button type="button" variant="ghost" size="icon-sm" className="lg:hidden -ml-1" onClick={onBack}>
+        <Button type="button" variant="ghost" size="icon-sm" className="lg:hidden -ml-1 text-white hover:bg-white/15" onClick={onBack}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
       )}
@@ -62,35 +74,35 @@ export function ChatHeader({
         src={conversation.visitor.avatarUrl}
         fallback={initial}
         size="lg"
-        className="shrink-0 !bg-primary/10 !from-primary/20 !to-primary/30 !text-primary"
+        className="shrink-0 ring-2 ring-white/40 shadow-lg !bg-white/20 !text-white"
       />
-      <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-foreground truncate text-[15px]">{name}</h2>
-        <div className="flex items-center gap-2 min-w-0 mt-0.5 flex-wrap">
+      <div className="flex-1 min-w-0 relative z-10">
+        <h2 className="font-bold text-white truncate text-[15px] tracking-tight">{name}</h2>
+        <div className="flex items-center gap-2 min-w-0 mt-1 flex-wrap">
           <ChannelBadge source={conversation.source} />
-          <Badge variant="secondary" className="h-5 text-[10px] font-normal px-1.5">
-            {STATUS_LABELS[conversation.status] || conversation.status}
+          <Badge variant="secondary" className="h-5 text-[10px] font-semibold px-1.5 bg-white/20 text-white border-white/25">
+            {statusLabels[conversation.status] || conversation.status}
           </Badge>
           {conversation.visitor.email && (
-            <span className="text-xs text-muted-foreground truncate hidden sm:inline">
+            <span className="text-xs text-white/80 truncate hidden sm:inline">
               {conversation.visitor.email}
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0 ml-auto">
+      <div className="flex items-center gap-1 shrink-0 ml-auto relative z-10">
         {showAssign && onAssignToMe && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="hidden md:inline-flex h-8 text-xs"
+            className="hidden md:inline-flex h-8 text-xs bg-white/10 border-white/25 text-white hover:bg-white/20"
             disabled={updating}
             onClick={onAssignToMe}
           >
             <UserCheck className="w-3.5 h-3.5" />
-            Bana ata
+            {i.assignToMe}
           </Button>
         )}
         {!isClosed && onResolve ? (
@@ -98,24 +110,24 @@ export function ChatHeader({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 text-xs text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+            className="h-8 text-xs bg-emerald-500/20 text-white border-emerald-300/40 hover:bg-emerald-500/30"
             disabled={updating}
             onClick={onResolve}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Çözüldü</span>
+            <span className="hidden sm:inline">{i.markResolved}</span>
           </Button>
         ) : onReopen ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 text-xs"
+            className="h-8 text-xs bg-white/10 border-white/25 text-white hover:bg-white/20"
             disabled={updating}
             onClick={onReopen}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Yeniden aç</span>
+            <span className="hidden sm:inline">{i.reopen}</span>
           </Button>
         ) : null}
 
@@ -124,15 +136,20 @@ export function ChatHeader({
             type="button"
             variant={autoTranslate ? 'default' : 'outline'}
             size="sm"
-            className={cn('h-8 text-xs gap-1.5', !autoTranslate && 'text-muted-foreground')}
+            className={cn(
+              'h-8 text-xs gap-1.5',
+              autoTranslate
+                ? 'bg-white text-indigo-700 hover:bg-white/90'
+                : 'bg-white/10 border-white/25 text-white hover:bg-white/20'
+            )}
             onClick={onToggleTranslate}
-            title={autoTranslate ? 'Çeviriyi kapat' : 'Otomatik çeviri (PRO)'}
+            title={autoTranslate ? i.translateOff : i.translatePro}
           >
             <Languages className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">
               {autoTranslate && detectedLang && languagesDiffer(agentLang, detectedLang)
                 ? `${languageLabel(detectedLang)} ↔ ${languageLabel(agentLang)}`
-                : 'Çeviri'}
+                : i.translate}
             </span>
           </Button>
         )}
@@ -141,17 +158,17 @@ export function ChatHeader({
           <>
             <Link
               href={`/contacts/${visitorId}`}
-              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-card hover:bg-muted transition"
+              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-white/25 bg-white/10 text-white hover:bg-white/20 transition"
             >
               <User className="w-3.5 h-3.5" />
-              Profil
+              {i.profile}
             </Link>
             <Link
               href="/visitors"
-              className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-border bg-card hover:bg-muted transition"
+              className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-white/25 bg-white/10 text-white hover:bg-white/20 transition"
             >
               <Monitor className="w-3.5 h-3.5" />
-              Canlı
+              {i.live}
             </Link>
           </>
         )}

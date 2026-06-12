@@ -44,7 +44,8 @@ export async function activateSubscription(
   plan: Plan,
   merchantOid: string,
   cardUserKey?: string,
-  cardToken?: string
+  cardToken?: string,
+  invoice?: { paidAmount: number; currency: string }
 ): Promise<void> {
   const planData = PLANS.find((p) => p.id === plan)
   if (!planData) {
@@ -71,12 +72,16 @@ export async function activateSubscription(
 
   if (planData.price > 0) {
     try {
+      const amountMinor = invoice
+        ? Math.round(invoice.paidAmount * 100)
+        : planData.price * 100
+      const currency = invoice?.currency ?? 'TRY'
       await prisma.invoice.create({
         data: {
           websiteId: updated.id,
           plan,
-          amount: planData.price * 100,
-          currency: 'TRY',
+          amount: amountMinor,
+          currency,
           status: 'PAID',
           periodStart,
           periodEnd: currentPeriodEnd,
@@ -199,7 +204,7 @@ export async function renewSubscription(
     conversationId: merchantOid,
     basketId: merchantOid,
     priceTry: planData.price,
-    itemName: `Gu Chat ${planData.name} Planı — Yenileme`,
+    itemName: `Gu Live Chat ${planData.name} Planı — Yenileme`,
     cardUserKey: website.paytrUserToken,
     cardToken: website.paytrCardToken,
     buyerEmail,
@@ -221,7 +226,8 @@ export async function renewSubscriptionFromCallback(
   merchantOid: string,
   plan: Plan,
   cardUserKey?: string,
-  cardToken?: string
+  cardToken?: string,
+  invoice?: { paidAmount: number; currency: string }
 ): Promise<void> {
   const planData = PLANS.find((p) => p.id === plan)
   if (!planData) {
@@ -260,12 +266,16 @@ export async function renewSubscriptionFromCallback(
 
   if (planData.price > 0) {
     try {
+      const amountMinor = invoice
+        ? Math.round(invoice.paidAmount * 100)
+        : planData.price * 100
+      const currency = invoice?.currency ?? 'TRY'
       await prisma.invoice.create({
         data: {
           websiteId: website.id,
           plan,
-          amount: planData.price * 100,
-          currency: 'TRY',
+          amount: amountMinor,
+          currency,
           status: 'PAID',
           periodStart,
           periodEnd: newPeriodEnd,
@@ -325,8 +335,8 @@ export async function initiateCheckout(
   const result = await initializeCheckoutForm({
     conversationId: merchantOid,
     basketId: merchantOid,
-    priceTry: plan.price,
-    itemName: `Gu Chat ${plan.name} Planı`,
+    price: plan.price,
+    itemName: `Gu Live Chat ${plan.name} Planı`,
     callbackUrl: `${baseUrl}/api/iyzico/callback${returnTo === 'plans' ? '?return=plans' : ''}`,
     buyerEmail: userEmail,
     buyerName: userName,

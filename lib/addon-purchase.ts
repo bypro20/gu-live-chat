@@ -46,8 +46,8 @@ export async function initiateAddonCheckout(
   const result = await initializeCheckoutForm({
     conversationId: merchantOid,
     basketId: merchantOid,
-    priceTry: amountTry,
-    itemName: `Gu Chat Eklenti: ${addon.name}`,
+    price: amountTry,
+    itemName: `Gu Live Chat Eklenti: ${addon.name}`,
     callbackUrl: `${baseUrl}/api/iyzico/callback?return=addons`,
     buyerEmail: userEmail,
     buyerName: userName,

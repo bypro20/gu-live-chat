@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface CannedResponse {
@@ -16,6 +17,7 @@ interface CannedResponse {
 export default function CannedResponsesPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('cannedResponses')
   const { activeWebsite } = useActiveWebsite()
+  const { cannedResponses: t, common } = useSettingsI18n()
   const [items, setItems] = useState<CannedResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -61,7 +63,7 @@ export default function CannedResponsesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!activeWebsite || !confirm('Silmek istediğinize emin misiniz?')) return
+    if (!activeWebsite || !confirm(t.confirmDelete)) return
     await fetch(`/api/canned-responses?id=${id}&websiteId=${activeWebsite.websiteId}`, { method: 'DELETE' })
     fetchItems()
   }
@@ -74,43 +76,47 @@ export default function CannedResponsesPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Hazır Cevaplar</h1>
-          <p className="text-sm text-muted-foreground mt-1">Inbox&apos;ta <code className="bg-muted px-1 rounded">/</code> yazarak kullanın</p>
+          <h1 className="text-xl sm:text-2xl font-bold">{t.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t.subtitleBefore}
+            <code className="bg-muted px-1 rounded">/</code>
+            {t.subtitleAfter}
+          </p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary">+ Yeni Cevap</button>
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary">{t.newResponse}</button>
       </div>
 
       {showForm && (
         <div className="surface p-5 mb-6 space-y-4">
           <input
-            placeholder="Başlık"
+            placeholder={t.titlePlaceholder}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm"
           />
           <div className="grid sm:grid-cols-2 gap-3">
             <input
-              placeholder="Kısayol (örn: merhaba)"
+              placeholder={t.shortcutPlaceholder}
               value={form.shortcut}
               onChange={(e) => setForm({ ...form, shortcut: e.target.value })}
               className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm"
             />
             <input
-              placeholder="Kategori (isteğe bağlı)"
+              placeholder={t.categoryPlaceholder}
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm"
             />
           </div>
           <textarea
-            placeholder="Mesaj içeriği"
+            placeholder={t.contentPlaceholder}
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             rows={4}
             className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-sm resize-none"
           />
           <button onClick={handleCreate} disabled={saving} className="btn-primary disabled:opacity-50">
-            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            {saving ? common.saving : common.save}
           </button>
         </div>
       )}
@@ -121,7 +127,7 @@ export default function CannedResponsesPage() {
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Henüz hazır cevap yok</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{t.empty}</p>
         ) : (
           items.map((item) => (
             <div key={item.id} className="p-4 flex justify-between gap-4">
@@ -133,7 +139,7 @@ export default function CannedResponsesPage() {
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.content}</p>
               </div>
               <button onClick={() => handleDelete(item.id)} className="text-xs text-destructive shrink-0 hover:underline">
-                Sil
+                {common.delete}
               </button>
             </div>
           ))

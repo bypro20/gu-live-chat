@@ -4,14 +4,16 @@ import Google from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
+import { getAuthUrl, getSiteUrl } from './site-config'
 
-/** NextAuth callback URL — custom domain (guchat.org), not *.vercel.app */
+/** NextAuth callback URL — custom domain (gulivechat.com), not *.vercel.app */
 function normalizeSiteUrl(url: string | undefined): string | undefined {
   if (!url) return undefined
   return url.replace(/\/$/, '')
 }
 
-const PRODUCTION_SITE_URL = 'https://guchat.org'
+const PRODUCTION_SITE_URL = getSiteUrl()
+const AUTH_SITE_URL = getAuthUrl()
 const publicAppUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_APP_URL)
 const configuredAuthUrl = normalizeSiteUrl(
   process.env.AUTH_URL ?? process.env.NEXTAUTH_URL
@@ -21,11 +23,11 @@ function isVercelAppUrl(url: string | undefined): boolean {
   return Boolean(url?.includes('vercel.app'))
 }
 
-// Vercel default host (gu-live-chat.vercel.app) breaks Google redirect_uri_mismatch on guchat.org.
-let resolvedAuthUrl = configuredAuthUrl ?? publicAppUrl
+// OAuth callback www üzerinden — apex DNS sorunlarında Google girişi kırılmasın
+let resolvedAuthUrl = configuredAuthUrl ?? AUTH_SITE_URL
 if (!resolvedAuthUrl || isVercelAppUrl(resolvedAuthUrl)) {
   resolvedAuthUrl =
-    publicAppUrl && !isVercelAppUrl(publicAppUrl) ? publicAppUrl : PRODUCTION_SITE_URL
+    AUTH_SITE_URL && !isVercelAppUrl(AUTH_SITE_URL) ? AUTH_SITE_URL : PRODUCTION_SITE_URL
 }
 process.env.AUTH_URL = resolvedAuthUrl
 

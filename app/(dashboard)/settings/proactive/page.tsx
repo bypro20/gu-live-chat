@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface ProactiveMessage {
@@ -19,25 +20,10 @@ interface ProactiveMessage {
   createdAt: string
 }
 
-const TRIGGER_LABELS: Record<string, string> = {
-  TIME_ON_PAGE: 'Süre/Sayfada Kalma',
-  SCROLL_DEPTH: 'Kaydırma Derinliği',
-  EXIT_INTENT: 'Çıkış Niyeti',
-  PAGE_VISIT: 'Sayfa Ziyareti',
-  CUSTOM: 'Özel',
-}
-
-const TRIGGER_PLACEHOLDERS: Record<string, string> = {
-  TIME_ON_PAGE: 'Saniye (örn: 30)',
-  SCROLL_DEPTH: 'Yüzde (örn: 50)',
-  EXIT_INTENT: '-',
-  PAGE_VISIT: 'URL (örn: /fiyat)',
-  CUSTOM: 'Değer',
-}
-
 export default function ProactiveSettingsPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('proactiveMessages')
   const { activeWebsite } = useActiveWebsite()
+  const { common, proactive: p } = useSettingsI18n()
   const [messages, setMessages] = useState<ProactiveMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<ProactiveMessage | null>(null)
@@ -137,7 +123,7 @@ export default function ProactiveSettingsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu hedefli mesajı silmek istediğinize emin misiniz?')) return
+    if (!confirm(p.confirmDelete)) return
     try {
       await fetch(`/api/proactive?id=${id}`, { method: 'DELETE' })
       fetchMessages()
@@ -167,82 +153,82 @@ export default function ProactiveSettingsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hedefli Mesajlar</h1>
-          <p className="text-sm text-muted-foreground mt-1">Ziyaretçilere belirli tetikleyicilere göre otomatik mesaj gösterin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{p.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{p.subtitle}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(!showForm) }}
           className="btn-primary w-full sm:w-auto"
         >
-          {showForm ? 'İptal' : 'Yeni Mesaj Ekle'}
+          {showForm ? common.cancel : p.addMessage}
         </button>
       </div>
 
       {showForm && (
         <div className="surface p-5 sm:p-6 mb-6 sm:mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">
-            {editing ? 'Mesajı Düzenle' : 'Yeni Hedefli Mesaj'}
+            {editing ? p.editMessage : p.newMessage}
           </h2>
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Başlık</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{p.titleLabel}</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Mesaj başlığı"
+                placeholder={p.titlePlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Mesaj</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{p.messageLabel}</label>
               <textarea
                 value={form.message}
                 onChange={(e) => setForm(prev => ({ ...prev, message: e.target.value }))}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
                 rows={3}
-                placeholder="Mesaj içeriği"
+                placeholder={p.messagePlaceholder}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici Tipi</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{p.triggerType}</label>
                 <select
                   value={form.triggerType}
                   onChange={(e) => setForm(prev => ({ ...prev, triggerType: e.target.value, triggerValue: '' }))}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
-                  {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
+                  {Object.entries(p.triggers).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </div>
               {form.triggerType !== 'EXIT_INTENT' && (
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici Değeri</label>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">{p.triggerValue}</label>
                   <input
                     type="text"
                     value={form.triggerValue}
                     onChange={(e) => setForm(prev => ({ ...prev, triggerValue: e.target.value }))}
                     className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                    placeholder={TRIGGER_PLACEHOLDERS[form.triggerType]}
+                    placeholder={p.triggerPlaceholders[form.triggerType]}
                   />
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Hedef Sayfalar (JSON dizi veya *, boş bırakılırsa tüm sayfalar)</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{p.targetPages}</label>
               <input
                 type="text"
                 value={form.targetPages}
                 onChange={(e) => setForm(prev => ({ ...prev, targetPages: e.target.value }))}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder='["/fiyat", "/iletisim"] veya *'
+                placeholder={p.targetPagesPlaceholder}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Gecikme (saniye)</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{p.delaySeconds}</label>
                 <input
                   type="number"
                   value={form.delay}
@@ -259,7 +245,7 @@ export default function ProactiveSettingsPage() {
                     onChange={(e) => setForm(prev => ({ ...prev, showOnce: e.target.checked }))}
                     className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   />
-                  <span className="text-sm text-foreground">Bir kere göster</span>
+                  <span className="text-sm text-foreground">{p.showOnce}</span>
                 </label>
               </div>
               <div className="flex items-center sm:items-end sm:pb-3">
@@ -270,7 +256,7 @@ export default function ProactiveSettingsPage() {
                     onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
                     className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   />
-                  <span className="text-sm text-foreground">Aktif</span>
+                  <span className="text-sm text-foreground">{common.active}</span>
                 </label>
               </div>
             </div>
@@ -280,13 +266,13 @@ export default function ProactiveSettingsPage() {
                 disabled={saving || !form.title.trim() || !form.message.trim()}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Kaydediliyor...' : editing ? 'Güncelle' : 'Oluştur'}
+                {saving ? common.saving : editing ? common.update : common.create}
               </button>
               <button
                 onClick={resetForm}
                 className="btn-secondary"
               >
-                İptal
+                {common.cancel}
               </button>
             </div>
           </div>
@@ -304,8 +290,8 @@ export default function ProactiveSettingsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
           </div>
-          <h3 className="font-medium text-foreground">Henüz hedefli mesaj yok</h3>
-          <p className="text-sm text-muted-foreground mt-1">Yeni bir mesaj oluşturmak için yukarıdaki butonu kullanın</p>
+          <h3 className="font-medium text-foreground">{p.emptyTitle}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{p.emptyHint}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -320,16 +306,16 @@ export default function ProactiveSettingsPage() {
                         ? 'bg-success-light text-success'
                         : 'bg-muted text-muted-foreground'
                     }`}>
-                      {msg.isActive ? 'Aktif' : 'Pasif'}
+                      {msg.isActive ? common.active : common.inactive}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{msg.message}</p>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>{TRIGGER_LABELS[msg.triggerType] || msg.triggerType}</span>
-                    {msg.triggerValue && <span>Değer: {msg.triggerValue}</span>}
-                    {msg.delay > 0 && <span>Gecikme: {msg.delay}s</span>}
-                    <span>{msg.showOnce ? 'Bir kere' : 'Her seferinde'}</span>
-                    {msg.targetPages && <span className="truncate max-w-[200px]">Sayfalar: {msg.targetPages}</span>}
+                    <span>{p.triggers[msg.triggerType] || msg.triggerType}</span>
+                    {msg.triggerValue && <span>{p.valueLabel(msg.triggerValue)}</span>}
+                    {msg.delay > 0 && <span>{p.delayLabel(msg.delay)}</span>}
+                    <span>{msg.showOnce ? p.showOnceBadge : p.showEveryTime}</span>
+                    {msg.targetPages && <span className="truncate max-w-[200px]">{p.pagesLabel(msg.targetPages)}</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -340,7 +326,7 @@ export default function ProactiveSettingsPage() {
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
-                    title={msg.isActive ? 'Devre dışı bırak' : 'Aktifleştir'}
+                    title={msg.isActive ? p.disable : p.enable}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       {msg.isActive ? (
@@ -353,7 +339,7 @@ export default function ProactiveSettingsPage() {
                   <button
                     onClick={() => handleEdit(msg)}
                     className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center transition"
-                    title="Düzenle"
+                    title={p.edit}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -362,7 +348,7 @@ export default function ProactiveSettingsPage() {
                   <button
                     onClick={() => handleDelete(msg.id)}
                     className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center transition"
-                    title="Sil"
+                    title={common.delete}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

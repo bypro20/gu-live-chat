@@ -5,7 +5,7 @@
  * Env:
  *   PORT=3001
  *   DATABASE_URL=... (same as Next.js app)
- *   NEXT_PUBLIC_APP_URL=https://guchat.org (CORS)
+ *   NEXT_PUBLIC_APP_URL=https://gulivechat.com (CORS)
  *   SOCKET_INTERNAL_SECRET=... (same as Vercel CRON_SECRET or dedicated secret)
  *
  * Vercel env:

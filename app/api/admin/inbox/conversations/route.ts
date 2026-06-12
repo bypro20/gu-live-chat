@@ -35,7 +35,7 @@ export async function GET(req: Request) {
           lastMessageAt: true,
           lastMessagePreview: true,
           unreadCount: true,
-          visitor: { select: { id: true, name: true, email: true } },
+          visitor: { select: { id: true, name: true, email: true, avatarUrl: true } },
         },
         orderBy: { lastMessageAt: 'desc' },
         skip: (page - 1) * limit,

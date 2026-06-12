@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { LogoMark } from '@/components/brand/logo-mark'
+import { SITE_NAME } from '@/lib/site-config'
 
 const boyutAyarları = {
   sm: { svg: 28, metin: 'text-sm', aralik: 'gap-1.5' },
@@ -32,15 +33,15 @@ export function Logo({
     <div className={cn('flex items-center', ayar.aralik, className)}>
       <LogoMark size={ayar.svg} glow={animasyonlu} />
       {metinGoster && (
-        <span className={cn(ayar.metin, 'font-bold tracking-tight text-foreground')}>
-          Gu <span className="text-primary">Chat</span>
+        <span className={cn(ayar.metin, 'font-bold tracking-tight text-foreground')} aria-label={SITE_NAME}>
+          Gu Live <span className="text-primary">Chat</span>
         </span>
       )}
     </div>
   )
 
   if (linkOlsun) {
-    return <Link href="/" className="shrink-0">{logoİçeriği}</Link>
+    return <Link href="/" className="shrink-0" aria-label={`${SITE_NAME} ana sayfa`}>{logoİçeriği}</Link>
   }
   return logoİçeriği
 }

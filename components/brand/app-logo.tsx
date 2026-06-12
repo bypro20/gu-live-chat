@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { LogoMark } from './logo-mark'
+import { SITE_NAME } from '@/lib/site-config'
 
 type AppLogoVariant = 'sidebar' | 'light' | 'admin'
 
@@ -43,7 +44,7 @@ export function AppLogo({
               isSidebar ? 'text-white' : 'text-foreground'
             )}
           >
-            Gu <span className={isSidebar ? 'text-[#93C5FD]' : 'text-primary'}>Chat</span>
+            Gu Live <span className={isSidebar ? 'text-[#93C5FD]' : 'text-primary'}>Chat</span>
           </span>
           {isAdmin && (
             <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-violet-500/20 text-violet-300 border border-violet-400/25">

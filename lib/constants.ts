@@ -132,7 +132,7 @@ export const PLANS = [
       'Bilet Sistemi',
       'Hazır cevaplar',
       'Dosya yükleme',
-      'AI Sohbet eklenti ile (opsiyonel)',
+      'AI Sohbet eklenti: Groq, Gemini Flash, OpenRouter ücretsiz',
     ],
     highlighted: false,
   },
@@ -145,7 +145,7 @@ export const PLANS = [
     features: [
       '25 temsilci',
       'Sınırsız sohbet',
-      'AI Sohbet Asistanı (GPT/Gemini — insan gibi)',
+      'AI Sohbet Asistanı — GPT-4.1 mini, Claude Sonnet, Gemini Pro',
       'Chatbot oluşturucu & otomasyon',
       'Ekran İzleme (Canlı müdahale)',
       '50+ Dil Otomatik Çeviri',
@@ -169,7 +169,7 @@ export const PLANS = [
     features: [
       'Sınırsız temsilci',
       'Sınırsız sohbet',
-      'AI Sohbet Asistanı (GPT/Gemini — insan gibi)',
+      'AI Sohbet Asistanı — GPT-4o, Claude Opus, Gemini 2.5 Pro',
       'Chatbot oluşturucu & otomasyon',
       'Ekran İzleme (Canlı müdahale)',
       '50+ Dil Otomatik Çeviri',

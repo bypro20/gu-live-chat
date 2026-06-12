@@ -165,7 +165,7 @@ html.dark { color-scheme: dark; }
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -283,7 +283,7 @@ body {
     @apply inline-flex items-center px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full;
   }
 
-  /* guchat.org — daha düz, hafif gölgeler */
+  /* gulivechat.com — daha düz, hafif gölgeler */
   .marketing-site {
     overflow-x: hidden;
     max-width: 100vw;
@@ -448,6 +448,21 @@ body {
       radial-gradient(ellipse 70% 50% at 0% 0%, rgba(139, 92, 246, 0.04) 0%, transparent 55%),
       #080C14;
   }
+
+  /* Admin gelen kutusu — müşteri paneli ile aynı açık tema */
+  .admin-shell .app-main .inbox-shell {
+    background: #f8fafc;
+    color: #0f172a;
+    color-scheme: light;
+  }
+
+  .admin-shell .app-main .inbox-shell .text-foreground {
+    color: #0f172a;
+  }
+
+  .admin-shell .app-main .inbox-shell .text-muted-foreground {
+    color: #64748b;
+  }
 }
 
 @keyframes fade-in {
@@ -485,11 +500,82 @@ body {
 
 html { scroll-behavior: smooth; }
 
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 25%, transparent) transparent;
+}
+
+.glass-nav {
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border-bottom-color: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.glass-nav-scrolled {
+  box-shadow: var(--shadow-sm);
+}
+
+.app-page-title {
+  @apply text-xl sm:text-2xl font-bold tracking-tight text-foreground;
+}
+
+.app-page-subtitle {
+  @apply text-sm text-muted-foreground mt-1 leading-relaxed;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--primary) 0%, #2563EB 55%, #1D4ED8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-answer--open {
+  grid-template-rows: 1fr;
+}
+
+.faq-answer-inner {
+  overflow: hidden;
+}
+
+.app-content-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 #gu-live-chat-widget-root {
   position: fixed !important;
   right: 24px !important;
   bottom: 24px !important;
   z-index: 2147483647 !important;
+}
+
+/* Marketing: mobil indirme çubuğu widget'ın üstüne binmesin */
+@media (max-width: 1023px) {
+  body:has(.marketing-site) #gu-chat-dock {
+    bottom: 88px !important;
+  }
+  body:has(.marketing-site) #gu-widget-iframe {
+    bottom: 180px !important;
+  }
 }
 
 /* ── Native app (Capacitor APK) ── */
@@ -498,6 +584,22 @@ html.native-app {
   overscroll-behavior: none;
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* React yüklenmeden önce web sitesi gibi görünmesin */
+html.native-app-android .app-sidebar,
+html.native-app-ios .app-sidebar {
+  display: none !important;
+}
+
+html.native-app .glass-nav,
+html.native-app nav[aria-label="Ana navigasyon"],
+html.native-app footer:not(.native-bottom-nav) {
+  display: none !important;
+}
+
+html.native-app .native-bottom-nav {
+  display: block;
 }
 
 html.native-app body {
@@ -550,4 +652,233 @@ html.native-app .native-sidebar-footer {
 html.native-app-admin .native-app-shell,
 html.native-app-admin body {
   background: #080C14;
+}
+
+html.native-app-admin .admin-shell {
+  touch-action: pan-y;
+}
+
+html.native-app-admin .admin-shell .app-main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+html.native-app-admin .native-app-admin-content {
+  min-height: min-content;
+}
+
+/* Native Android / iOS — gerçek uygulama hissi */
+html.native-app-android {
+  font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+}
+
+html.native-app-ios {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+html.native-app .native-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html.native-app .native-app-main {
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
+html.native-app .native-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  inset-inline: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(17, 24, 39, 0.06);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.native-app .native-bottom-nav-inner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  max-width: 32rem;
+  margin: 0 auto;
+  min-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app .native-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px 8px;
+  color: var(--muted-foreground);
+  transition: color 0.15s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html.native-app .native-tab:active {
+  transform: scale(0.94);
+}
+
+html.native-app .native-tab--active {
+  color: var(--primary);
+}
+
+html.native-app .native-tab-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+html.native-app .native-tab--active .native-tab-icon {
+  transform: translateY(-1px);
+}
+
+html.native-app .native-app-content {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.native-app .native-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+html.native-app .native-hub-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  padding: 0 4px 8px;
+}
+
+html.native-app .native-hub-list {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+html.native-app .native-hub-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html.native-app .native-hub-row:last-child {
+  border-bottom: none;
+}
+
+html.native-app .native-hub-row:active {
+  background: var(--accent);
+}
+
+html.native-app .native-hub-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+html.native-app .native-hub-action {
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--radius-xl);
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  transition: transform 0.1s ease, background 0.12s ease;
+}
+
+html.native-app .native-hub-action:active {
+  transform: scale(0.98);
+  background: var(--accent);
+}
+
+html.native-app .native-hub-action--danger {
+  color: var(--destructive);
+  border-color: color-mix(in srgb, var(--destructive) 25%, var(--border));
+  background: var(--destructive-light);
+}
+
+html.native-app .native-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html.native-app .native-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+html.native-app .native-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  animation: fade-in 0.2s ease both;
+}
+
+html.native-app .native-sheet {
+  width: 100%;
+  background: var(--background);
+  border-radius: 20px 20px 0 0;
+  padding-top: 8px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: var(--shadow-2xl);
+}
+
+html.native-app .native-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  margin: 0 auto 12px;
+}
+
+html.native-app .native-settings-hub .native-app-content,
+html.native-app .native-settings-hub {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Inbox tam ekran — alt nav gizlenmez ama içerik taşmasın */
+html.native-app .native-app-shell .app-main {
+  background: var(--background);
 }

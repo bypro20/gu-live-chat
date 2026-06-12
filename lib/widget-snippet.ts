@@ -1,4 +1,7 @@
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
+import { WIDGET_ASSET_VERSION } from '@/lib/widget-theme'
+import { getSiteUrl } from '@/lib/site-config'
+
+const APP_URL = getSiteUrl()
 
 export function buildWidgetInstallSnippet(websiteId: string) {
   const id = websiteId || 'WEBSITE_ID'
@@ -10,5 +13,5 @@ export function buildWidgetInstallSnippet(websiteId: string) {
   window.GU_WIDGET_URL = '${APP_URL}';
   $gu('set', 'WEBSITE_ID', '${id}');
 </script>
-<script async src="${APP_URL}/widget.js"></script>`
+<script async src="${APP_URL}/widget.js?v=${WIDGET_ASSET_VERSION}"></script>`
 }

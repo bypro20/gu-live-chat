@@ -1,11 +1,11 @@
 /**
- * Verifies admin@guchat.org exists in DB with ADMIN role and password matches.
+ * Verifies admin@gulivechat.com exists in DB with ADMIN role and password matches.
  * Usage: ADMIN_PASSWORD='...' npx tsx scripts/verify-admin-auth.ts
  */
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/db'
 
-const ADMIN_EMAIL = 'admin@guchat.org'
+const ADMIN_EMAIL = 'admin@gulivechat.com'
 
 async function main() {
   const password = process.env.ADMIN_PASSWORD

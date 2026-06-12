@@ -27,12 +27,14 @@ import {
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { GrowthOpportunities } from '@/components/dashboard/growth-opportunities'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { stats, isLoading } = useDashboardStats()
   const { activeWebsite } = useActiveWebsite()
   const [copiedCode, setCopiedCode] = useState(false)
+  const t = useDashboardI18n().dashboard
 
   const resolvedRate =
     stats.totalConversations > 0
@@ -42,28 +44,28 @@ export default function DashboardPage() {
   const planKey = (activeWebsite?.plan || 'FREE') as keyof typeof PLAN_LIMITS
   const planInfo = PLANS.find((p) => p.id === planKey)
   const convLimit = PLAN_LIMITS[planKey]?.maxConversationsPerMonth
-  const convLimitLabel = convLimit === Infinity ? 'Sınırsız' : String(convLimit)
+  const convLimitLabel = convLimit === Infinity ? t.unlimited : String(convLimit)
   const installSnippet = buildWidgetInstallSnippet(activeWebsite?.websiteId || 'YOUR_WEBSITE_ID')
 
   const channelMax = Math.max(...stats.channelBreakdown.map((c) => c.count), 1)
 
   const statCards = [
     {
-      label: 'Açık Sohbetler',
+      label: t.openChats,
       value: stats.openConversations,
       icon: MessageSquare,
       color: 'text-primary',
       bg: 'bg-primary-light',
     },
     {
-      label: 'Bugünkü Sohbetler',
+      label: t.todayChats,
       value: stats.todayConversations,
       icon: Inbox,
       color: 'text-success',
       bg: 'bg-success-light',
     },
     {
-      label: 'Aktif Ziyaretçiler',
+      label: t.activeVisitors,
       value: stats.activeVisitors,
       icon: Eye,
       color: 'text-info',
@@ -72,7 +74,7 @@ export default function DashboardPage() {
       live: stats.activeVisitors > 0,
     },
     {
-      label: 'Ort. İlk Yanıt',
+      label: t.avgFirstResponse,
       value: stats.avgResponseTime,
       icon: Clock,
       color: 'text-warning',
@@ -88,26 +90,24 @@ export default function DashboardPage() {
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div>
             <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">
-              Gu Chat · Kontrol Merkezi
+              {t.controlCenter}
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Hoş geldiniz{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}
+              {session?.user?.name ? t.welcomeWithName(session.user.name.split(' ')[0]) : t.welcome}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm max-w-lg">
-              {activeWebsite
-                ? `${activeWebsite.name} için tüm kanallar, AI asistan ve analitik tek panelde.`
-                : 'Canlı destek operasyonunuzu buradan yönetin.'}
+              {activeWebsite ? t.subtitleWithSite(activeWebsite.name) : t.subtitleDefault}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Link href="/settings/channels">
               <Button variant="outline" size="sm" className="gap-1.5 bg-card/80">
                 <Radio className="w-4 h-4" />
-                Kanallar
+                {t.channels}
               </Button>
             </Link>
             <Link href="/inbox" className="btn-primary">
-              <MessageSquare className="w-4 h-4" /> Gelen Kutusu
+              <MessageSquare className="w-4 h-4" /> {t.inbox}
             </Link>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
               </p>
               {card.href && !isLoading && (
                 <p className="relative text-xs text-primary mt-2 flex items-center gap-1 font-medium">
-                  Canlı izleme <ArrowRight className="w-3 h-3" />
+                  {t.liveMonitoring} <ArrowRight className="w-3 h-3" />
                 </p>
               )}
             </div>
@@ -166,16 +166,14 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-primary" />
-                Kanal dağılımı
+                {t.channelDistribution}
               </h2>
-              <span className="text-xs text-muted-foreground">Bu ay</span>
+              <span className="text-xs text-muted-foreground">{t.thisMonth}</span>
             </div>
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Yükleniyor…</p>
+              <p className="text-sm text-muted-foreground">{t.loading}</p>
             ) : stats.channelBreakdown.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Henüz sohbet yok. Widget veya kanal entegrasyonu ile başlayın.
-              </p>
+              <p className="text-sm text-muted-foreground">{t.noChatsYet}</p>
             ) : (
               <div className="space-y-3">
                 {stats.channelBreakdown.map((ch) => (
@@ -201,7 +199,7 @@ export default function DashboardPage() {
               href="/settings/channels"
               className="inline-flex items-center gap-1 text-sm text-primary font-medium mt-4 hover:text-primary-hover"
             >
-              WhatsApp, Instagram, Telegram bağla <ArrowRight className="w-3.5 h-3.5" />
+              {t.connectChannels} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -209,22 +207,20 @@ export default function DashboardPage() {
           <div className="app-panel p-6">
             <h2 className="text-base font-bold mb-4 flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
-              Temsilci performansı
+              {t.agentPerformance}
             </h2>
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Yükleniyor…</p>
+              <p className="text-sm text-muted-foreground">{t.loading}</p>
             ) : stats.agentPerformance.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Bu ay henüz temsilci aktivitesi yok.
-              </p>
+              <p className="text-sm text-muted-foreground">{t.noAgentActivity}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground border-b border-border">
-                      <th className="pb-2 font-medium">Temsilci</th>
-                      <th className="pb-2 font-medium text-right">Mesaj</th>
-                      <th className="pb-2 font-medium text-right">Çözülen</th>
+                      <th className="pb-2 font-medium">{t.agent}</th>
+                      <th className="pb-2 font-medium text-right">{t.messages}</th>
+                      <th className="pb-2 font-medium text-right">{t.resolved}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -252,11 +248,10 @@ export default function DashboardPage() {
           </div>
 
           <div className="app-panel p-6">
-            <h2 className="text-base font-bold mb-3">Widget Kurulumu</h2>
+            <h2 className="text-base font-bold mb-3">{t.widgetSetup}</h2>
             {activeWebsite ? (
               <p className="text-sm text-muted-foreground mb-2">
-                <span className="font-medium text-foreground">{activeWebsite.name}</span> için embed
-                kodu
+                <span className="font-medium text-foreground">{t.embedCodeFor(activeWebsite.name)}</span>
               </p>
             ) : null}
             <div className="relative">
@@ -273,12 +268,12 @@ export default function DashboardPage() {
                 {copiedCode ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-success" />
-                    <span className="text-success">Kopyalandı</span>
+                    <span className="text-success">{t.copied}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Kopyala</span>
+                    <span>{t.copy}</span>
                   </>
                 )}
               </button>
@@ -299,10 +294,8 @@ export default function DashboardPage() {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold">AI Agent</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Standart talepleri anında işleyin
-                </p>
+                <h2 className="text-base font-bold">{t.aiAgent}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t.aiAgentSubtitle}</p>
               </div>
             </div>
             {isLoading ? (
@@ -313,7 +306,7 @@ export default function DashboardPage() {
                   %{stats.aiMetrics.aiResolutionRate}
                 </p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  AI destekli çözüm oranı (bu ay) · {stats.aiMetrics.botReplies} bot yanıtı
+                  {t.aiResolutionRate(stats.aiMetrics.aiResolutionRate, stats.aiMetrics.botReplies)}
                 </p>
                 <div className="flex items-center gap-2 mb-3">
                   <span
@@ -325,15 +318,15 @@ export default function DashboardPage() {
                   />
                   <span className="text-sm">
                     {stats.aiAgent.active && stats.aiAgent.autoReply
-                      ? 'Aktif — ziyaretçilere otomatik yanıt veriyor'
+                      ? t.aiActiveAuto
                       : stats.aiAgent.active
-                        ? 'Açık — otomatik yanıt kapalı'
-                        : 'Kapalı'}
+                        ? t.aiActiveManual
+                        : t.aiOff}
                   </span>
                 </div>
                 <Link href="/settings/chatbot">
                   <Button variant="outline" size="sm" className="w-full">
-                    AI Agent ayarları
+                    {t.aiSettings}
                   </Button>
                 </Link>
               </>
@@ -341,11 +334,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="app-panel p-6">
-            <h2 className="text-base font-bold mb-4">Performans</h2>
+            <h2 className="text-base font-bold mb-4">{t.performance}</h2>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                  <span>Toplam sohbet (ay)</span>
+                  <span>{t.totalChatsMonth}</span>
                   <span className="font-medium text-foreground tabular-nums">
                     {isLoading ? '—' : stats.totalConversations}
                   </span>
@@ -359,7 +352,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                  <span>Çözüm oranı</span>
+                  <span>{t.resolutionRate}</span>
                   <span className="font-medium text-foreground tabular-nums">
                     {isLoading ? '—' : `%${resolvedRate}`}
                   </span>
@@ -376,18 +369,18 @@ export default function DashboardPage() {
 
           <div className="app-panel p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold">Plan</h2>
+              <h2 className="text-base font-bold">{t.plan}</h2>
               <Link
                 href="/settings/plans"
                 className="text-xs font-semibold text-primary hover:text-primary-hover"
               >
-                Yükselt →
+                {t.upgrade}
               </Link>
             </div>
-            <p className="text-sm font-semibold">{planInfo?.name || 'Ücretsiz'}</p>
+            <p className="text-sm font-semibold">{planInfo?.name || t.freePlan}</p>
             <div className="mt-3 bg-primary-light rounded-xl p-3 border border-primary/10">
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                <span>Sohbet kullanımı (bu ay)</span>
+                <span>{t.chatUsageMonth}</span>
                 <span>
                   {isLoading ? '—' : `${stats.totalConversations} / ${convLimitLabel}`}
                 </span>
@@ -407,13 +400,13 @@ export default function DashboardPage() {
 
           <div className="app-panel p-6">
             <h2 className="text-base font-bold mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" /> Hızlı erişim
+              <Zap className="w-4 h-4 text-primary" /> {t.quickAccess}
             </h2>
             <div className="grid grid-cols-1 gap-2">
               {[
-                { href: '/settings/widget', icon: Monitor, label: 'Widget' },
-                { href: '/settings/team', icon: Users, label: 'Takım' },
-                { href: '/settings/chatbot', icon: Bot, label: 'Chatbot & AI' },
+                { href: '/settings/widget', icon: Monitor, label: t.quickWidget },
+                { href: '/settings/team', icon: Users, label: t.quickTeam },
+                { href: '/settings/chatbot', icon: Bot, label: t.quickChatbot },
               ].map((item) => (
                 <Link
                   key={item.href}

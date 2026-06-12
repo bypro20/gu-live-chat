@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
         temperature: aiConfig.temperature,
       },
       systemPrompt: suggestPrompt,
+      plan: website.plan as import('@/lib/constants').PlanType,
       websiteId: website.id,
     })
 

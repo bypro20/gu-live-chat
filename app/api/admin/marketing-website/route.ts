@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { prisma } from '@/lib/db'
 import { resolveAdminInboxSite } from '@/lib/admin-inbox-setup'
 
-/** guchat.org widget'ının bağlı olduğu site (admin gelen kutusu). */
+/** gulivechat.com widget'ının bağlı olduğu site (admin gelen kutusu). */
 export async function GET() {
   try {
     const check = await requireAdmin()

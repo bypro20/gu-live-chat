@@ -96,6 +96,7 @@ export async function POST(
             temperature: aiConfig.temperature,
           }
         : null,
+      plan: conversation.website.plan as import('@/lib/constants').PlanType,
       websiteId: conversation.websiteId,
       conversationId,
     })

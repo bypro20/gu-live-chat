@@ -1,0 +1,14 @@
+# Ollama — Gu Live Chat platform AI (açık kaynak modeller)
+FROM ollama/ollama:latest
+
+ENV OLLAMA_HOST=0.0.0.0:11434
+
+# Railway PORT env — Ollama'yı bu porta bağla
+ENV OLLAMA_ORIGINS=*
+
+COPY scripts/ollama-railway-start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 11434
+
+CMD ["/start.sh"]

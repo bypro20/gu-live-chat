@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
+import { isNativeCustomerUserAgent } from '@/lib/native-app'
 
 function getClientIp(req: NextRequest): string | null {
   const forwarded = req.headers.get('x-forwarded-for')
@@ -43,7 +45,7 @@ export async function proxy(req: NextRequest) {
 
   const { pathname } = req.nextUrl
   const ua = req.headers.get('user-agent') || ''
-  const isCustomerApp = ua.includes('GuChatApp') && !ua.includes('GuChatAdminApp')
+  const isCustomerApp = isNativeCustomerUserAgent(ua)
 
   // Legacy admin login URL alias
   if (pathname === '/panel-giris') {
@@ -113,7 +115,17 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  return NextResponse.next()
+  const res = NextResponse.next()
+  if (
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/widget') &&
+    !pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|js|css|woff|woff2|ttf|apk)$/)
+  ) {
+    const ctx = detectLocaleContext(req)
+    applyLocaleCookies(res, ctx)
+  }
+
+  return res
 }
 
 export const config = {

@@ -1,7 +1,6 @@
-import type { Metadata } from 'next'
-import { buildMetadata, PAGE_SEO } from '@/lib/seo'
+import { marketingMetadata } from '@/lib/marketing-pages/metadata'
 
-export const metadata: Metadata = buildMetadata(PAGE_SEO.pricing)
+export const generateMetadata = () => marketingMetadata('pricing')
 
 export default function PricingLayout({ children }: { children: React.ReactNode }) {
   return children

@@ -1,9 +1,9 @@
-# Gu Chat Yönetim (Admin APK)
+# Gu Live Chat Yönetim (Admin APK)
 
 Platform yönetim paneli için **ayrı** Android uygulaması. Müşteri APK'sından tamamen bağımsızdır.
 
-- **Müşteri uygulaması:** `mobile/` → `guchat.org/login?app=android`
-- **Yönetici uygulaması:** `mobile-admin/` → `guchat.org/admin-login?app=admin`
+- **Müşteri uygulaması:** `mobile/` → `gulivechat.com/login?app=android`
+- **Yönetici uygulaması:** `mobile-admin/` → `gulivechat.com/admin-login?app=admin`
 
 ## Kurulum
 
@@ -19,6 +19,6 @@ APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ## Web erişimi (tarayıcı)
 
-Yönetici girişi her zaman: **https://guchat.org/admin-login**
+Yönetici girişi her zaman: **https://gulivechat.com/admin-login**
 
 Müşteri mobil uygulamasından admin paneline erişim engellenmiştir.

@@ -1,16 +1,14 @@
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
+import { marketingDomainVariants, SITE_DOMAIN } from './site-config'
 
-const MARKETING_DOMAIN = (process.env.MARKETING_WEBSITE_DOMAIN || 'guchat.org')
+const MARKETING_DOMAIN = (
+  process.env.MARKETING_WEBSITE_DOMAIN || SITE_DOMAIN
+)
   .toLowerCase()
   .replace(/^https?:\/\//, '')
   .replace(/\/$/, '')
-const MARKETING_NAME = process.env.MARKETING_WEBSITE_NAME || 'Gu Chat — Platform'
-
-function marketingDomainVariants(): string[] {
-  const d = MARKETING_DOMAIN
-  return [...new Set([d, `www.${d}`, `https://${d}`, `http://${d}`])]
-}
+const MARKETING_NAME = process.env.MARKETING_WEBSITE_NAME || 'Gu Live Chat — Platform'
 
 /** Marketing sitesini bul — domain varyantları + env override. */
 async function findMarketingWebsiteInDb() {
@@ -68,6 +66,21 @@ async function ensureMarketingSiteProPlan(websiteInternalId: string) {
   }
 }
 
+/** Canlı DB'deki marketing sitesi adı/domain'i güncel marka ile senkronize et */
+async function ensureMarketingSiteBranding(websiteInternalId: string) {
+  try {
+    await prisma.website.update({
+      where: { id: websiteInternalId },
+      data: {
+        name: MARKETING_NAME,
+        domain: MARKETING_DOMAIN,
+      },
+    })
+  } catch (e) {
+    console.warn('[marketing-website] branding sync:', e)
+  }
+}
+
 async function ensureAllPlatformAdmins(websiteInternalId: string) {
   const admins = await prisma.user.findMany({
     where: { role: 'ADMIN' },
@@ -102,6 +115,7 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
   if (existing) {
     await ensureTeamOwner(existing.id, ownerUserId)
     await ensureMarketingSiteProPlan(existing.id)
+    await ensureMarketingSiteBranding(existing.id)
     await ensureAllPlatformAdmins(existing.id)
     return existing.websiteId
   }
@@ -152,6 +166,7 @@ export async function ensureAdminMarketingAccess(adminUserId: string): Promise<s
       })
       if (site) {
         await ensureMarketingSiteProPlan(site.id)
+        await ensureMarketingSiteBranding(site.id)
         await ensureAllPlatformAdmins(site.id)
         return site.websiteId
       }

@@ -8,7 +8,8 @@ import { usePlanCheckout } from '@/lib/hooks/use-plan-checkout'
 import { PlanPackagesPanel } from '@/components/dashboard/plan-packages-panel'
 import IyzicoCheckout from '../billing/IyzicoCheckout'
 import type { PlanId } from '@/lib/plan-cta'
-import { trialHeroLine } from '@/lib/trial-config'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
+import { getPlansPanelUi } from '@/lib/plan-i18n'
 
 export default function PlansPageContent() {
   const searchParams = useSearchParams()
@@ -26,6 +27,9 @@ export default function PlansPageContent() {
     setError,
     purchasePlan,
   } = usePlanCheckout(activeWebsite?.websiteId)
+
+  const { locale } = useRegionalPricing()
+  const panelUi = getPlansPanelUi(locale)
 
   const fetchPlan = useCallback(async () => {
     if (!activeWebsite) return
@@ -50,11 +54,11 @@ export default function PlansPageContent() {
   useEffect(() => {
     const payment = searchParams.get('payment')
     if (payment === 'success') {
-      setNotice({ type: 'success', text: 'Ödeme başarılı! Paketiniz güncellendi.' })
+      setNotice({ type: 'success', text: panelUi.paymentSuccess })
       window.history.replaceState({}, '', '/settings/plans')
       void fetchPlan()
     } else if (payment === 'failed') {
-      setNotice({ type: 'error', text: 'Ödeme tamamlanamadı. Tekrar deneyebilirsiniz.' })
+      setNotice({ type: 'error', text: panelUi.paymentFailed })
       window.history.replaceState({}, '', '/settings/plans')
     }
   }, [searchParams, fetchPlan])
@@ -94,17 +98,14 @@ export default function PlansPageContent() {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Paketler</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Abonelik paketinizi seçin — ücretli paketlerde doğrudan güvenli ödeme ekranına yönlendirilirsiniz.
-              </p>
-              <p className="text-xs text-primary font-medium mt-2">{trialHeroLine()}</p>
+              <h1 className="app-page-title">{panelUi.title}</h1>
+              <p className="app-page-subtitle">{panelUi.subtitle}</p>
             </div>
             <Link
               href="/settings/billing"
               className="text-sm font-semibold text-primary hover:underline shrink-0"
             >
-              Faturalama →
+              {panelUi.billingNav}
             </Link>
           </div>
         </div>

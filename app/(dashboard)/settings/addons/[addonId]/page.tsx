@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { addonCategoryLabels } from '@/lib/settings-i18n'
 
 interface Addon {
   id: string
@@ -35,20 +37,10 @@ interface Purchase {
   createdAt: string
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  SOCIAL: 'Sosyal',
-  MARKETING: 'Pazarlama',
-  AI: 'AI',
-  ANALYTICS: 'Analitik',
-  CRM: 'CRM',
-  SUPPORT: 'Destek',
-  AUTOMATION: 'Otomasyon',
-  ECOMMERCE: 'E-ticaret',
-  CUSTOM: 'Özel',
-  SECURITY: 'Güvenlik',
-}
-
 export default function AddonDetailPage() {
+  const i18n = useSettingsI18n()
+  const { addons: a, common: c } = i18n
+  const CATEGORY_LABELS = addonCategoryLabels(i18n)
   const params = useParams()
   const router = useRouter()
   const addonId = params.addonId as string
@@ -124,7 +116,7 @@ export default function AddonDetailPage() {
         setMessage({ type: 'error', text: data.error })
       }
     } catch {
-      setMessage({ type: 'error', text: 'İşlem başarısız' })
+      setMessage({ type: 'error', text: a.operationFailed })
     } finally {
       setSaving(false)
     }
@@ -132,7 +124,7 @@ export default function AddonDetailPage() {
 
   const handleCancel = async () => {
     if (!activeWebsite) return
-    if (!confirm('Aboneliğinizi iptal etmek istediğinize emin misiniz? Eklenti, dönem sonunda devre dışı kalacaktır.')) return
+    if (!confirm(a.cancelConfirm)) return
 
     setSaving(true)
     setMessage(null)
@@ -150,7 +142,7 @@ export default function AddonDetailPage() {
         setMessage({ type: 'error', text: data.error })
       }
     } catch {
-      setMessage({ type: 'error', text: 'İşlem başarısız' })
+      setMessage({ type: 'error', text: a.operationFailed })
     } finally {
       setSaving(false)
     }
@@ -179,7 +171,7 @@ export default function AddonDetailPage() {
         setMessage({ type: 'error', text: data.error })
       }
     } catch {
-      setMessage({ type: 'error', text: 'Kaydetme başarısız' })
+      setMessage({ type: 'error', text: c.saveFailed })
     } finally {
       setSaving(false)
     }
@@ -206,11 +198,11 @@ export default function AddonDetailPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Geri
+          {c.back}
         </button>
         <div className="text-center py-20">
-          <h2 className="text-lg font-semibold text-foreground">Eklenti bulunamadı</h2>
-          <p className="text-sm text-muted-foreground mt-1">Bu eklenti mevcut değil veya kaldırılmış</p>
+          <h2 className="text-lg font-semibold text-foreground">{a.addonNotFound}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{a.addonNotFoundHint}</p>
         </div>
       </div>
     )
@@ -225,7 +217,7 @@ export default function AddonDetailPage() {
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Mağazaya Dön
+        {a.backToStore}
       </button>
 
       {message && (
@@ -265,7 +257,7 @@ export default function AddonDetailPage() {
                   <h1 className="text-lg sm:text-xl font-bold text-foreground">{addon.name}</h1>
                   {addon.isFeatured && (
                     <span className="px-2 py-0.5 text-[11px] font-bold bg-primary text-primary-foreground rounded-full">
-                      Öne Çıkan
+                      {a.featuredBadge}
                     </span>
                   )}
                 </div>
@@ -273,11 +265,11 @@ export default function AddonDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">
-                  {addon.price === 0 ? 'Ücretsiz' : `₺${(addon.price / 100).toLocaleString('tr-TR')}`}
+                  {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
                 </div>
                 {addon.price > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    /{addon.purchaseType === 'YEARLY' ? 'yıl' : 'ay'}
+                    /{addon.purchaseType === 'YEARLY' ? a.perYear.replace('/', '') : a.perMonth.replace('/', '')}
                   </p>
                 )}
               </div>
@@ -296,14 +288,14 @@ export default function AddonDetailPage() {
       {purchase && (
         <div className="surface p-5 sm:p-6 mb-6">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Durum</h2>
+            <h2 className="text-lg font-semibold text-foreground">{a.status}</h2>
             <div className="flex items-center gap-3">
               <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                 purchase.isActive
                   ? 'bg-success-light text-success'
                   : 'bg-destructive-light text-destructive'
               }`}>
-                {purchase.isActive ? 'Aktif' : 'Devre Dışı'}
+                {purchase.isActive ? a.active : a.disabled}
               </span>
               <button
                 onClick={handleToggle}
@@ -320,30 +312,30 @@ export default function AddonDetailPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Satın Alınma</span>
+              <span className="text-muted-foreground">{a.purchasedAt}</span>
               <p className="font-medium text-foreground">
-                {new Date(purchase.createdAt).toLocaleDateString('tr-TR')}
+                {new Date(purchase.createdAt).toLocaleDateString(i18n.dateLocale)}
               </p>
             </div>
             {purchase.expiresAt && (
               <div>
-                <span className="text-muted-foreground">Bitiş Tarihi</span>
+                <span className="text-muted-foreground">{a.expiresAt}</span>
                 <p className="font-medium text-foreground">
-                  {new Date(purchase.expiresAt).toLocaleDateString('tr-TR')}
+                  {new Date(purchase.expiresAt).toLocaleDateString(i18n.dateLocale)}
                 </p>
               </div>
             )}
             <div>
-              <span className="text-muted-foreground">Otomatik Yenileme</span>
+              <span className="text-muted-foreground">{a.autoRenew}</span>
               <p className={`font-medium ${purchase.autoRenew ? 'text-success' : 'text-muted-foreground'}`}>
-                {purchase.autoRenew ? 'Aktif' : 'Kapalı'}
+                {purchase.autoRenew ? a.autoRenewOn : a.autoRenewOff}
               </p>
             </div>
           </div>
           {purchase.cancelledAt && (
             <div className="mt-4 p-3 bg-destructive-light border border-destructive/30 rounded-xl">
               <p className="text-xs text-destructive">
-                Abonelik iptal edildi — {new Date(purchase.cancelledAt).toLocaleDateString('tr-TR')}
+                {a.subscriptionCancelled(new Date(purchase.cancelledAt).toLocaleDateString(i18n.dateLocale))}
               </p>
             </div>
           )}
@@ -352,21 +344,21 @@ export default function AddonDetailPage() {
 
       {addon.longDescription && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Açıklama</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{a.description}</h2>
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{addon.longDescription}</p>
         </div>
       )}
 
       {addon.setupGuide && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Kurulum Kılavuzu</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{a.setupGuide}</h2>
           <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{addon.setupGuide}</div>
         </div>
       )}
 
       {propertyKeys.length > 0 && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Yapılandırma</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{a.configuration}</h2>
           <div className="space-y-4">
             {propertyKeys.map(key => {
               const prop = properties[key]
@@ -391,7 +383,7 @@ export default function AddonDetailPage() {
                       onChange={(e) => updateConfigValue(key, e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     >
-                      <option value="">Seçiniz</option>
+                      <option value="">{a.selectOption}</option>
                       {prop.enum.map((opt: string) => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
@@ -415,7 +407,7 @@ export default function AddonDetailPage() {
               disabled={saving}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+              {saving ? c.saving : c.save}
             </button>
           </div>
         </div>
@@ -423,7 +415,7 @@ export default function AddonDetailPage() {
 
       {addon.permissions && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-3">İzinler</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{a.permissions}</h2>
           <div className="flex flex-wrap gap-2">
             {(JSON.parse(addon.permissions) as string[]).map(perm => (
               <span key={perm} className="px-2.5 py-1 bg-primary-light text-primary text-xs font-mono rounded-md">
@@ -438,15 +430,15 @@ export default function AddonDetailPage() {
         <div className="surface !border-destructive/40 p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-destructive">Aboneliği İptal Et</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">İptal edildiğinde dönem sonuna kadar kullanmaya devam edebilirsiniz</p>
+              <h3 className="text-sm font-semibold text-destructive">{a.cancelSubscription}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{a.cancelSubscriptionHint}</p>
             </div>
             <button
               onClick={handleCancel}
               disabled={saving}
               className="px-4 py-2 bg-destructive hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-destructive-foreground text-sm font-medium rounded-xl transition shrink-0"
             >
-              {saving ? 'İşleniyor...' : 'Aboneliği İptal Et'}
+              {saving ? a.processing : a.cancelSubscriptionBtn}
             </button>
           </div>
         </div>

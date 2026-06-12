@@ -16,7 +16,10 @@ export function FadeIn({
 
   useEffect(() => {
     const el = ref.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setAnimated(true)
+      return
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -25,7 +28,7 @@ export function FadeIn({
           observer.disconnect()
         }
       },
-      { threshold: 0.05, rootMargin: '24px 0px' }
+      { threshold: 0.08, rootMargin: '32px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -34,14 +37,8 @@ export function FadeIn({
   return (
     <div
       ref={ref}
-      className={className}
-      style={
-        animated
-          ? {
-              animation: `slide-up 0.5s ease ${delay}s both`,
-            }
-          : undefined
-      }
+      className={`${className}${animated ? ' animate-in-up' : ' opacity-0'}`}
+      style={animated && delay > 0 ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
     </div>

@@ -1,22 +1,17 @@
-import Link from 'next/link'
+'use client'
 
-/** iyzico başvurusu için zorunlu yasal sayfa linkleri — footer üst bandı */
-export const IYZICO_REQUIRED_LINKS = [
-  { href: '/hakkimizda', label: 'Hakkımızda' },
-  { href: '/urunler', label: 'Ürünler' },
-  { href: '/gizlilik', label: 'Gizlilik Sözleşmesi' },
-  { href: '/teslimat-iade', label: 'Teslimat ve İade Şartları' },
-  { href: '/mesafeli-satis', label: 'Mesafeli Satış Sözleşmesi' },
-  { href: '/odeme-guvenligi', label: 'Ödeme Güvenliği' },
-] as const
+import Link from 'next/link'
+import { useT } from '@/components/marketing/locale-provider'
 
 export function IyzicoLegalBar() {
+  const links = useT().footerExtended.iyzicoLinks
+
   return (
     <nav
-      aria-label="Yasal sayfalar"
+      aria-label="Legal pages"
       className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm"
     >
-      {IYZICO_REQUIRED_LINKS.map((link, i) => (
+      {links.map((link, i) => (
         <span key={link.href} className="flex items-center gap-4">
           {i > 0 && <span className="hidden sm:inline text-border">|</span>}
           <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">

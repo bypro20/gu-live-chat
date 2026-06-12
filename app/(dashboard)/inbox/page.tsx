@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
+import { Suspense, useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Search, MessageSquare, AlertTriangle, Volume2, VolumeX } from 'lucide-react'
@@ -28,12 +28,18 @@ import { INBOX_CHANNEL_FILTERS } from '@/lib/conversation-channels'
 import { useInboxSoundAlert, playNewMessageSound } from '@/lib/hooks/use-inbox-sound-alert'
 import { unlockInboxAudio } from '@/lib/inbox-sound'
 import { ConnectionBadge } from '@/components/inbox/connection-badge'
+import { InboxMessageArea } from '@/components/inbox/inbox-message-area'
 import { useAgentLanguage } from '@/lib/hooks/use-agent-language'
 import { LanguageBar } from '@/components/inbox/language-bar'
 import { translateClient } from '@/lib/translate-client'
 import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { resolveInboxPrimary } from '@/lib/inbox-theme'
 
 function InboxPageContent() {
+  const d = useDashboardI18n()
+  const i = d.inbox
+  const c = d.common
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const userRole = session?.user?.role
@@ -87,7 +93,7 @@ function InboxPageContent() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Güncellenemedi')
+        throw new Error(data.error || i.updateFailed)
       }
       await mutateConversations()
     } catch (e) {
@@ -360,7 +366,7 @@ function InboxPageContent() {
         attachmentPayload = attachmentContent(uploadMeta, textToSend)
         textToSend = attachmentPayload.content
       } catch (e) {
-        setSendError(e instanceof Error ? e.message : 'Dosya yüklenemedi')
+        setSendError(e instanceof Error ? e.message : i.uploadFailed)
         setUploading(false)
         return
       }
@@ -401,7 +407,7 @@ function InboxPageContent() {
       setMessageText('')
       clearPendingUpload()
     } catch (e) {
-      setSendError(e instanceof Error ? e.message : 'Mesaj gönderilemedi')
+      setSendError(e instanceof Error ? e.message : i.sendFailed)
     }
   }
 
@@ -415,47 +421,50 @@ function InboxPageContent() {
         headers: { 'Content-Type': 'application/json' },
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'AI önerisi alınamadı')
+      if (!res.ok) throw new Error(data.error || i.aiSuggestFailed)
       if (data.suggestion) setMessageText(data.suggestion)
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : 'AI önerisi alınamadı')
+      setAiError(err instanceof Error ? err.message : i.aiSuggestFailed)
     } finally {
       setAiSuggesting(false)
     }
   }
 
-  const mapMessage = (
-    m: (typeof messages)[0] & { sender?: { name?: string | null; image?: string | null } }
-  ) => ({
-    id: m.id,
-    content: m.content,
-    type: m.type,
-    senderType: m.senderType,
-    createdAt: m.createdAt,
-    sentiment: m.sentiment,
-    senderName: m.sender?.name ?? null,
-    senderImage: m.sender?.image ?? null,
-    attachments: m.attachments?.map((a) => ({
-      id: a.id,
-      url: a.url,
-      filename: a.filename,
-      mimetype: a.mimetype,
-      size: a.size,
-    })),
-  })
+  const inboxPrimary = resolveInboxPrimary(activeWebsite?.primaryColor)
+  const mappedMessages = useMemo(
+    () =>
+      messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        type: m.type,
+        senderType: m.senderType,
+        createdAt: m.createdAt,
+        sentiment: m.sentiment,
+        senderName: m.sender?.name ?? null,
+        senderImage: m.sender?.image ?? null,
+        attachments: m.attachments?.map((a) => ({
+          id: a.id,
+          url: a.url,
+          filename: a.filename,
+          mimetype: a.mimetype,
+          size: a.size,
+        })),
+      })),
+    [messages]
+  )
 
   return (
-    <div className="h-full min-h-0 w-full max-w-full flex overflow-hidden bg-background">
+    <div className="h-full min-h-0 w-full max-w-full flex overflow-hidden bg-slate-50">
       {/* Sidebar */}
       <div
-        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-border flex-col bg-card shrink-0 ${
+        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex-col bg-white shrink-0 shadow-sm ${
           selectedConversation ? 'hidden lg:flex' : 'flex'
         }`}
       >
         <div className="p-4 border-b border-border space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <h1 className="text-lg font-semibold tracking-tight">Gelen Kutusu</h1>
+              <h1 className="text-lg font-semibold tracking-tight">{i.title}</h1>
               <ConnectionBadge connected={liveConnected} socketEnabled={isSocketEnabled()} />
               {inboxUnread > 0 && (
                 <span className="text-xs font-medium text-primary tabular-nums">{inboxUnread}</span>
@@ -470,7 +479,7 @@ function InboxPageContent() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                title={soundOn ? 'Bildirim sesi açık' : 'Bildirim sesi kapalı'}
+                title={soundOn ? i.soundOn : i.soundOff}
                 onClick={() => {
                   setSoundOn((v) => !v)
                   if (!soundOn) unlockInboxAudio()
@@ -490,7 +499,7 @@ function InboxPageContent() {
                   !allWebsites ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
                 }`}
               >
-                {activeWebsite?.name || 'Aktif'}
+                {activeWebsite?.name || i.activeSite}
               </button>
               <button
                 type="button"
@@ -499,7 +508,7 @@ function InboxPageContent() {
                   allWebsites ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
                 }`}
               >
-                Tüm siteler
+                {i.allSites}
               </button>
             </div>
           )}
@@ -507,9 +516,9 @@ function InboxPageContent() {
           <div className="flex gap-1 overflow-x-auto">
             {(
               [
-                { key: 'all' as const, label: 'Tümü' },
-                { key: 'me' as const, label: 'Bana' },
-                { key: 'unassigned' as const, label: 'Atanmamış' },
+                { key: 'all' as const, label: i.filterAll },
+                { key: 'me' as const, label: i.filterMe },
+                { key: 'unassigned' as const, label: i.filterUnassigned },
               ] as const
             ).map((f) => (
               <button
@@ -530,10 +539,10 @@ function InboxPageContent() {
           <div className="flex gap-1 overflow-x-auto">
             {(
               [
-                { key: 'all' as const, label: 'Tümü' },
-                { key: 'OPEN' as const, label: 'Açık' },
-                { key: 'PENDING' as const, label: 'Bekleyen' },
-                { key: 'RESOLVED' as const, label: 'Çözülen' },
+                { key: 'all' as const, label: i.filterAll },
+                { key: 'OPEN' as const, label: i.statusOpen },
+                { key: 'PENDING' as const, label: i.statusPending },
+                { key: 'RESOLVED' as const, label: i.statusResolved },
               ] as const
             ).map((f) => (
               <button
@@ -573,7 +582,7 @@ function InboxPageContent() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sohbet ara…"
+              placeholder={i.searchPlaceholder}
               className="pl-9 h-10 bg-muted/40"
             />
           </div>
@@ -587,12 +596,12 @@ function InboxPageContent() {
               ))}
             </div>
           ) : !activeWebsite ? (
-            <p className="p-6 text-sm text-muted-foreground text-center">Site yükleniyor…</p>
+            <p className="p-6 text-sm text-muted-foreground text-center">{i.siteLoading}</p>
           ) : error ? (
             <div className="p-6 text-center space-y-2">
               <p className="text-sm text-destructive">{error.message}</p>
               <Button variant="link" size="sm" onClick={() => mutateConversations()}>
-                Tekrar dene
+                {c.retry}
               </Button>
             </div>
           ) : conversations.length === 0 ? (
@@ -600,10 +609,8 @@ function InboxPageContent() {
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <MessageSquare className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-medium text-foreground">Henüz sohbet yok</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Widget&apos;tan gelen mesajlar burada görünür.
-              </p>
+              <h3 className="font-medium text-foreground">{i.noChats}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{i.noChatsHint}</p>
             </div>
           ) : (
             conversations.map((conv) => (
@@ -620,7 +627,7 @@ function InboxPageContent() {
 
       {/* Chat panel */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-muted/30 ${
+        className={`flex-1 flex-col min-w-0 bg-slate-100/80 ${
           selectedConversation ? 'flex' : 'hidden lg:flex'
         }`}
       >
@@ -630,8 +637,8 @@ function InboxPageContent() {
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-muted-foreground/60" />
               </div>
-              <h2 className="text-lg font-semibold">Sohbet seçin</h2>
-              <p className="text-sm text-muted-foreground mt-1">Detayları görmek için listeden bir sohbet açın</p>
+              <h2 className="text-lg font-semibold">{i.selectChat}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{i.selectChatHint}</p>
             </div>
           </div>
         ) : (
@@ -644,6 +651,7 @@ function InboxPageContent() {
               onToggleTranslate={() => setAutoTranslate((v) => !v)}
               detectedLang={normalizedVisitorLang}
               agentLang={agentLang}
+              primaryColor={inboxPrimary}
               showAssign
               onAssignToMe={() => updateConversation({ assignedToId: session?.user?.id })}
               onResolve={
@@ -671,22 +679,23 @@ function InboxPageContent() {
               canTranslate={canTranslate}
             />
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <InboxMessageArea>
               {messagesLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className={`h-12 ${i % 2 ? 'ml-auto w-2/3' : 'w-2/3'} rounded-xl`} />
+                    <Skeleton key={i} className={`h-12 ${i % 2 ? 'ml-auto w-2/3' : 'w-2/3'} rounded-2xl`} />
                   ))}
                 </div>
-              ) : messages.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground mt-8">Henüz mesaj yok</p>
+              ) : mappedMessages.length === 0 ? (
+                <p className="text-center text-sm text-slate-500 mt-8">{i.noMessages}</p>
               ) : (
                 <MessageThread
-                  messages={messages.map(mapMessage)}
+                  messages={mappedMessages}
                   autoTranslate={autoTranslate}
                   canTranslate={canTranslate}
                   websiteId={activeWebsite?.websiteId}
                   agentLang={agentLang}
+                  primaryColor={inboxPrimary}
                 />
               )}
               {typingPreview && typingPreview.conversationId === selectedId && (
@@ -695,12 +704,12 @@ function InboxPageContent() {
               {lastVisitorSentiment === 'NEGATIVE' && (
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-destructive py-1">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  Ziyaretçi olumsuz ton — öncelik verin
+                  {i.negativeSentiment}
                 </div>
               )}
               {aiError && <p className="text-xs text-destructive text-center">{aiError}</p>}
               <div ref={messagesEndRef} />
-            </div>
+            </InboxMessageArea>
 
             <MessageComposer
               value={messageText}
@@ -727,13 +736,14 @@ function InboxPageContent() {
               autoTranslate={autoTranslate}
               detectedLang={normalizedVisitorLang}
               agentLang={agentLang}
+              primaryColor={inboxPrimary}
               sendError={sendError}
               placeholder={
                 translationPairActive && normalizedVisitorLang
-                  ? `${languageLabel(agentLang)} yazın — ${languageLabel(normalizedVisitorLang)}'ye çevrilir`
+                  ? i.writeTranslate(languageLabel(agentLang), languageLabel(normalizedVisitorLang))
                   : canCannedResponses
-                    ? 'Mesaj yazın… (/ hazır cevap)'
-                    : 'Mesaj yazın…'
+                    ? i.writeMessageCanned
+                    : i.writeMessage
               }
             />
           </>
@@ -752,7 +762,7 @@ export default function InboxPage() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-          Gelen kutusu yükleniyor…
+          Loading…
         </div>
       }
     >

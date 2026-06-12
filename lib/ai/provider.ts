@@ -1,6 +1,13 @@
 import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
+import type { PlanType } from '@/lib/constants'
 import { DEFAULT_MODEL } from './models'
+import { clampModelToPlan } from './plan-models'
+import {
+  buildGeminiFallbackRuntime,
+  canUsePlatformFallback,
+  clampRequestedForPlan,
+} from './platform-router'
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -31,6 +38,9 @@ export interface AiRuntimeConfig {
   source: 'env' | 'db'
   baseURL?: string
   extraHeaders?: Record<string, string>
+  /** Platform yedek: kullanıcı farklı sağlayıcı seçmiş, Gemini ile karşılandı */
+  platformFallback?: boolean
+  requestedProvider?: AiProvider
 }
 
 export interface GenerateAiReplyParams {
@@ -39,6 +49,8 @@ export interface GenerateAiReplyParams {
   knowledge?: KnowledgeEntry[]
   systemPrompt?: string
   dbConfig?: DbAiConfig | null
+  /** Paket sınırına göre modeli düşürmek için */
+  plan?: PlanType
   websiteId?: string
   conversationId?: string
   visitorContext?: string
@@ -63,14 +75,33 @@ function ollamaBaseUrl() {
 
 // ─── Env / provider discovery ───────────────────────────────────────
 
+function geminiKey() {
+  return ENV_KEYS.GEMINI?.trim() || ''
+}
+
 export function getEnvProviderStatus() {
-  return {
+  const native = {
     openai: !!ENV_KEYS.OPENAI?.trim(),
     anthropic: !!ENV_KEYS.ANTHROPIC?.trim(),
-    gemini: !!ENV_KEYS.GEMINI?.trim(),
+    gemini: !!geminiKey(),
     groq: !!ENV_KEYS.GROQ?.trim(),
     openrouter: !!ENV_KEYS.OPENROUTER?.trim(),
     ollama: !!ollamaBaseUrl(),
+  }
+  const platformFallback = !!geminiKey()
+  return {
+    ...native,
+    /** Gerçek API anahtarı yoksa Gemini platform yedek ile çalışır */
+    effective: {
+      openai: native.openai || platformFallback,
+      anthropic: native.anthropic || platformFallback,
+      gemini: native.gemini,
+      groq: native.groq || platformFallback,
+      openrouter: native.openrouter || platformFallback,
+      ollama: native.ollama || platformFallback,
+    },
+    platformFallback,
+    native,
   }
 }
 
@@ -119,37 +150,89 @@ function runtimeForProvider(provider: AiProvider, db: DbAiConfig | null | undefi
   if (provider === 'OPENROUTER') {
     cfg.baseURL = 'https://openrouter.ai/api/v1'
     cfg.extraHeaders = {
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org',
-      'X-Title': 'Gu Chat',
+      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://gulivechat.com',
+      'X-Title': 'Gu Live Chat',
     }
   }
 
   return cfg
 }
 
-export function resolveAiConfig(db?: DbAiConfig | null): AiRuntimeConfig | null {
+function runtimeWithPlatformFallback(
+  provider: AiProvider,
+  db: DbAiConfig | null | undefined,
+  temperature: number,
+  plan?: PlanType
+): AiRuntimeConfig | null {
+  const requestedModel = db?.model || DEFAULT_MODEL[provider]
+  const clamped = plan
+    ? clampRequestedForPlan(plan, provider, requestedModel)
+    : { provider, model: requestedModel }
+
+  const native = runtimeForProvider(
+    clamped.provider,
+    { provider: clamped.provider, model: clamped.model, apiKey: db?.apiKey ?? null, temperature: db?.temperature ?? null },
+    temperature
+  )
+  if (native) return native
+
+  const gKey = geminiKey()
+  if (!canUsePlatformFallback(clamped.provider, gKey)) return null
+
+  const fallback = buildGeminiFallbackRuntime(
+    clamped.provider,
+    clamped.model,
+    gKey,
+    temperature
+  )
+  const geminiClamped = plan
+    ? clampModelToPlan(plan, 'GEMINI', fallback.model)
+    : { provider: 'GEMINI' as AiProvider, model: fallback.model }
+
+  return {
+    provider: 'GEMINI',
+    apiKey: gKey,
+    model: geminiClamped.model,
+    temperature,
+    source: 'env',
+    platformFallback: true,
+    requestedProvider: clamped.provider,
+  }
+}
+
+export function resolveAiConfig(
+  db?: DbAiConfig | null,
+  plan?: PlanType
+): AiRuntimeConfig | null {
   const temperature = db?.temperature ?? 0.75
   const preferred = db?.provider
 
+  const applyPlan = (cfg: AiRuntimeConfig): AiRuntimeConfig => {
+    if (!plan) return cfg
+    const clamped = clampModelToPlan(plan, cfg.provider, cfg.model)
+    return { ...cfg, provider: clamped.provider, model: clamped.model }
+  }
+
   if (preferred) {
-    const cfg = runtimeForProvider(preferred, db, temperature)
-    if (cfg) return cfg
+    const cfg = runtimeWithPlatformFallback(preferred, db, temperature, plan)
+    if (cfg) return applyPlan(cfg)
   }
 
   for (const provider of ['GEMINI', 'OPENROUTER', 'GROQ', 'OPENAI', 'ANTHROPIC', 'OLLAMA'] as AiProvider[]) {
-    const cfg = runtimeForProvider(provider, db, temperature)
-    if (cfg) return cfg
+    const cfg = runtimeWithPlatformFallback(provider, db, temperature, plan)
+    if (cfg) return applyPlan(cfg)
   }
 
   if (db?.apiKey?.trim()) {
     const provider = db.provider
-    return {
+    const raw: AiRuntimeConfig = {
       provider,
       apiKey: db.apiKey.trim(),
       model: db.model || DEFAULT_MODEL[provider],
       temperature,
       source: 'db',
     }
+    return applyPlan(raw)
   }
 
   return null
@@ -157,6 +240,31 @@ export function resolveAiConfig(db?: DbAiConfig | null): AiRuntimeConfig | null 
 
 export function isAiLlmAvailable(db?: DbAiConfig | null): boolean {
   return resolveAiConfig(db) !== null
+}
+
+/** Canlı Gemini bağlantı testi — hata mesajı döner, anahtar asla sızmaz. */
+export async function probeGeminiConnection(model = 'gemini-2.5-flash'): Promise<{ ok: boolean; error?: string }> {
+  const key = geminiKey()
+  if (!key) return { ok: false, error: 'GEMINI_API_KEY missing' }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+        generationConfig: { maxOutputTokens: 16 },
+      }),
+    })
+    if (!res.ok) {
+      const err = await res.text()
+      return { ok: false, error: `${res.status}: ${err.slice(0, 300)}` }
+    }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'fetch failed' }
+  }
 }
 
 // ─── System prompt ──────────────────────────────────────────────────
@@ -353,7 +461,7 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
     return fallbackReply(siteName, [], knowledge)
   }
 
-  const runtime = resolveAiConfig(params.dbConfig)
+  const runtime = resolveAiConfig(params.dbConfig, params.plan)
   if (!runtime) {
     return fallbackReply(siteName, messages, knowledge)
   }

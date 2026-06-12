@@ -3,6 +3,7 @@
 import { FileText, Download } from 'lucide-react'
 import type { InboxAttachment } from './types'
 import { attName, attSize, formatBytes, isImageAtt } from './utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 export function AttachmentList({
   attachments,
@@ -11,15 +12,16 @@ export function AttachmentList({
   attachments: InboxAttachment[]
   variant?: 'light' | 'dark'
 }) {
+  const { inbox: inboxT, common } = useDashboardI18n()
   if (!attachments?.length) return null
   const onDark = variant === 'dark'
 
   return (
     <div className="flex flex-col gap-2 mt-2">
-      {attachments.map((a, i) =>
+      {attachments.map((a, idx) =>
         isImageAtt(a) ? (
           <a
-            key={a.id || i}
+            key={a.id || idx}
             href={a.url}
             target="_blank"
             rel="noopener noreferrer"
@@ -27,18 +29,18 @@ export function AttachmentList({
           >
             <img
               src={a.url}
-              alt={attName(a)}
+              alt={attName(a, common.file)}
               className="max-w-[min(280px,100%)] max-h-[220px] w-auto rounded-lg border border-border/60 object-cover transition group-hover:opacity-95"
               loading="lazy"
             />
           </a>
         ) : (
           <a
-            key={a.id || i}
+            key={a.id || idx}
             href={a.url}
             target="_blank"
             rel="noopener noreferrer"
-            download={attName(a)}
+            download={attName(a, common.file)}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 max-w-[280px] no-underline transition hover:opacity-90 ${
               onDark ? 'bg-primary-foreground/10' : 'bg-background/80 border border-border/50'
             }`}
@@ -56,7 +58,7 @@ export function AttachmentList({
                   onDark ? 'text-primary-foreground' : 'text-foreground'
                 }`}
               >
-                {attName(a)}
+                {attName(a, common.file)}
               </span>
               <span
                 className={`flex items-center gap-1 text-[11px] ${
@@ -66,7 +68,7 @@ export function AttachmentList({
                 {formatBytes(attSize(a))}
                 {attSize(a) ? ' · ' : ''}
                 <Download className="w-3 h-3" />
-                İndir
+                {inboxT.download}
               </span>
             </span>
           </a>

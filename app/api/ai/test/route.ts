@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       knowledge,
       systemPrompt: aiConfig?.systemPrompt || undefined,
       dbConfig,
+      plan: website.plan as import('@/lib/constants').PlanType,
       websiteId: website.id,
     })
 

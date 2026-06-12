@@ -2,6 +2,7 @@
 
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { formatDuration, getBrowserEmoji, getDeviceEmoji, getAccent, type VisitorTheme } from '@/lib/visitors-utils'
+import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
 interface VisitorStatusHeaderProps {
   visitor: LiveVisitor
@@ -10,6 +11,7 @@ interface VisitorStatusHeaderProps {
 
 export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorStatusHeaderProps) {
   const accent = getAccent(theme)
+  const { header: h, locale } = useVisitorsI18n()
 
   return (
     <div className="flex items-start gap-4">
@@ -27,12 +29,12 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-base font-bold text-gray-900 dark:text-white">
-            {visitor.name || 'Anonim Ziyaretçi'}
+            {visitor.name || h.anonymousVisitor}
           </h3>
           {visitor.isLive && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              ÇEVRİMİÇİ
+              {h.online}
             </span>
           )}
         </div>
@@ -60,7 +62,7 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
         <div className="flex items-center gap-3 mt-1.5">
           {visitor.startedAt && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
-              ⏱ {formatDuration(visitor.startedAt)}
+              ⏱ {formatDuration(visitor.startedAt, undefined, locale)}
             </span>
           )}
           {visitor.country && (

@@ -2,6 +2,7 @@
 
 import { Languages } from 'lucide-react'
 import { TRANSLATE_LANGUAGES, languageLabel, languagesDiffer } from '@/lib/translate-languages'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 type LanguageBarProps = {
   agentLang: string
@@ -18,6 +19,8 @@ export function LanguageBar({
   autoTranslate,
   canTranslate,
 }: LanguageBarProps) {
+  const i = useDashboardI18n().inbox
+
   if (!canTranslate) return null
 
   const pairActive = autoTranslate && visitorLang && languagesDiffer(agentLang, visitorLang)
@@ -25,7 +28,7 @@ export function LanguageBar({
   return (
     <div className="px-4 py-2 border-b border-border bg-muted/30 flex flex-wrap items-center gap-2 text-xs">
       <Languages className="w-3.5 h-3.5 text-primary shrink-0" />
-      <span className="text-muted-foreground">Diliniz:</span>
+      <span className="text-muted-foreground">{i.yourLanguage}</span>
       <select
         value={agentLang}
         onChange={(e) => onAgentLangChange(e.target.value)}
@@ -39,11 +42,11 @@ export function LanguageBar({
       </select>
       {pairActive && (
         <span className="text-primary font-medium ml-1">
-          ↔ {languageLabel(visitorLang)} canlı çeviri aktif
+          {i.liveTranslateActive(languageLabel(visitorLang))}
         </span>
       )}
       {autoTranslate && !visitorLang && (
-        <span className="text-muted-foreground">Ziyaretçi dili algılanıyor…</span>
+        <span className="text-muted-foreground">{i.detectingVisitorLang}</span>
       )}
     </div>
   )

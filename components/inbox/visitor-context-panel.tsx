@@ -16,7 +16,9 @@ import {
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { STATUS_LABELS, visitorDisplayName } from './utils'
+import { getStatusLabels, visitorDisplayName } from './utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { useLocale } from '@/components/marketing/locale-provider'
 import type { InboxConversation } from './types'
 
 type VisitorDetail = {
@@ -49,6 +51,10 @@ export function VisitorContextPanel({
   conversation: InboxConversation
   onClose?: () => void
 }) {
+  const d = useDashboardI18n()
+  const i = d.inbox
+  const statusLabels = getStatusLabels(d)
+  const { locale } = useLocale()
   const visitorId = conversation.visitorId || conversation.visitor?.id
   const [detail, setDetail] = useState<VisitorDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -65,16 +71,17 @@ export function VisitorContextPanel({
 
   const name = visitorDisplayName(
     detail?.name ?? conversation.visitor.name,
-    detail?.email ?? conversation.visitor.email
+    detail?.email ?? conversation.visitor.email,
+    d
   )
 
   return (
     <aside className="hidden xl:flex w-[300px] shrink-0 flex-col border-l border-border bg-card">
       <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Ziyaretçi</h2>
+        <h2 className="text-sm font-semibold text-foreground">{i.visitor}</h2>
         {onClose && (
           <Button type="button" variant="ghost" size="sm" className="h-7 text-xs xl:hidden" onClick={onClose}>
-            Kapat
+            {i.close}
           </Button>
         )}
       </div>
@@ -90,7 +97,7 @@ export function VisitorContextPanel({
           <div>
             <p className="font-semibold text-foreground">{name}</p>
             <Badge variant="outline" className="mt-1 text-[10px]">
-              {STATUS_LABELS[conversation.status] || conversation.status}
+              {statusLabels[conversation.status] || conversation.status}
             </Badge>
           </div>
         </div>
@@ -101,66 +108,66 @@ export function VisitorContextPanel({
           </div>
         ) : (
           <>
-            <InfoSection title="İletişim">
+            <InfoSection title={i.contactSection}>
               {detail?.email && (
-                <InfoRow icon={Mail} label="E-posta" value={detail.email} />
+                <InfoRow icon={Mail} label={i.email} value={detail.email} />
               )}
               {detail?.phone && (
-                <InfoRow icon={Phone} label="Telefon" value={detail.phone} />
+                <InfoRow icon={Phone} label={i.phone} value={detail.phone} />
               )}
               {!detail?.email && !detail?.phone && (
-                <p className="text-xs text-muted-foreground">İletişim bilgisi yok</p>
+                <p className="text-xs text-muted-foreground">{i.noContactInfo}</p>
               )}
             </InfoSection>
 
-            <InfoSection title="Konum & cihaz">
+            <InfoSection title={i.locationSection}>
               {(detail?.city || detail?.country) && (
                 <InfoRow
                   icon={MapPin}
-                  label="Konum"
+                  label={i.location}
                   value={[detail?.city, detail?.country].filter(Boolean).join(', ')}
                 />
               )}
               {(detail?.browser || detail?.os) && (
                 <InfoRow
                   icon={Monitor}
-                  label="Cihaz"
+                  label={i.device}
                   value={[detail?.deviceType, detail?.browser, detail?.os].filter(Boolean).join(' · ')}
                 />
               )}
             </InfoSection>
 
             {(detail?.currentPage || detail?.landingPage) && (
-              <InfoSection title="Sayfa">
+              <InfoSection title={i.pageSection}>
                 {detail.currentPage && (
-                  <InfoRow icon={Globe} label="Şu an" value={detail.currentPage} link />
+                  <InfoRow icon={Globe} label={i.currentPage} value={detail.currentPage} link />
                 )}
                 {detail.landingPage && detail.landingPage !== detail.currentPage && (
-                  <InfoRow icon={Globe} label="Giriş" value={detail.landingPage} link />
+                  <InfoRow icon={Globe} label={i.landingPage} value={detail.landingPage} link />
                 )}
                 {detail.referrer && (
-                  <InfoRow icon={ExternalLink} label="Kaynak" value={detail.referrer} link />
+                  <InfoRow icon={ExternalLink} label={i.sourceLabel} value={detail.referrer} link />
                 )}
               </InfoSection>
             )}
 
             {conversation.assignedTo?.name && (
-              <InfoSection title="Atanan">
-                <InfoRow icon={User} label="Temsilci" value={conversation.assignedTo.name} />
+              <InfoSection title={i.assignedSection}>
+                <InfoRow icon={User} label={i.agentLabel} value={conversation.assignedTo.name} />
               </InfoSection>
             )}
 
             {detail?.conversations && detail.conversations.length > 0 && (
-              <InfoSection title="Geçmiş sohbetler">
+              <InfoSection title={i.historySection}>
                 <div className="space-y-2">
                   {detail.conversations.slice(0, 5).map((c) => (
                     <div key={c.id} className="rounded-lg border border-border/80 p-2.5 bg-muted/30">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-medium text-foreground">
-                          {STATUS_LABELS[c.status] || c.status}
+                          {statusLabels[c.status] || c.status}
                         </span>
                         <span className="text-[10px] text-muted-foreground tabular-nums">
-                          {new Date(c.lastMessageAt).toLocaleDateString('tr-TR')}
+                          {new Date(c.lastMessageAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR')}
                         </span>
                       </div>
                       {c.lastMessagePreview && (
@@ -180,7 +187,7 @@ export function VisitorContextPanel({
           <Link href={`/contacts/${visitorId}`}>
             <Button variant="outline" size="sm" className="w-full gap-2">
               <MessageSquare className="w-3.5 h-3.5" />
-              CRM profilini aç
+              {i.openCrm}
             </Button>
           </Link>
         )}

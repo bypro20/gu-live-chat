@@ -5,31 +5,24 @@ import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
+import { LanguageSwitcher } from '@/components/marketing/language-switcher'
 import { Zap, Shield, BarChart3, Users } from 'lucide-react'
-import { trialRegisterLine } from '@/lib/trial-config'
 import { readStoredAttribution, captureAttributionFromCurrentUrl } from '@/lib/marketing-attribution-client'
 import { attributionForApi } from '@/lib/marketing-attribution'
 import { trackSignUp } from '@/lib/marketing-events'
+import { useLocale } from '@/components/marketing/locale-provider'
+import { getAuthMessages, planLabelForAuth, translateAuthApiError } from '@/lib/auth-i18n'
 
-const markaOzellikleri = [
-  { simge: Zap, metin: 'Ücretsiz başlayın, kredi kartı gerekmez' },
-  { simge: Shield, metin: 'KVKK uyumlu, Avrupa veri merkezi' },
-  { simge: BarChart3, metin: 'Gelişmiş analitik ve raporlama' },
-  { simge: Users, metin: 'Sınırsız ekip üyesi ekleme' },
-]
-
-const PLAN_LABELS: Record<string, string> = {
-  STARTER: 'Başlangıç',
-  PRO: 'Profesyonel',
-  BUSINESS: 'Kurumsal',
-}
+const featureIcons = [Zap, Shield, BarChart3, Users]
 
 export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { locale } = useLocale()
+  const t = getAuthMessages(locale)
   const selectedPlan = searchParams.get('plan')
   const inviteToken = searchParams.get('invite')
-  const selectedPlanLabel = selectedPlan ? PLAN_LABELS[selectedPlan] : null
+  const selectedPlanLabel = selectedPlan ? planLabelForAuth(locale, selectedPlan) : null
   const [inviteInfo, setInviteInfo] = useState<{ websiteName: string; email: string } | null>(null)
   const [form, setForm] = useState({
     name: '',
@@ -65,7 +58,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
     setHata('')
 
     if (form.password !== form.confirmPassword) {
-      setHata('Şifreler eşleşmiyor')
+      setHata(t.register.passwordMismatch)
       setYukleniyor(false)
       return
     }
@@ -94,7 +87,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
       const data = await res.json()
 
       if (!res.ok) {
-        setHata(data.error || 'Kayıt sırasında bir hata oluştu')
+        setHata(translateAuthApiError(data.error || t.register.registerError, locale))
         setYukleniyor(false)
         return
       }
@@ -120,7 +113,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
         router.push('/login')
       }
     } catch {
-      setHata('Kayıt sırasında bir hata oluştu')
+      setHata(t.register.registerError)
     } finally {
       setYukleniyor(false)
     }
@@ -130,70 +123,68 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
     setForm((onceki) => ({ ...onceki, [alan]: deger }))
   }
 
+  const subtitle = inviteInfo
+    ? t.register.inviteSubtitle(inviteInfo.websiteName)
+    : selectedPlanLabel
+      ? t.register.planSubtitle(selectedPlanLabel)
+      : t.register.defaultSubtitle
+
   return (
     <div className="min-h-screen flex">
-      {/* Sol Panel - Marka ve Tanıtım (mobilde gizli) */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
         <div className="relative z-10 max-w-md">
           <div className="flex justify-center mb-6">
             <Logo boyut="lg" metinGoster={false} />
           </div>
-          <h2 className="text-3xl font-bold text-foreground text-center">Gu Chat</h2>
-          <p className="text-muted-foreground mt-3 text-lg text-center leading-relaxed">
-            2 dakikada profesyonel canlı destek sistemi kurun.
-          </p>
+          <h2 className="text-3xl font-bold text-foreground text-center">{t.brandTagline}</h2>
+          <p className="text-muted-foreground mt-3 text-lg text-center leading-relaxed">{t.brandSubtitle}</p>
           <div className="mt-12 space-y-5">
-            {markaOzellikleri.map(ozellik => (
-              <div key={ozellik.metin} className="flex items-center gap-4 group">
-                <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
-                  <ozellik.simge className="w-5 h-5 text-primary" />
+            {t.features.map((metin, i) => {
+              const Icon = featureIcons[i] ?? Zap
+              return (
+                <div key={metin} className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-foreground font-medium">{metin}</span>
                 </div>
-                <span className="text-foreground font-medium">{ozellik.metin}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div className="mt-12 pt-8 border-t border-border text-center">
-            <p className="text-muted-foreground text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+            <p className="text-muted-foreground text-sm">{t.brandFooter}</p>
           </div>
         </div>
       </div>
 
-      {/* Sağ Panel - Beyaz Form Bölümü (tamamen dolar, kaydırılabilir) */}
-      <div className="flex-1 flex items-start justify-center bg-white dark:bg-gray-950 p-6 sm:p-8 overflow-y-auto min-h-screen lg:min-h-0 lg:items-center">
+      <div className="flex-1 flex items-start justify-center bg-white dark:bg-gray-950 p-6 sm:p-8 overflow-y-auto min-h-screen lg:min-h-0 lg:items-center relative">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <LanguageSwitcher compact />
+        </div>
         <div className="w-full max-w-md my-8">
-          {/* Mobilde logo göster */}
           <div className="lg:hidden flex justify-center mb-8">
             <Logo boyut="default" animasyonlu />
           </div>
 
-          {/* Başlık */}
           <div className="mb-8">
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-              {inviteInfo ? 'Takım Davetini Kabul Et' : 'Hesap Oluştur'}
+              {inviteInfo ? t.register.inviteTitle : t.register.title}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              {inviteInfo
-                ? `${inviteInfo.websiteName} takımına katılmak için hesap oluşturun`
-                : selectedPlanLabel
-                  ? trialRegisterLine(selectedPlanLabel)
-                  : '2 dakikada ücretsiz başlayın — kayıtta PRO deneme başlar'}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{subtitle}</p>
             {selectedPlanLabel && (
               <span className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                Seçilen plan: {selectedPlanLabel}
+                {t.register.selectedPlan(selectedPlanLabel)}
               </span>
             )}
           </div>
 
-          {/* Hata mesajı */}
           {hata && (
             <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg p-3 mb-6 text-sm">
               {hata}
             </div>
           )}
 
-          {/* Google ile kayıt */}
           {googleAktif && (
             <div className="mb-6 space-y-3">
               <button
@@ -210,28 +201,26 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Google ile kayıt ol
+                {t.register.google}
               </button>
             </div>
           )}
 
-          {/* Ayırıcı çizgi */}
           {googleAktif && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border dark:border-gray-600"></div>
+                <div className="w-full border-t border-border dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
+                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">{t.register.orEmail}</span>
               </div>
             </div>
           )}
 
-          {/* Kayıt formu */}
           <form onSubmit={formuGonder} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                Adınız
+                {t.register.name}
               </label>
               <input
                 id="name"
@@ -239,14 +228,14 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                 value={form.name}
                 onChange={(e) => guncelle('name', e.target.value)}
                 className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Ad Soyad"
+                placeholder={t.register.namePlaceholder}
                 required
               />
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                E-posta
+                {t.register.email}
               </label>
               <input
                 id="email"
@@ -262,7 +251,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                  Şifre
+                  {t.register.password}
                 </label>
                 <input
                   id="password"
@@ -277,7 +266,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                  Şifre Tekrar
+                  {t.register.confirmPassword}
                 </label>
                 <input
                   id="confirmPassword"
@@ -293,11 +282,11 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
 
             {!inviteToken && (
               <div className="border-t border-border dark:border-gray-700 pt-4 mt-4">
-                <h3 className="text-sm font-medium text-foreground dark:text-gray-300 mb-3">Website Bilgileri</h3>
+                <h3 className="text-sm font-medium text-foreground dark:text-gray-300 mb-3">{t.register.websiteSection}</h3>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="websiteName" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                      Website Adı
+                      {t.register.websiteName}
                     </label>
                     <input
                       id="websiteName"
@@ -305,13 +294,13 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                       value={form.websiteName}
                       onChange={(e) => guncelle('websiteName', e.target.value)}
                       className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder="Şirket Adı"
+                      placeholder={t.register.websiteNamePlaceholder}
                       required
                     />
                   </div>
                   <div>
                     <label htmlFor="websiteDomain" className="block text-sm font-medium text-foreground dark:text-gray-300 mb-1.5">
-                      Website Domain
+                      {t.register.websiteDomain}
                     </label>
                     <input
                       id="websiteDomain"
@@ -319,7 +308,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                       value={form.websiteDomain}
                       onChange={(e) => guncelle('websiteDomain', e.target.value)}
                       className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder="orneksite.com"
+                      placeholder={t.register.websiteDomainPlaceholder}
                       required
                     />
                   </div>
@@ -327,11 +316,10 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               </div>
             )}
 
-            {/* Kayıt butonu */}
             <button
               type="submit"
               disabled={yukleniyor}
-              className="w-full py-3 px-4 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed  mt-2"
+              className="w-full py-3 px-4 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {yukleniyor ? (
                 <span className="flex items-center justify-center gap-2">
@@ -339,19 +327,18 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Hesap oluşturuluyor...
+                  {t.register.submitting}
                 </span>
               ) : (
-                'Hesap Oluştur'
+                t.register.submit
               )}
             </button>
           </form>
 
-          {/* Giriş linki */}
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-            Zaten hesabınız var mı?{' '}
+            {t.register.hasAccount}{' '}
             <Link href="/login" className="text-primary hover:underline font-medium">
-              Giriş Yap
+              {t.register.login}
             </Link>
           </p>
         </div>

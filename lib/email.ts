@@ -45,7 +45,7 @@ function getProvider(): EmailProvider {
 const DEFAULT_FROM =
   process.env.EMAIL_FROM ||
   process.env.SMTP_FROM ||
-  'Gu Chat <noreply@guchat.org>'
+  'Gu Live Chat <noreply@gulivechat.com>'
 
 // ─── Send Email ────────────────────────────────────────────────────
 

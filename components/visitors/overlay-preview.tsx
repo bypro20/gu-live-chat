@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import type { LiveVisitor, VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { getAccent, type VisitorTheme } from '@/lib/visitors-utils'
 import { useSocket } from '@/lib/hooks/use-socket'
+import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
 interface OverlayPreviewProps {
   visitor: LiveVisitor
@@ -31,6 +32,7 @@ export function OverlayPreview({
   onWebRTCHDToggle,
 }: OverlayPreviewProps) {
   const accent = getAccent(theme)
+  const { overlay: o, monitor: m, locale } = useVisitorsI18n()
   const { emit } = useSocket()
   const videoRef = useRef<HTMLVideoElement>(null)
   const screenshotImgRef = useRef<HTMLImageElement>(null)
@@ -209,17 +211,17 @@ export function OverlayPreview({
   const zoomOut = useCallback(() => setZoom((z) => Math.max(z / 1.25, 1)), [])
   const zoomReset = useCallback(() => setZoom(1), [])
 
-  const displayName = visitor.name || 'Anonim'
+  const displayName = visitor.name || m.anonymous
   const initial = displayName[0]?.toUpperCase() || 'A'
 
-  const formatDuration = (dateStr?: string) => {
+  const formatDurationLocal = (dateStr?: string) => {
     if (!dateStr) return ''
     const diff = Date.now() - new Date(dateStr).getTime()
     const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'az önce'
-    if (mins < 60) return `${mins} dk`
+    if (mins < 1) return o.justNow
+    if (mins < 60) return o.durationMin(mins)
     const hours = Math.floor(mins / 60)
-    return `${hours} sa ${mins % 60} dk`
+    return o.durationHour(hours, mins % 60)
   }
 
   const showScreenshot = !!isScreenCapturing && !hasWebRTC && screenshotReady
@@ -259,7 +261,7 @@ export function OverlayPreview({
             {(isConnected || screenshotReady) && <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
             <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${(isConnected || screenshotReady) ? 'bg-emerald-400' : 'bg-amber-400'}`} />
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">{(isConnected || screenshotReady) ? 'CANLI' : 'BEKLE'}</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">{(isConnected || screenshotReady) ? o.live : o.wait}</span>
         </div>
         <span className="h-4 w-px bg-white/[0.08]" />
         <span className="text-[11px] font-mono tabular-nums text-white/50">{viewportW}×{viewportH}</span>
@@ -280,7 +282,7 @@ export function OverlayPreview({
         {isActive && (
           <button
             onClick={() => setInterventionMode((v) => !v)}
-            title={interventionMode ? 'Müdahale modunu kapat' : 'Fare ile müdahale et'}
+            title={interventionMode ? o.interventionOn : o.interventionOff}
             className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-[11px] font-semibold transition-all ${
               interventionMode
                 ? 'bg-sky-500/30 text-sky-200 ring-1 ring-sky-400/60 shadow-sm shadow-sky-500/20'
@@ -291,13 +293,13 @@ export function OverlayPreview({
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 13l6 6" />
             </svg>
-            {interventionMode && <span>Müdahale</span>}
+            {interventionMode && <span>{o.intervention}</span>}
           </button>
         )}
         {/* Visitor info toggle */}
         <button
           onClick={() => setShowInfo((v) => !v)}
-          title="Ziyaretçi Bilgisi"
+          title={o.visitorInfo}
           className={`w-8 h-8 grid place-items-center rounded-lg transition-colors ${showInfo ? 'bg-white/[0.12] text-white/90' : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70'}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -306,12 +308,12 @@ export function OverlayPreview({
         </button>
         {/* Zoom */}
         <div className="flex items-center gap-0.5 bg-white/[0.06] rounded-lg px-1 py-0.5">
-          <button onClick={zoomOut} disabled={zoom <= 1} title="Uzaklaştır" className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">−</button>
-          <button onClick={zoomReset} title="Sıfırla" className="px-1 text-[10px] font-mono text-white/35 hover:text-white/70 min-w-[36px]">{Math.round(zoom * 100)}%</button>
-          <button onClick={zoomIn} disabled={zoom >= 4} title="Yakınlaştır" className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">+</button>
+          <button onClick={zoomOut} disabled={zoom <= 1} title={o.zoomOut} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">−</button>
+          <button onClick={zoomReset} title={o.zoomReset} className="px-1 text-[10px] font-mono text-white/35 hover:text-white/70 min-w-[36px]">{Math.round(zoom * 100)}%</button>
+          <button onClick={zoomIn} disabled={zoom >= 4} title={o.zoomIn} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">+</button>
         </div>
         {/* Fullscreen */}
-        <button onClick={() => setIsFullscreen((f) => !f)} title={isFullscreen ? 'Küçült' : 'Tam ekran'} className="w-8 h-8 grid place-items-center rounded-lg text-white/40 hover:bg-white/[0.08] hover:text-white/80 transition-colors">
+        <button onClick={() => setIsFullscreen((f) => !f)} title={isFullscreen ? o.exitFullscreen : o.fullscreen} className="w-8 h-8 grid place-items-center rounded-lg text-white/40 hover:bg-white/[0.08] hover:text-white/80 transition-colors">
           {isFullscreen ? (
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 9V5m0 4H5m4 0L4 4m11 5h4m-4 0V5m0 4l5-5M9 15v4m0-4H5m4 0l-5 5m11-5h4m-4 0v4m0-4l5 5" /></svg>
           ) : (
@@ -321,7 +323,7 @@ export function OverlayPreview({
         {/* Stop */}
         <button onClick={handleStop} disabled={isStopping} className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[11px] font-semibold text-white bg-red-600 hover:bg-red-500 disabled:bg-red-900 disabled:cursor-wait transition-colors">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          {isStopping ? 'Kapatılıyor…' : 'Bağlantıyı Kes'}
+          {isStopping ? o.disconnecting : o.disconnect}
         </button>
       </div>
     </div>
@@ -341,18 +343,18 @@ export function OverlayPreview({
               {visitor.isLive && (
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] text-emerald-400 font-medium">Çevrimiçi</span>
+                  <span className="text-[10px] text-emerald-400 font-medium">{o.online}</span>
                 </span>
               )}
               {visitor.startedAt && (
-                <span className="text-[10px] text-white/30">{formatDuration(visitor.startedAt)}</span>
+                <span className="text-[10px] text-white/30">{formatDurationLocal(visitor.startedAt)}</span>
               )}
             </div>
           </div>
         </div>
         {visitor.currentTitle && (
           <div className="mb-2.5 px-2.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1">Mevcut Sayfa</p>
+            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1">{o.currentPage}</p>
             <p className="text-xs text-white/70 truncate">{visitor.currentTitle}</p>
             {visitor.currentPage && (
               <p className="text-[10px] text-white/30 truncate mt-0.5">{visitor.currentPage}</p>
@@ -369,7 +371,7 @@ export function OverlayPreview({
         </div>
         {activities.length > 0 && (
           <div className="mt-2.5 pt-2.5 border-t border-white/[0.08]">
-            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1.5">Son Aktiviteler</p>
+            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1.5">{o.recentActivity}</p>
             <div className="space-y-1">
               {activities.slice(0, 3).map((a, i) => (
                 <div key={i} className="flex items-center gap-2 text-[10px]">
@@ -409,7 +411,7 @@ export function OverlayPreview({
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 13l6 6" />
           </svg>
-          Müdahale Modu — Fare, klavye ve scroll ile yardım edin
+          {o.interventionBanner}
         </div>
       )}
 
@@ -435,7 +437,7 @@ export function OverlayPreview({
       {isScreenCapturing && !hasWebRTC && (
         <img
           ref={screenshotImgRef}
-          alt="Canlı ekran"
+          alt={o.liveScreenAlt}
           className="absolute inset-0 w-full h-full block"
           style={{
             objectFit: 'contain',
@@ -521,8 +523,8 @@ export function OverlayPreview({
         <div className="absolute inset-0 grid place-items-center bg-[#050816] z-10">
           <div className="flex flex-col items-center gap-4 text-white/60">
             <div className="w-10 h-10 rounded-full border-[3px] border-emerald-500 border-t-transparent animate-spin" />
-            <span className="text-sm font-medium">Canlı ekran bağlantısı kuruluyor…</span>
-            <span className="text-xs text-white/30">Ekran görüntüsü bekleniyor</span>
+            <span className="text-sm font-medium">{o.connecting}</span>
+            <span className="text-xs text-white/30">{o.waitingScreenshot}</span>
           </div>
         </div>
       )}
@@ -532,8 +534,8 @@ export function OverlayPreview({
         <div className="absolute inset-0 grid place-items-center bg-[#050816]">
           <div className="flex flex-col items-center gap-3 text-center px-6">
             <div className="w-14 h-14 rounded-2xl bg-red-500/10 grid place-items-center text-2xl">🚫</div>
-            <p className="text-sm font-semibold text-white/90">Ziyaretçi ekran paylaşımını reddetti</p>
-            <button onClick={handleStart} className="mt-1 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] hover:opacity-90 transition-opacity">Tekrar Dene</button>
+            <p className="text-sm font-semibold text-white/90">{o.shareDenied}</p>
+            <button onClick={handleStart} className="mt-1 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] hover:opacity-90 transition-opacity">{o.retry}</button>
           </div>
         </div>
       )}
@@ -544,14 +546,14 @@ export function OverlayPreview({
           <div className="flex flex-col items-center gap-4 text-center px-6">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-sky-500/20 grid place-items-center text-3xl">🔒</div>
             <div>
-              <p className="text-lg font-bold text-white">Gizlilik nedeniyle ekran gizlendi</p>
+              <p className="text-lg font-bold text-white">{o.privacyHiddenTitle}</p>
               <p className="text-sm text-white/40 mt-1.5 leading-relaxed">
-                Ziyaretçi hassas bilgi (şifre, kart, CVV vb.) giriyor.<br />Ekran geçici olarak gizlendi.
+                {o.privacyHiddenDesc}
               </p>
             </div>
             <div className="flex items-center gap-2 mt-1">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-xs text-amber-400 font-medium">Giriş bitince otomatik devam edecek</span>
+              <span className="text-xs text-amber-400 font-medium">{o.privacyResume}</span>
             </div>
           </div>
         </div>
@@ -586,19 +588,19 @@ export function OverlayPreview({
             </svg>
           </div>
           <div>
-            <p className="text-lg font-bold text-white/90">Ekran İzleme</p>
+            <p className="text-lg font-bold text-white/90">{o.screenWatchTitle}</p>
             <p className="text-sm text-white/40 mt-1.5 leading-relaxed">
-              Ziyaretçinin ekranını gerçek zamanlı izleyin.<br />
-              <span className="text-white/30">Kredi kartı ve şifre gizlilik koruması • Fare ile müdahale</span>
+              {o.screenWatchDesc}<br />
+              <span className="text-white/30">{o.screenWatchHint}</span>
             </p>
           </div>
           {visitor.isLive ? (
             <button onClick={handleStart} className="mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 hover:scale-[1.02] active:scale-95 transition-all">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
-              Ekranı İzle
+              {o.watchScreen}
             </button>
           ) : (
-            <span className="text-xs text-white/20">Ziyaretçi çevrimdışı</span>
+            <span className="text-xs text-white/20">{o.visitorOffline}</span>
           )}
         </div>
       </div>

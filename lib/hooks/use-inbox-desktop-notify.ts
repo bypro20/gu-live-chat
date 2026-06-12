@@ -29,7 +29,7 @@ export function useInboxDesktopNotify(
 
     if (Notification.permission === 'granted') {
       try {
-        new Notification('Yeni mesaj — Gu Chat', {
+        new Notification('Yeni mesaj — Gu Live Chat', {
           body: latestPreview || 'Gelen kutunuzda okunmamış mesaj var',
           icon: '/favicon.ico',
           tag: 'guchat-inbox',

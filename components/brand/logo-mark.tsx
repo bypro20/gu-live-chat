@@ -8,7 +8,7 @@ interface LogoMarkProps {
   glow?: boolean
 }
 
-/** Gu Chat mark — gradient kutu + sohbet balonu + AI vurgusu */
+/** Gu Live Chat mark — gradient kutu + sohbet balonu + AI vurgusu */
 export function LogoMark({ size = 40, className, glow = false }: LogoMarkProps) {
   const id = `gu-mark-${size}`
   return (

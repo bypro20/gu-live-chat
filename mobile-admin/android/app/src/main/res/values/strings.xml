@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gu Live Chat Yönetim</string>
+    <string name="title_activity_main">Gu Live Chat Yönetim</string>
+    <string name="package_name">org.guchat.admin</string>
+    <string name="custom_url_scheme">org.guchat.admin</string>
+</resources>

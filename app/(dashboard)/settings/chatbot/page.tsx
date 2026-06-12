@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useChatbots } from '@/lib/hooks/use-chatbots'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import AiBotSettings from './ai-bot-settings'
 
@@ -23,9 +24,19 @@ interface Chatbot {
   steps: BotStep[]
 }
 
+const STEP_ICONS: Record<string, string> = {
+  MESSAGE: '💬',
+  CHOICE: '🔘',
+  COLLECT_EMAIL: '📧',
+  COLLECT_NAME: '👤',
+  ASSIGN_AGENT: '👥',
+  END: '✅',
+}
+
 export default function ChatbotPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('chatbot')
   const { chatbots, isLoading, createChatbot, deleteChatbot, toggleChatbot } = useChatbots()
+  const { common, chatbot: cb } = useSettingsI18n()
   const [showBuilder, setShowBuilder] = useState(false)
   const [saving, setSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -33,7 +44,7 @@ export default function ChatbotPage() {
   const [botTrigger, setBotTrigger] = useState('ALL_CONVERSATIONS')
   const [botTriggerValue, setBotTriggerValue] = useState('')
   const [steps, setSteps] = useState<BotStep[]>([
-    { type: 'MESSAGE', message: 'Merhaba! Size nasıl yardımcı olabiliriz?', order: 0 },
+    { type: 'MESSAGE', message: cb.defaultWelcome, order: 0 },
   ])
 
   const handleCreate = async () => {
@@ -56,20 +67,20 @@ export default function ChatbotPage() {
       setBotName('')
       setBotTrigger('ALL_CONVERSATIONS')
       setBotTriggerValue('')
-      setSteps([{ type: 'MESSAGE', message: 'Merhaba! Size nasıl yardımcı olabiliriz?', order: 0 }])
+      setSteps([{ type: 'MESSAGE', message: cb.defaultWelcome, order: 0 }])
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Chatbot oluşturulamadı')
+      setCreateError(err instanceof Error ? err.message : cb.createFailed)
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu chatbotu silmek istediğinize emin misiniz?')) return
+    if (!confirm(cb.confirmDelete)) return
     try {
       await deleteChatbot(id)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Chatbot silinemedi')
+      alert(err instanceof Error ? err.message : cb.deleteFailed)
     }
   }
 
@@ -91,34 +102,21 @@ export default function ChatbotPage() {
     return <PlanUpgradePrompt feature="chatbot" />
   }
 
-  const stepTypes: Record<string, { label: string; icon: string; description: string }> = {
-    MESSAGE: { label: 'Mesaj', icon: '💬', description: 'Bir metin mesajı gönder' },
-    CHOICE: { label: 'Seçenek', icon: '🔘', description: 'Tıklanabilir seçenekler sun' },
-    COLLECT_EMAIL: { label: 'E-posta Topla', icon: '📧', description: 'Ziyaretçiden e-posta al' },
-    COLLECT_NAME: { label: 'İsim Topla', icon: '👤', description: 'Ziyaretçiden isim al' },
-    ASSIGN_AGENT: { label: 'Temsilciye Aktar', icon: '👥', description: 'Sohbeti temsilciye aktar' },
-    END: { label: 'Bitir', icon: '✅', description: 'Sohbeti sonlandır' },
-  }
-
-  const triggerLabels: Record<string, string> = {
-    ALL_CONVERSATIONS: 'Tüm sohbetler',
-    OFFLINE_ONLY: 'Sadece çevrimdışı',
-    KEYWORD: 'Anahtar kelime tetiklendiğinde',
-    FIRST_VISIT: 'İlk ziyarette',
-  }
+  const stepTypes = cb.stepTypes
+  const triggerLabels = cb.triggers
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Chatbot</h1>
-          <p className="text-sm text-muted-foreground mt-1">Otomatik yanıt akışları oluşturun</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{cb.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{cb.subtitle}</p>
         </div>
         <button
           onClick={() => setShowBuilder(!showBuilder)}
           className="btn-primary w-full sm:w-auto"
         >
-          + Yeni Chatbot
+          {cb.newChatbot}
         </button>
       </div>
 
@@ -130,17 +128,17 @@ export default function ChatbotPage() {
         <div className="surface p-5 sm:p-6 mb-6">
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Chatbot Adı</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{cb.botName}</label>
               <input
                 type="text"
                 value={botName}
                 onChange={(e) => setBotName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Örn: Hoş Geldin Bot"
+                placeholder={cb.botNamePlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{common.trigger}</label>
               <select
                 value={botTrigger}
                 onChange={(e) => setBotTrigger(e.target.value)}
@@ -153,13 +151,13 @@ export default function ChatbotPage() {
             </div>
             {botTrigger === 'KEYWORD' && (
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Anahtar Kelimeler</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{cb.keywords}</label>
                 <input
                   type="text"
                   value={botTriggerValue}
                   onChange={(e) => setBotTriggerValue(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                  placeholder="fiyat, sipariş, destek (virgülle ayırın)"
+                  placeholder={cb.keywordsPlaceholder}
                 />
               </div>
             )}
@@ -167,7 +165,7 @@ export default function ChatbotPage() {
 
           {/* Steps */}
           <div className="space-y-3 mb-6">
-            <h3 className="text-sm font-semibold text-foreground">Akış Adımları</h3>
+            <h3 className="text-sm font-semibold text-foreground">{cb.flowSteps}</h3>
             {steps.map((step, index) => (
               <div key={index} className="flex items-start gap-3 p-4 bg-muted rounded-xl border border-border">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-sm font-bold text-primary shrink-0">
@@ -175,7 +173,7 @@ export default function ChatbotPage() {
                 </div>
                 <div className="flex-1 min-w-0 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{stepTypes[step.type]?.icon}</span>
+                    <span className="text-lg">{STEP_ICONS[step.type]}</span>
                     <span className="text-sm font-medium text-foreground">{stepTypes[step.type]?.label}</span>
                   </div>
                   {(step.type === 'MESSAGE' || step.type === 'COLLECT_EMAIL' || step.type === 'COLLECT_NAME' || step.type === 'ASSIGN_AGENT') && (
@@ -184,7 +182,7 @@ export default function ChatbotPage() {
                       value={step.message}
                       onChange={(e) => updateStep(index, 'message', e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder={step.type === 'MESSAGE' ? 'Mesaj metni...' : step.type === 'ASSIGN_AGENT' ? 'Aktarım mesajı...' : 'İstem mesajı...'}
+                      placeholder={step.type === 'MESSAGE' ? cb.messagePlaceholder : step.type === 'ASSIGN_AGENT' ? cb.transferPlaceholder : cb.promptPlaceholder}
                     />
                   )}
                   {step.type === 'CHOICE' && (
@@ -205,7 +203,7 @@ export default function ChatbotPage() {
                               setSteps(updated)
                             }}
                             className="flex-1 min-w-0 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                            placeholder="Seçenek metni"
+                            placeholder={cb.optionText}
                           />
                           <button
                             onClick={() => {
@@ -229,7 +227,7 @@ export default function ChatbotPage() {
                         }}
                         className="text-xs text-primary hover:underline"
                       >
-                        + Seçenek Ekle
+                        {cb.addOption}
                       </button>
                     </div>
                   )}
@@ -253,7 +251,7 @@ export default function ChatbotPage() {
                 onClick={() => addStep(type)}
                 className="px-3 py-2 bg-muted hover:bg-accent rounded-lg text-sm transition flex items-center gap-1.5 text-foreground"
               >
-                <span>{info.icon}</span>
+                <span>{STEP_ICONS[type]}</span>
                 <span>{info.label}</span>
               </button>
             ))}
@@ -267,10 +265,10 @@ export default function ChatbotPage() {
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
             <button onClick={() => { setShowBuilder(false); setCreateError(null) }} className="btn-secondary">
-              İptal
+              {common.cancel}
             </button>
             <button onClick={handleCreate} disabled={saving || !botName.trim()} className="btn-primary disabled:opacity-50">
-              {saving ? 'Kaydediliyor...' : 'Chatbot Oluştur'}
+              {saving ? common.saving : cb.createChatbot}
             </button>
           </div>
         </div>
@@ -287,8 +285,8 @@ export default function ChatbotPage() {
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
               🤖
             </div>
-            <h3 className="font-medium text-foreground">Henüz chatbot yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">Yukarıdaki butonu kullanarak ilk chatbotunuzu oluşturun</p>
+            <h3 className="font-medium text-foreground">{cb.emptyTitle}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{cb.emptyHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -300,7 +298,7 @@ export default function ChatbotPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{bot.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{triggerLabels[bot.trigger]} • {bot.steps.length} adım</p>
+                    <p className="text-xs text-muted-foreground truncate">{triggerLabels[bot.trigger]} • {cb.stepCount(bot.steps.length)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -308,9 +306,9 @@ export default function ChatbotPage() {
                     onClick={() => toggleChatbot(bot.id, !bot.isActive).catch((e) => alert(e.message))}
                     className={`px-3 py-1 text-xs font-medium rounded-full ${bot.isActive ? 'bg-success-light text-success' : 'bg-muted text-muted-foreground'}`}
                   >
-                    {bot.isActive ? 'Aktif' : 'Pasif'}
+                    {bot.isActive ? common.active : common.inactive}
                   </button>
-                  <button onClick={() => handleDelete(bot.id)} className="text-muted-foreground hover:text-destructive transition text-sm">Sil</button>
+                  <button onClick={() => handleDelete(bot.id)} className="text-muted-foreground hover:text-destructive transition text-sm">{common.delete}</button>
                 </div>
               </div>
             ))}

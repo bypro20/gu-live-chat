@@ -1,11 +1,22 @@
-/** Gu Chat native (Capacitor) uygulama algılama */
+/** Gu Live Chat native (Capacitor) uygulama algılama */
 
 export const NATIVE_APP_STORAGE_KEY = 'gu-native-app'
 
-/** Müşteri APK */
-export const NATIVE_CUSTOMER_UA = 'GuChatApp'
+/** Müşteri APK — yeni marka */
+export const NATIVE_CUSTOMER_UA = 'GuLiveChatApp'
 /** Yönetici APK — ayrı uygulama */
-export const NATIVE_ADMIN_UA = 'GuChatAdminApp'
+export const NATIVE_ADMIN_UA = 'GuLiveChatAdminApp'
+
+const LEGACY_CUSTOMER_UA = 'GuChatApp'
+const LEGACY_ADMIN_UA = 'GuChatAdminApp'
+
+export function isNativeAdminUserAgent(ua: string): boolean {
+  return new RegExp(`${NATIVE_ADMIN_UA}|${LEGACY_ADMIN_UA}`, 'i').test(ua)
+}
+
+export function isNativeCustomerUserAgent(ua: string): boolean {
+  return new RegExp(`${NATIVE_CUSTOMER_UA}|${LEGACY_CUSTOMER_UA}`, 'i').test(ua) && !isNativeAdminUserAgent(ua)
+}
 
 export type NativeAppPlatform = 'android' | 'ios' | 'admin'
 
@@ -75,14 +86,16 @@ export function getNativeAppPlatform(): NativeAppPlatform | null {
     // ignore
   }
 
-  if (/GuChatAdminApp/i.test(navigator.userAgent)) return 'admin'
-  if (/GuChatApp/i.test(navigator.userAgent)) return 'android'
+  if (isNativeAdminUserAgent(navigator.userAgent)) return 'admin'
+  if (isNativeCustomerUserAgent(navigator.userAgent)) return 'android'
 
   const cap = (window as CapacitorWindow).Capacitor
   if (cap?.isNativePlatform?.()) {
+    // Admin APK da Android — UA gelmeden önce müşteri sanılmasın
+    if (isNativeAdminUserAgent(navigator.userAgent)) return 'admin'
     const p = cap.getPlatform?.()
-    if (p === 'android' || p === 'ios') return p
-    return 'android'
+    if (p === 'ios') return 'ios'
+    if (p === 'android') return 'android'
   }
 
   return null
@@ -138,7 +151,8 @@ export function isNativeBlockedPath(pathname: string, platform: NativeAppPlatfor
 
 export function nativeAppRedirectForBlocked(pathname: string, platform: NativeAppPlatform): string {
   if (platform === 'admin') {
-    return pathname === ADMIN_LOGIN_PATH ? ADMIN_LOGIN_PATH : nativeAdminHomePath()
+    if (pathname === ADMIN_LOGIN_PATH || pathname === '/panel-giris') return ADMIN_LOGIN_PATH
+    return nativeAdminHomePath()
   }
   return nativeAppHomePath()
 }

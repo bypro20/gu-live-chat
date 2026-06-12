@@ -2,6 +2,10 @@
 // Used by invoice pages and billing components
 
 import { PLANS } from './constants'
+import type { PlanId } from './plan-cta'
+import { getPlanEntry } from './plan-i18n'
+import type { SiteLocale } from './regional-config'
+import { getInvoiceStatusLabelFromSettings } from './settings-i18n'
 
 // ─── Format Amount ─────────────────────────────────────────────────
 
@@ -16,14 +20,8 @@ export function formatAmount(amountInKurus: number, currency = 'TRY'): string {
 
 // ─── Invoice Status Label (Turkish) ───────────────────────────────
 
-export function getInvoiceStatusLabel(status: string): string {
-  switch (status) {
-    case 'PENDING': return 'Bekliyor'
-    case 'PAID': return 'Ödendi'
-    case 'FAILED': return 'Başarısız'
-    case 'REFUNDED': return 'İade Edildi'
-    default: return status
-  }
+export function getInvoiceStatusLabel(status: string, locale?: SiteLocale): string {
+  return getInvoiceStatusLabelFromSettings(status, locale)
 }
 
 export function getInvoiceStatusColor(status: string): string {
@@ -38,7 +36,11 @@ export function getInvoiceStatusColor(status: string): string {
 
 // ─── Plan Name Helper ─────────────────────────────────────────────
 
-export function getPlanLabel(plan: string): string {
+export function getPlanLabel(plan: string, locale?: SiteLocale): string {
+  if (locale) {
+    const entry = getPlanEntry(locale, plan as PlanId)
+    if (entry?.name) return entry.name
+  }
   const planData = PLANS.find((p) => p.id === plan)
   return planData?.name || plan
 }

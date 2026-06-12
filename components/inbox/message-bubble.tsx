@@ -9,14 +9,17 @@ import { translateClient } from '@/lib/translate-client'
 import { AttachmentList } from './attachment-list'
 import type { InboxMessage } from './types'
 import { formatMessageTime } from './utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { useLocale } from '@/components/marketing/locale-provider'
+import { inboxAgentBubbleStyle, inboxVisitorBubbleStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 type MessageBubbleProps = {
   message: InboxMessage
   autoTranslate?: boolean
   canTranslate?: boolean
   websiteId?: string
-  /** Temsilcinin panel dili — gelen mesajlar buna çevrilir */
   agentLang?: string
+  primaryColor?: string | null
   grouped?: boolean
   senderName?: string | null
   senderImage?: string | null
@@ -28,10 +31,14 @@ export const MessageBubble = memo(function MessageBubble({
   canTranslate = false,
   websiteId,
   agentLang = 'tr',
+  primaryColor,
   grouped = false,
   senderName,
   senderImage,
 }: MessageBubbleProps) {
+  const inbox = useDashboardI18n().inbox
+  const { locale } = useLocale()
+  const primary = resolveInboxPrimary(primaryColor)
   const isVisitor = message.senderType === 'VISITOR'
   const isSystem = message.senderType === 'SYSTEM' || message.type === 'SYSTEM'
   const isBot = message.senderType === 'BOT'
@@ -71,12 +78,12 @@ export const MessageBubble = memo(function MessageBubble({
     if (autoTranslate && isVisitor && canTranslate && message.content && !translatedText && !translating) {
       void handleTranslate()
     }
-  }, [autoTranslate, isVisitor, canTranslate, message.content, translatedText, translating, handleTranslate, agentLang])
+  }, [autoTranslate, isVisitor, canTranslate, message.content, translatedText, translating, handleTranslate])
 
   if (isSystem) {
     return (
       <div className="flex justify-center py-1">
-        <span className="text-xs text-muted-foreground bg-muted/80 px-3 py-1 rounded-full">
+        <span className="text-xs text-slate-500 bg-white/80 backdrop-blur px-3 py-1 rounded-full border border-indigo-100 shadow-sm">
           {message.content}
         </span>
       </div>
@@ -85,28 +92,28 @@ export const MessageBubble = memo(function MessageBubble({
 
   const hasAtt = !!(message.attachments && message.attachments.length > 0)
   const hideText = hasAtt && /^(🖼️|📎)\s/u.test(message.content)
-
-  const agentLabel = isBot ? 'Bot' : senderName || 'Temsilci'
+  const agentLabel = isBot ? 'Bot' : senderName || inbox.agentLabel
 
   return (
-    <div className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${grouped ? 'mt-0.5' : 'mt-1'}`}>
+    <div className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${grouped ? 'mt-0.5' : 'mt-2'}`}>
       {isVisitor && !grouped && (
         <Avatar
           fallback="Z"
           size="sm"
-          className="!w-7 !h-7 shrink-0 mt-1 !bg-muted !text-muted-foreground text-[10px]"
+          className="!w-8 !h-8 shrink-0 mt-0.5 !bg-indigo-100 !text-indigo-700 text-[10px] ring-2 ring-white shadow-sm"
         />
       )}
-      {isVisitor && grouped && <div className="w-7 shrink-0" />}
+      {isVisitor && grouped && <div className="w-8 shrink-0" />}
+
       <div className={`max-w-[min(78%,520px)] ${isVisitor ? '' : 'items-end flex flex-col'}`}>
         {!grouped && !isVisitor && (
-          <span className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1 mr-0.5 justify-end">
+          <span className="flex items-center gap-1 text-[10px] text-slate-500 mb-1 mr-1 justify-end font-medium">
             {isBot && <Bot className="w-3 h-3" />}
             {agentLabel}
           </span>
         )}
         {isBot && grouped && (
-          <span className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1 ml-0.5 justify-end">
+          <span className="flex items-center gap-1 text-[10px] text-slate-500 mb-1 justify-end font-medium">
             <Bot className="w-3 h-3" />
             Bot
           </span>
@@ -114,16 +121,17 @@ export const MessageBubble = memo(function MessageBubble({
         {isVisitor && message.sentiment === 'NEGATIVE' && (
           <Badge variant="destructive" className="mb-1 text-[10px] h-5 gap-1">
             <AlertTriangle className="w-3 h-3" />
-            Olumsuz ton
+            {inbox.negativeSentiment.split('—')[0]?.trim() || inbox.negativeSentiment}
           </Badge>
         )}
         {(message.content || hasAtt) && (
           <div
-            className={`px-3.5 py-2.5 text-[14px] leading-relaxed ${
+            className={`px-4 py-3 text-[14px] leading-relaxed transition-shadow ${
               isVisitor
-                ? 'bg-card text-foreground rounded-2xl rounded-bl-md border border-border/80 shadow-sm'
-                : 'bg-primary text-primary-foreground rounded-2xl rounded-br-md shadow-sm'
+                ? 'rounded-[8px_22px_22px_22px]'
+                : 'rounded-[22px_8px_22px_22px]'
             }`}
+            style={isVisitor ? inboxVisitorBubbleStyle() : inboxAgentBubbleStyle(primary)}
           >
             {!hideText && message.content && (
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
@@ -138,8 +146,8 @@ export const MessageBubble = memo(function MessageBubble({
               <p
                 className={`text-xs mt-2 pt-2 border-t italic ${
                   isVisitor
-                    ? 'text-muted-foreground border-border'
-                    : 'text-primary-foreground/85 border-primary-foreground/20'
+                    ? 'text-slate-500 border-slate-200'
+                    : 'text-white/85 border-white/25'
                 }`}
               >
                 {translatedText}
@@ -152,18 +160,18 @@ export const MessageBubble = memo(function MessageBubble({
             isVisitor ? '' : 'justify-end'
           } ${grouped ? 'hidden' : ''}`}
         >
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            {formatMessageTime(message.createdAt)}
+          <span className="text-[10px] text-slate-400 tabular-nums">
+            {formatMessageTime(message.createdAt, locale)}
           </span>
           {isVisitor && canTranslate && message.content && (
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="h-6 w-6 text-muted-foreground hover:text-primary"
+              className="h-6 w-6 text-slate-400 hover:text-indigo-600"
               onClick={() => void handleTranslate()}
               disabled={translating}
-              title="Çevir"
+              title={inbox.translateMessage}
             >
               {translating ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -174,15 +182,16 @@ export const MessageBubble = memo(function MessageBubble({
           )}
         </div>
       </div>
+
       {!isVisitor && !grouped && (
         <Avatar
           src={senderImage || undefined}
           fallback={(agentLabel.charAt(0) || 'A').toUpperCase()}
           size="sm"
-          className="!w-7 !h-7 shrink-0 mt-1 !bg-primary/15 !text-primary text-[10px]"
+          className="!w-8 !h-8 shrink-0 mt-0.5 ring-2 ring-white shadow-sm !bg-indigo-100 !text-indigo-700 text-[10px]"
         />
       )}
-      {!isVisitor && grouped && <div className="w-7 shrink-0" />}
+      {!isVisitor && grouped && <div className="w-8 shrink-0" />}
     </div>
   )
 })

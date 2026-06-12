@@ -1,30 +1,44 @@
 import type { InboxAttachment } from './types'
+import type { DashboardMessages } from '@/lib/dashboard-i18n'
+import {
+  formatInboxTimeAgo,
+  formatInboxMessageTime,
+  formatInboxDateDivider,
+  visitorDisplayName as i18nVisitorName,
+  inboxStatusLabels,
+} from '@/lib/dashboard-i18n'
+import type { SiteLocale } from '@/lib/regional-config'
+import { getDashboardMessages } from '@/lib/dashboard-i18n'
 
-export function timeAgo(date: string): string {
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-  if (diff < 60) return 'şimdi'
-  if (diff < 3600) return `${Math.floor(diff / 60)} dk`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} sa`
-  return `${Math.floor(diff / 86400)} g`
+export function timeAgo(date: string, d: DashboardMessages): string {
+  return formatInboxTimeAgo(date, d)
 }
 
-export function formatMessageTime(date: string): string {
-  return new Date(date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+export function formatMessageTime(date: string, locale: SiteLocale): string {
+  return formatInboxMessageTime(date, locale)
 }
 
-export function formatDateDivider(date: string): string {
-  const d = new Date(date)
-  const today = new Date()
-  const yesterday = new Date()
-  yesterday.setDate(today.getDate() - 1)
-
-  if (d.toDateString() === today.toDateString()) return 'Bugün'
-  if (d.toDateString() === yesterday.toDateString()) return 'Dün'
-  return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+export function formatDateDivider(date: string, d: DashboardMessages, locale: SiteLocale): string {
+  return formatInboxDateDivider(date, d, locale)
 }
 
-export function attName(a: InboxAttachment): string {
-  return a.fileName || a.filename || 'dosya'
+export function visitorDisplayName(
+  name: string | null | undefined,
+  email: string | null | undefined,
+  d?: DashboardMessages
+): string {
+  return i18nVisitorName(name, email, d ?? getDashboardMessages('tr'))
+}
+
+export function getStatusLabels(d: DashboardMessages): Record<string, string> {
+  return inboxStatusLabels(d)
+}
+
+/** @deprecated use getStatusLabels(d) */
+export const STATUS_LABELS: Record<string, string> = inboxStatusLabels(getDashboardMessages('tr'))
+
+export function attName(a: InboxAttachment, fileLabel = 'file'): string {
+  return a.fileName || a.filename || fileLabel
 }
 
 export function attMime(a: InboxAttachment): string {
@@ -51,18 +65,4 @@ export function formatBytes(bytes?: number): string {
     i++
   }
   return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`
-}
-
-export function visitorDisplayName(
-  name: string | null | undefined,
-  email: string | null | undefined
-): string {
-  return name || email?.split('@')[0] || 'Anonim'
-}
-
-export const STATUS_LABELS: Record<string, string> = {
-  OPEN: 'Açık',
-  PENDING: 'Bekliyor',
-  RESOLVED: 'Çözüldü',
-  CLOSED: 'Kapalı',
 }

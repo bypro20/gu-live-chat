@@ -4,7 +4,9 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   getNativeAppPlatform,
+  isNativeAdminUserAgent,
   isNativeBlockedPath,
+  isNativeCustomerUserAgent,
   markNativeApp,
   nativeAppHomePath,
   nativeAppRedirectForBlocked,
@@ -26,28 +28,93 @@ const MARKETING_PATHS = new Set([
   '/integrations',
 ])
 
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean
+    getPlatform?: () => string
+    Plugins?: Record<
+      string,
+      {
+        getInfo?: () => Promise<{ id?: string }>
+        setStyle?: (opts: object) => void
+        setBackgroundColor?: (opts: object) => void
+        setOverlaysWebView?: (opts: { overlay: boolean }) => void
+        hide?: () => void
+      }
+    >
+  }
+}
+
+async function detectNativePlatformFromShell(): Promise<'admin' | 'android' | 'ios' | null> {
+  const cap = (window as CapacitorWindow).Capacitor
+  if (!cap?.isNativePlatform?.()) return null
+
+  try {
+    const info = await cap.Plugins?.App?.getInfo?.()
+    if (info?.id === 'org.guchat.admin') return 'admin'
+    if (info?.id === 'org.guchat.app') return 'android'
+  } catch {
+    // ignore
+  }
+
+  if (isNativeAdminUserAgent(navigator.userAgent)) return 'admin'
+  if (isNativeCustomerUserAgent(navigator.userAgent)) return 'android'
+
+  const platform = cap.getPlatform?.()
+  if (platform === 'ios') return 'ios'
+  if (platform === 'android') return 'android'
+  return null
+}
+
 /** Capacitor modunu başlatır; müşteri ve yönetici uygulaması rotalarını ayırır */
 export function NativeAppBootstrap() {
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
-    const fromUrl = parseNativeAppFromSearch(window.location.search)
-    if (fromUrl) {
-      markNativeApp(fromUrl)
-      const url = new URL(window.location.href)
-      url.searchParams.delete('app')
-      const clean = url.pathname + url.search + url.hash
-      window.history.replaceState({}, '', clean)
-    } else {
-      const platform = getNativeAppPlatform()
-      if (platform) markNativeApp(platform)
+    let cancelled = false
+
+    const bootstrap = async () => {
+      const fromUrl = parseNativeAppFromSearch(window.location.search)
+      if (fromUrl) {
+        markNativeApp(fromUrl)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('app')
+        const clean = url.pathname + url.search + url.hash
+        window.history.replaceState({}, '', clean)
+      } else {
+        const shellPlatform = await detectNativePlatformFromShell()
+        if (shellPlatform) {
+          markNativeApp(shellPlatform)
+        } else {
+          const platform = getNativeAppPlatform()
+          if (platform) markNativeApp(platform)
+        }
+      }
+
+      if (cancelled) return
+
+      try {
+        const cap = (window as CapacitorWindow).Capacitor
+        const platform = getNativeAppPlatform()
+        cap?.Plugins?.StatusBar?.setStyle?.({ style: 'DARK' })
+        if (platform === 'admin') {
+          cap?.Plugins?.StatusBar?.setBackgroundColor?.({ color: '#080C14' })
+        } else {
+          cap?.Plugins?.StatusBar?.setBackgroundColor?.({ color: '#00000000' })
+          cap?.Plugins?.StatusBar?.setOverlaysWebView?.({ overlay: true })
+        }
+        cap?.Plugins?.SplashScreen?.hide?.()
+      } catch {
+        // native plugin hataları uygulamayı kapatmasın
+      }
     }
 
-    const cap = (window as Window & { Capacitor?: { Plugins?: Record<string, { setStyle?: (o: object) => void; setBackgroundColor?: (o: object) => void; hide?: () => void }> } }).Capacitor
-    cap?.Plugins?.StatusBar?.setStyle?.({ style: 'DARK' })
-    cap?.Plugins?.StatusBar?.setBackgroundColor?.({ color: '#0B1220' })
-    cap?.Plugins?.SplashScreen?.hide?.()
+    void bootstrap()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

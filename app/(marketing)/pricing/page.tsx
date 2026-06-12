@@ -1,117 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta, type PlanId } from '@/lib/plan-cta'
+import { TRIAL_DAYS } from '@/lib/trial-config'
+import { type PlanType } from '@/lib/constants'
+import { buildPlanCardFeatures } from '@/lib/plan-i18n'
 import {
-  trialFaqQuestion,
-  trialFaqAnswer,
-  trialPricingHeadline,
-  trialPricingCta,
-} from '@/lib/trial-config'
-import { PLAN_LIMITS, type PlanType } from '@/lib/constants'
+  getPricingFaqs,
+  getPricingFeatureGroups,
+  getPricingPageUi,
+  PRICING_PLAN_META,
+} from '@/lib/pricing-page-i18n'
+import { getPlanCatalog } from '@/lib/plan-i18n'
 import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { FadeIn } from '@/components/marketing/fade-in'
-
-// ─── Plan definitions ────────────────────────────────────────────────────────
-
-const PLANS = [
-  {
-    id: 'FREE',
-    name: 'Ücretsiz',
-    monthly: 0,
-    yearlyMonthly: 0,
-    desc: 'Tek girişimciler ve küçük ekipler için. İlk canlı destek deneyiminiz.',
-    badge: null,
-    highlighted: false,
-    color: '#64748B',
-  },
-  {
-    id: 'STARTER',
-    name: 'Başlangıç',
-    monthly: 1790,
-    yearlyMonthly: 1432,
-    desc: 'Müşteri hizmetlerini geliştirmek isteyen büyüyen işletmeler için.',
-    badge: null,
-    highlighted: false,
-    color: '#3B82F6',
-  },
-  {
-    id: 'PRO',
-    name: 'Profesyonel',
-    monthly: 3790,
-    yearlyMonthly: 3032,
-    desc: 'Tam özellikli destek platformuna ihtiyaç duyan ekipler için. Tüm güçlü özellikler.',
-    badge: 'En İyi Değer',
-    highlighted: true,
-    color: '#1972F5',
-  },
-  {
-    id: 'BUSINESS',
-    name: 'Kurumsal',
-    monthly: 11990,
-    yearlyMonthly: 9592,
-    desc: 'Özel entegrasyon, white-label ve garantili SLA isteyen büyük şirketler için.',
-    badge: null,
-    highlighted: false,
-    color: '#7C3AED',
-  },
-]
-
-// ─── Plan card feature lists (from PLAN_LIMITS) ────────────────────────────
-
-function formatPlanCount(n: number): string {
-  if (n === Infinity) return 'Sınırsız'
-  return n.toLocaleString('tr-TR')
-}
+import { useLocale } from '@/components/marketing/locale-provider'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
+import type { SiteLocale } from '@/lib/regional-config'
 
 interface PlanCardFeature {
   label: string
   included: boolean
 }
 
-function buildPlanCardFeatures(planId: PlanType): PlanCardFeature[] {
-  const l = PLAN_LIMITS[planId]
-  const features: PlanCardFeature[] = [
-    { label: `${formatPlanCount(l.maxAgents)} temsilci`, included: true },
-    { label: `${formatPlanCount(l.maxConversationsPerMonth)} sohbet/ay`, included: true },
-    { label: 'Canlı sohbet widget\'ı', included: true },
-    { label: 'Paylaşımlı gelen kutusu', included: true },
-    { label: 'Temel analitik', included: true },
-    { label: 'Ziyaretçi takibi', included: l.visitorTracking },
-    { label: 'Chatbot oluşturucu', included: l.chatbot },
-    { label: 'Bilgi bankası', included: l.knowledgeBase },
-    { label: 'Bilet sistemi', included: l.ticketing },
-    { label: 'Hazır cevaplar', included: l.cannedResponses },
-    { label: 'CSAT puanlama', included: l.ratings },
-    { label: 'Proaktif mesajlar', included: l.proactiveMessages },
-    { label: 'Dosya paylaşımı', included: l.fileUpload },
-    { label: 'Ekran izleme & müdahale', included: l.overlayAI },
-    { label: 'AI Sohbet Asistanı (GPT/Gemini)', included: l.aiAssistant },
-    { label: '50+ dil otomatik çeviri', included: l.autoTranslate },
-    { label: 'E-posta kampanyaları', included: l.campaigns },
-    { label: 'Çoklu kanal (WhatsApp, Telegram…)', included: l.multiChannel },
-    { label: 'Otomasyon iş akışları', included: l.workflows },
-    { label: 'Durum sayfası', included: l.statusPage },
-    { label: 'API & Webhook', included: l.webhooks && l.apiAccess },
-    { label: 'Gelişmiş analitik', included: l.advancedAnalytics },
-    { label: 'Beyaz etiket (filigransız)', included: l.customBranding },
-  ]
-  if (planId === 'BUSINESS') {
-    features.push(
-      { label: 'Özel SLA garantisi (%99.9)', included: true },
-      { label: '7/24 öncelikli destek', included: true },
-    )
-  }
-  return features
-}
-
-function PlanFeatureList({ planId }: { planId: PlanType }) {
-  const features = buildPlanCardFeatures(planId)
+function PlanFeatureList({ planId, locale }: { planId: PlanType; locale: SiteLocale }) {
+  const features = buildPlanCardFeatures(planId, locale)
   return (
     <ul className="mt-5 mb-5 flex-1 space-y-2 border-t border-slate-100 pt-5">
       {features.map((f) => (
@@ -131,158 +49,9 @@ function PlanFeatureList({ planId }: { planId: PlanType }) {
   )
 }
 
-// ─── Feature comparison table ────────────────────────────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 type FeatureValue = boolean | string | null
-
-interface FeatureRow {
-  label: string
-  tooltip?: string
-  free: FeatureValue
-  starter: FeatureValue
-  pro: FeatureValue
-  business: FeatureValue
-}
-
-interface FeatureGroup {
-  group: string
-  rows: FeatureRow[]
-}
-
-const FEATURE_GROUPS: FeatureGroup[] = [
-  {
-    group: 'Fiyatlandırma',
-    rows: [
-      { label: 'Aylık fiyat', free: '₺0', starter: '₺1.790', pro: '₺3.790', business: '₺11.990' },
-      { label: 'Dahil temsilci', free: '2', starter: '5', pro: '25', business: 'Sınırsız' },
-      { label: 'Aylık sohbet limiti', free: '100', starter: '1.000', pro: 'Sınırsız', business: 'Sınırsız' },
-    ],
-  },
-  {
-    group: 'Ekip Gelen Kutusu',
-    rows: [
-      { label: 'Canlı sohbet widget\'ı', free: true, starter: true, pro: true, business: true },
-      { label: 'Paylaşımlı gelen kutusu', free: true, starter: true, pro: true, business: true },
-      { label: 'Mobil uygulama', free: true, starter: true, pro: true, business: true },
-      { label: 'Sınırsız sohbet geçmişi', free: false, starter: true, pro: true, business: true },
-      { label: 'Hazır cevaplar', free: false, starter: true, pro: true, business: true },
-      { label: 'Bilet sistemi', free: false, starter: true, pro: true, business: true },
-      { label: 'CSAT puanlama', free: false, starter: true, pro: true, business: true },
-      { label: 'Dahili notlar', free: false, starter: true, pro: true, business: true },
-      { label: 'Sohbet önceliklendirme', free: false, starter: true, pro: true, business: true },
-      { label: 'Takip hatırlatıcıları', free: false, starter: true, pro: true, business: true },
-      { label: 'Döngüsel yönlendirme', free: false, starter: false, pro: true, business: true },
-      { label: 'Yönlendirme kuralları', free: false, starter: false, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Kanallar',
-    rows: [
-      { label: 'Web sitesi widget\'ı', free: true, starter: true, pro: true, business: true },
-      { label: 'E-posta', free: false, starter: true, pro: true, business: true },
-      { label: 'WhatsApp Business', free: false, starter: false, pro: true, business: true },
-      { label: 'Messenger', free: false, starter: false, pro: true, business: true },
-      { label: 'Instagram DM', free: false, starter: false, pro: true, business: true },
-      { label: 'Telegram', free: false, starter: false, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Yapay Zeka',
-    rows: [
-      { label: 'AI otomatik yanıt', free: false, starter: false, pro: true, business: true },
-      { label: 'AI temsilci asistanı', free: false, starter: false, pro: true, business: true },
-      { label: '50+ dil otomatik çeviri', free: false, starter: false, pro: true, business: true },
-      { label: 'Bilgi bankası AI eğitimi', free: false, starter: true, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Sohbet Widget\'ı',
-    rows: [
-      { label: 'Widget özelleştirme', free: true, starter: true, pro: true, business: true },
-      { label: 'Proaktif mesajlar', free: false, starter: true, pro: true, business: true },
-      { label: 'Canlı yazma önizleme', free: true, starter: true, pro: true, business: true },
-      { label: 'Dosya paylaşımı', free: false, starter: true, pro: true, business: true },
-      { label: 'Ekran izleme & müdahale', free: false, starter: false, pro: true, business: true },
-      { label: 'Beyaz etiket (filigransız)', free: false, starter: false, pro: false, business: true },
-    ],
-  },
-  {
-    group: 'CRM & Ziyaretçi',
-    rows: [
-      { label: 'Ziyaretçi takibi', free: false, starter: true, pro: true, business: true },
-      { label: 'Müşteri profilleri', free: '100', starter: '5.000', pro: '50.000', business: 'Sınırsız' },
-      { label: 'Özel nitelikler', free: false, starter: false, pro: true, business: true },
-      { label: 'Müşteri segmentasyonu', free: false, starter: false, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Otomasyon & İş Akışı',
-    rows: [
-      { label: 'Chatbot oluşturucu', free: false, starter: true, pro: true, business: true },
-      { label: 'Otomasyon iş akışları', free: false, starter: false, pro: true, business: true },
-      { label: 'Kampanya gönderimi', free: false, starter: false, pro: true, business: true },
-      { label: 'Durum sayfası', free: false, starter: false, pro: true, business: true },
-      { label: 'API & Webhook', free: false, starter: false, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Bilgi Bankası',
-    rows: [
-      { label: 'Makale & kategoriler', free: false, starter: true, pro: true, business: true },
-      { label: 'Widget içi yardım', free: false, starter: true, pro: true, business: true },
-      { label: 'Özel alan adı', free: false, starter: false, pro: true, business: true },
-      { label: 'Çok dilli destek', free: false, starter: false, pro: true, business: true },
-    ],
-  },
-  {
-    group: 'Analitik & Raporlar',
-    rows: [
-      { label: 'Temel analitik', free: true, starter: true, pro: true, business: true },
-      { label: 'Gelişmiş analitik', free: false, starter: false, pro: true, business: true },
-      { label: 'Veri dışa aktarma', free: false, starter: true, pro: true, business: true },
-      { label: 'Özel panolar', free: false, starter: false, pro: false, business: true },
-    ],
-  },
-  {
-    group: 'Güvenlik & SLA',
-    rows: [
-      { label: 'SSL/TLS şifreleme', free: true, starter: true, pro: true, business: true },
-      { label: '2 Faktörlü doğrulama', free: true, starter: true, pro: true, business: true },
-      { label: 'KVKK uyumu', free: true, starter: true, pro: true, business: true },
-      { label: 'Özel SLA garantisi', free: false, starter: false, pro: false, business: true },
-      { label: '7/24 öncelikli destek', free: false, starter: false, pro: false, business: true },
-    ],
-  },
-]
-
-const FAQS = [
-  {
-    q: 'Bazı özellikler için ekstra ücret öder miyim?',
-    a: 'Planınıza dahil olan tüm özellikler aylık fiyata dahildir. Sadece belirli özel entegrasyonlar veya ek temsilci lisansları için ek ücret söz konusu olabilir.',
-  },
-  {
-    q: 'Fiyatlara KDV dahil mi?',
-    a: 'Gösterilen fiyatlar KDV hariçtir. Fatura aşamasında geçerli KDV oranı (%20) eklenecektir. Kurumsal mükelleflerin KDV iade süreci için muhasebe ekibinize danışabilirsiniz.',
-  },
-  {
-    q: trialFaqQuestion(),
-    a: trialFaqAnswer(),
-  },
-  {
-    q: 'İstediğim zaman plan değiştirebilir miyim?',
-    a: 'Evet, istediğiniz an yükseltme veya düşürme yapabilirsiniz. Yükseltmelerde kalan süre için kıst hesaplama yapılır. Verileriniz hiçbir zaman silinmez.',
-  },
-  {
-    q: 'Yıllık ödeme yaparsam ne kadar tasarruf ederim?',
-    a: 'Yıllık ödeme seçeneğinde %20 indirim uygulanır. Seçtiğiniz planın yıllık tutarını peşin ödeyerek avantajlı fiyattan yararlanabilirsiniz.',
-  },
-  {
-    q: 'Kurumsal plan için nasıl teklif alabilirim?',
-    a: 'İletişim formumuzdan bize ulaşın. Özel entegrasyon, white-label, özel SLA ve özel fiyatlandırma için ekibimiz en kısa sürede dönüş yapar.',
-  },
-]
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function FeatureCell({ value }: { value: FeatureValue }) {
   if (value === true) {
@@ -330,10 +99,36 @@ function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
 export default function PricingPage() {
   const { data: session } = useSession()
   const isLoggedIn = !!session?.user
+  const { locale } = useLocale()
+  const { planPrice } = useRegionalPricing()
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
-  const planCta = (planId: PlanId) => getMarketingPlanCta(planId, { isLoggedIn })
+  const ui = getPricingPageUi(locale)
+  const catalog = getPlanCatalog(locale)
+  const faqs = getPricingFaqs(locale)
+
+  const tablePrices = useMemo(
+    () => ({
+      free: planPrice('FREE').formatted,
+      starter: planPrice('STARTER').formatted,
+      pro: planPrice('PRO').formatted,
+      business: planPrice('BUSINESS').formatted,
+    }),
+    [planPrice]
+  )
+
+  const featureGroups = useMemo(
+    () => getPricingFeatureGroups(locale, tablePrices),
+    [locale, tablePrices]
+  )
+
+  const planCta = (planId: PlanId) => getMarketingPlanCta(planId, { isLoggedIn, locale })
+
+  const trialBadge =
+    locale === 'en'
+      ? `Try any plan free for ${TRIAL_DAYS} days`
+      : `Her planı ${TRIAL_DAYS} gün boyunca ücretsiz deneyin`
 
   return (
     <>
@@ -345,18 +140,17 @@ export default function PricingPage() {
           <FadeIn>
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 mb-6">
               <Sparkles className="w-3 h-3" />
-              {trialPricingHeadline()}
+              {trialBadge}
             </span>
           </FadeIn>
           <FadeIn delay={0.05}>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-              Basit, şeffaf fiyatlandırma
+              {ui.heroTitle}
             </h1>
           </FadeIn>
           <FadeIn delay={0.1}>
             <p className="mt-4 text-lg text-slate-500 max-w-xl mx-auto">
-              Temsilci başına değil, çalışma alanı başına sabit fiyat.
-              Ekibiniz büyüdükçe maliyet artmaz.
+              {ui.heroSubtitle}
             </p>
           </FadeIn>
 
@@ -364,19 +158,19 @@ export default function PricingPage() {
           <FadeIn delay={0.15}>
             <div className="flex items-center justify-center gap-4 mt-10">
               <span className={`text-sm font-medium transition-colors ${billing === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>
-                Aylık
+                {ui.monthly}
               </span>
               <button
                 onClick={() => setBilling(b => b === 'monthly' ? 'yearly' : 'monthly')}
                 className={`relative w-12 h-6 rounded-full transition-colors ${billing === 'yearly' ? 'bg-blue-600' : 'bg-slate-200'}`}
-                aria-label="Fatura dönemi"
+                aria-label={ui.monthly}
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`} />
               </button>
               <span className={`text-sm font-medium transition-colors ${billing === 'yearly' ? 'text-slate-900' : 'text-slate-400'}`}>
-                Yıllık
+                {ui.yearly}
                 <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
-                  %20 indirim
+                  {ui.yearlyDiscount}
                 </span>
               </span>
             </div>
@@ -386,8 +180,11 @@ export default function PricingPage() {
         {/* ── Plan cards ───────────────────────────────────────────────────── */}
         <section className="py-12 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-            {PLANS.map((plan, i) => {
-              const price = billing === 'yearly' ? plan.yearlyMonthly : plan.monthly
+            {PRICING_PLAN_META.map((plan, i) => {
+              const entry = catalog[plan.id]
+              const yearly = billing === 'yearly'
+              const priceInfo = planPrice(plan.id, yearly)
+              const badgeLabel = plan.badge === 'bestValue' ? ui.bestValue : null
               return (
                 <FadeIn key={plan.id} delay={i * 0.06}>
                   <div className={`relative h-full rounded-2xl border p-6 flex flex-col transition-all ${
@@ -395,38 +192,44 @@ export default function PricingPage() {
                       ? 'border-blue-500 ring-1 ring-blue-500/20'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}>
-                    {plan.badge && (
+                    {badgeLabel && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                         <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                          {plan.badge}
+                          {badgeLabel}
                         </span>
                       </div>
                     )}
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">{plan.name}</h3>
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">{plan.desc}</p>
+                      <h3 className="text-base font-bold text-slate-900">{entry.name}</h3>
+                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">{entry.description}</p>
                     </div>
                     <div className="mt-6 mb-5">
-                      {plan.monthly === 0 ? (
+                      {priceInfo.amount === 0 ? (
                         <div>
-                          <span className="text-3xl font-bold text-slate-900">Ücretsiz</span>
-                          <p className="text-xs text-slate-400 mt-1">Sonsuza dek</p>
+                          <span className="text-3xl font-bold text-slate-900">{ui.free}</span>
+                          <p className="text-xs text-slate-400 mt-1">{ui.forever}</p>
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold text-slate-900">₺{price.toLocaleString('tr-TR')}</span>
-                            <span className="text-sm text-slate-400">/ay</span>
+                            <span className="text-3xl font-bold text-slate-900">{priceInfo.formatted}</span>
+                            <span className="text-sm text-slate-400">{ui.perMonth}</span>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
-                            {billing === 'yearly'
-                              ? `Yıllık ₺${(price * 12).toLocaleString('tr-TR')} · %20 indirimli`
-                              : 'Çalışma alanı başına'}
+                            {yearly
+                              ? ui.yearlyNote(
+                                  new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
+                                    style: 'currency',
+                                    currency: priceInfo.currency,
+                                    maximumFractionDigits: priceInfo.currency === 'TRY' ? 0 : 2,
+                                  }).format(priceInfo.amount * 12)
+                                )
+                              : ui.perWorkspace}
                           </p>
                         </div>
                       )}
                     </div>
-                    <PlanFeatureList planId={plan.id as PlanType} />
+                    <PlanFeatureList planId={plan.id as PlanType} locale={locale} />
                     <Link
                       href={planCta(plan.id as PlanId).href}
                       className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all ${
@@ -437,9 +240,9 @@ export default function PricingPage() {
                     >
                       {planCta(plan.id as PlanId).label}
                     </Link>
-                    {plan.monthly > 0 && (
+                    {priceInfo.amount > 0 && (
                       <p className="text-[10px] text-slate-400 text-center mt-2">
-                        Kredi kartı gerekmez · İstediğinde iptal
+                        {ui.noCard}
                       </p>
                     )}
                   </div>
@@ -454,14 +257,13 @@ export default function PricingPage() {
           <section className="py-10 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900">Temsilci başına değil, çalışma alanı başına sabit fiyat</h3>
+                <h3 className="text-lg font-bold text-slate-900">{ui.flatTitle}</h3>
                 <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-                  Ekibinize kaç kişi eklerseniz ekleyin, aylık ücretiniz değişmez.
-                  Büyürken ekstra maliyet endişesi taşımadan işinize odaklanın.
+                  {ui.flatDesc}
                 </p>
               </div>
               <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl hover:bg-blue-700 transition-colors">
-                Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+                {ui.startFree} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </section>
@@ -471,27 +273,29 @@ export default function PricingPage() {
         <section className="py-16 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <FadeIn>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-2">Planları karşılaştırın</h2>
-              <p className="text-slate-500 text-center text-sm mb-10">Şirketinize en uygun planı seçin.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-2">{ui.compareTitle}</h2>
+              <p className="text-slate-500 text-center text-sm mb-10">{ui.compareSubtitle}</p>
             </FadeIn>
 
             <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-5 py-4 font-semibold text-slate-600 w-[40%]">Özellik</th>
-                    {PLANS.map(plan => (
+                    <th className="text-left px-5 py-4 font-semibold text-slate-600 w-[40%]">{ui.featureCol}</th>
+                    {PRICING_PLAN_META.map((plan) => (
                       <th key={plan.id} className={`text-center px-4 py-4 font-bold ${plan.highlighted ? 'text-blue-600' : 'text-slate-700'}`}>
-                        <div>{plan.name}</div>
+                        <div>{catalog[plan.id].name}</div>
                         <div className={`text-xs font-normal mt-0.5 ${plan.highlighted ? 'text-blue-400' : 'text-slate-400'}`}>
-                          {plan.monthly === 0 ? '₺0' : `₺${plan.monthly.toLocaleString('tr-TR')}/ay`}
+                          {plan.id === 'FREE'
+                            ? tablePrices.free
+                            : `${tablePrices[plan.id === 'STARTER' ? 'starter' : plan.id === 'PRO' ? 'pro' : 'business']}${ui.perMonth}`}
                         </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {FEATURE_GROUPS.map((group) => (
+                  {featureGroups.map((group) => (
                     <>
                       <tr key={group.group} className="bg-slate-50/60">
                         <td colSpan={5} className="px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -510,7 +314,7 @@ export default function PricingPage() {
                           </td>
                           <td className="px-4 py-3.5 text-center"><FeatureCell value={row.free} /></td>
                           <td className="px-4 py-3.5 text-center"><FeatureCell value={row.starter} /></td>
-                          <td className={`px-4 py-3.5 text-center ${PLANS[2].highlighted ? 'bg-blue-50/40' : ''}`}>
+                          <td className={`px-4 py-3.5 text-center ${PRICING_PLAN_META[2].highlighted ? 'bg-blue-50/40' : ''}`}>
                             <FeatureCell value={row.pro} />
                           </td>
                           <td className="px-4 py-3.5 text-center"><FeatureCell value={row.business} /></td>
@@ -522,17 +326,17 @@ export default function PricingPage() {
                 <tfoot>
                   <tr className="border-t border-slate-200 bg-slate-50">
                     <td className="px-5 py-4" />
-                    {PLANS.map(plan => (
+                    {PRICING_PLAN_META.map((plan) => (
                       <td key={plan.id} className="px-4 py-4 text-center">
                         <Link
-                          href={planCta(plan.id as PlanId).href}
+                          href={planCta(plan.id).href}
                           className={`inline-block text-xs font-semibold px-4 py-2 rounded-lg transition-all ${
                             plan.highlighted
                               ? 'bg-blue-600 text-white hover:bg-blue-700'
                               : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                           }`}
                         >
-                          {planCta(plan.id as PlanId).label}
+                          {planCta(plan.id).label}
                         </Link>
                       </td>
                     ))}
@@ -577,10 +381,10 @@ export default function PricingPage() {
         <section className="py-16 px-4 sm:px-6 bg-slate-50">
           <div className="max-w-2xl mx-auto">
             <FadeIn>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10">Sık sorulan sorular</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10">{ui.faqTitle}</h2>
             </FadeIn>
             <div className="space-y-2">
-              {FAQS.map((faq, i) => (
+              {faqs.map((faq, i) => (
                 <FadeIn key={i} delay={i * 0.04}>
                   <FaqItem
                     q={faq.q}
@@ -598,14 +402,20 @@ export default function PricingPage() {
         <FadeIn>
           <section className="py-20 px-4 sm:px-6 text-center">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Müşteri deneyiminizi geliştirmeye hazır mısınız?</h2>
-              <p className="text-slate-500 mb-8">{trialPricingCta()}</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                {locale === 'en' ? 'Ready to improve customer experience?' : 'Müşteri deneyiminizi geliştirmeye hazır mısınız?'}
+              </h2>
+              <p className="text-slate-500 mb-8">
+                {locale === 'en'
+                  ? `Try free for ${TRIAL_DAYS} days. No commitment, no credit card required.`
+                  : `${TRIAL_DAYS} gün ücretsiz deneyin. Taahhüt yok, kredi kartı gerekmez.`}
+              </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors text-sm">
-                  Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+                  {ui.startFree} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-200 transition-colors text-sm">
-                  İletişime Geç
+                  {locale === 'en' ? 'Contact Us' : 'İletişime Geç'}
                 </Link>
               </div>
             </div>

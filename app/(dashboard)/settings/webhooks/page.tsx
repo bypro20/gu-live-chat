@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface WebhookEvent {
@@ -35,6 +36,7 @@ const AVAILABLE_EVENTS = [
 export default function WebhooksPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('webhooks')
   const { activeWebsite } = useActiveWebsite()
+  const { webhooks: t, common } = useSettingsI18n()
   const [webhooks, setWebhooks] = useState<Webhook[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
@@ -62,8 +64,8 @@ export default function WebhooksPage() {
   const handleCreate = async () => {
     if (!activeWebsite) return
     setFormError(null)
-    if (!newUrl.trim()) { setFormError('URL gerekli'); return }
-    if (selectedEvents.length === 0) { setFormError('En az bir olay seçin'); return }
+    if (!newUrl.trim()) { setFormError(common.urlRequired); return }
+    if (selectedEvents.length === 0) { setFormError(common.selectAtLeastOneEvent); return }
 
     setCreating(true)
     try {
@@ -79,14 +81,14 @@ export default function WebhooksPage() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Webhook oluşturulamadı')
+        throw new Error(data.error || t.createFailed)
       }
       setNewUrl('')
       setSelectedEvents([])
       setShowCreate(false)
       fetchWebhooks()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Webhook oluşturulamadı')
+      setFormError(err instanceof Error ? err.message : t.createFailed)
     } finally {
       setCreating(false)
     }
@@ -107,7 +109,7 @@ export default function WebhooksPage() {
   }
 
   const handleDelete = async (webhook: Webhook) => {
-    if (!confirm('Bu webhook silinsin mi?')) return
+    if (!confirm(t.confirmDelete)) return
     setBusyId(webhook.id)
     try {
       await fetch(`/api/webhooks/${webhook.id}`, { method: 'DELETE' })
@@ -127,12 +129,12 @@ export default function WebhooksPage() {
         id: webhook.id,
         ok: !!data.success,
         text: data.success
-          ? `Test başarılı (HTTP ${data.status})`
-          : data.error || 'Test başarısız',
+          ? common.testSuccess(data.status)
+          : data.error || common.testFailed,
       })
       fetchWebhooks()
     } catch {
-      setTestResult({ id: webhook.id, ok: false, text: 'Test isteği gönderilemedi' })
+      setTestResult({ id: webhook.id, ok: false, text: common.testRequestFailed })
     } finally {
       setBusyId(null)
     }
@@ -146,34 +148,33 @@ export default function WebhooksPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Webhook’lar</h1>
-          <p className="text-sm text-muted-foreground mt-1">Dış sistemlere gerçek zamanlı bildirimler gönderin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t.subtitle}</p>
         </div>
         <button
           onClick={() => { setShowCreate(!showCreate); setFormError(null) }}
           className="btn-primary w-full sm:w-auto"
         >
-          + Webhook Ekle
+          {t.addWebhook}
         </button>
       </div>
 
-      {/* Create Form */}
       {showCreate && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Yeni Webhook</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t.newWebhook}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">URL</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t.urlLabel}</label>
               <input
                 type="url"
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="https://ornek.com/webhook"
+                placeholder={t.urlPlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Olaylar</label>
+              <label className="block text-sm font-medium text-foreground mb-2">{t.eventsLabel}</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {AVAILABLE_EVENTS.map((event) => (
                   <label key={event} className="flex items-center gap-2 p-2.5 bg-muted rounded-lg cursor-pointer hover:bg-accent transition">
@@ -198,16 +199,15 @@ export default function WebhooksPage() {
           </div>
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
             <button onClick={() => setShowCreate(false)} className="btn-secondary">
-              İptal
+              {common.cancel}
             </button>
             <button onClick={handleCreate} disabled={creating} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-              {creating ? 'Oluşturuluyor...' : 'Oluştur'}
+              {creating ? common.creating : common.create}
             </button>
           </div>
         </div>
       )}
 
-      {/* Webhook List */}
       <div className="surface">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -218,10 +218,8 @@ export default function WebhooksPage() {
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
               🔗
             </div>
-            <h3 className="font-medium text-foreground">Henüz webhook yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Webhook ekleyerek dış sistemlere gerçek zamanlı bildirimler gönderin
-            </p>
+            <h3 className="font-medium text-foreground">{t.emptyTitle}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{t.emptyHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -238,14 +236,14 @@ export default function WebhooksPage() {
                       ))}
                     </div>
                     {webhook.failureCount > 0 && (
-                      <p className="text-xs text-destructive mt-1.5">{webhook.failureCount} başarısız deneme</p>
+                      <p className="text-xs text-destructive mt-1.5">{t.failureCount(webhook.failureCount)}</p>
                     )}
                     {testResult?.id === webhook.id && (
                       <p className={`text-xs mt-1.5 ${testResult.ok ? 'text-success' : 'text-destructive'}`}>{testResult.text}</p>
                     )}
                   </div>
                   <span className={`shrink-0 px-2 py-1 text-xs font-medium rounded-full ${webhook.isActive ? 'bg-success-light text-success' : 'bg-muted text-muted-foreground'}`}>
-                    {webhook.isActive ? 'Aktif' : 'Pasif'}
+                    {webhook.isActive ? common.active : common.inactive}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -254,21 +252,21 @@ export default function WebhooksPage() {
                     disabled={busyId === webhook.id}
                     className="px-3 py-1.5 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-accent transition disabled:opacity-50"
                   >
-                    Test Et
+                    {t.test}
                   </button>
                   <button
                     onClick={() => handleToggle(webhook)}
                     disabled={busyId === webhook.id}
                     className="px-3 py-1.5 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-accent transition disabled:opacity-50"
                   >
-                    {webhook.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+                    {webhook.isActive ? t.deactivate : t.activate}
                   </button>
                   <button
                     onClick={() => handleDelete(webhook)}
                     disabled={busyId === webhook.id}
                     className="px-3 py-1.5 text-xs font-medium bg-destructive-light text-destructive rounded-lg hover:opacity-80 transition disabled:opacity-50"
                   >
-                    Sil
+                    {common.delete}
                   </button>
                 </div>
               </div>
@@ -277,14 +275,17 @@ export default function WebhooksPage() {
         )}
       </div>
 
-      {/* Info */}
       <div className="mt-6 bg-primary-light rounded-xl p-4 flex items-start gap-3">
         <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-primary">Webhook güvenliği</p>
-          <p className="text-xs text-primary/80 mt-0.5">Her webhook isteği, webhook sırrınız ile imzalanır. İstek doğrulamak için <code className="bg-primary/10 px-1 rounded font-mono">X-Gu-Signature</code> header değerini kullanın.</p>
+          <p className="text-sm font-medium text-primary">{t.securityTitle}</p>
+          <p className="text-xs text-primary/80 mt-0.5">
+            {t.securityDescBefore}
+            <code className="bg-primary/10 px-1 rounded font-mono">{t.signatureHeader}</code>
+            {t.securityDescAfter}
+          </p>
         </div>
       </div>
     </div>

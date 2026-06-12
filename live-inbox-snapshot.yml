@@ -1,0 +1,304 @@
+- generic [active] [ref=e1] [box=0,0,390,844]:
+  - generic [ref=e2] [box=0,0,390,844]:
+    - complementary [ref=e3] [box=-280,0,280,844]:
+      - generic [ref=e4] [box=-280,0,279,72]:
+        - link "Gu Chat Canlı Destek Platformu" [ref=e5] [cursor=pointer] [box=-260,17,163,38]:
+          - /url: /dashboard
+          - generic [ref=e6] [box=-260,17,163,38]:
+            - img [ref=e9] [box=-260,17,38,38]
+            - generic [ref=e17] [box=-210,18,113,35]:
+              - generic [ref=e19] [box=-210,18,56,15]: Gu Chat
+              - paragraph [ref=e23] [box=-210,37,113,16]: Canlı Destek Platformu
+        - button "Bildirimler" [ref=e24] [cursor=pointer] [box=-57,18,36,36]:
+          - img [ref=e25] [box=-49,26,20,20]
+      - button "G Gu Chat — Platform guchat.org" [ref=e245] [cursor=pointer] [box=-268,84,255,50]:
+        - generic [ref=e246] [box=-256,95,28,28]: G
+        - generic [ref=e247] [box=-218,92,171,34]:
+          - paragraph [ref=e248] [box=-218,92,171,19]: Gu Chat — Platform
+          - paragraph [ref=e249] [box=-218,111,171,14]: guchat.org
+        - img [ref=e250] [box=-37,103,12,12]
+      - navigation [ref=e27] [box=-280,145,279,587]:
+        - generic [ref=e28] [box=-268,161,245,155]:
+          - paragraph [ref=e29] [box=-268,161,245,16]: Ana Sayfa
+          - generic [ref=e30] [box=-268,185,245,131]:
+            - link "Genel Bakış" [ref=e31] [cursor=pointer] [box=-268,185,245,42]:
+              - /url: /dashboard
+              - img [ref=e33] [box=-256,195,20,20]
+              - generic [ref=e35] [box=-224,195,189,22]: Genel Bakış
+            - link "Gelen Kutusu" [ref=e36] [cursor=pointer] [box=-268,228,245,44]:
+              - /url: /inbox
+              - img [ref=e38] [box=-255,240,20,20]
+              - generic [ref=e40] [box=-223,239,187,22]: Gelen Kutusu
+            - link "Kişiler" [ref=e41] [cursor=pointer] [box=-268,274,245,42]:
+              - /url: /contacts
+              - img [ref=e43] [box=-256,285,20,20]
+              - generic [ref=e45] [box=-224,284,189,22]: Kişiler
+        - generic [ref=e46] [box=-268,335,245,109]:
+          - paragraph [ref=e47] [box=-268,335,245,16]: İzleme & Analiz
+          - generic [ref=e48] [box=-268,359,245,85]:
+            - link "Analitik" [ref=e49] [cursor=pointer] [box=-268,359,245,42]:
+              - /url: /analytics
+              - img [ref=e51] [box=-256,370,20,20]
+              - generic [ref=e53] [box=-224,369,189,22]: Analitik
+            - link "Ziyaretçiler" [ref=e54] [cursor=pointer] [box=-268,403,245,42]:
+              - /url: /visitors
+              - img [ref=e56] [box=-256,414,20,20]
+              - generic [ref=e59] [box=-224,413,189,22]: Ziyaretçiler
+        - generic [ref=e60] [box=-268,465,245,109]:
+          - paragraph [ref=e61] [box=-268,465,245,16]: İletişim
+          - generic [ref=e62] [box=-268,489,245,85]:
+            - link "Sohbet Widget'ı" [ref=e63] [cursor=pointer] [box=-268,489,245,42]:
+              - /url: /settings/widget
+              - img [ref=e65] [box=-256,499,20,20]
+              - generic [ref=e67] [box=-224,499,189,22]: Sohbet Widget'ı
+            - link "Kanallar" [ref=e68] [cursor=pointer] [box=-268,532,245,42]:
+              - /url: /settings/channels
+              - img [ref=e70] [box=-256,543,20,20]
+              - generic [ref=e72] [box=-224,542,189,22]: Kanallar
+        - generic [ref=e73] [box=-268,594,245,284]:
+          - paragraph [ref=e74] [box=-268,594,245,16]: İçerik & Otomasyon
+          - generic [ref=e75] [box=-268,618,245,260]:
+            - link "Bilgi Bankası" [ref=e76] [cursor=pointer] [box=-268,618,245,42]:
+              - /url: /settings/knowledge
+              - img [ref=e78] [box=-256,629,20,20]
+              - generic [ref=e80] [box=-224,628,189,22]: Bilgi Bankası
+            - link "Bilet Sistemi" [ref=e81] [cursor=pointer] [box=-268,661,245,42]:
+              - /url: /settings/tickets
+              - img [ref=e83] [box=-256,672,20,20]
+              - generic [ref=e85] [box=-224,671,189,22]: Bilet Sistemi
+            - link "Chatbot" [ref=e86] [cursor=pointer] [box=-268,705,245,42]:
+              - /url: /settings/chatbot
+              - img [ref=e88] [box=-256,716,20,20]
+              - generic [ref=e90] [box=-224,715,189,22]: Chatbot
+            - link "Hazır Cevaplar" [ref=e91] [cursor=pointer] [box=-268,749,245,42]:
+              - /url: /settings/canned-responses
+              - img [ref=e93] [box=-256,759,20,20]
+              - generic [ref=e95] [box=-224,759,189,22]: Hazır Cevaplar
+            - link "CSAT Puanları" [ref=e96] [cursor=pointer] [box=-268,792,245,42]:
+              - /url: /settings/ratings
+              - img [ref=e98] [box=-256,803,20,20]
+              - generic [ref=e100] [box=-224,802,189,22]: CSAT Puanları
+            - link "Otomasyonlar" [ref=e101] [cursor=pointer] [box=-268,836,245,42]:
+              - /url: /settings/workflows
+              - img [ref=e103] [box=-256,847,20,20]
+              - generic [ref=e105] [box=-224,846,189,22]: Otomasyonlar
+        - generic [ref=e106] [box=-268,897,245,66]:
+          - paragraph [ref=e107] [box=-268,897,245,16]: Pazarlama
+          - link "Kampanyalar" [ref=e109] [cursor=pointer] [box=-268,921,245,42]:
+            - /url: /settings/campaigns
+            - img [ref=e111] [box=-256,932,20,20]
+            - generic [ref=e113] [box=-224,931,189,22]: Kampanyalar
+        - generic [ref=e114] [box=-268,983,245,240]:
+          - paragraph [ref=e115] [box=-268,983,245,16]: Yapılandırma
+          - generic [ref=e116] [box=-268,1007,245,216]:
+            - link "Genel Ayarlar" [ref=e117] [cursor=pointer] [box=-268,1007,245,42]:
+              - /url: /settings
+              - img [ref=e119] [box=-256,1018,20,20]
+              - generic [ref=e122] [box=-224,1017,189,22]: Genel Ayarlar
+            - link "Takım" [ref=e123] [cursor=pointer] [box=-268,1050,245,42]:
+              - /url: /settings/team
+              - img [ref=e125] [box=-256,1061,20,20]
+              - generic [ref=e127] [box=-224,1060,189,22]: Takım
+            - link "Webhook'lar" [ref=e128] [cursor=pointer] [box=-268,1094,245,42]:
+              - /url: /settings/webhooks
+              - img [ref=e130] [box=-256,1105,20,20]
+              - generic [ref=e132] [box=-224,1104,189,22]: Webhook'lar
+            - link "Hedefli Mesajlar" [ref=e133] [cursor=pointer] [box=-268,1138,245,42]:
+              - /url: /settings/proactive
+              - generic [ref=e134] [box=-244,1148,209,22]: Hedefli Mesajlar
+            - link "Durum Sayfası" [ref=e135] [cursor=pointer] [box=-268,1181,245,42]:
+              - /url: /settings/status-page
+              - img [ref=e137] [box=-256,1192,20,20]
+              - generic [ref=e139] [box=-224,1191,189,22]: Durum Sayfası
+        - generic [ref=e140] [box=-268,1243,245,66]:
+          - paragraph [ref=e141] [box=-268,1243,245,16]: Eklentiler
+          - link "Eklenti Mağazası" [ref=e143] [cursor=pointer] [box=-268,1267,245,42]:
+            - /url: /settings/addons
+            - img [ref=e145] [box=-256,1278,20,20]
+            - generic [ref=e147] [box=-224,1277,189,22]: Eklenti Mağazası
+        - generic [ref=e148] [box=-268,1328,245,66]:
+          - paragraph [ref=e149] [box=-268,1328,245,16]: Abonelik
+          - link "Faturalama" [ref=e151] [cursor=pointer] [box=-268,1352,245,42]:
+            - /url: /settings/billing
+            - img [ref=e153] [box=-256,1363,20,20]
+            - generic [ref=e155] [box=-224,1362,189,22]: Faturalama
+        - generic [ref=e156] [box=-268,1414,245,66]:
+          - paragraph [ref=e157] [box=-268,1414,245,16]: Hesap
+          - link "Gizlilik & KVKK" [ref=e159] [cursor=pointer] [box=-268,1438,245,42]:
+            - /url: /settings/privacy
+            - img [ref=e161] [box=-256,1449,20,20]
+            - generic [ref=e163] [box=-224,1448,189,22]: Gizlilik & KVKK
+        - generic [ref=e234] [box=-268,1500,245,61]:
+          - generic [ref=e236] [box=-258,1500,50,14]: Yönetim
+          - link "Admin Paneli ADMIN" [ref=e238] [cursor=pointer] [box=-268,1520,245,40]:
+            - /url: /admin
+            - img [ref=e239] [box=-256,1530,20,20]
+            - generic [ref=e241] [box=-226,1529,131,22]: Admin Paneli
+            - generic [ref=e242] [box=-85,1530,50,20]: ADMIN
+      - generic [ref=e164] [box=-280,731,279,113]:
+        - button "Koyu Tema" [ref=e166] [cursor=pointer] [box=-117,744,94,26]:
+          - img [ref=e167] [box=-109,750,14,14]
+          - text: Koyu Tema
+        - generic [ref=e169] [cursor=pointer] [box=-268,780,255,52]:
+          - generic [ref=e170] [box=-260,788,36,36]: G
+          - generic [ref=e171] [box=-214,790,193,32]:
+            - paragraph [ref=e172] [box=-214,790,193,16]: Guchat Platform Admin
+            - paragraph [ref=e243] [box=-214,806,193,16]: admin@guchat.org
+    - main [ref=e173] [box=280,0,110,844]:
+      - generic [ref=e174] [box=280,0,110,56]:
+        - button "Menü" [ref=e175] [cursor=pointer] [box=292,12,32,32]:
+          - img [ref=e176] [box=298,18,20,20]
+        - generic [ref=e179] [box=332,12,2,32]:
+          - img [ref=e181] [box=332,12,32,32]
+          - generic [ref=e189] [box=374,15,29,26]: Gu Chat
+        - button "Bildirimler" [ref=e191] [cursor=pointer] [box=342,10,36,36]:
+          - img [ref=e192] [box=350,18,20,20]
+      - generic [ref=e196] [box=280,56,110,788]:
+        - generic [ref=e197] [box=280,56,109,276]:
+          - generic [ref=e198] [box=296,72,77,56]:
+            - generic [ref=e199] [box=296,72,37,56]:
+              - heading "Gelen Kutusu" [level=1] [ref=e200] [box=296,72,59,56]
+              - generic [ref=e201] [box=363,90,70,20]:
+                - img [ref=e257] [box=371,94,12,12]
+                - text: Canlı
+            - button "Bildirim sesi açık" [ref=e211] [cursor=pointer] [box=341,84,32,32]:
+              - img [box=349,92,16,16]
+          - generic [ref=e212] [box=296,140,77,32]:
+            - button "Tümü" [ref=e213] [cursor=pointer] [box=296,140,50,26]
+            - button "Bana" [ref=e214] [cursor=pointer] [box=350,140,46,26]
+            - button "Atanmamış" [ref=e215] [cursor=pointer] [box=400,140,79,26]
+          - generic [ref=e216] [box=296,184,77,34]:
+            - button "Tümü" [ref=e217] [cursor=pointer] [box=296,184,56,28]
+            - button "Açık" [ref=e218] [cursor=pointer] [box=356,184,49,28]
+            - button "Bekleyen" [ref=e219] [cursor=pointer] [box=409,184,76,28]
+            - button "Çözülen" [ref=e220] [cursor=pointer] [box=490,184,71,28]
+          - generic [ref=e221] [box=296,230,77,34]:
+            - button "Tüm kanallar" [ref=e222] [cursor=pointer] [box=296,230,87,26]
+            - button "Web" [ref=e223] [cursor=pointer] [box=387,230,44,26]
+            - button "WhatsApp" [ref=e224] [cursor=pointer] [box=435,230,75,26]
+            - button "Instagram" [ref=e225] [cursor=pointer] [box=514,230,73,26]
+            - button "Messenger" [ref=e226] [cursor=pointer] [box=591,230,79,26]
+            - button "Telegram" [ref=e227] [cursor=pointer] [box=673,230,69,26]
+            - button "E-posta" [ref=e228] [cursor=pointer] [box=747,230,61,26]
+          - generic [ref=e229] [box=296,275,77,40]:
+            - img [box=308,287,16,16]
+            - textbox "Sohbet ara…" [ref=e230] [box=296,275,77,40]
+        - generic [ref=e231] [box=280,332,109,512]:
+          - button "A Anonim 1 sa merhaba nasılsınız Açık" [ref=e261] [cursor=pointer] [box=280,332,103,87]:
+            - generic [ref=e265] [box=309,356,10,20]: A
+            - generic [ref=e267] [box=348,344,23,62]:
+              - generic [ref=e268] [box=348,344,23,20]:
+                - generic [box=348,344,0,20]:
+                  - generic [box=348,344,0,20]: Anonim
+                - generic [ref=e269] [box=356,345,22,18]: 1 sa
+              - paragraph [ref=e270] [box=348,366,23,18]: merhaba nasılsınız
+              - generic [ref=e272] [box=348,390,32,16]: Açık
+          - button "A Anonim 1 g Merhaba, hoş geldiniz! Gu Chat — Platform olarak buradayız. Size nasıl yardımcı olabilirim? Açık" [ref=e273] [cursor=pointer] [box=280,419,103,87]:
+            - generic [ref=e277] [box=309,443,10,20]: A
+            - generic [ref=e279] [box=348,431,23,62]:
+              - generic [ref=e280] [box=348,431,23,20]:
+                - generic [box=348,431,0,20]:
+                  - generic [box=348,431,0,20]: Anonim
+                - generic [ref=e281] [box=356,432,17,18]: 1 g
+              - paragraph [ref=e282] [box=348,453,23,18]: Merhaba, hoş geldiniz! Gu Chat — Platform olarak buradayız. Size nasıl yardımcı olabilirim?
+              - generic [ref=e284] [box=348,477,32,16]: Açık
+          - button "A Anonim 2 g hello Açık" [ref=e285] [cursor=pointer] [box=280,506,103,87]:
+            - generic [ref=e289] [box=309,530,10,20]: A
+            - generic [ref=e291] [box=348,518,23,62]:
+              - generic [ref=e292] [box=348,518,23,20]:
+                - generic [box=348,518,0,20]:
+                  - generic [box=348,518,0,20]: Anonim
+                - generic [ref=e293] [box=356,519,17,18]: 2 g
+              - paragraph [ref=e294] [box=348,540,23,18]: hello
+              - generic [ref=e296] [box=348,564,32,16]: Açık
+          - button "A Anonim 2 g [audit] smoke 1780864226043 Açık" [ref=e297] [cursor=pointer] [box=280,593,103,87]:
+            - generic [ref=e301] [box=309,617,10,20]: A
+            - generic [ref=e303] [box=348,605,23,62]:
+              - generic [ref=e304] [box=348,605,23,20]:
+                - generic [box=348,605,0,20]:
+                  - generic [box=348,605,0,20]: Anonim
+                - generic [ref=e305] [box=356,606,17,18]: 2 g
+              - paragraph [ref=e306] [box=348,627,23,18]: "[audit] smoke 1780864226043"
+              - generic [ref=e308] [box=348,651,32,16]: Açık
+          - button "A Anonim 2 g [audit] smoke 1780863555831 Açık" [ref=e309] [cursor=pointer] [box=280,680,103,87]:
+            - generic [ref=e313] [box=309,704,10,20]: A
+            - generic [ref=e315] [box=348,692,23,62]:
+              - generic [ref=e316] [box=348,692,23,20]:
+                - generic [box=348,692,0,20]:
+                  - generic [box=348,692,0,20]: Anonim
+                - generic [ref=e317] [box=356,693,17,18]: 2 g
+              - paragraph [ref=e318] [box=348,714,23,18]: "[audit] smoke 1780863555831"
+              - generic [ref=e320] [box=348,738,32,16]: Açık
+          - button "A Anonim 2 g audit message 1780862898.996842 Açık" [ref=e321] [cursor=pointer] [box=280,767,103,87]:
+            - generic [ref=e325] [box=309,791,10,20]: A
+            - generic [ref=e327] [box=348,779,23,62]:
+              - generic [ref=e328] [box=348,779,23,20]:
+                - generic [box=348,779,0,20]:
+                  - generic [box=348,779,0,20]: Anonim
+                - generic [ref=e329] [box=356,780,17,18]: 2 g
+              - paragraph [ref=e330] [box=348,801,23,18]: audit message 1780862898.996842
+              - generic [ref=e332] [box=348,824,32,16]: Açık
+          - button "T T 2 g hiz Açık" [ref=e333] [cursor=pointer] [box=280,853,103,87]:
+            - generic [ref=e337] [box=309,877,9,20]: T
+            - generic [ref=e339] [box=348,865,23,62]:
+              - generic [ref=e340] [box=348,865,23,20]:
+                - generic [box=348,865,0,20]:
+                  - generic [box=348,865,0,20]: T
+                - generic [ref=e341] [box=356,867,17,18]: 2 g
+              - paragraph [ref=e342] [box=348,887,23,18]: hiz
+              - generic [ref=e344] [box=348,911,32,16]: Açık
+          - button "A Audit 2 g okuma testi Açık" [ref=e345] [cursor=pointer] [box=280,940,103,87]:
+            - generic [ref=e349] [box=309,964,10,20]: A
+            - generic [ref=e351] [box=348,952,23,62]:
+              - generic [ref=e352] [box=348,952,23,20]:
+                - generic [box=348,952,0,20]:
+                  - generic [box=348,952,0,20]: Audit
+                - generic [ref=e353] [box=356,954,17,18]: 2 g
+              - paragraph [ref=e354] [box=348,974,23,18]: okuma testi
+              - generic [ref=e356] [box=348,998,32,16]: Açık
+          - button "A Audit 2 g e2e audit mesaji Açık" [ref=e357] [cursor=pointer] [box=280,1027,103,87]:
+            - generic [ref=e361] [box=309,1051,10,20]: A
+            - generic [ref=e363] [box=348,1039,23,62]:
+              - generic [ref=e364] [box=348,1039,23,20]:
+                - generic [box=348,1039,0,20]:
+                  - generic [box=348,1039,0,20]: Audit
+                - generic [ref=e365] [box=356,1040,17,18]: 2 g
+              - paragraph [ref=e366] [box=348,1061,23,18]: e2e audit mesaji
+              - generic [ref=e368] [box=348,1085,32,16]: Açık
+          - button "A Anonim 2 g slm Açık" [ref=e369] [cursor=pointer] [box=280,1114,103,87]:
+            - generic [ref=e373] [box=309,1138,10,20]: A
+            - generic [ref=e375] [box=348,1126,23,62]:
+              - generic [ref=e376] [box=348,1126,23,20]:
+                - generic [box=348,1126,0,20]:
+                  - generic [box=348,1126,0,20]: Anonim
+                - generic [ref=e377] [box=356,1127,17,18]: 2 g
+              - paragraph [ref=e378] [box=348,1148,23,18]: slm
+              - generic [ref=e380] [box=348,1172,32,16]: Açık
+          - button "A Anonim 2 g selam Açık" [ref=e381] [cursor=pointer] [box=280,1201,103,87]:
+            - generic [ref=e385] [box=309,1225,10,20]: A
+            - generic [ref=e387] [box=348,1213,23,62]:
+              - generic [ref=e388] [box=348,1213,23,20]:
+                - generic [box=348,1213,0,20]:
+                  - generic [box=348,1213,0,20]: Anonim
+                - generic [ref=e389] [box=356,1214,17,18]: 2 g
+              - paragraph [ref=e390] [box=348,1235,23,18]: selam
+              - generic [ref=e392] [box=348,1259,32,16]: Açık
+          - button "T Test 2 g merhaba Açık" [ref=e393] [cursor=pointer] [box=280,1288,103,87]:
+            - generic [ref=e397] [box=309,1312,9,20]: T
+            - generic [ref=e399] [box=348,1300,23,62]:
+              - generic [ref=e400] [box=348,1300,23,20]:
+                - generic [box=348,1300,0,20]:
+                  - generic [box=348,1300,0,20]: Test
+                - generic [ref=e401] [box=356,1301,17,18]: 2 g
+              - paragraph [ref=e402] [box=348,1322,23,18]: merhaba
+              - generic [ref=e404] [box=348,1346,32,16]: Açık
+          - button "Z Ziyaretci 2 g Canli test mesaji Açık" [ref=e405] [cursor=pointer] [box=280,1375,103,87]:
+            - generic [ref=e409] [box=309,1399,9,20]: Z
+            - generic [ref=e411] [box=348,1387,23,62]:
+              - generic [ref=e412] [box=348,1387,23,20]:
+                - generic [box=348,1387,0,20]:
+                  - generic [box=348,1387,0,20]: Ziyaretci
+                - generic [ref=e413] [box=356,1388,17,18]: 2 g
+              - paragraph [ref=e414] [box=348,1409,23,18]: Canli test mesaji
+              - generic [ref=e416] [box=348,1433,32,16]: Açık
+  - alert [ref=e233] [box=-1,843,1,1]

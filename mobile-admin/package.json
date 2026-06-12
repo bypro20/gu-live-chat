@@ -2,7 +2,7 @@
   "name": "guchat-admin-mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "Gu Chat yönetici uygulaması (Capacitor) — sadece admin panel",
+  "description": "Gu Live Chat yönetici uygulaması (Capacitor) — sadece admin panel",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",

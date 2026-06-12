@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { hasAnyPlatformAiKey, pickDefaultProvider } from './provider'
-import { DEFAULT_MODEL } from './models'
+import { getDefaultModelForPlan, getDefaultProviderForPlan } from './plan-models'
+import type { PlanType } from '@/lib/constants'
 
 /** Platform AI anahtarı varsa ve site config yoksa varsayılanı oluşturur. */
 export async function ensureAiConfig(websiteDbId: string) {
@@ -9,7 +10,13 @@ export async function ensureAiConfig(websiteDbId: string) {
   const existing = await prisma.aIConfig.findUnique({ where: { websiteId: websiteDbId } })
   if (existing) return existing
 
-  const provider = pickDefaultProvider() ?? 'OPENAI'
+  const website = await prisma.website.findUnique({
+    where: { id: websiteDbId },
+    select: { plan: true },
+  })
+  const plan = (website?.plan ?? 'FREE') as PlanType
+  const provider = pickDefaultProvider() ?? getDefaultProviderForPlan(plan)
+  const model = getDefaultModelForPlan(plan, provider)
   return prisma.aIConfig.create({
     data: {
       websiteId: websiteDbId,
@@ -17,7 +24,7 @@ export async function ensureAiConfig(websiteDbId: string) {
       autoReply: true,
       autoSuggest: true,
       provider,
-      model: DEFAULT_MODEL[provider],
+      model,
       apiKey: '',
       temperature: 0.75,
       systemPrompt: '',

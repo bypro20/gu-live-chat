@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Gu Chat</string>
-    <string name="title_activity_main">Gu Chat</string>
+    <string name="app_name">Gu Live Chat</string>
+    <string name="title_activity_main">Gu Live Chat</string>
     <string name="package_name">org.guchat.app</string>
     <string name="custom_url_scheme">org.guchat.app</string>
 </resources>

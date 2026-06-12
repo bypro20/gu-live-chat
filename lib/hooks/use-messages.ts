@@ -24,6 +24,7 @@ export interface Message {
     mimetype: string
     size: number
   }>
+  sender?: { id: string; name: string | null; image: string | null } | null
 }
 
 export type SendAttachment = {

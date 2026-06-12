@@ -6,8 +6,8 @@ export type PlatformSettings = {
 }
 
 const DEFAULTS: PlatformSettings = {
-  platformName: process.env.PLATFORM_NAME || 'Gu Chat',
-  supportEmail: process.env.SUPPORT_EMAIL || 'destek@guchat.org',
+  platformName: process.env.PLATFORM_NAME || 'Gu Live Chat',
+  supportEmail: process.env.SUPPORT_EMAIL || 'destek@gulivechat.com',
 }
 
 const KEYS = {

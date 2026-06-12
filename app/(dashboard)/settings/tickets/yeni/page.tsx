@@ -3,23 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { ticketChannelLabels, ticketPriorityLabels } from '@/lib/settings-i18n'
 import Link from 'next/link'
 
-const CHANNEL_OPTIONS = [
-  { value: 'EMAIL', label: 'E-posta' },
-  { value: 'WIDGET', label: 'Widget' },
-  { value: 'WHATSAPP', label: 'WhatsApp' },
-  { value: 'API', label: 'API' },
-]
-
-const PRIORITY_OPTIONS = [
-  { value: 'LOW', label: 'Düşük' },
-  { value: 'MEDIUM', label: 'Orta' },
-  { value: 'HIGH', label: 'Yüksek' },
-  { value: 'URGENT', label: 'Acil' },
-]
-
 export default function NewTicketPage() {
+  const i18n = useSettingsI18n()
+  const { tickets: t, common: c } = i18n
+  const CHANNEL_OPTIONS = Object.entries(ticketChannelLabels(i18n)).map(([value, label]) => ({ value, label }))
+  const PRIORITY_OPTIONS = Object.entries(ticketPriorityLabels(i18n)).map(([value, label]) => ({ value, label }))
+
   const router = useRouter()
   const { activeWebsite } = useActiveWebsite()
   const [form, setForm] = useState({
@@ -52,12 +45,12 @@ export default function NewTicketPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Bilet oluşturulamadı')
+        setError(data.error || t.createFailed)
         return
       }
       router.push(`/settings/tickets/${data.id}`)
     } catch {
-      setError('Bir hata oluştu')
+      setError(c.connectionError)
     } finally {
       setLoading(false)
     }
@@ -70,45 +63,45 @@ export default function NewTicketPage() {
           href="/settings/tickets"
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
-          ← Biletler
+          {t.backToTickets}
         </Link>
         <span className="text-muted-foreground">/</span>
-        <h1 className="text-xl font-semibold">Yeni Bilet</h1>
+        <h1 className="text-xl font-semibold">{t.newTitle}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 bg-card border border-border rounded-xl p-6">
         <div>
-          <label className="block text-sm font-medium mb-1.5">Konu *</label>
+          <label className="block text-sm font-medium mb-1.5">{t.subject}</label>
           <input
             name="subject"
             value={form.subject}
             onChange={handleChange}
             required
-            placeholder="Bilet konusu"
+            placeholder={t.subjectPlaceholder}
             className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Müşteri Adı</label>
+            <label className="block text-sm font-medium mb-1.5">{t.customerName}</label>
             <input
               name="requesterName"
               value={form.requesterName}
               onChange={handleChange}
-              placeholder="Ad Soyad"
+              placeholder={t.customerNamePlaceholder}
               className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Müşteri E-posta *</label>
+            <label className="block text-sm font-medium mb-1.5">{t.customerEmail}</label>
             <input
               name="requesterEmail"
               value={form.requesterEmail}
               onChange={handleChange}
               required
               type="email"
-              placeholder="ornek@domain.com"
+              placeholder={t.customerEmailPlaceholder}
               className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
@@ -116,7 +109,7 @@ export default function NewTicketPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Kanal</label>
+            <label className="block text-sm font-medium mb-1.5">{t.channel}</label>
             <select
               name="channel"
               value={form.channel}
@@ -129,7 +122,7 @@ export default function NewTicketPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Öncelik</label>
+            <label className="block text-sm font-medium mb-1.5">{t.priority}</label>
             <select
               name="priority"
               value={form.priority}
@@ -144,13 +137,13 @@ export default function NewTicketPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">Açıklama</label>
+          <label className="block text-sm font-medium mb-1.5">{t.description}</label>
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
             rows={5}
-            placeholder="Sorunun detaylı açıklaması…"
+            placeholder={t.descriptionPlaceholder}
             className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
           />
         </div>
@@ -166,14 +159,14 @@ export default function NewTicketPage() {
             href="/settings/tickets"
             className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
           >
-            İptal
+            {c.cancel}
           </Link>
           <button
             type="submit"
             disabled={loading || !activeWebsite}
             className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Oluşturuluyor…' : 'Bilet Oluştur'}
+            {loading ? t.creating : t.createTicket.replace('+ ', '')}
           </button>
         </div>
       </form>

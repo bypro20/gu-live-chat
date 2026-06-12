@@ -2,6 +2,7 @@
 
 import { Wifi, WifiOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 export function ConnectionBadge({
   connected,
@@ -10,11 +11,8 @@ export function ConnectionBadge({
   connected: boolean
   socketEnabled: boolean
 }) {
-  const label = connected
-    ? 'Canlı'
-    : socketEnabled
-      ? 'Bağlanıyor'
-      : 'Senkron'
+  const i = useDashboardI18n().inbox
+  const label = connected ? i.live : socketEnabled ? i.connecting : i.sync
 
   return (
     <span

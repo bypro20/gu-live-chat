@@ -1,15 +1,16 @@
 import type { MetadataRoute } from 'next'
 import { SITE_LEGAL } from '@/lib/site-legal'
+import { SITE_NAME_SHORT } from '@/lib/site-config'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE_LEGAL.name,
-    short_name: 'Gu Chat',
+    short_name: SITE_NAME_SHORT,
     description: SITE_LEGAL.metaDescription,
-    start_url: '/',
-    display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#2563EB',
+    start_url: '/login?app=android',
+    display: 'fullscreen',
+    background_color: '#0B1220',
+    theme_color: '#0B1220',
     lang: 'tr',
     icons: [
       {

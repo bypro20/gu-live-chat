@@ -4,20 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/lib/hooks/use-notifications'
-
-function formatTimeAgo(dateStr: string) {
-  const now = new Date()
-  const date = new Date(dateStr)
-  const diff = now.getTime() - date.getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1) return 'Az önce'
-  if (minutes < 60) return `${minutes} dk önce`
-  if (hours < 24) return `${hours} saat önce`
-  return `${days} gün önce`
-}
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { formatNotificationTimeAgo } from '@/lib/dashboard-i18n'
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -54,6 +42,9 @@ export default function NotificationBell({
   variant = 'sidebar',
 }: NotificationBellProps) {
   const router = useRouter()
+  const d = useDashboardI18n()
+  const n = d.notifications
+  const c = d.common
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
@@ -145,7 +136,7 @@ export default function NotificationBell({
       style={{ top: menuPos.top, left: menuPos.left }}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <h3 className="text-sm font-semibold text-white">Bildirimler</h3>
+        <h3 className="text-sm font-semibold text-white">{n.title}</h3>
         {unreadCount > 0 && (
           <button
             type="button"
@@ -153,7 +144,7 @@ export default function NotificationBell({
             disabled={markingAsRead}
             className="text-[11px] text-[#60A5FA] hover:text-[#93C5FD] transition disabled:opacity-50 cursor-pointer"
           >
-            Tümünü okundu işaretle
+            {n.markAllRead}
           </button>
         )}
       </div>
@@ -164,7 +155,7 @@ export default function NotificationBell({
             <svg className="w-8 h-8 text-gray-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <p className="text-xs text-gray-500">Henüz bildiriminiz yok</p>
+            <p className="text-xs text-gray-500">{n.empty}</p>
           </div>
         ) : (
           notifications.slice(0, 30).map((notification) => (
@@ -185,7 +176,7 @@ export default function NotificationBell({
                   )}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
-                <p className="text-[10px] text-gray-500 mt-1">{formatTimeAgo(notification.createdAt)}</p>
+                <p className="text-[10px] text-gray-500 mt-1">{formatNotificationTimeAgo(notification.createdAt, d)}</p>
               </div>
               <span
                 role="button"
@@ -201,7 +192,7 @@ export default function NotificationBell({
                   }
                 }}
                 className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-rose-400 transition cursor-pointer"
-                title="Sil"
+                title={c.delete}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -226,8 +217,8 @@ export default function NotificationBell({
         type="button"
         onClick={handleOpen}
         className={buttonClass}
-        title="Bildirimler"
-        aria-label="Bildirimler"
+        title={n.title}
+        aria-label={n.title}
         aria-expanded={open}
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

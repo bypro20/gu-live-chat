@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { addonCategoryLabels, addonPlanBadges } from '@/lib/settings-i18n'
 import { useRouter } from 'next/navigation'
 import {
   Search, ShoppingCart, Check, X, AlertCircle, Star,
@@ -28,45 +30,26 @@ interface Addon {
   includedInPlan?: boolean
 }
 
-const PLAN_BADGE: Record<string, { label: string; className: string }> = {
-  FREE: { label: 'Ücretsiz', className: 'bg-gray-500/10 text-gray-600' },
-  STARTER: { label: 'Başlangıç', className: 'bg-blue-500/10 text-blue-600' },
-  PRO: { label: 'Profesyonel', className: 'bg-purple-500/10 text-purple-600' },
-  BUSINESS: { label: 'Kurumsal', className: 'bg-amber-500/10 text-amber-600' },
-}
+const CATEGORY_KEYS = ['ALL', 'SOCIAL', 'MARKETING', 'AI', 'ANALYTICS', 'CRM', 'SUPPORT', 'AUTOMATION', 'ECOMMERCE', 'CUSTOM'] as const
 
+const CATEGORY_ICONS: Record<string, typeof Grid3X3> = {
+  ALL: Grid3X3,
+  SOCIAL: Layers,
+  MARKETING: TrendingUp,
+  AI: Zap,
+  ANALYTICS: Crown,
+  CRM: Package,
+  SUPPORT: Shield,
+  AUTOMATION: Timer,
+  ECOMMERCE: ShoppingCart,
+  CUSTOM: Layers,
+}
 interface Purchase {
   addonId: string
   isActive: boolean
   config: string | null
   expiresAt: string | null
   cancelledAt: string | null
-}
-
-const CATEGORIES = [
-  { key: 'ALL', label: 'Tümü', icon: Grid3X3 },
-  { key: 'SOCIAL', label: 'Sosyal', icon: Layers },
-  { key: 'MARKETING', label: 'Pazarlama', icon: TrendingUp },
-  { key: 'AI', label: 'AI', icon: Zap },
-  { key: 'ANALYTICS', label: 'Analitik', icon: Crown },
-  { key: 'CRM', label: 'CRM', icon: Package },
-  { key: 'SUPPORT', label: 'Destek', icon: Shield },
-  { key: 'AUTOMATION', label: 'Otomasyon', icon: Timer },
-  { key: 'ECOMMERCE', label: 'E-ticaret', icon: ShoppingCart },
-  { key: 'CUSTOM', label: 'Özel', icon: Layers },
-]
-
-const CATEGORY_LABELS: Record<string, string> = {
-  SOCIAL: 'Sosyal',
-  MARKETING: 'Pazarlama',
-  AI: 'AI',
-  ANALYTICS: 'Analitik',
-  CRM: 'CRM',
-  SUPPORT: 'Destek',
-  AUTOMATION: 'Otomasyon',
-  ECOMMERCE: 'E-ticaret',
-  CUSTOM: 'Özel',
-  SECURITY: 'Güvenlik',
 }
 
 function StarRating({ rating = 5, size = 14 }: { rating?: number; size?: number }) {
@@ -84,6 +67,15 @@ function StarRating({ rating = 5, size = 14 }: { rating?: number; size?: number 
 }
 
 export default function AddonsPage() {
+  const i18n = useSettingsI18n()
+  const { addons: a, common: c } = i18n
+  const CATEGORY_LABELS = addonCategoryLabels(i18n)
+  const PLAN_BADGE = addonPlanBadges(i18n)
+  const CATEGORIES = CATEGORY_KEYS.map((key) => ({
+    key,
+    label: CATEGORY_LABELS[key] || key,
+    icon: CATEGORY_ICONS[key] || Layers,
+  }))
   const router = useRouter()
   const { activeWebsite, isLoading: websiteLoading } = useActiveWebsite()
   const [addons, setAddons] = useState<Addon[]>([])
@@ -178,7 +170,7 @@ export default function AddonsPage() {
           }
           return
         }
-        setPurchaseError(payData.error || 'Ödeme başlatılamadı')
+        setPurchaseError(payData.error || a.paymentStartFailed)
         return
       }
 
@@ -186,11 +178,11 @@ export default function AddonsPage() {
         setPurchases(prev => [...prev, { addonId: addon.id, isActive: true, config: null, expiresAt: data.purchase.expiresAt, cancelledAt: null }])
         setModalAddon(null)
       } else {
-        setPurchaseError(data.error || 'Satın alma başarısız')
+        setPurchaseError(data.error || a.purchaseFailed)
       }
     } catch (err) {
       console.error('Purchase failed:', err)
-      setPurchaseError('Bağlantı hatası')
+      setPurchaseError(c.connectionError)
     } finally {
       setPurchasingId(null)
     }
@@ -240,7 +232,7 @@ export default function AddonsPage() {
                 <div className="w-3 h-3 bg-[var(--primary)] rounded-full animate-pulse" />
               </div>
             </div>
-            <p className="text-sm text-[var(--muted-foreground)] animate-pulse">Mağaza yükleniyor...</p>
+            <p className="text-sm text-[var(--muted-foreground)] animate-pulse">{a.loading}</p>
           </div>
         </div>
       </div>
@@ -262,8 +254,8 @@ export default function AddonsPage() {
                   <Store size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-[var(--foreground)]">Eklenti Mağazası</h1>
-                  <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Platformunuzu güçlendirecek premium eklentiler</p>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-[var(--foreground)]">{a.title}</h1>
+                  <p className="text-sm text-[var(--muted-foreground)] mt-0.5">{a.subtitle}</p>
                 </div>
               </div>
             </div>
@@ -274,7 +266,7 @@ export default function AddonsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Eklenti ara..."
+                  placeholder={a.searchPlaceholder}
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] text-sm focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/50 outline-none transition placeholder:text-[var(--muted-foreground)]"
                 />
                 {searchQuery && (
@@ -285,7 +277,7 @@ export default function AddonsPage() {
               </div>
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--primary)]/10 border border-[var(--primary)]/20">
                 <Package size={14} className="text-[var(--primary)]" />
-                <span className="text-xs font-semibold text-[var(--primary)]">{purchases.length} aktif</span>
+                <span className="text-xs font-semibold text-[var(--primary)]">{a.activeCount(purchases.length)}</span>
               </div>
             </div>
           </div>
@@ -328,7 +320,7 @@ export default function AddonsPage() {
               <div className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                 <Check size={15} className="text-green-500" />
               </div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">Eklentilerim</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">{a.myAddons}</h2>
               <span className="px-2 py-0.5 text-[11px] font-medium bg-green-500/10 text-green-500 rounded-full">{purchasedAddons.length}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -355,13 +347,13 @@ export default function AddonsPage() {
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isCancelled ? (
-                              <span className="px-2 py-0.5 text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">İptal</span>
+                              <span className="px-2 py-0.5 text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">{a.cancelled}</span>
                             ) : isActive ? (
                               <span className="px-2 py-0.5 text-[10px] font-semibold bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center gap-1">
-                                <Check size={10} /> Aktif
+                                <Check size={10} /> {a.active}
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">Pasif</span>
+                              <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">{a.inactive}</span>
                             )}
                           </div>
                         </div>
@@ -370,7 +362,7 @@ export default function AddonsPage() {
                             onClick={() => router.push(`/settings/addons/${addon.id}`)}
                             className="px-3 py-1.5 text-xs font-medium bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg hover:bg-[var(--primary)]/20 transition flex items-center gap-1"
                           >
-                            <Settings size={12} /> Yönet
+                            <Settings size={12} /> {a.manage}
                           </button>
                           {!isCancelled && (
                             <button
@@ -382,12 +374,12 @@ export default function AddonsPage() {
                               }`}
                             >
                               {isActive ? <PowerOff size={12} /> : <Power size={12} />}
-                              {isActive ? 'Devre Dışı' : 'Aktifleştir'}
+                              {isActive ? a.disable : a.enable}
                             </button>
                           )}
                           {purchase?.expiresAt && (
                             <span className="text-[10px] text-[var(--muted-foreground)]">
-                              {new Date(purchase.expiresAt).toLocaleDateString('tr-TR')}
+                              {new Date(purchase.expiresAt).toLocaleDateString(i18n.dateLocale)}
                             </span>
                           )}
                         </div>
@@ -405,7 +397,7 @@ export default function AddonsPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">Öne Çıkan Eklentiler</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">{a.featured}</h2>
             </div>
             <div ref={featuredRef} className="flex gap-5 overflow-x-auto pb-4 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
               {featuredAddons.map(addon => (
@@ -416,7 +408,7 @@ export default function AddonsPage() {
                   <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent pointer-events-none" />
                   <div className="absolute top-4 right-4 z-10">
                     <span className="px-3 py-1 text-[11px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg flex items-center gap-1.5">
-                      <Sparkles size={12} /> Popüler
+                      <Sparkles size={12} /> {a.popular}
                     </span>
                   </div>
                   <div className="p-6 relative">
@@ -439,10 +431,10 @@ export default function AddonsPage() {
                       <div>
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-2xl font-bold text-[var(--foreground)]">
-                            {addon.price === 0 ? 'Ücretsiz' : `₺${(addon.price / 100).toLocaleString('tr-TR')}`}
+                            {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
                           </span>
                           {addon.price > 0 && (
-                             <span className="text-xs text-[var(--muted-foreground)]">/ay</span>
+                             <span className="text-xs text-[var(--muted-foreground)]">{a.perMonth}</span>
                            )}
                         </div>
                       </div>
@@ -450,7 +442,7 @@ export default function AddonsPage() {
                         onClick={() => setModalAddon(addon)}
                         className="px-5 py-2.5 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-[var(--primary)]/30 hover:shadow-xl hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-2"
                       >
-                        <ShoppingCart size={15} /> Hemen Satın Al
+                        <ShoppingCart size={15} /> {a.buyNow}
                       </button>
                     </div>
                   </div>
@@ -466,15 +458,15 @@ export default function AddonsPage() {
             <div className="flex items-center gap-2">
               <Grid3X3 size={16} className="text-[var(--muted-foreground)]" />
               <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                {activeCategory === 'ALL' ? 'Tüm Eklentiler' : CATEGORIES.find(c => c.key === activeCategory)?.label}
+                {activeCategory === 'ALL' ? a.allAddons : CATEGORIES.find(cat => cat.key === activeCategory)?.label}
               </h2>
               {searchQuery && (
                 <span className="text-sm text-[var(--muted-foreground)]">
-                  &quot;{searchQuery}&quot; için {filteredAddons.length} sonuç
+                  {a.resultsFor(searchQuery, filteredAddons.length)}
                 </span>
               )}
             </div>
-            <span className="text-xs text-[var(--muted-foreground)]">{filteredAddons.length} eklenti</span>
+            <span className="text-xs text-[var(--muted-foreground)]">{a.addonCount(filteredAddons.length)}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -494,7 +486,7 @@ export default function AddonsPage() {
                   {addon.isFeatured && (
                     <div className="absolute top-4 right-4 z-10">
                       <span className="px-2.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-md flex items-center gap-1">
-                        <Sparkles size={10} /> Öne Çıkan
+                        <Sparkles size={10} /> {a.featuredBadge}
                       </span>
                     </div>
                   )}
@@ -511,7 +503,7 @@ export default function AddonsPage() {
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         {planBadge && (
                           <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${planBadge.className}`}>
-                            {isPlanIncluded ? `✓ ${planBadge.label} dahil` : `${planBadge.label}+`}
+                            {isPlanIncluded ? a.planIncluded(planBadge.label) : a.planRequired(planBadge.label)}
                           </span>
                         )}
                         {addon.category && (
@@ -525,7 +517,7 @@ export default function AddonsPage() {
                     {isLocked && (
                       <div className="flex items-center gap-1.5 mb-2 text-[10px] text-amber-600 dark:text-amber-400">
                         <AlertCircle size={12} />
-                        <span>Plan yükseltme veya eklenti satın alma gerekli</span>
+                        <span>{a.planUpgradeRequired}</span>
                       </div>
                     )}
 
@@ -542,18 +534,18 @@ export default function AddonsPage() {
                       <div>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-[var(--foreground)]">
-                            {addon.price === 0 ? 'Ücretsiz' : `₺${(addon.price / 100).toLocaleString('tr-TR')}`}
+                            {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
                           </span>
                           {addon.price > 0 && (
-                            <span className="text-xs text-[var(--muted-foreground)]">/{addon.purchaseType === 'YEARLY' ? 'yıl' : 'ay'}</span>
+                            <span className="text-xs text-[var(--muted-foreground)]">/{addon.purchaseType === 'YEARLY' ? a.perYear.replace('/', '') : a.perMonth.replace('/', '')}</span>
                           )}
                           {addon.isFeatured && addon.price > 0 && (
-                            <span className="text-[10px] text-[var(--success)] font-medium ml-1">14 gün para iade garantisi</span>
+                            <span className="text-[10px] text-[var(--success)] font-medium ml-1">{a.refundGuarantee}</span>
                           )}
                         </div>
                         {addon.price > 0 && (
                           <p className="text-[10px] text-green-600 dark:text-green-400 mt-0.5 flex items-center gap-1">
-                            <Check size={10} /> 14 gün para iade garantisi
+                            <Check size={10} /> {a.refundGuarantee}
                           </p>
                         )}
                       </div>
@@ -562,11 +554,11 @@ export default function AddonsPage() {
                         <div className="flex items-center gap-2">
                           {isActive ? (
                             <span className="px-3 py-1.5 text-[11px] font-semibold bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg flex items-center gap-1">
-                              <Check size={12} /> Satın Alındı • Aktif
+                              <Check size={12} /> {a.purchasedActive}
                             </span>
                           ) : (
                             <span className="px-3 py-1.5 text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg flex items-center gap-1">
-                              <AlertCircle size={12} /> Satın Alındı • Pasif
+                              <AlertCircle size={12} /> {a.purchasedInactive}
                             </span>
                           )}
                           <button
@@ -585,7 +577,7 @@ export default function AddonsPage() {
                           {purchasingId === addon.id ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           ) : (
-                            <><Check size={14} /> Ücretsiz</>
+                            <><Check size={14} /> {a.free}</>
                           )}
                         </button>
                       ) : (
@@ -593,7 +585,7 @@ export default function AddonsPage() {
                           onClick={() => setModalAddon(addon)}
                           className="px-4 py-2 bg-gradient-to-r from-[var(--primary)] to-blue-500 hover:from-[var(--primary-hover)] hover:to-blue-600 text-white text-sm font-medium rounded-xl shadow-md shadow-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/40 transition-all duration-200 flex items-center gap-1.5"
                         >
-                          <ShoppingCart size={14} /> Satın Al
+                          <ShoppingCart size={14} /> {a.buy}
                         </button>
                       )}
                     </div>
@@ -610,18 +602,16 @@ export default function AddonsPage() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--primary)]/20 to-blue-500/20 flex items-center justify-center text-4xl mb-5 shadow-inner">
                   <Package size={36} className="text-[var(--primary)]/60" />
                 </div>
-                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">Eklenti bulunamadı</h3>
+                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">{a.notFound}</h3>
                 <p className="text-sm text-[var(--muted-foreground)] max-w-md">
-                  {searchQuery
-                    ? `"${searchQuery}" ile eşleşen bir eklenti bulamadık. Farklı bir arama terimi deneyin.`
-                    : 'Bu kategoride henüz bir eklenti bulunmuyor. Farklı bir kategori seçmeyi deneyin.'}
+                  {searchQuery ? a.notFoundSearch(searchQuery) : a.notFoundCategory}
                 </p>
                 {searchQuery && (
                   <button
                     onClick={() => { setSearchQuery(''); setActiveCategory('ALL') }}
                     className="mt-4 px-4 py-2 text-sm font-medium bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl hover:bg-[var(--primary)]/20 transition"
                   >
-                    Tümünü Göster
+                    {a.showAll}
                   </button>
                 )}
               </div>
@@ -662,20 +652,20 @@ export default function AddonsPage() {
 
                 <div className="rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-blue-500/5 border border-[var(--border)] p-4 mb-5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--muted-foreground)]">Aylık Ücret</span>
+                    <span className="text-sm text-[var(--muted-foreground)]">{a.monthlyFee}</span>
                     <div className="text-right">
                       <span className="text-2xl font-bold text-[var(--foreground)]">
-                        {modalAddon.price === 0 ? 'Ücretsiz' : `₺${(modalAddon.price / 100).toLocaleString('tr-TR')}`}
+                        {modalAddon.price === 0 ? a.free : `₺${(modalAddon.price / 100).toLocaleString(i18n.dateLocale)}`}
                       </span>
                       {modalAddon.price > 0 && (
-                        <span className="text-sm text-[var(--muted-foreground)]">/{modalAddon.purchaseType === 'YEARLY' ? 'yıl' : 'ay'}</span>
+                        <span className="text-sm text-[var(--muted-foreground)]">/{modalAddon.purchaseType === 'YEARLY' ? a.perYear.replace('/', '') : a.perMonth.replace('/', '')}</span>
                       )}
                     </div>
                   </div>
                   {modalAddon.price > 0 && (
                     <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-[var(--border)]">
                       <Check size={12} className="text-green-500" />
-                      <span className="text-xs text-green-600 dark:text-green-400">14 gün para iade garantisi</span>
+                      <span className="text-xs text-green-600 dark:text-green-400">{a.refundGuarantee}</span>
                     </div>
                   )}
                 </div>
@@ -685,7 +675,7 @@ export default function AddonsPage() {
                     onClick={() => setModalAddon(null)}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--primary-light)] text-sm font-medium transition"
                   >
-                    İptal
+                    {c.cancel}
                   </button>
                   <button
                     onClick={() => handlePurchase(modalAddon)}
@@ -695,7 +685,7 @@ export default function AddonsPage() {
                     {purchasingId === modalAddon.id ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <><ArrowRight size={16} /> Ödemeye Geç</>
+                      <><ArrowRight size={16} /> {a.proceedToPayment}</>
                     )}
                   </button>
                 </div>

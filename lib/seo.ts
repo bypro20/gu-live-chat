@@ -1,36 +1,17 @@
 import type { Metadata } from 'next'
 import { SITE_LEGAL } from '@/lib/site-legal'
+import { SITE_DOMAIN, SITE_NAME } from '@/lib/site-config'
+import { mergePageKeywords, SEO_KEYWORDS_TR } from '@/lib/seo-keywords'
 import { trialSeoHome, trialSeoPricing, TRIAL_DAYS } from '@/lib/trial-config'
 
 export const SITE_URL = SITE_LEGAL.url.replace(/\/$/, '')
 
-/** Ana hedef anahtar kelimeler — Türkçe canlı destek SaaS */
-export const SEO_KEYWORDS = [
-  'canlı destek',
-  'canlı destek yazılımı',
-  'live chat',
-  'live chat yazılımı',
-  'chatbot',
-  'müşteri hizmetleri yazılımı',
-  'müşteri destek platformu',
-  'canlı sohbet widget',
-  'whatsapp canlı destek',
-  'whatsapp müşteri hizmetleri',
-  'ziyaretçi takibi',
-  'AI müşteri desteği',
-  'birleşik inbox',
-  'Gu Chat',
-  'guchat',
-  'Türk canlı destek',
-  'e-ticaret canlı destek',
-  'online müşteri hizmetleri',
-] as const
+export { SEO_KEYWORDS_TR as SEO_KEYWORDS }
 
 /** Google Search Console doğrulama — env ile override edilebilir */
 export const GOOGLE_SITE_VERIFICATION_CODE =
   process.env.GOOGLE_SITE_VERIFICATION || '6rvC_wtUp9XHeIa0nxjGglIILkJjEW440tlaGqFbXVQ'
 
-/** Google/Bing doğrulama meta — env'den otomatik */
 export function getSiteVerificationMetadata(): Pick<Metadata, 'verification'> {
   const google = GOOGLE_SITE_VERIFICATION_CODE
   const bing = process.env.BING_SITE_VERIFICATION
@@ -51,6 +32,9 @@ export type PageMeta = {
   path: string
   keywords?: readonly string[]
   ogImage?: string
+  /** Sayfa başlığında marka öne alınsın (landing SEO sayfaları) */
+  keywordFirst?: boolean
+  locale?: 'tr' | 'en'
 }
 
 export function buildMetadata({
@@ -59,28 +43,42 @@ export function buildMetadata({
   path,
   keywords = [],
   ogImage,
+  keywordFirst = false,
+  locale = 'tr',
 }: PageMeta): Metadata {
   const url = `${SITE_URL}${path}`
-  const fullTitle = path === '' ? `${SITE_LEGAL.name} — ${title}` : title
-  const allKeywords = [...new Set([...SEO_KEYWORDS.slice(0, 8), ...keywords])]
+  const brand = SITE_NAME
 
+  const fullTitle =
+    path === ''
+      ? `${brand} — ${title}`
+      : keywordFirst
+        ? `${title} | ${brand}`
+        : `${title} | ${brand}`
+
+  const allKeywords = mergePageKeywords(locale, keywords)
   const resolvedOg = ogImage ?? DEFAULT_OG_IMAGE
   const ogImageUrl = resolvedOg.startsWith('http') ? resolvedOg : `${SITE_URL}${resolvedOg}`
 
   return {
-    title: path === '' ? { default: fullTitle, template: `%s | ${SITE_LEGAL.name}` } : title,
+    title: path === '' ? { default: fullTitle, template: `%s | ${brand}` } : fullTitle,
     description,
     keywords: allKeywords,
-    alternates: { canonical: url },
+    applicationName: brand,
+    alternates: {
+      canonical: url,
+      types: { 'application/rss+xml': `${SITE_URL}/blog` },
+    },
     ...getSiteVerificationMetadata(),
     openGraph: {
       type: 'website',
-      locale: 'tr_TR',
+      locale: locale === 'en' ? 'en_US' : 'tr_TR',
+      alternateLocale: locale === 'en' ? ['tr_TR'] : ['en_US'],
       url,
-      siteName: SITE_LEGAL.name,
+      siteName: brand,
       title: fullTitle,
       description,
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: fullTitle }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${brand} — ${title}` }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -88,98 +86,128 @@ export function buildMetadata({
       description,
       images: [ogImageUrl],
     },
-    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    category: 'technology',
   }
 }
 
-/** Varsayılan OG görseli — app/opengraph-image.tsx */
 export const DEFAULT_OG_IMAGE = '/og-image.png'
 
 export const PAGE_SEO = {
   home: {
-    title: SITE_LEGAL.tagline,
+    title: 'Canlı Destek, Live Chat & AI Chatbot Platformu',
     description:
-      'Gu Chat — Türkiye\'nin canlı destek ve chatbot platformu. Web sitenize 30 saniyede canlı sohbet ekleyin, WhatsApp ve AI ile müşterilerinize anında ulaşın. ' + trialSeoHome(),
+      `${SITE_NAME} (${SITE_DOMAIN}) — web sitenize 30 saniyede canlı sohbet ekleyin. WhatsApp, AI chatbot ve birleşik inbox. KVKK uyumlu, iyzico güvenli ödeme. ${trialSeoHome()}`,
     path: '',
-    keywords: ['canlı destek yazılımı', 'live chat türkiye', 'ücretsiz canlı destek'],
+    keywords: ['canlı destek yazılımı', 'live chat türkiye', 'gulivechat', 'ücretsiz canlı destek'],
   },
   features: {
-    title: 'Canlı Destek Özellikleri — AI, Widget, Inbox & Entegrasyonlar',
+    title: 'Canlı Destek Özellikleri',
     description:
-      'Gu Chat özellikleri: canlı sohbet widget, AI chatbot, WhatsApp entegrasyonu, ziyaretçi takibi, ekran izleme, 50+ dil çeviri ve birleşik gelen kutusu. Müşteri hizmetlerinizi tek platformda yönetin.',
+      `${SITE_NAME} özellikleri: canlı sohbet widget, AI chatbot, WhatsApp entegrasyonu, ziyaretçi takibi, ekran paylaşımı, 50+ dil çeviri ve birleşik gelen kutusu. Müşteri hizmetlerinizi tek panelden yönetin.`,
     path: '/features',
     keywords: ['canlı destek özellikleri', 'chatbot özellikleri', 'müşteri destek araçları'],
+    keywordFirst: true,
   },
   pricing: {
-    title: 'Fiyatlandırma — Ücretsiz Canlı Destek Paketi ile Başlayın',
+    title: 'Fiyatlandırma — Ücretsiz Paket ile Başlayın',
     description:
-      'Gu Chat fiyatları: Ücretsiz, Başlangıç (₺1.790/ay), Profesyonel (₺3.790/ay) ve Kurumsal paketler. Canlı destek, chatbot ve AI — ihtiyacınıza göre ölçeklenin. ' + trialSeoPricing(),
+      `${SITE_NAME} fiyatları: Ücretsiz, Başlangıç, Profesyonel ve Kurumsal paketler. Canlı destek, chatbot ve AI — ihtiyacınıza göre ölçeklenin. ${trialSeoPricing()}`,
     path: '/pricing',
-    keywords: ['canlı destek fiyat', 'live chat ücret', 'chatbot fiyatlandırma'],
+    keywords: ['canlı destek fiyat', 'live chat ücret', 'gulivechat fiyat'],
+    keywordFirst: true,
   },
   urunler: {
-    title: 'Ürünler — Abonelik Paketleri & Eklentiler | Satın Al',
+    title: 'Abonelik Paketleri & Eklentiler',
     description:
-      'Gu Chat dijital abonelik paketleri ve eklentileri. Başlangıç (₺1.790/ay), Profesyonel (₺3.790/ay), WhatsApp kanalı, AI asistan ve daha fazlası — iyzico ile güvenli ödeme, anında dijital teslimat.',
+      `${SITE_NAME} dijital abonelik ve eklentileri. WhatsApp kanalı, AI asistan, white-label ve daha fazlası — iyzico ile güvenli ödeme, anında dijital teslimat.`,
     path: '/urunler',
-    keywords: ['canlı destek abonelik', 'saas satın al', 'gu chat paketleri'],
+    keywords: ['canlı destek abonelik', 'saas satın al', 'gulivechat paketleri'],
+    keywordFirst: true,
   },
   ai: {
-    title: 'AI Müşteri Desteği — Yapay Zeka Chatbot & Otomatik Yanıt',
+    title: 'AI Müşteri Desteği & Yapay Zeka Chatbot',
     description:
-      'Gu Chat AI asistanı tekrarlayan müşteri sorularını 7/24 otomatik yanıtlar. GPT/Gemini destekli chatbot, bilgi bankası entegrasyonu ve akıllı temsilci yönlendirme.',
+      `${SITE_NAME} AI asistanı tekrarlayan müşteri sorularını 7/24 yanıtlar. GPT/Gemini destekli chatbot, bilgi bankası entegrasyonu ve akıllı temsilci yönlendirme.`,
     path: '/ai',
     keywords: ['AI müşteri hizmetleri', 'yapay zeka chatbot', 'otomatik müşteri desteği'],
+    keywordFirst: true,
   },
   integrations: {
-    title: 'Entegrasyonlar — WhatsApp, E-ticaret, API & Webhook',
+    title: 'Entegrasyonlar — WhatsApp, E-ticaret, API',
     description:
-      'Gu Chat entegrasyonları: Shopify, WooCommerce, İkas, Ticimax, IdeaSoft, WhatsApp, Messenger, Telegram, Slack, Zapier, REST API ve webhook. Tüm e-ticaret platformlarında çalışır.',
+      `${SITE_NAME} entegrasyonları: Shopify, WooCommerce, İkas, Ticimax, IdeaSoft, WhatsApp, Messenger, Telegram, Slack, Zapier, REST API ve webhook.`,
     path: '/integrations',
     keywords: [
       'whatsapp entegrasyonu',
       'shopify canlı destek',
       'woocommerce chatbot',
       'ikas entegrasyonu',
-      'ticimax canlı destek',
       'e-ticaret müşteri hizmetleri',
     ],
+    keywordFirst: true,
   },
   blog: {
-    title: 'Blog — Canlı Destek, Chatbot & Müşteri Deneyimi Rehberleri',
+    title: 'Blog — Canlı Destek & Müşteri Deneyimi Rehberleri',
     description:
-      'Gu Chat blog: canlı destek ipuçları, chatbot kurulum rehberleri, e-ticaret müşteri hizmetleri ve AI destek stratejileri. Satış ve memnuniyeti artırın.',
+      `${SITE_NAME} blog: canlı destek ipuçları, chatbot kurulum rehberleri, e-ticaret müşteri hizmetleri ve AI destek stratejileri.`,
     path: '/blog',
-    keywords: ['canlı destek rehberi', 'müşteri deneyimi blog'],
+    keywords: ['canlı destek rehberi', 'müşteri deneyimi blog', 'gulivechat blog'],
   },
   contact: {
-    title: 'İletişim — Demo Talep & Satış',
+    title: 'İletişim — Demo & Satış',
     description:
-      'Gu Chat ekibiyle iletişime geçin. Demo talep edin, kurumsal fiyatlandırma ve SLA seçeneklerini öğrenin. 7/24 destek.',
+      `${SITE_NAME} ekibiyle iletişime geçin. Demo talep edin, kurumsal fiyatlandırma ve SLA seçeneklerini öğrenin.`,
     path: '/contact',
+    keywords: ['gu live chat iletişim', 'canlı destek demo'],
   },
   canliDestek: {
-    title: 'Canlı Destek Yazılımı — Web Sitenize Anında Canlı Sohbet',
+    title: 'Canlı Destek Yazılımı — Web Sitenize Anında Sohbet',
     description:
-      'Gu Chat canlı destek yazılımı ile ziyaretçilerinize gerçek zamanlı yanıt verin. Widget kurulumu 30 saniye, proaktif mesajlar, ziyaretçi takibi ve AI destek. Türkiye\'de üretildi, KVKK uyumlu.',
+      `${SITE_NAME} ile ziyaretçilerinize gerçek zamanlı yanıt verin. Widget kurulumu 30 saniye, proaktif mesajlar, ziyaretçi takibi ve AI destek. KVKK uyumlu.`,
     path: '/canli-destek',
     keywords: ['canlı destek yazılımı', 'canlı destek programı', 'web sitesi canlı sohbet', 'live chat türkiye'],
+    keywordFirst: true,
   },
   chatbot: {
     title: 'Chatbot Yazılımı — 7/24 Otomatik Müşteri Hizmetleri',
     description:
-      'Gu Chat chatbot ile tekrarlayan soruları otomatik yanıtlayın. Görsel akış editörü, AI destekli yanıtlar, bilgi bankası entegrasyonu. Temsilci yükünü %60\'a kadar azaltın.',
+      `${SITE_NAME} chatbot ile tekrarlayan soruları otomatik yanıtlayın. Görsel akış editörü, AI yanıtlar ve bilgi bankası. Temsilci yükünü azaltın.`,
     path: '/chatbot',
-    keywords: ['chatbot yazılımı', 'müşteri hizmetleri chatbot', 'otomatik yanıt sistemi', 'AI chatbot türkiye'],
+    keywords: ['chatbot yazılımı', 'müşteri hizmetleri chatbot', 'AI chatbot türkiye'],
+    keywordFirst: true,
   },
   whatsappDestek: {
-    title: 'WhatsApp Canlı Destek — Müşterilerinize WhatsApp\'tan Ulaşın',
+    title: 'WhatsApp Canlı Destek — Tek Inbox\'ta Yönetin',
     description:
-      'Gu Chat WhatsApp Business entegrasyonu ile WhatsApp mesajlarını tek inbox\'ta yönetin. Canlı destek, chatbot ve ekip ataması — hepsi bir arada.',
+      `${SITE_NAME} WhatsApp Business entegrasyonu ile mesajları tek gelen kutusunda yönetin. Canlı destek, chatbot ve ekip ataması.`,
     path: '/whatsapp-destek',
     keywords: ['whatsapp canlı destek', 'whatsapp müşteri hizmetleri', 'whatsapp business destek'],
+    keywordFirst: true,
+  },
+  basla: {
+    title: 'Ücretsiz Başlayın — Canlı Destek & Chatbot',
+    description:
+      `${SITE_NAME} ile ücretsiz kayıt olun. Canlı sohbet widget, AI chatbot ve WhatsApp — tek platformda. Kredi kartı gerekmez.`,
+    path: '/basla',
+    keywords: ['ücretsiz canlı destek', 'gu live chat kayıt', 'gulivechat ücretsiz'],
+    keywordFirst: true,
   },
 } as const
+
+function socialSameAs(): string[] {
+  const s = SITE_LEGAL.social
+  return [s.instagram, s.linkedin, s.youtube, s.x].filter(Boolean)
+}
 
 /** Organization + WebSite JSON-LD */
 export function organizationJsonLd() {
@@ -194,22 +222,29 @@ export function organizationJsonLd() {
         url: SITE_URL,
         email: SITE_LEGAL.email,
         telephone: SITE_LEGAL.phone,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${SITE_URL}/icon.png`,
+          width: 512,
+          height: 512,
+        },
         address: {
           '@type': 'PostalAddress',
           addressLocality: 'İstanbul',
           addressCountry: 'TR',
           streetAddress: SITE_LEGAL.address,
         },
-        sameAs: [],
+        ...(socialSameAs().length ? { sameAs: socialSameAs() } : {}),
       },
       {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
         url: SITE_URL,
         name: SITE_LEGAL.name,
+        alternateName: [SITE_DOMAIN, 'gulivechat', 'Gu Live Chat'],
         description: SITE_LEGAL.metaDescription,
         publisher: { '@id': `${SITE_URL}/#organization` },
-        inLanguage: 'tr-TR',
+        inLanguage: ['tr-TR', 'en-US'],
         potentialAction: {
           '@type': 'SearchAction',
           target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/help?q={search_term_string}` },
@@ -220,29 +255,38 @@ export function organizationJsonLd() {
   }
 }
 
-/** SoftwareApplication JSON-LD for product pages */
+/** SoftwareApplication JSON-LD — ana ürün */
 export function softwareApplicationJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
+    '@id': `${SITE_URL}/#software`,
     name: SITE_LEGAL.name,
     applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web',
+    applicationSubCategory: 'Customer Support Software',
+    operatingSystem: 'Web, Android',
+    browserRequirements: 'Requires JavaScript',
     offers: {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'TRY',
-      description: `Ücretsiz paket mevcut — ${TRIAL_DAYS} gün deneme`,
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '127',
-      bestRating: '5',
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/register`,
+      description: `Ücretsiz paket — ${TRIAL_DAYS} gün PRO deneme`,
     },
     description: SITE_LEGAL.metaDescription,
     url: SITE_URL,
+    image: `${SITE_URL}/og-image.png`,
     inLanguage: 'tr-TR',
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    featureList: [
+      'Canlı sohbet widget',
+      'AI chatbot',
+      'WhatsApp entegrasyonu',
+      'Birleşik inbox',
+      'Ziyaretçi takibi',
+      'KVKK uyumu',
+    ],
   }
 }
 
@@ -270,11 +314,12 @@ export function articleJsonLd(article: {
     headline: article.title,
     description: article.description,
     datePublished: article.datePublished,
-    author: { '@type': 'Organization', name: SITE_LEGAL.name },
+    author: { '@type': 'Organization', name: SITE_LEGAL.name, url: SITE_URL },
     publisher: {
       '@type': 'Organization',
       name: SITE_LEGAL.name,
       url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon.png` },
     },
     mainEntityOfPage: `${SITE_URL}${article.path}`,
     inLanguage: 'tr-TR',
@@ -291,5 +336,20 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
       name: item.name,
       item: `${SITE_URL}${item.path}`,
     })),
+  }
+}
+
+/** Landing sayfaları — WebPage + breadcrumb */
+export function webPageJsonLd(page: { name: string; description: string; path: string }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${SITE_URL}${page.path}#webpage`,
+    url: `${SITE_URL}${page.path}`,
+    name: page.name,
+    description: page.description,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    about: { '@id': `${SITE_URL}/#software` },
+    inLanguage: 'tr-TR',
   }
 }

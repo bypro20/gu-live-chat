@@ -1,34 +1,60 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="native-app native-app-android">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Gu Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Gu Live Chat</title>
   <style>
-    body {
+    * { box-sizing: border-box; }
+    html, body {
       margin: 0;
       min-height: 100dvh;
+      background: #0B1220;
+      overflow: hidden;
+    }
+    body {
       display: grid;
       place-items: center;
       font-family: system-ui, sans-serif;
-      background: #0B1220;
       color: #fff;
     }
+    .wrap { text-align: center; padding: 24px; }
+    .logo {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 800;
+    }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { margin: 0; font-size: 13px; color: #94A3B8; }
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.15);
-      border-top-color: #2563EB;
+      width: 36px;
+      height: 36px;
+      margin: 20px auto 0;
+      border: 3px solid rgba(255,255,255,0.12);
+      border-top-color: #3B82F6;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="spinner" aria-label="Yükleniyor"></div>
+  <div class="wrap">
+    <div class="logo">G</div>
+    <h1>Gu Live Chat</h1>
+    <p>Yükleniyor…</p>
+    <div class="spinner" aria-hidden="true"></div>
+  </div>
   <script>
-    location.replace('https://guchat.org/login?app=android')
+    try { localStorage.setItem('gu-native-app', 'android'); } catch (e) {}
+    location.replace('https://gulivechat.com/login?app=android')
   </script>
 </body>
 </html>

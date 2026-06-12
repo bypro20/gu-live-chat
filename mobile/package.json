@@ -2,12 +2,12 @@
   "name": "guchat-mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "Gu Chat Android uygulaması (Capacitor)",
+  "description": "Gu Live Chat Android uygulaması (Capacitor)",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",
-    "build:apk": "cd android && ./gradlew assembleRelease",
-    "build:apk:debug": "cd android && ./gradlew assembleDebug",
+    "build:apk": "bash scripts/build-apk.sh",
+    "build:apk:debug": "bash scripts/build-apk.sh",
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {

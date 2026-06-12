@@ -3,32 +3,7 @@
 import Link from 'next/link'
 import type { PlanFeature } from '@/lib/plan-shared'
 import { FEATURE_ADDON_SLUG, MIN_PLAN_FOR_FEATURE } from '@/lib/plan-shared'
-
-const FEATURE_TITLES: Partial<Record<PlanFeature, string>> = {
-  chatbot: 'Chatbot',
-  knowledgeBase: 'Bilgi Bankası',
-  ticketing: 'Bilet Sistemi',
-  webhooks: 'Webhook',
-  workflows: 'Otomasyon',
-  campaigns: 'Kampanyalar',
-  cannedResponses: 'Hazır Cevaplar',
-  statusPage: 'Durum Sayfası',
-  apiAccess: 'API Erişimi',
-  advancedAnalytics: 'Gelişmiş Analitik',
-  visitorTracking: 'Ziyaretçi Takibi',
-  aiAssistant: 'AI Sohbet Asistanı',
-  overlayAI: 'Ekran İzleme',
-  multiChannel: 'Çoklu Kanal',
-  autoTranslate: 'Otomatik Çeviri',
-  ratings: 'CSAT Puanlama',
-  proactiveMessages: 'Hedefli Mesajlar',
-}
-
-const PLAN_NAMES = {
-  STARTER: 'Başlangıç',
-  PRO: 'Profesyonel',
-  BUSINESS: 'Kurumsal',
-} as const
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 
 interface PlanUpgradePromptProps {
   feature: PlanFeature
@@ -36,9 +11,10 @@ interface PlanUpgradePromptProps {
 }
 
 export default function PlanUpgradePrompt({ feature, description }: PlanUpgradePromptProps) {
+  const { planUpgrade: t } = useSettingsI18n()
   const requiredPlan = MIN_PLAN_FOR_FEATURE[feature] || 'PRO'
-  const title = FEATURE_TITLES[feature] || feature
-  const planName = PLAN_NAMES[requiredPlan as keyof typeof PLAN_NAMES] || requiredPlan
+  const title = t.features[feature] || feature
+  const planName = t.plans[requiredPlan as keyof typeof t.plans] || requiredPlan
 
   return (
     <div className="flex-1 flex items-center justify-center p-6 min-h-[320px]">
@@ -50,8 +26,7 @@ export default function PlanUpgradePrompt({ feature, description }: PlanUpgradeP
         </div>
         <h2 className="text-xl font-bold mb-2">{title}</h2>
         <p className="text-muted-foreground mb-4">
-          {description ||
-            `Bu özellik ${planName} paketinde ve üzerinde kullanılabilir. Planınızı yükselterek hemen kullanmaya başlayın.`}
+          {description || t.defaultDescription(planName)}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
@@ -61,14 +36,14 @@ export default function PlanUpgradePrompt({ feature, description }: PlanUpgradeP
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-            Paketi Yükselt
+            {t.upgradeButton}
           </Link>
           {FEATURE_ADDON_SLUG[feature] && (
             <Link
               href="/settings/addons"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] text-sm font-medium hover:bg-[var(--primary-light)]"
             >
-              Eklenti Mağazası
+              {t.addonStore}
             </Link>
           )}
         </div>

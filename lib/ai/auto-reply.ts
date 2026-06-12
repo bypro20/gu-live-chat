@@ -9,6 +9,7 @@ import { websiteHasAiAssistant } from '../plan-features'
 import { isAdminOwnedWebsite } from '../admin-website'
 import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
+import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 20
 
@@ -141,6 +142,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       systemPrompt: aiConfig.systemPrompt || undefined,
       visitorContext,
       dbConfig,
+      plan: conversation.website.plan as PlanType,
       websiteId: params.websiteDbId,
       conversationId: params.conversationId,
     })

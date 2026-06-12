@@ -17,7 +17,7 @@ export async function GET() {
       {
         error: 'Gelen kutusu kurulamadı',
         detail,
-        hint: 'curl -H "Authorization: Bearer CRON_SECRET" https://guchat.org/api/cron/seed-admin',
+        hint: 'curl -H "Authorization: Bearer CRON_SECRET" https://gulivechat.com/api/cron/seed-admin',
       },
       { status: 500 }
     )

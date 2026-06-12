@@ -2,17 +2,18 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'org.guchat.app',
-  appName: 'Gu Chat',
+  appName: 'Gu Live Chat',
   webDir: 'www',
+  // Uzak URL yok — önce yerel kabuk, sonra gulivechat.com (tarayıcı adres çubuğu asla görünmez)
   server: {
-    // Canlı panel — güncellemeler otomatik yansır
-    url: 'https://guchat.org/login?app=android',
     cleartext: false,
     androidScheme: 'https',
+    allowNavigation: ['gulivechat.com', '*.gulivechat.com', 'www.gulivechat.com'],
   },
   android: {
     allowMixedContent: false,
     backgroundColor: '#0B1220',
+    appendUserAgent: 'GuLiveChatApp/1.0',
     buildOptions: {
       keystorePath: undefined,
       keystoreAlias: undefined,

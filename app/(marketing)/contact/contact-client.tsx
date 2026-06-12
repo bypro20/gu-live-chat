@@ -7,6 +7,7 @@ import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { useToast } from '@/lib/toast'
 import { SITE_LEGAL } from '@/lib/site-legal'
 import { trackLead } from '@/lib/marketing-events'
+import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { Mail, MessageSquare, Building2, MapPin, Phone, Clock } from 'lucide-react'
 
 declare global {
@@ -26,15 +27,12 @@ function openLiveChat() {
 export function ContactPageClient() {
   const { toast } = useToast()
   const searchParams = useSearchParams()
-  const defaultSubject = searchParams.get('konu') === 'demo' ? 'Demo Talebi' : 'Genel Bilgi'
+  const c = useMarketingPages().contact
+  const defaultSubject = searchParams.get('konu') === 'demo' ? c.subjects.demo : c.subjects.general
   const [loading, setLoading] = useState(false)
   const [subject, setSubject] = useState(defaultSubject)
 
-  function focusFormWithSubject(nextSubject: string) {
-    setSubject(nextSubject)
-    document.getElementById('contact-subject')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    setTimeout(() => document.getElementById('contact-name')?.focus(), 300)
-  }
+  const subjectOptions = [c.subjects.general, c.subjects.demo, c.subjects.enterprise, c.subjects.support]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -53,18 +51,19 @@ export function ContactPageClient() {
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Gönderilemedi')
+      if (!res.ok) throw new Error(data.error || c.sendError)
       trackLead({ subject: String(fd.get('subject') ?? 'contact') })
       toast({
-        title: 'Mesajınız alındı',
-        description: 'En kısa sürede size dönüş yapacağız.',
+        title: c.toastSuccessTitle,
+        description: c.toastSuccessDesc,
         variant: 'success',
       })
       form.reset()
+      setSubject(c.subjects.general)
     } catch (err) {
       toast({
-        title: 'Gönderilemedi',
-        description: err instanceof Error ? err.message : 'Bir hata oluştu',
+        title: c.toastErrorTitle,
+        description: err instanceof Error ? err.message : c.sendError,
         variant: 'error',
       })
     } finally {
@@ -75,8 +74,8 @@ export function ContactPageClient() {
   function handleLiveChat() {
     if (!openLiveChat()) {
       toast({
-        title: 'Canlı destek',
-        description: 'Sağ alttaki sohbet balonunu kullanarak bize ulaşabilirsiniz.',
+        title: c.toastLiveChatTitle,
+        description: c.toastLiveChatDesc,
         variant: 'default',
       })
     }
@@ -87,11 +86,9 @@ export function ContactPageClient() {
   return (
     <MarketingPageShell>
       <div className="mb-10">
-        <p className="section-label mb-4">İletişim</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Bize ulaşın</h1>
-        <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-          Sorularınız, demo talepleri veya kurumsal çözümler için ekibimizle iletişime geçin.
-        </p>
+        <p className="section-label mb-4">{c.badge}</p>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{c.title}</h1>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl">{c.subtitle}</p>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8 lg:gap-10">
@@ -104,9 +101,9 @@ export function ContactPageClient() {
               <Mail className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">E-posta</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{c.email}</p>
               <p className="text-sm font-medium mt-1 text-foreground">{SITE_LEGAL.email}</p>
-              <p className="text-xs text-muted-foreground mt-1">24 saat içinde yanıt</p>
+              <p className="text-xs text-muted-foreground mt-1">{c.emailNote}</p>
             </div>
           </a>
 
@@ -119,24 +116,25 @@ export function ContactPageClient() {
               <MessageSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Canlı Destek</p>
-              <p className="text-sm font-medium mt-1 text-foreground">{siteHost} üzerinden</p>
-              <p className="text-xs text-primary mt-1">Sohbeti aç →</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{c.liveChat}</p>
+              <p className="text-sm font-medium mt-1 text-foreground">{siteHost}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{c.liveChatNote}</p>
+              <p className="text-xs text-primary mt-1">{c.liveChatAction} →</p>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => focusFormWithSubject('Kurumsal Çözüm')}
+            onClick={() => focusFormWithSubject(c.subjects.enterprise)}
             className="surface p-5 flex items-start gap-4 hover:border-primary/30 transition-colors group w-full text-left"
           >
             <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0 group-hover:bg-violet-500/15 transition-colors">
               <Building2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kurumsal</p>
-              <p className="text-sm font-medium mt-1 text-foreground">Özel fiyatlandırma ve SLA</p>
-              <p className="text-xs text-primary mt-1">Teklif iste →</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{c.enterprise}</p>
+              <p className="text-sm font-medium mt-1 text-foreground">{c.enterpriseNote}</p>
+              <p className="text-xs text-primary mt-1">{c.enterpriseAction} →</p>
             </div>
           </button>
 
@@ -158,48 +156,46 @@ export function ContactPageClient() {
           </div>
 
           <p className="text-xs text-muted-foreground px-1">
-            <Link href="/hakkimizda" className="text-primary hover:underline">Kurumsal bilgiler</Link>
+            <Link href="/hakkimizda" className="text-primary hover:underline">{c.corporateInfo}</Link>
             {' · '}
-            <Link href="/help" className="text-primary hover:underline">Yardım merkezi</Link>
+            <Link href="/help" className="text-primary hover:underline">{c.helpCenter}</Link>
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="lg:col-span-3 surface p-6 sm:p-8 space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Mesaj gönderin</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Demo, kurumsal teklif veya teknik destek için formu doldurun.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{c.formTitle}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{c.formSubtitle}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="contact-name" className="text-sm font-medium block mb-1.5">Ad Soyad</label>
+              <label htmlFor="contact-name" className="text-sm font-medium block mb-1.5">{c.nameLabel}</label>
               <input
                 id="contact-name"
                 required
                 name="name"
                 autoComplete="name"
-                placeholder="Adınız Soyadınız"
+                placeholder={c.namePlaceholder}
                 className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
             <div>
-              <label htmlFor="contact-email" className="text-sm font-medium block mb-1.5">E-posta</label>
+              <label htmlFor="contact-email" className="text-sm font-medium block mb-1.5">{c.emailLabel}</label>
               <input
                 id="contact-email"
                 required
                 type="email"
                 name="email"
                 autoComplete="email"
-                placeholder="ornek@sirket.com"
+                placeholder={c.emailPlaceholder}
                 className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="contact-subject" className="text-sm font-medium block mb-1.5">Konu</label>
+            <label htmlFor="contact-subject" className="text-sm font-medium block mb-1.5">{c.subjectLabel}</label>
             <select
               id="contact-subject"
               name="subject"
@@ -207,37 +203,41 @@ export function ContactPageClient() {
               onChange={(e) => setSubject(e.target.value)}
               className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option>Genel Bilgi</option>
-              <option>Demo Talebi</option>
-              <option>Kurumsal Çözüm</option>
-              <option>Teknik Destek</option>
+              {subjectOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label htmlFor="contact-message" className="text-sm font-medium block mb-1.5">Mesaj</label>
+            <label htmlFor="contact-message" className="text-sm font-medium block mb-1.5">{c.messageLabel}</label>
             <textarea
               id="contact-message"
               required
               name="message"
               rows={5}
-              placeholder="Size nasıl yardımcı olabiliriz?"
+              placeholder={c.messagePlaceholder}
               className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
             <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60">
-              {loading ? 'Gönderiliyor...' : 'Gönder'}
+              {loading ? c.submitting : c.submit}
             </button>
             <p className="text-xs text-muted-foreground">
-              Göndererek{' '}
-              <Link href="/gizlilik" className="text-primary hover:underline">gizlilik sözleşmesini</Link>
-              {' '}kabul etmiş olursunuz.
+              {c.privacyNote.replace(c.privacyLink, '').trim()}{' '}
+              <Link href="/gizlilik" className="text-primary hover:underline">{c.privacyLink}</Link>
             </p>
           </div>
         </form>
       </div>
     </MarketingPageShell>
   )
+
+  function focusFormWithSubject(nextSubject: string) {
+    setSubject(nextSubject)
+    document.getElementById('contact-subject')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => document.getElementById('contact-name')?.focus(), 300)
+  }
 }

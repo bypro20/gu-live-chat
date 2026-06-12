@@ -17,9 +17,9 @@
     return;
   }
 
-  // Same-origin when embedded on guchat.org; override with window.GU_WIDGET_URL for cross-domain installs
+  // Same-origin when embedded on gulivechat.com; override with window.GU_WIDGET_URL for cross-domain installs
   function getWidgetBaseUrl() {
-    return window.GU_WIDGET_URL || window.location.origin || 'https://guchat.org';
+    return window.GU_WIDGET_URL || window.location.origin || 'https://gulivechat.com';
   }
 
   // ─── Force widget visibility with !important CSS ──────────────────────
@@ -39,28 +39,101 @@
   var forceStyle = document.createElement('style');
   forceStyle.id = 'gu-widget-force-style';
   forceStyle.textContent =
-    '#gu-chat-button{position:fixed!important;bottom:24px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
-    '#gu-widget-iframe{position:fixed!important;bottom:96px!important;right:24px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
-    '#gu-greeting-bubble{position:fixed!important;bottom:96px!important;right:24px!important;z-index:2147483646!important;filter:none!important;}' +
+    '#gu-chat-dock{position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:14px!important;pointer-events:none!important;filter:none!important;}' +
+    '#gu-teaser-card{pointer-events:auto!important;max-width:calc(100vw - 40px)!important;animation:gu-slide-up 0.55s cubic-bezier(0.16,1,0.3,1)!important;}' +
+    '#gu-teaser-top{height:5px!important;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA)!important;background-size:200% 100%!important;animation:gu-shimmer 3s ease infinite!important;}' +
+    '#gu-launcher-row{display:flex!important;align-items:center!important;gap:12px!important;pointer-events:none!important;}' +
+    '#gu-status-pill{pointer-events:none!important;display:none;font:700 12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,rgba(16,185,129,0.92),rgba(5,150,105,0.92));box-shadow:0 8px 24px rgba(16,185,129,0.35),0 0 0 1px rgba(255,255,255,0.2);white-space:nowrap;animation:gu-float 3s ease-in-out infinite!important;}' +
+    '@media(min-width:480px){#gu-status-pill{display:block!important;}}' +
+    '#gu-launcher-wrap{position:relative!important;pointer-events:auto!important;}' +
+    '#gu-launcher-ring,#gu-launcher-ring2{position:absolute!important;inset:-4px!important;border-radius:28px!important;pointer-events:none!important;}' +
+    '#gu-launcher-ring{animation:gu-ring 2s ease-out infinite!important;border:2px solid rgba(99,102,241,0.55)!important;}' +
+    '#gu-launcher-ring2{animation:gu-ring 2s ease-out 1s infinite!important;border:2px solid rgba(59,130,246,0.35)!important;}' +
+    '#gu-chat-button{position:relative!important;width:76px!important;height:76px!important;border-radius:24px!important;z-index:1!important;visibility:visible!important;pointer-events:auto!important;background:linear-gradient(135deg,#60A5FA 0%,#6366F1 35%,#8B5CF6 70%,#3B82F6 100%)!important;background-size:200% 200%!important;animation:gu-float 2.8s ease-in-out infinite,gu-shimmer 5s ease infinite!important;box-shadow:0 20px 56px rgba(99,102,241,0.5),0 0 0 2px rgba(255,255,255,0.35) inset,0 0 48px rgba(99,102,241,0.35)!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1)!important;}' +
+    '#gu-widget-iframe{position:fixed!important;bottom:112px!important;right:20px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
     'html,body{transform:none!important;filter:none!important;}' +
     '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}' +
     '#gu-chat-button svg{display:block;pointer-events:none;}' +
-    '@keyframes gu-pulse{0%{box-shadow:0 0 0 0 rgba(25,114,245,0.4),0 6px 20px rgba(25,114,245,0.35)}70%{box-shadow:0 0 0 14px rgba(25,114,245,0),0 8px 26px rgba(25,114,245,0.45)}100%{box-shadow:0 0 0 0 rgba(25,114,245,0),0 6px 20px rgba(25,114,245,0.35)}}' +
-    '@keyframes gu-fade-in{from{opacity:0}to{opacity:1}}' +
-    '@keyframes gu-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}' +
+    '@keyframes gu-shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}' +
+    '@keyframes gu-ring{0%{transform:scale(1);opacity:0.65}100%{transform:scale(1.6);opacity:0}}' +
+    '@keyframes gu-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}' +
+    '@keyframes gu-slide-up{from{opacity:0;transform:translateY(28px) scale(0.9);filter:blur(6px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}' +
     '@keyframes gu-badge-pop{0%{transform:scale(0)}60%{transform:scale(1.25)}100%{transform:scale(1)}}' +
-    '@keyframes gu-bubble-in{from{opacity:0;transform:translateY(12px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}';
+    '@keyframes gu-bubble-in{from{opacity:0;transform:translateY(14px) scale(0.94)}to{opacity:1;transform:translateY(0) scale(1)}}' +
+    '@keyframes gu-pop{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}';
   (document.head || document.documentElement).appendChild(forceStyle);
 
-  // ─── Chat button — DIRECTLY on document.body (no container) ──────────
-  // position:fixed anchors to viewport. Directly on body so no parent container
-  // can interfere. CSS !important rules protect against style overrides.
-  var CHAT_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h6"/><path d="M9 14h4"/></svg>';
-  var CLOSE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  var appearance = {
+    primaryColor: '#6366F1',
+    welcomeMessage: 'Merhaba! 👋 Sorularınız mı var? Hemen yazın, anında yardımcı olalım.',
+    avatarUrl: null,
+    websiteName: 'Canlı Destek',
+    agentsOnline: true,
+  };
+
+  function fetchAppearance(cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', getWidgetBaseUrl() + '/api/widget/appearance?websiteId=' + encodeURIComponent(WEBSITE_ID), true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (data.primaryColor) appearance.primaryColor = data.primaryColor;
+          if (data.welcomeMessage) appearance.welcomeMessage = data.welcomeMessage;
+          if (data.avatarUrl) appearance.avatarUrl = data.avatarUrl;
+          if (data.websiteName) appearance.websiteName = data.websiteName;
+          if (typeof data.agentsOnline === 'boolean') appearance.agentsOnline = data.agentsOnline;
+        } catch (e) {}
+      }
+      if (cb) cb();
+    };
+    xhr.onerror = function() { if (cb) cb(); };
+    xhr.send();
+  }
+
+  function applyPrimaryColor(color) {
+    if (!color || color.charAt(0) !== '#') return;
+    var ring = document.getElementById('gu-launcher-ring');
+    if (ring) ring.style.borderColor = color + '88';
+    var top = document.getElementById('gu-teaser-top');
+    if (top) top.style.background = 'linear-gradient(90deg,' + color + ',#818CF8,#A78BFA,' + color + ')';
+  }
+
+  var CHAT_ICON = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h6"/><path d="M9 14h4"/></svg>';
+  var CLOSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+
+  var chatDock = document.createElement('div');
+  chatDock.id = 'gu-chat-dock';
+
+  var teaserCard = document.createElement('div');
+  teaserCard.id = 'gu-teaser-card';
+  teaserCard.style.cssText = 'display:none;width:340px;max-width:calc(100vw - 40px);border-radius:24px;background:rgba(255,255,255,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:2px solid rgba(99,102,241,0.22);box-shadow:0 32px 64px -16px rgba(15,23,42,0.28),0 0 60px rgba(99,102,241,0.15);overflow:hidden;cursor:pointer;';
+
+  var teaserTop = document.createElement('div');
+  teaserTop.id = 'gu-teaser-top';
+  teaserTop.style.cssText = 'height:5px;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA);background-size:200% 100%;';
+
+  var teaserBody = document.createElement('div');
+  teaserBody.style.cssText = 'padding:18px 20px 20px;';
+
+  var launcherRow = document.createElement('div');
+  launcherRow.id = 'gu-launcher-row';
+
+  var statusPill = document.createElement('div');
+  statusPill.id = 'gu-status-pill';
+  statusPill.textContent = '🟢 Canlı destek açık';
+
+  var launcherWrap = document.createElement('div');
+  launcherWrap.id = 'gu-launcher-wrap';
+
+  var launcherRing = document.createElement('div');
+  launcherRing.id = 'gu-launcher-ring';
+
+  var launcherRing2 = document.createElement('div');
+  launcherRing2.id = 'gu-launcher-ring2';
 
   var chatBtn = document.createElement('div');
   chatBtn.id = 'gu-chat-button';
-  chatBtn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:2147483647;width:62px;height:62px;border-radius:18px;background:linear-gradient(145deg,#3B8BFF 0%,#1565E0 55%,#0D47C9 100%);cursor:pointer;box-shadow:0 10px 32px rgba(25,114,245,0.45),0 2px 8px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),box-shadow 0.28s ease,border-radius 0.28s ease;pointer-events:auto;filter:none;will-change:transform;backface-visibility:hidden;-webkit-font-smoothing:antialiased;animation:gu-pulse 3s ease-in-out infinite;';
 
   // ─── Unread badge (shown when widget is closed and new messages arrive) ──
   var unreadBadge = document.createElement('span');
@@ -96,6 +169,72 @@
     setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 260);
   }
 
+  var greetingDismissed = sessionStorage.getItem('gu_greeting_dismissed') === '1';
+
+  function hideTeaser() {
+    teaserCard.style.display = 'none';
+  }
+
+  function buildTeaserContent() {
+    var color = appearance.primaryColor || '#6366F1';
+    var initials = (appearance.websiteName || 'CD').slice(0, 2).toUpperCase();
+    var avatarHtml = appearance.avatarUrl
+      ? '<img src="' + appearance.avatarUrl + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'
+      : '<span style="font:800 18px/1 -apple-system,sans-serif;color:#fff;">' + initials + '</span>';
+
+    teaserBody.innerHTML =
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">' +
+        '<div style="position:relative;flex-shrink:0;">' +
+          '<div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,' + color + ',#818CF8);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 28px rgba(99,102,241,0.35);border:2px solid rgba(255,255,255,0.5);">' + avatarHtml + '</div>' +
+          '<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#10B981;border:3px solid #fff;box-shadow:0 0 10px rgba(16,185,129,0.8);"></span>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#0F172A;letter-spacing:-0.03em;">' + appearance.websiteName + '</p>' +
+          '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#10B981;">🟢 Çevrimiçi · ~30 sn yanıt</p>' +
+        '</div>' +
+        '<button type="button" id="gu-teaser-close" aria-label="Kapat" style="width:28px;height:28px;border:none;border-radius:10px;background:#F1F5F9;color:#64748B;font:700 16px/1 sans-serif;cursor:pointer;flex-shrink:0;">×</button>' +
+      '</div>' +
+      '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#334155;">' + appearance.welcomeMessage + '</p>' +
+      '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:linear-gradient(135deg,' + color + ',#818CF8);color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>' +
+      '<p style="margin:10px 0 0;text-align:center;font:600 10px/1.4 -apple-system,sans-serif;color:#94A3B8;letter-spacing:0.04em;">ÜCRETSİZ · ANINDA YANIT · GÜVENLİ</p>';
+
+    var closeBtn = document.getElementById('gu-teaser-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        greetingDismissed = true;
+        try { sessionStorage.setItem('gu_greeting_dismissed', '1'); } catch (err) {}
+        hideTeaser();
+      });
+    }
+    var ctaBtn = document.getElementById('gu-teaser-cta');
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!chatOpen) chatBtn.click();
+      });
+    }
+    applyPrimaryColor(color);
+  }
+
+  function showTeaser() {
+    if (greetingDismissed || chatOpen) return;
+    buildTeaserContent();
+    teaserCard.style.display = 'block';
+  }
+
+  function removeGreeting() {
+    hideTeaser();
+  }
+
+  teaserCard.addEventListener('click', function(e) {
+    if (e.target && (e.target.id === 'gu-teaser-close' || e.target.id === 'gu-teaser-cta')) return;
+    if (!chatOpen) chatBtn.click();
+  });
+
+  teaserCard.appendChild(teaserTop);
+  teaserCard.appendChild(teaserBody);
+
   function setIconChat() { chatBtn.innerHTML = CHAT_ICON; chatBtn.appendChild(unreadBadge); }
   function setIconClose() { chatBtn.innerHTML = CLOSE_ICON; chatBtn.appendChild(unreadBadge); }
 
@@ -104,77 +243,44 @@
   chatBtn.addEventListener('click', function() {
     chatOpen = !chatOpen;
     if (chatOpen) {
-      removeGreeting();
+      hideTeaser();
       setUnread(0);
       showIframe();
       iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
       setIconClose();
-      chatBtn.style.animation = 'none';
     } else {
       hideIframe();
       iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:close' }, '*');
       setIconChat();
+      if (!greetingDismissed) showTeaser();
     }
   });
-  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.boxShadow = '0 10px 30px rgba(25,114,245,0.5)'; chatBtn.style.transform = 'scale(1.08)'; });
-  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.boxShadow = '0 6px 20px rgba(25,114,245,0.4),0 2px 6px rgba(0,0,0,0.1)'; chatBtn.style.transform = 'scale(1)'; });
-  // DIRECTLY on body — no container wrapper
-  document.body.appendChild(chatBtn);
+  chatBtn.addEventListener('mouseenter', function() { chatBtn.style.transform = 'scale(1.1) rotate(-4deg)'; });
+  chatBtn.addEventListener('mouseleave', function() { chatBtn.style.transform = 'scale(1) rotate(0deg)'; });
+
+  launcherWrap.appendChild(launcherRing);
+  launcherWrap.appendChild(launcherRing2);
+  launcherWrap.appendChild(chatBtn);
+  launcherRow.appendChild(statusPill);
+  launcherRow.appendChild(launcherWrap);
+  chatDock.appendChild(teaserCard);
+  chatDock.appendChild(launcherRow);
+  document.body.appendChild(chatDock);
 
   // Create iframe — DIRECTLY on document.body (no container)
   var iframe = document.createElement('iframe');
   var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:100px;right:24px;z-index:2147483647;width:400px;height:min(680px,calc(100vh - 120px));max-height:calc(100vh - 120px);border-radius:22px;box-shadow:0 20px 60px rgba(15,23,42,0.22),0 0 0 1px rgba(15,23,42,0.06);display:none;opacity:0;transform:translateY(16px) scale(0.97);transform-origin:bottom right;transition:opacity 0.3s ease,transform 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:white;filter:none;overflow:hidden;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:112px;right:20px;z-index:2147483647;width:440px;height:min(680px,calc(100vh - 132px));max-height:calc(100vh - 132px);border-radius:30px;box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(99,102,241,0.2),0 0 120px rgba(99,102,241,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
   iframe.allow = 'microphone; camera';
   iframe.title = 'Canlı Sohbet';
-  // DIRECTLY on body — no container wrapper
   document.body.appendChild(iframe);
 
-  // ─── Optional proactive greeting bubble near the launcher ────────────
-  var greetingEl = null;
-  var greetingDismissed = sessionStorage.getItem('gu_greeting_dismissed') === '1';
-
-  function removeGreeting() {
-    if (greetingEl && greetingEl.parentNode) {
-      greetingEl.parentNode.removeChild(greetingEl);
-    }
-    greetingEl = null;
-  }
-
-  function showGreeting(text) {
-    if (greetingDismissed || chatOpen || greetingEl) return;
-    greetingEl = document.createElement('div');
-    greetingEl.id = 'gu-greeting-bubble';
-    greetingEl.style.cssText = 'position:fixed;bottom:96px;right:24px;z-index:2147483646;max-width:240px;background:#fff;color:#111827;border-radius:16px 16px 4px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.16);padding:13px 16px;font:400 13.5px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;animation:gu-bubble-in 0.35s cubic-bezier(0.16,1,0.3,1);filter:none;';
-
-    var close = document.createElement('span');
-    close.textContent = '×';
-    close.style.cssText = 'position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#fff;color:#76728A;font:700 15px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
-    close.addEventListener('click', function(e) {
-      e.stopPropagation();
-      greetingDismissed = true;
-      try { sessionStorage.setItem('gu_greeting_dismissed', '1'); } catch (err) {}
-      removeGreeting();
-    });
-
-    var txt = document.createElement('div');
-    txt.textContent = text;
-
-    greetingEl.appendChild(close);
-    greetingEl.appendChild(txt);
-    greetingEl.addEventListener('click', function() {
-      removeGreeting();
-      if (!chatOpen) { chatBtn.click(); }
-    });
-    document.body.appendChild(greetingEl);
-  }
-
-  // Surface a friendly greeting a few seconds after load (once per session).
-  setTimeout(function() {
-    showGreeting('Merhaba! 👋 Size nasıl yardımcı olabiliriz?');
-  }, 6000);
+  fetchAppearance(function() {
+    applyPrimaryColor(appearance.primaryColor);
+    setTimeout(function() { showTeaser(); }, 1200);
+  });
 
   // ─── Proactive Messages ────────────────────────────────────────────
   var proactiveMessages = [];

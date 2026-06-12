@@ -21,9 +21,9 @@ Vercel'deki **aynı** değerleri kopyala:
 |----------|----------|
 | `DATABASE_URL` | Turso/libSQL bağlantısı |
 | `TURSO_AUTH_TOKEN` | Turso auth (varsa) |
-| `NEXT_PUBLIC_APP_URL` | `https://guchat.org` |
+| `NEXT_PUBLIC_APP_URL` | `https://gulivechat.com` |
 | `SOCKET_INTERNAL_SECRET` | Vercel `CRON_SECRET` ile **aynı** |
-| `SOCKET_CORS_ORIGINS` | (opsiyonel) `https://guchat.org,https://www.guchat.org` |
+| `SOCKET_CORS_ORIGINS` | (opsiyonel) `https://gulivechat.com,https://www.gulivechat.com` |
 
 `PORT` Railway tarafından otomatik atanır — elle yazma.
 
@@ -59,16 +59,16 @@ Bu script şunları yazar ve production redeploy tetikler:
 
 ## 5. (Opsiyonel) Özel domain
 
-Railway Networking → **Custom Domain** → `socket.guchat.org`
+Railway Networking → **Custom Domain** → `socket.gulivechat.com`
 
 DNS: CNAME `socket` → Railway'in verdiği hedef.
 
-Sonra `SOCKET_URL=https://socket.guchat.org` ile script'i tekrar çalıştır.
+Sonra `SOCKET_URL=https://socket.gulivechat.com` ile script'i tekrar çalıştır.
 
 ## 6. Doğrulama
 
 ```bash
-curl https://guchat.org/api/health
+curl https://gulivechat.com/api/health
 # "socket": true, "socketConfigured": true
 ```
 

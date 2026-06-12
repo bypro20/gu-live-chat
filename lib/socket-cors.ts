@@ -1,6 +1,15 @@
+import { SITE_DOMAIN } from './site-config'
+
+/** Production CORS — Railway env eksik olsa bile gulivechat.com çalışsın */
+const CANONICAL_ORIGINS = [
+  `https://${SITE_DOMAIN}`,
+  `https://www.${SITE_DOMAIN}`,
+  'https://guchat.org',
+]
+
 /** Socket.io CORS — ana site + www + ek origin'ler (Railway production). */
 export function socketCorsOrigins(): string | string[] {
-  const origins = new Set<string>()
+  const origins = new Set<string>(CANONICAL_ORIGINS)
 
   const app = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
   if (app) {

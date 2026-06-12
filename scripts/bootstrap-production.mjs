@@ -4,7 +4,7 @@
  *
  *   VERCEL_TOKEN=... CRON_SECRET=... node scripts/bootstrap-production.mjs
  */
-const BASE = process.env.BASE_URL || 'https://guchat.org'
+const BASE = process.env.BASE_URL || 'https://gulivechat.com'
 const cronSecret = process.env.CRON_SECRET
 const vercelToken = process.env.VERCEL_TOKEN
 const team = process.env.VERCEL_TEAM_ID || 'team_5gbzCiGoSSKTC6ONZjWLZigV'
@@ -84,9 +84,9 @@ async function main() {
     console.log('2) Vercel env...')
     await upsertEnv('NEXT_PUBLIC_MARKETING_WEBSITE_ID', marketingId)
     await upsertEnv('NEXT_PUBLIC_WIDGET_WEBSITE_ID', marketingId)
-    await upsertEnv('CONTACT_EMAIL', process.env.CONTACT_EMAIL || 'admin@guchat.org')
-    await upsertEnv('SUPPORT_EMAIL', process.env.SUPPORT_EMAIL || 'destek@guchat.org')
-    await upsertEnv('EMAIL_FROM', process.env.EMAIL_FROM || 'Gu Chat <noreply@guchat.org>')
+    await upsertEnv('CONTACT_EMAIL', process.env.CONTACT_EMAIL || 'admin@gulivechat.com')
+    await upsertEnv('SUPPORT_EMAIL', process.env.SUPPORT_EMAIL || 'destek@gulivechat.com')
+    await upsertEnv('EMAIL_FROM', process.env.EMAIL_FROM || 'Gu Live Chat <noreply@gulivechat.com>')
   }
 
   console.log('3) redeploy...')

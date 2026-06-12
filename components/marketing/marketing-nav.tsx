@@ -1,36 +1,50 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Download, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
 import { MobileAndroidNavButton } from '@/components/marketing/mobile-android-bar'
-
-const navLinks = [
-  { label: 'Ürünler', href: '/urunler' },
-  { label: 'Canlı Destek', href: '/canli-destek' },
-  { label: 'Özellikler', href: '/features' },
-  { label: 'Yapay Zeka', href: '/ai' },
-  { label: 'Fiyatlandırma', href: '/pricing' },
-  { label: 'Entegrasyonlar', href: '/integrations' },
-  { label: 'Blog', href: '/blog' },
-]
+import { LanguageSwitcher } from '@/components/marketing/language-switcher'
+import { useT } from '@/components/marketing/locale-provider'
+import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
+import { useEffect, useState } from 'react'
 
 export function MarketingNav() {
+  const t = useT()
+  const { common } = useMarketingPages()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  const navLinks = [
+    { label: t.nav.products, href: '/urunler' },
+    { label: t.nav.features, href: '/features' },
+    { label: t.nav.pricing, href: '/pricing' },
+    { label: t.nav.blog, href: '/blog' },
+  ]
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-background border-b border-border">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+        scrolled ? 'glass-nav glass-nav-scrolled' : 'bg-background/95 border-border'
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Logo boyut="default" linkOlsun animasyonlu={false} />
 
-          <div className="hidden lg:flex items-center gap-0.5">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+                className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/80 transition-colors duration-150"
               >
                 {item.label}
               </Link>
@@ -38,27 +52,29 @@ export function MarketingNav() {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
+            <LanguageSwitcher compact />
             <Link
               href="/mobil-indir"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500 shadow-lg shadow-emerald-500/25 hover:from-emerald-500 hover:to-green-400 transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <Download className="w-4 h-4 shrink-0" />
-              Android Uygulama
+              {t.nav.mobile}
             </Link>
             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">
-              Giriş Yap
+              {t.nav.login}
             </Link>
-            <Link href="/register" className="btn-primary">
-              Ücretsiz Başla <ArrowRight className="w-3.5 h-3.5" />
+            <Link href="/register" className="btn-primary shadow-brand">
+              {t.nav.startFree} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
           <div className="flex lg:hidden items-center gap-2">
-            <MobileAndroidNavButton />
+            <LanguageSwitcher compact />
             <button
+              type="button"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
-              aria-label="Menü"
+              aria-label={common.menuAria}
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -67,16 +83,7 @@ export function MarketingNav() {
       </div>
 
       {mobileOpen && (
-        <div className="lg:hidden border-t border-border bg-background px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
-          <a
-            href="/downloads/guchat.apk"
-            download="GuChat.apk"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center justify-center gap-2 mx-0 mb-4 px-4 py-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-500"
-          >
-            <Download className="w-5 h-5" />
-            APK İndir — Android Uygulama
-          </a>
+        <div className="lg:hidden border-t border-border bg-background px-4 py-4 space-y-1 animate-in">
           {navLinks.map((item) => (
             <Link
               key={item.href}
@@ -87,21 +94,15 @@ export function MarketingNav() {
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/mobil-indir"
-            onClick={() => setMobileOpen(false)}
-            className="block px-4 py-2.5 text-sm font-medium text-emerald-700 hover:text-emerald-800 rounded-lg hover:bg-emerald-50"
-          >
-            Kurulum adımları →
+          <Link href="/mobil-indir" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-muted-foreground">
+            {t.nav.mobile}
           </Link>
-          <div className="border-t border-border mt-3 pt-3 space-y-2">
-            <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-muted-foreground">
-              Giriş Yap
-            </Link>
-            <Link href="/register" onClick={() => setMobileOpen(false)} className="block btn-primary text-center">
-              Ücretsiz Başla
-            </Link>
-          </div>
+          <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 text-sm font-medium">
+            {t.nav.login}
+          </Link>
+          <Link href="/register" onClick={() => setMobileOpen(false)} className="btn-primary w-full justify-center mt-2">
+            {t.nav.startFree}
+          </Link>
         </div>
       )}
     </nav>

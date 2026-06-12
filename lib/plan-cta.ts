@@ -1,3 +1,6 @@
+import type { SiteLocale } from './regional-config'
+import { getBillingPlanCtaLabel } from './plan-i18n'
+
 export type PlanId = 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS'
 
 const PLAN_NAME_TO_ID: Record<string, PlanId> = {
@@ -16,35 +19,36 @@ export interface PlanCtaContext {
   trialUsed?: boolean
   isCurrentPlan?: boolean
   iyzicoEnabled?: boolean
+  locale?: SiteLocale
 }
 
 export function getMarketingPlanCta(
   planId: PlanId,
-  { isLoggedIn = false }: PlanCtaContext = {}
+  { isLoggedIn = false, locale = 'tr' }: PlanCtaContext = {}
 ): { label: string; href: string } {
+  const en = locale === 'en'
+
   if (planId === 'FREE') {
     return {
-      label: 'Ücretsiz Başla',
+      label: en ? 'Start Free' : 'Ücretsiz Başla',
       href: isLoggedIn ? '/dashboard' : '/register',
     }
   }
 
   if (planId === 'BUSINESS') {
-    return { label: 'İletişime Geç', href: '/contact' }
+    return { label: en ? 'Contact Us' : 'İletişime Geç', href: '/contact' }
   }
 
   if (isLoggedIn) {
-    return { label: 'Satın Al', href: `/settings/plans?plan=${planId}` }
+    return { label: en ? 'Buy Now' : 'Satın Al', href: `/settings/plans?plan=${planId}` }
   }
 
-  return { label: 'Satın Al', href: `/register?plan=${planId}` }
+  return { label: en ? 'Buy Now' : 'Satın Al', href: `/register?plan=${planId}` }
 }
 
 export function getBillingPlanCta(
   planId: PlanId,
-  { isCurrentPlan = false }: PlanCtaContext = {}
+  { isCurrentPlan = false, locale = 'tr' }: PlanCtaContext = {}
 ): string {
-  if (isCurrentPlan) return 'Mevcut Plan'
-  if (planId === 'FREE') return 'Ücretsiz Plan'
-  return 'Satın Al'
+  return getBillingPlanCtaLabel(planId, locale, { isCurrentPlan })
 }

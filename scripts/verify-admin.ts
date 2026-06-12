@@ -1,5 +1,5 @@
 /**
- * Verifies admin@guchat.org in DATABASE_URL: role, ban status, password match.
+ * Verifies admin@gulivechat.com in DATABASE_URL: role, ban status, password match.
  * Usage: npx tsx scripts/verify-admin.ts  (reads .env + .env.local)
  */
 import { config } from 'dotenv'
@@ -11,7 +11,7 @@ config({ path: resolve(process.cwd(), '.env.local'), override: true })
 
 const { prisma } = await import('../lib/db')
 
-const ADMIN_EMAIL = 'admin@guchat.org'
+const ADMIN_EMAIL = 'admin@gulivechat.com'
 
 async function main() {
   const password = process.env.ADMIN_PASSWORD

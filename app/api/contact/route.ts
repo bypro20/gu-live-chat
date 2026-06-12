@@ -19,12 +19,12 @@ export async function POST(req: Request) {
     }
 
     const { name, email, subject, message } = parsed.data
-    const to = process.env.CONTACT_EMAIL || process.env.SUPPORT_EMAIL || process.env.ADMIN_EMAIL || 'destek@guchat.org'
+    const to = process.env.CONTACT_EMAIL || process.env.SUPPORT_EMAIL || process.env.ADMIN_EMAIL || 'destek@gulivechat.com'
 
     let emailDelivered = false
     if (isEmailConfigured()) {
       const html = `
-        <h2>Gu Chat — İletişim Formu</h2>
+        <h2>Gu Live Chat — İletişim Formu</h2>
         <p><strong>Ad:</strong> ${name}</p>
         <p><strong>E-posta:</strong> ${email}</p>
         <p><strong>Konu:</strong> ${subject}</p>

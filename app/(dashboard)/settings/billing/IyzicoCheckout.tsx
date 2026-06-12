@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 
 interface IyzicoCheckoutProps {
   checkoutFormContent: string
@@ -8,6 +9,7 @@ interface IyzicoCheckoutProps {
 }
 
 export default function IyzicoCheckout({ checkoutFormContent, onClose }: IyzicoCheckoutProps) {
+  const { billing: b } = useSettingsI18n()
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export default function IyzicoCheckout({ checkoutFormContent, onClose }: IyzicoC
   }, [checkoutFormContent])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-[520px] mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-4 bg-black/60 backdrop-blur-sm animate-in">
+      <div className="relative w-full max-w-[520px] mx-4 animate-in-scale">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-white">Güvenli Ödeme — iyzico</h3>
+          <h3 className="text-lg font-semibold text-white">{b.securePayment}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -52,7 +54,7 @@ export default function IyzicoCheckout({ checkoutFormContent, onClose }: IyzicoC
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>256-bit SSL · iyzico güvenli ödeme</span>
+          <span>{b.securePaymentHint}</span>
         </div>
       </div>
     </div>

@@ -1,13 +1,13 @@
 'use client'
 
 import { Suspense, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Shield } from 'lucide-react'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
-import { nativeAdminHomePath } from '@/lib/native-app'
+import { getNativeAppPlatform, markNativeApp, nativeAdminHomePath } from '@/lib/native-app'
 
 /** signIn(redirect:false) sets the cookie asynchronously — poll until the session is readable. */
 async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boolean> {
@@ -26,6 +26,7 @@ async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boo
 }
 
 function AdminLoginForm() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const { isNativeCustomerApp, isNativeAdminApp } = useNativeApp()
   const callbackUrl = searchParams.get('callbackUrl') || nativeAdminHomePath()
@@ -51,8 +52,14 @@ function AdminLoginForm() {
       if (result?.ok) {
         const isAdmin = await waitForAdminSession()
         if (isAdmin) {
-          // Full navigation so the new session cookie is always sent to /admin
-          window.location.href = callbackUrl.startsWith('/') ? callbackUrl : '/admin'
+          markNativeApp('admin')
+          const target = callbackUrl.startsWith('/') ? callbackUrl : '/admin'
+          if (isNativeAdminApp || getNativeAppPlatform() === 'admin') {
+            router.push(target)
+            router.refresh()
+            return
+          }
+          window.location.href = target
           return
         }
         setError('Bu panel sadece yöneticiler içindir.')
@@ -74,7 +81,7 @@ function AdminLoginForm() {
           <h1 className="text-xl font-bold text-white">Yönetici paneli bu uygulamada yok</h1>
           <p className="text-sm text-slate-400">
             Müşteri uygulamasından platform yönetimine erişilemez. Yönetici girişi için tarayıcıdan
-            guchat.org/admin-login adresini veya Gu Chat Yönetim uygulamasını kullanın.
+            gulivechat.com/admin-login adresini veya Gu Live Chat Yönetim uygulamasını kullanın.
           </p>
           <Link href="/inbox" className="inline-flex px-6 py-3 rounded-xl bg-primary text-white font-semibold">
             Gelen Kutusuna Dön
@@ -95,9 +102,9 @@ function AdminLoginForm() {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-light rounded-xl mb-4">
               <Shield className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Gu Chat Yönetim</h1>
+            <h1 className="text-2xl font-bold text-foreground">Gu Live Chat Yönetim</h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              {isNativeAdminApp ? 'Yönetici uygulaması · Sadece sizin için' : 'guchat.org · Sadece platform yöneticileri'}
+              {isNativeAdminApp ? 'Yönetici uygulaması · Sadece sizin için' : 'gulivechat.com · Sadece platform yöneticileri'}
             </p>
           </div>
 
@@ -118,7 +125,7 @@ function AdminLoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-muted/40 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="admin@guchat.org"
+                placeholder="admin@gulivechat.com"
                 required
               />
             </div>

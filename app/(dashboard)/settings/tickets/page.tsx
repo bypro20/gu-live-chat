@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import {
+  ticketStatusLabels,
+  ticketPriorityLabels,
+  ticketChannelLabels,
+} from '@/lib/settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import Link from 'next/link'
 
@@ -19,36 +25,21 @@ interface Ticket {
   _count: { messages: number }
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  NEW: 'Yeni',
-  OPEN: 'Açık',
-  PENDING_CUSTOMER: 'Müşteri Bekliyor',
-  PENDING_AGENT: 'Temsilci Bekliyor',
-  ON_HOLD: 'Beklemede',
-  RESOLVED: 'Çözüldü',
-  CLOSED: 'Kapalı',
-}
-
-const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  LOW: { label: 'Düşük', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
-  MEDIUM: { label: 'Orta', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-  HIGH: { label: 'Yüksek', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
-  URGENT: { label: 'Acil', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-}
-
-const CHANNEL_LABELS: Record<string, string> = {
-  EMAIL: 'E-posta',
-  WIDGET: 'Widget',
-  API: 'API',
-  WHATSAPP: 'WhatsApp',
-  MESSENGER: 'Messenger',
-  INSTAGRAM: 'Instagram',
-  IMPORT: 'İçe Aktarma',
+const PRIORITY_COLORS: Record<string, string> = {
+  LOW: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  MEDIUM: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  URGENT: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const STATUS_TABS = ['NEW', 'OPEN', 'PENDING_CUSTOMER', 'PENDING_AGENT', 'ON_HOLD', 'RESOLVED', 'CLOSED']
 
 export default function TicketsPage() {
+  const i18n = useSettingsI18n()
+  const { tickets: t, common: c } = i18n
+  const STATUS_LABELS = ticketStatusLabels(i18n)
+  const PRIORITY_LABELS = ticketPriorityLabels(i18n)
+  const CHANNEL_LABELS = ticketChannelLabels(i18n)
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('ticketing')
   const { activeWebsite } = useActiveWebsite()
   const [tickets, setTickets] = useState<Ticket[]>([])
@@ -88,7 +79,7 @@ export default function TicketsPage() {
     const now = new Date()
     const d = new Date(date)
     const diff = Math.floor((now.getTime() - d.getTime()) / 1000)
-    if (diff < 60) return 'şimdi'
+    if (diff < 60) return c.now
     if (diff < 3600) return `${Math.floor(diff / 60)}dk`
     if (diff < 86400) return `${Math.floor(diff / 3600)}sa`
     return `${Math.floor(diff / 86400)}g`
@@ -102,16 +93,16 @@ export default function TicketsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Ticket Yönetimi</h1>
-          <p className="text-sm text-muted-foreground mt-1">Müşteri taleplerini yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t.subtitle}</p>
         </div>
         <div className="flex items-center justify-between sm:justify-end gap-3">
-          <span className="text-sm text-muted-foreground">{total} ticket</span>
+          <span className="text-sm text-muted-foreground">{c.tickets(total)}</span>
           <Link
             href="/settings/tickets/yeni"
             className="btn-primary"
           >
-            + Ticket Oluştur
+            {t.createTicket}
           </Link>
         </div>
       </div>
@@ -122,7 +113,7 @@ export default function TicketsPage() {
           type="text"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          placeholder="Ticket ara (konu, e-posta, isim)..."
+          placeholder={t.searchPlaceholder}
           className="w-full sm:max-w-md px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
         />
       </div>
@@ -137,7 +128,7 @@ export default function TicketsPage() {
               : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
-          Tümü
+          {c.all}
         </button>
         {STATUS_TABS.map((s) => (
           <button
@@ -167,9 +158,9 @@ export default function TicketsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="font-medium text-foreground">Henüz ticket yok</h3>
+            <h3 className="font-medium text-foreground">{t.noTickets}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {statusFilter ? 'Bu durumda ticket bulunamadı' : 'Yeni bir ticket oluşturun'}
+              {statusFilter ? t.noTicketsFiltered : t.noTicketsHint}
             </p>
           </div>
         ) : (
@@ -179,14 +170,14 @@ export default function TicketsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Konu</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Durum</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Öncelik</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Kanal</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Atanan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tarih</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Mesaj</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colId}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colSubject}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colStatus}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colPriority}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colChannel}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colAssignee}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colDate}</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.colMessages}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -209,8 +200,8 @@ export default function TicketsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
-                          {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
+                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_COLORS[ticket.priority] || PRIORITY_COLORS.MEDIUM}`}>
+                          {PRIORITY_LABELS[ticket.priority] || ticket.priority}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-foreground">
@@ -252,11 +243,11 @@ export default function TicketsPage() {
                     <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-muted text-foreground">
                       {STATUS_LABELS[ticket.status] || ticket.status}
                     </span>
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_CONFIG[ticket.priority]?.color || PRIORITY_CONFIG.MEDIUM.color}`}>
-                      {PRIORITY_CONFIG[ticket.priority]?.label || ticket.priority}
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${PRIORITY_COLORS[ticket.priority] || PRIORITY_COLORS.MEDIUM}`}>
+                      {PRIORITY_LABELS[ticket.priority] || ticket.priority}
                     </span>
                     <span className="text-xs text-muted-foreground">{CHANNEL_LABELS[ticket.channel] || ticket.channel}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">{timeAgo(ticket.createdAt)} · {ticket._count.messages} mesaj</span>
+                    <span className="text-xs text-muted-foreground ml-auto">{timeAgo(ticket.createdAt)} · {c.messages(ticket._count.messages)}</span>
                   </div>
                 </button>
               ))}
@@ -273,7 +264,7 @@ export default function TicketsPage() {
             disabled={page === 1}
             className="px-3 py-1.5 text-sm font-medium bg-muted text-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent transition"
           >
-            Önceki
+            {t.previous}
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
@@ -293,7 +284,7 @@ export default function TicketsPage() {
             disabled={page === totalPages}
             className="px-3 py-1.5 text-sm font-medium bg-muted text-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent transition"
           >
-            Sonraki
+            {t.next}
           </button>
         </div>
       )}

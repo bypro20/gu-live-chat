@@ -47,11 +47,11 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
   for u in "${PROD_URL_VARS[@]}"; do
     if [[ "$key" == "$u" ]]; then
-      echo "⚠ $key → production'da https://guchat.org olmalı (.env localhost olabilir)"
+      echo "⚠ $key → production'da https://gulivechat.com olmalı (.env localhost olabilir)"
     fi
   done
   if [[ "$key" == "NEXT_PUBLIC_SOCKET_URL" ]]; then
-    echo "ℹ $key → Railway/socket URL (.env ile aynı; guchat.org yapmayın)"
+    echo "ℹ $key → Railway/socket URL (.env ile aynı; gulivechat.com yapmayın)"
   fi
 
   read -r -p "Vercel'e '$key' eklemek ister misiniz? [y/N] " ans

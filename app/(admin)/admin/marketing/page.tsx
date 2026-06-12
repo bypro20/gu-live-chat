@@ -114,7 +114,7 @@ export default function AdminMarketingPage() {
         </p>
         <div className="p-3 rounded-xl bg-slate-950 border border-emerald-800/50">
           <p className="text-xs text-slate-500 mb-1">Landing URL (Google Ads&apos;e yapıştır)</p>
-          <code className="text-sm text-emerald-300 break-all">https://guchat.org/basla?utm_source=google&utm_medium=cpc&utm_campaign=search-canli-destek</code>
+          <code className="text-sm text-emerald-300 break-all">https://gulivechat.com/basla?utm_source=google&utm_medium=cpc&utm_campaign=search-canli-destek</code>
         </div>
         <p className="text-xs text-slate-500">Günlük bütçe: ₺80 · Sadece Arama ağı · Negatif kelimeler ekleyin</p>
       </section>

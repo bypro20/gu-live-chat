@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   getNativeAppPlatform,
   type NativeAppPlatform,
 } from '@/lib/native-app'
 
-export function useNativeApp() {
-  const [platform, setPlatform] = useState<NativeAppPlatform | null>(null)
+function readNativePlatform(): NativeAppPlatform | null {
+  if (typeof window === 'undefined') return null
+  return getNativeAppPlatform()
+}
 
-  useEffect(() => {
-    setPlatform(getNativeAppPlatform())
-  }, [])
+export function useNativeApp() {
+  const [platform] = useState<NativeAppPlatform | null>(readNativePlatform)
 
   return {
     isNativeApp: platform !== null,

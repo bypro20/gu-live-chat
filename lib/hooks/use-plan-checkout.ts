@@ -4,16 +4,16 @@ import { useCallback, useEffect, useState } from 'react'
 import type { PlanId } from '@/lib/plan-cta'
 
 export function usePlanCheckout(websiteId?: string, returnTo: 'plans' | 'billing' = 'plans') {
-  const [iyzicoEnabled, setIyzicoEnabled] = useState(false)
+  const [checkoutEnabled, setCheckoutEnabled] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const [checkoutFormContent, setCheckoutFormContent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/iyzico/status')
-      .then((res) => (res.ok ? res.json() : { enabled: false }))
-      .then((data) => setIyzicoEnabled(Boolean(data.enabled)))
-      .catch(() => setIyzicoEnabled(false))
+      .then((r) => (r.ok ? r.json() : { enabled: false }))
+      .then((iyzico) => setCheckoutEnabled(Boolean(iyzico?.enabled)))
+      .catch(() => setCheckoutEnabled(false))
   }, [])
 
   const purchasePlan = useCallback(
@@ -25,7 +25,7 @@ export function usePlanCheckout(websiteId?: string, returnTo: 'plans' | 'billing
 
       if (planId === 'FREE') return false
 
-      if (!iyzicoEnabled) {
+      if (!checkoutEnabled) {
         setError('Ödeme sistemi şu an kullanılamıyor. Lütfen biraz sonra tekrar deneyin.')
         return false
       }
@@ -34,7 +34,7 @@ export function usePlanCheckout(websiteId?: string, returnTo: 'plans' | 'billing
       setError(null)
 
       try {
-        const res = await fetch('/api/iyzico/checkout', {
+        const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ planId, websiteId, returnTo }),
@@ -60,11 +60,12 @@ export function usePlanCheckout(websiteId?: string, returnTo: 'plans' | 'billing
         setCheckoutLoading(null)
       }
     },
-    [iyzicoEnabled, websiteId, returnTo]
+    [checkoutEnabled, websiteId, returnTo]
   )
 
   return {
-    iyzicoEnabled,
+    iyzicoEnabled: checkoutEnabled,
+    paymentProvider: 'iyzico' as const,
     checkoutLoading,
     checkoutFormContent,
     setCheckoutFormContent,

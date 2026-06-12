@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Gu Chat uygulama ikonları — resources/icon.png → Android mipmap */
+/** Gu Live Chat uygulama ikonları — resources/icon.png → Android mipmap */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -51,4 +51,4 @@ for (const [folder, height] of Object.entries(splashSizes)) {
     .toFile(join(dir, 'splash.png'))
 }
 
-console.log('Gu Chat icons generated from resources/icon.png')
+console.log('Gu Live Chat icons generated from resources/icon.png')

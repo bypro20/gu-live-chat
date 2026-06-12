@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { useLocale } from '@/components/marketing/locale-provider'
 
 interface Visitor {
   id: string
@@ -19,6 +21,8 @@ interface Visitor {
 
 export default function ContactsPage() {
   const { activeWebsite } = useActiveWebsite()
+  const { contacts: t, common } = useDashboardI18n()
+  const { locale } = useLocale()
   const [contacts, setContacts] = useState<Visitor[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -55,9 +59,9 @@ export default function ContactsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kişiler</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.title}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Ziyaretçilerin profil bilgilerini ve sohbet geçmişini yönetin
+            {t.subtitle}
             {total > 0 && <span className="ml-2 text-primary font-medium">({total})</span>}
           </p>
         </div>
@@ -72,7 +76,7 @@ export default function ContactsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="İsim veya e-posta ara..."
+            placeholder={t.searchPlaceholder}
             className="w-full h-11 pl-10 pr-4 bg-card border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
           />
         </div>
@@ -90,10 +94,8 @@ export default function ContactsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h3 className="font-semibold text-foreground">Henüz kişi yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              İlk ziyaretçi sohbet başlattığında kişiler burada görünecek
-            </p>
+            <h3 className="font-semibold text-foreground">{t.noContacts}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{t.noContactsHint}</p>
           </div>
         ) : (
           <>
@@ -101,11 +103,11 @@ export default function ContactsPage() {
               <table className="w-full">
                 <thead className="bg-muted/60">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kişi</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Konum</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cihaz</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sohbet</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Son Aktivite</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.person}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.location}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.device}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.chat}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.lastActivity}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -117,7 +119,7 @@ export default function ContactsPage() {
                             {contact.name?.[0]?.toUpperCase() || '?'}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-foreground text-sm truncate">{contact.name || 'Anonim'}</p>
+                            <p className="font-medium text-foreground text-sm truncate">{contact.name || common.anonymous}</p>
                             <p className="text-xs text-muted-foreground truncate">{contact.email || '-'}</p>
                           </div>
                         </Link>
@@ -130,11 +132,11 @@ export default function ContactsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 bg-primary-light text-primary text-xs font-medium rounded-full tabular-nums">
-                          {contact._count.conversations} sohbet
+                          {contact._count.conversations} {t.conversations}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground tabular-nums">
-                        {new Date(contact.updatedAt).toLocaleDateString('tr-TR')}
+                        {new Date(contact.updatedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR')}
                       </td>
                     </tr>
                   ))}
@@ -150,7 +152,7 @@ export default function ContactsPage() {
                       {contact.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-foreground text-sm truncate">{contact.name || 'Anonim'}</p>
+                      <p className="font-medium text-foreground text-sm truncate">{contact.name || common.anonymous}</p>
                       <p className="text-xs text-muted-foreground truncate">{contact.email || '-'}</p>
                     </div>
                     <span className="px-2.5 py-1 bg-primary-light text-primary text-xs font-medium rounded-full shrink-0 tabular-nums">

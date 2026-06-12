@@ -2,6 +2,7 @@
 
 import type { VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { formatTimeAgo, type VisitorTheme } from '@/lib/visitors-utils'
+import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
 interface ActivityFeedProps {
   activities: VisitorActivity[]
@@ -72,12 +73,12 @@ function ActivityIcon({ eventType }: { eventType: string }) {
   }
 }
 
-function ActivityLabel({ activity }: { activity: VisitorActivity }) {
+function ActivityLabel({ activity, labels }: { activity: VisitorActivity; labels: ReturnType<typeof useVisitorsI18n>['activity'] }) {
   switch (activity.eventType) {
     case 'pageview':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">Sayfa görüntülendi</p>
+          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{labels.pageview}</p>
           <p className="text-[11px] text-blue-500 dark:text-blue-400 truncate mt-0.5">{activity.title || activity.url}</p>
         </div>
       )
@@ -85,7 +86,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
     case 'input':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">Yazıyor</p>
+          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{labels.typing}</p>
           {activity.text && (
             <p className="text-[11px] text-gray-500 dark:text-gray-400 italic truncate mt-0.5">
               &ldquo;{activity.text}&rdquo;
@@ -96,7 +97,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
     case 'click':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">Tıkladı</p>
+          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{labels.click}</p>
           {activity.text && (
             <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{activity.text}</p>
           )}
@@ -105,7 +106,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
     case 'focus':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">Form alanına odaklandı</p>
+          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{labels.focus}</p>
           {activity.fieldName && (
             <p className="text-[11px] text-indigo-500 dark:text-indigo-400 truncate mt-0.5">{activity.fieldName}</p>
           )}
@@ -114,7 +115,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
     case 'scroll':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">Kaydırdı</p>
+          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{labels.scroll}</p>
           {activity.scrollPercentage !== undefined && (
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -123,7 +124,7 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
                   style={{ width: `${activity.scrollPercentage}%` }}
                 />
               </div>
-              <span className="text-[10px] text-gray-400 font-medium">%{activity.scrollPercentage}</span>
+              <span className="text-[10px] text-gray-400 font-medium">{activity.scrollPercentage}%</span>
             </div>
           )}
         </div>
@@ -131,13 +132,13 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
     case 'online':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Siteye girdi</p>
+          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{labels.online}</p>
         </div>
       )
     case 'offline':
       return (
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Siteden çıktı</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{labels.offline}</p>
         </div>
       )
     default:
@@ -149,31 +150,31 @@ function ActivityLabel({ activity }: { activity: VisitorActivity }) {
   }
 }
 
-export function ActivityFeed({ activities, theme = 'dashboard' }: ActivityFeedProps) {
+export function ActivityFeed({ activities }: ActivityFeedProps) {
+  const { activity: labels, locale } = useVisitorsI18n()
+
   if (activities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 text-center">
         <span className="text-2xl mb-2">📡</span>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Ziyaretçinin aktiviteleri burada görünecek</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Sayfa geçişleri, tıklamalar ve yazılar gerçek zamanlı aktarılır
-        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{labels.emptyTitle}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{labels.emptyHint}</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">Canlı Aktivite</p>
+      <p className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">{labels.liveActivity}</p>
       {activities.slice(0, 30).map((activity, idx) => (
         <div
           key={`${activity.timestamp}-${idx}`}
           className="flex items-start gap-2.5 p-2 rounded-lg bg-white dark:bg-[#1a1d2e]/50 border border-gray-100 dark:border-white/[0.03]"
         >
           <ActivityIcon eventType={activity.eventType} />
-          <ActivityLabel activity={activity} />
+          <ActivityLabel activity={activity} labels={labels} />
           <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0 mt-0.5">
-            {formatTimeAgo(activity.timestamp)}
+            {formatTimeAgo(activity.timestamp, locale)}
           </span>
         </div>
       ))}

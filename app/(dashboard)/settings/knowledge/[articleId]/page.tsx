@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { useWebsite } from '@/lib/hooks/use-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import { useRouter } from 'next/navigation'
 
 interface Category {
@@ -34,6 +35,8 @@ function slugify(text: string) {
 
 export default function ArticleEditorPage({ params }: { params: Promise<{ articleId: string }> }) {
   const { articleId } = use(params)
+  const i18n = useSettingsI18n()
+  const { knowledge: k, common: c } = i18n
   const { website } = useWebsite()
   const router = useRouter()
   const isNew = articleId === 'new'
@@ -83,7 +86,7 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
 
   const handleSave = async (newStatus?: 'DRAFT' | 'PUBLISHED') => {
     if (!website || !title.trim() || !slug.trim() || !content.trim()) {
-      setMessage({ type: 'error', text: 'Başlık, slug ve içerik zorunludur' })
+      setMessage({ type: 'error', text: k.requiredFields })
       return
     }
 
@@ -119,17 +122,17 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Kaydetme başarısız')
+        throw new Error(data.error || c.saveFailed)
       }
 
       const saved = await res.json()
-      setMessage({ type: 'success', text: 'Makale kaydedildi!' })
+      setMessage({ type: 'success', text: k.articleSaved })
       if (isNew) {
         router.push(`/settings/knowledge/${saved.id}`)
       }
       setTimeout(() => setMessage(null), 3000)
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Kaydetme başarısız' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : c.saveFailed })
     } finally {
       setSaving(false)
     }
@@ -139,7 +142,7 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
     const w = window.open('', '_blank')
     if (!w) return
     w.document.write(`
-      <html><head><title>${title || 'Önizleme'}</title>
+      <html><head><title>${title || k.previewTitle}</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <script src="https://cdn.tailwindcss.com"></script>
@@ -172,17 +175,17 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{isNew ? 'Yeni Makale' : 'Makale Düzenle'}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{isNew ? k.newArticleTitle : k.editArticleTitle}</h1>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3">
           <button onClick={handlePreview} className="px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-accent transition">
-            Önizle
+            {c.preview}
           </button>
           <button onClick={() => handleSave('DRAFT')} disabled={saving} className="px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-accent transition disabled:opacity-50">
-            {saving ? 'Kaydediliyor...' : 'Taslak Kaydet'}
+            {saving ? c.saving : k.saveDraft}
           </button>
           <button onClick={() => handleSave('PUBLISHED')} disabled={saving} className="col-span-2 sm:col-span-1 px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary-hover transition disabled:opacity-50 shadow-brand">
-            {saving ? 'Yayınlanıyor...' : 'Yayınla'}
+            {saving ? k.publishing : k.publish}
           </button>
         </div>
       </div>
@@ -201,20 +204,20 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
         <div className="surface p-5 sm:p-6 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Başlık</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{k.titleLabel}</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Makale başlığı"
+                placeholder={k.titlePlaceholder}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Slug
+                {k.slug}
                 <button onClick={() => setAutoSlug(!autoSlug)} className="ml-2 text-xs text-muted-foreground hover:text-primary">
-                  {autoSlug ? 'Otomatik' : 'Manuel'}
+                  {autoSlug ? c.auto : c.manual}
                 </button>
               </label>
               <input
@@ -222,57 +225,57 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
                 value={slug}
                 onChange={(e) => { setSlug(e.target.value); setAutoSlug(false) }}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="makale-slugu"
+                placeholder={k.slugArticlePlaceholder}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Kısa Açıklama</label>
+            <label className="block text-sm font-medium text-foreground mb-1">{k.excerptLabel}</label>
             <input
               type="text"
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-              placeholder="Kısa bir açıklama (opsiyonel)"
+              placeholder={k.excerptPlaceholder}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">İçerik</label>
+            <label className="block text-sm font-medium text-foreground mb-1">{k.contentLabel}</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={16}
               className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-y font-mono text-sm"
-              placeholder="Makale içeriğini buraya yazın..."
+              placeholder={k.contentPlaceholder}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Kategori</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{k.categoryLabel}</label>
               <select
                 value={categoryId || ''}
                 onChange={(e) => setCategoryId(e.target.value || null)}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               >
-                <option value="">Kategori seçin</option>
+                <option value="">{k.selectCategory}</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Durum</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{k.status}</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
               >
-                <option value="DRAFT">Taslak</option>
-                <option value="PUBLISHED">Yayında</option>
-                <option value="ARCHIVED">Arşiv</option>
+                <option value="DRAFT">{k.statusDraft}</option>
+                <option value="PUBLISHED">{k.statusPublished}</option>
+                <option value="ARCHIVED">{k.statusArchived}</option>
               </select>
             </div>
           </div>
@@ -284,7 +287,7 @@ export default function ArticleEditorPage({ params }: { params: Promise<{ articl
               onChange={(e) => setIsFeatured(e.target.checked)}
               className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
             />
-            <span className="text-sm font-medium text-foreground">Öne Çıkan Makale</span>
+            <span className="text-sm font-medium text-foreground">{k.featuredArticle}</span>
           </label>
         </div>
       </div>

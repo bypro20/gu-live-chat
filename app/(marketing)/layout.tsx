@@ -5,16 +5,19 @@ import { JsonLd } from '@/components/marketing/json-ld'
 import { SourceProtection } from '@/components/marketing/source-protection'
 import { MobileAndroidBar } from '@/components/marketing/mobile-android-bar'
 import { organizationJsonLd } from '@/lib/seo'
+import { getServerLocaleContext } from '@/lib/locale-server'
 
 export const runtime = 'nodejs'
 export const revalidate = 600
 
-export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
+  const initialLocale = await getServerLocaleContext()
+
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
-      <MarketingProviders>
-        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased pb-28 lg:pb-0">
+      <MarketingProviders initialLocale={initialLocale}>
+        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased pb-32 lg:pb-0">
           <SourceProtection />
           {children}
           <MarketingWidgetLoader />

@@ -1,8 +1,11 @@
 import type { LiveVisitor, VisitorActivity } from '@/lib/stores/live-visitors-store'
+import type { SiteLocale } from '@/lib/regional-config'
+import { getVisitorsMessages } from '@/lib/visitors-i18n'
 
 // ─── Time Formatting ────────────────────────────────────────────────
 
-export function formatTimeAgo(date: string | Date): string {
+export function formatTimeAgo(date: string | Date, locale: SiteLocale = 'tr'): string {
+  const t = getVisitorsMessages(locale).time
   const now = new Date()
   const d = typeof date === 'string' ? new Date(date) : date
   const diffMs = now.getTime() - d.getTime()
@@ -10,14 +13,15 @@ export function formatTimeAgo(date: string | Date): string {
   const diffMin = Math.floor(diffSec / 60)
   const diffHr = Math.floor(diffMin / 60)
 
-  if (diffSec < 10) return 'Şimdi'
-  if (diffSec < 60) return `${diffSec}s`
-  if (diffMin < 60) return `${diffMin}dk`
-  if (diffHr < 24) return `${diffHr}sa`
-  return d.toLocaleDateString('tr-TR')
+  if (diffSec < 10) return t.now
+  if (diffSec < 60) return t.seconds(diffSec)
+  if (diffMin < 60) return t.minutes(diffMin)
+  if (diffHr < 24) return t.hours(diffHr)
+  return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR')
 }
 
-export function formatDuration(start: string | Date, end?: string | Date): string {
+export function formatDuration(start: string | Date, end?: string | Date, locale: SiteLocale = 'tr'): string {
+  const t = getVisitorsMessages(locale).time
   const s = typeof start === 'string' ? new Date(start) : start
   const e = end ? (typeof end === 'string' ? new Date(end) : end) : new Date()
   const diffMs = e.getTime() - s.getTime()
@@ -25,9 +29,9 @@ export function formatDuration(start: string | Date, end?: string | Date): strin
   const diffHr = Math.floor(diffMin / 60)
   const remMin = diffMin % 60
 
-  if (diffHr > 0) return `${diffHr}sa ${remMin}dk`
-  if (diffMin > 0) return `${diffMin}dk`
-  return 'Az önce'
+  if (diffHr > 0) return t.durationHour(diffHr, remMin)
+  if (diffMin > 0) return t.durationMin(diffMin)
+  return t.justNow
 }
 
 // ─── Page History Extraction ─────────────────────────────────────────
@@ -84,21 +88,22 @@ export function getScrollPercent(visitor: LiveVisitor): number | null {
 
 // ─── Browser / Device Icons ─────────────────────────────────────────
 
-export function getBrowserLabel(browser?: string | null): string {
+export function getBrowserLabel(browser?: string | null, locale: SiteLocale = 'tr'): string {
   const b = (browser || '').toLowerCase()
   if (b.includes('chrome')) return 'Chrome'
   if (b.includes('firefox')) return 'Firefox'
   if (b.includes('safari')) return 'Safari'
   if (b.includes('edge')) return 'Edge'
   if (b.includes('opera')) return 'Opera'
-  return browser || 'Bilinmiyor'
+  return browser || getVisitorsMessages(locale).device.unknown
 }
 
-export function getDeviceLabel(device?: string | null): string {
+export function getDeviceLabel(device?: string | null, locale: SiteLocale = 'tr'): string {
   const d = (device || '').toLowerCase()
-  if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return 'Mobil'
-  if (d.includes('tablet') || d.includes('ipad')) return 'Tablet'
-  return 'Masaüstü'
+  const labels = getVisitorsMessages(locale).device
+  if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return labels.mobile
+  if (d.includes('tablet') || d.includes('ipad')) return labels.tablet
+  return labels.desktop
 }
 
 export function getBrowserEmoji(browser?: string | null): string {

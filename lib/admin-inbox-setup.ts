@@ -6,13 +6,14 @@ export type AdminInboxSite = {
   websiteId: string
   name: string
   domain: string
+  primaryColor?: string | null
 }
 
 async function findSiteByPublicId(publicId: string): Promise<AdminInboxSite | null> {
   try {
     const site = await prisma.website.findUnique({
       where: { websiteId: publicId },
-      select: { id: true, websiteId: true, name: true, domain: true },
+      select: { id: true, websiteId: true, name: true, domain: true, primaryColor: true },
     })
     if (site) return site
   } catch (e) {
@@ -21,9 +22,9 @@ async function findSiteByPublicId(publicId: string): Promise<AdminInboxSite | nu
 
   try {
     const rows = await prisma.$queryRawUnsafe<
-      Array<{ id: string; websiteId: string; name: string; domain: string }>
+      Array<{ id: string; websiteId: string; name: string; domain: string; primaryColor: string | null }>
     >(
-      `SELECT id, websiteId, name, domain FROM websites WHERE websiteId = ? LIMIT 1`,
+      `SELECT id, websiteId, name, domain, primaryColor FROM websites WHERE websiteId = ? LIMIT 1`,
       publicId
     )
     return rows[0] ?? null
@@ -51,7 +52,7 @@ export async function resolveAdminInboxSite(adminUserId: string): Promise<AdminI
     const owned = await prisma.website.findFirst({
       where: { ownerId: adminUserId },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, websiteId: true, name: true, domain: true },
+      select: { id: true, websiteId: true, name: true, domain: true, primaryColor: true },
     })
     if (owned) return owned
   } catch (e) {

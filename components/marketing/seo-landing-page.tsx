@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { JsonLd } from '@/components/marketing/json-ld'
-import { buildMetadata, breadcrumbJsonLd, faqJsonLd, softwareApplicationJsonLd, type PageMeta } from '@/lib/seo'
+import { buildMetadata, breadcrumbJsonLd, faqJsonLd, softwareApplicationJsonLd, webPageJsonLd, type PageMeta } from '@/lib/seo'
 import { trialHeroLine, trialShortLabel } from '@/lib/trial-config'
 
 export type SeoLandingConfig = {
@@ -27,6 +27,11 @@ export function SeoLandingPage({ config }: { config: SeoLandingConfig }) {
     <MarketingPageShell>
       <JsonLd
         data={[
+          webPageJsonLd({
+            name: config.meta.title,
+            description: config.meta.description,
+            path: config.meta.path,
+          }),
           softwareApplicationJsonLd(),
           breadcrumbJsonLd([
             { name: 'Ana Sayfa', path: '/' },
@@ -96,7 +101,7 @@ export function SeoLandingPage({ config }: { config: SeoLandingConfig }) {
       <section className="surface p-8 text-center">
         <h2 className="text-xl font-bold mb-3">Hemen ücretsiz deneyin</h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Gu Chat ile müşterilerinize anında ulaşın. Kurulum 30 saniye, {trialShortLabel()}.
+          Gu Live Chat ile müşterilerinize anında ulaşın. Kurulum 30 saniye, {trialShortLabel()}.
         </p>
         <Link href="/register" className="btn-primary px-8 py-3.5 inline-flex">
           Ücretsiz Başla <ArrowRight className="w-4 h-4" />

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTeam } from '@/lib/hooks/use-team'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 
 interface TeamMember {
   id: string
@@ -12,6 +13,7 @@ interface TeamMember {
 
 export default function TeamPage() {
   const { members, isLoading, inviteMember, removeMember } = useTeam()
+  const { team: t, common } = useSettingsI18n()
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('MEMBER')
   const [showInvite, setShowInvite] = useState(false)
@@ -19,14 +21,14 @@ export default function TeamPage() {
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   const roleLabels: Record<string, { label: string; color: string }> = {
-    OWNER: { label: 'Sahip', color: 'bg-primary-light text-primary' },
-    ADMIN: { label: 'Yönetici', color: 'bg-primary-light text-primary' },
-    MEMBER: { label: 'Temsilci', color: 'bg-muted text-muted-foreground' },
+    OWNER: { label: t.roles.OWNER, color: 'bg-primary-light text-primary' },
+    ADMIN: { label: t.roles.ADMIN, color: 'bg-primary-light text-primary' },
+    MEMBER: { label: t.roles.MEMBER, color: 'bg-muted text-muted-foreground' },
   }
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {
-      setMessage({ type: 'error', text: 'E-posta adresi gerekli' })
+      setMessage({ type: 'error', text: common.emailRequired })
       return
     }
     try {
@@ -34,10 +36,10 @@ export default function TeamPage() {
       setInviteEmail('')
       setInviteRole('MEMBER')
       setShowInvite(false)
-      setMessage({ type: 'success', text: 'Davet gönderildi!' })
+      setMessage({ type: 'success', text: t.inviteSent })
       setTimeout(() => setMessage(null), 3000)
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Davet gönderilemedi' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : t.inviteFailed })
     }
   }
 
@@ -45,10 +47,10 @@ export default function TeamPage() {
     setRemovingId(memberId)
     try {
       await removeMember(memberId)
-      setMessage({ type: 'success', text: 'Üye kaldırıldı' })
+      setMessage({ type: 'success', text: t.memberRemoved })
       setTimeout(() => setMessage(null), 3000)
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Kaldırma başarısız' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : t.removeFailed })
     } finally {
       setRemovingId(null)
     }
@@ -58,14 +60,14 @@ export default function TeamPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Takım Yönetimi</h1>
-          <p className="text-sm text-muted-foreground mt-1">Temsilcileri yönetin ve yeni üyeler davet edin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t.subtitle}</p>
         </div>
         <button
           onClick={() => setShowInvite(!showInvite)}
           className="btn-primary w-full sm:w-auto"
         >
-          + Üye Davet Et
+          {t.inviteMember}
         </button>
       </div>
 
@@ -79,17 +81,16 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Invite Form */}
       {showInvite && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Yeni Üye Davet Et</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t.inviteTitle}</h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-              placeholder="E-posta adresi"
+              placeholder={t.emailPlaceholder}
               className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
             />
             <select
@@ -97,20 +98,19 @@ export default function TeamPage() {
               onChange={(e) => setInviteRole(e.target.value)}
               className="px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
             >
-              <option value="MEMBER">Temsilci</option>
-              <option value="ADMIN">Yönetici</option>
+              <option value="MEMBER">{t.roles.MEMBER}</option>
+              <option value="ADMIN">{t.roles.ADMIN}</option>
             </select>
             <button
               onClick={handleInvite}
               className="btn-primary shrink-0"
             >
-              Davet Gönder
+              {t.sendInvite}
             </button>
           </div>
         </div>
       )}
 
-      {/* Team Members List */}
       <div className="surface overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -123,8 +123,8 @@ export default function TeamPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <h3 className="font-medium text-foreground">Henüz takım üyesi yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">Yukarıdaki butonu kullanarak üye davet edin</p>
+            <h3 className="font-medium text-foreground">{t.emptyTitle}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{t.emptyHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -135,7 +135,7 @@ export default function TeamPage() {
                     {member.user?.name?.[0]?.toUpperCase() || member.user?.email?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{member.user?.name || 'İsimsiz'}</p>
+                    <p className="font-medium text-foreground text-sm truncate">{member.user?.name || common.unnamed}</p>
                     <p className="text-xs text-muted-foreground truncate">{member.user?.email}</p>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function TeamPage() {
                       disabled={removingId === member.id}
                       className="text-destructive hover:opacity-80 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
-                      {removingId === member.id ? 'Kaldırılıyor...' : 'Kaldır'}
+                      {removingId === member.id ? common.removing : common.remove}
                     </button>
                   )}
                 </div>
@@ -159,14 +159,13 @@ export default function TeamPage() {
         )}
       </div>
 
-      {/* Plan Limits */}
       <div className="mt-6 bg-primary-light rounded-xl p-4 flex items-start gap-3">
         <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-primary">Plan Limitleri</p>
-          <p className="text-xs text-primary/80 mt-0.5">Ücretsiz plan en fazla 2 temsilci destekler. Daha fazla temsilci için planınızı yükseltin.</p>
+          <p className="text-sm font-medium text-primary">{t.planLimitsTitle}</p>
+          <p className="text-xs text-primary/80 mt-0.5">{t.planLimitsDesc}</p>
         </div>
       </div>
     </div>

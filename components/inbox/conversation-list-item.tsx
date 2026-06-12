@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { ChannelBadge } from './channel-badge'
 import type { InboxConversation } from './types'
-import { STATUS_LABELS, timeAgo, visitorDisplayName } from './utils'
+import { timeAgo, visitorDisplayName, getStatusLabels } from './utils'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 const STATUS_DOT: Record<string, string> = {
   OPEN: 'bg-emerald-500',
@@ -24,7 +25,10 @@ export const ConversationListItem = memo(function ConversationListItem({
   selected: boolean
   onClick: () => void
 }) {
-  const name = visitorDisplayName(conversation.visitor.name, conversation.visitor.email)
+  const d = useDashboardI18n()
+  const i = d.inbox
+  const statusLabels = getStatusLabels(d)
+  const name = visitorDisplayName(conversation.visitor.name, conversation.visitor.email, d)
   const initial = name.charAt(0).toUpperCase()
 
   return (
@@ -32,10 +36,10 @@ export const ConversationListItem = memo(function ConversationListItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full px-3 py-3 flex items-start gap-3 border-b border-border/60 transition-colors text-left',
-        'hover:bg-muted/50',
-        selected && 'bg-primary/5 border-l-2 border-l-primary',
-        conversation.unreadCount > 0 && !selected && 'bg-primary/[0.03]'
+        'w-full px-3 py-3 flex items-start gap-3 border-b border-indigo-100/60 transition-all duration-150 text-left',
+        'hover:bg-indigo-50/60',
+        selected && 'bg-indigo-50 border-l-[3px] border-l-indigo-500 shadow-sm',
+        conversation.unreadCount > 0 && !selected && 'bg-indigo-50/40'
       )}
     >
       <div className="relative shrink-0">
@@ -68,7 +72,7 @@ export const ConversationListItem = memo(function ConversationListItem({
             )}
           </div>
           <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">
-            {timeAgo(conversation.lastMessageAt)}
+            {timeAgo(conversation.lastMessageAt, d)}
           </span>
         </div>
         <p
@@ -77,11 +81,11 @@ export const ConversationListItem = memo(function ConversationListItem({
             conversation.unreadCount > 0 ? 'text-foreground/80 font-medium' : 'text-muted-foreground'
           )}
         >
-          {conversation.lastMessagePreview || 'Henüz mesaj yok'}
+          {conversation.lastMessagePreview || i.noMessages}
         </p>
         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
           <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium">
-            {STATUS_LABELS[conversation.status] || conversation.status}
+            {statusLabels[conversation.status] || conversation.status}
           </Badge>
           {conversation.assignedTo?.name && (
             <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">

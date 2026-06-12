@@ -100,7 +100,7 @@ async function checkMarketingSite(): Promise<HealthCheck> {
       id: 'marketing_site',
       ok: false,
       severity: 'critical',
-      message: 'Marketing sitesi (guchat.org widget) bulunamadı',
+      message: 'Marketing sitesi (gulivechat.com widget) bulunamadı',
     }
   }
   const site = await prisma.website.findUnique({

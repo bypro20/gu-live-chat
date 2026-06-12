@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/lib/site-config'
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
+const BASE = getSiteUrl()
 
 export default function robots(): MetadataRoute.Robots {
   return {

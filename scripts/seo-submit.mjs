@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Manuel SEO indeksleme — Bing ping + IndexNow */
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://guchat.org'
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://gulivechat.com'
 const INDEXNOW_KEY = '7f3a9b2e1d4c8f6a5b0e3d2c1b4a5f6'
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`
 

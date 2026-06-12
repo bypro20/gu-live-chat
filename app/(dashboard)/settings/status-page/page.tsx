@@ -4,22 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import {
+  statusPageComponentStatuses,
+  statusPageIncidentStatuses,
+} from '@/lib/settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
-
-const COMPONENT_STATUSES = [
-  { value: 'OPERATIONAL', label: 'Çalışıyor', color: 'text-success' },
-  { value: 'DEGRADED_PERFORMANCE', label: 'Yavaşlama', color: 'text-warning' },
-  { value: 'PARTIAL_OUTAGE', label: 'Kısmi Kesinti', color: 'text-orange-500' },
-  { value: 'MAJOR_OUTAGE', label: 'Büyük Kesinti', color: 'text-destructive' },
-  { value: 'UNDER_MAINTENANCE', label: 'Bakımda', color: 'text-muted-foreground' },
-]
-
-const INCIDENT_STATUSES = [
-  { value: 'INVESTIGATING', label: 'İnceleniyor' },
-  { value: 'IDENTIFIED', label: 'Tespit Edildi' },
-  { value: 'MONITORING', label: 'İzleniyor' },
-  { value: 'RESOLVED', label: 'Çözüldü' },
-]
 
 interface StatusPageData {
   id: string
@@ -63,6 +53,16 @@ interface Incident {
 }
 
 export default function StatusPageSettingsPage() {
+  const i18n = useSettingsI18n()
+  const { statusPage: sp, common: c } = i18n
+  const COMPONENT_STATUSES = statusPageComponentStatuses(i18n)
+  const INCIDENT_STATUSES = statusPageIncidentStatuses(i18n)
+  const severityOptions = [
+    { value: 'LOW', label: sp.severityLow },
+    { value: 'MEDIUM', label: sp.severityMedium },
+    { value: 'HIGH', label: sp.severityHigh },
+    { value: 'URGENT', label: sp.severityUrgent },
+  ]
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('statusPage')
   const router = useRouter()
   const { activeWebsite } = useActiveWebsite()
@@ -234,10 +234,8 @@ export default function StatusPageSettingsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Durum Sayfası</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sistem durumunuzu müşterilerinizle paylaşın
-          </p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{sp.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{sp.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
           {pageData.subdomain && pageData.isActive && (
@@ -249,7 +247,7 @@ export default function StatusPageSettingsPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              Önizle
+              {sp.preview}
             </a>
           )}
           <button
@@ -261,7 +259,7 @@ export default function StatusPageSettingsPage() {
                 : 'bg-primary hover:bg-primary-hover text-primary-foreground'
             }`}
           >
-            {saved ? '✓ Kaydedildi' : saving ? 'Kaydediliyor...' : 'Kaydet'}
+            {saved ? sp.saved : saving ? sp.saving : c.save}
           </button>
         </div>
       </div>
@@ -269,10 +267,10 @@ export default function StatusPageSettingsPage() {
       <div className="space-y-6">
         {/* Settings Card */}
         <div className="surface p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Sayfa Ayarları</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{sp.pageSettings}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Başlık</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.pageTitle}</label>
               <input
                 type="text"
                 value={pageData.title}
@@ -281,7 +279,7 @@ export default function StatusPageSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Alt Alan Adı</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.subdomain}</label>
               <div className="flex items-center gap-1">
                 <input
                   type="text"
@@ -290,11 +288,11 @@ export default function StatusPageSettingsPage() {
                   className="flex-1 px-4 py-3 border border-border rounded-xl bg-muted text-foreground focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition"
                   placeholder="status"
                 />
-                <span className="text-sm text-muted-foreground whitespace-nowrap">.gu-live-chat.com</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">{sp.subdomainSuffix}</span>
               </div>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-1">Açıklama</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.description}</label>
               <textarea
                 value={pageData.description}
                 onChange={(e) => setPageData({ ...pageData, description: e.target.value })}
@@ -303,7 +301,7 @@ export default function StatusPageSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Logo URL</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.logoUrl}</label>
               <input
                 type="text"
                 value={pageData.logoUrl}
@@ -312,7 +310,7 @@ export default function StatusPageSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Twitter Kullanıcı Adı</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.twitterHandle}</label>
               <input
                 type="text"
                 value={pageData.twitterHandle}
@@ -322,7 +320,7 @@ export default function StatusPageSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Ana Renk</label>
+              <label className="block text-sm font-medium text-foreground mb-1">{sp.primaryColor}</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -347,7 +345,7 @@ export default function StatusPageSettingsPage() {
                 onChange={(e) => setPageData({ ...pageData, isActive: e.target.checked })}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-ring"
               />
-              <span className="text-sm font-medium text-foreground">Aktif</span>
+              <span className="text-sm font-medium text-foreground">{sp.active}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -356,7 +354,7 @@ export default function StatusPageSettingsPage() {
                 onChange={(e) => setPageData({ ...pageData, showHistory: e.target.checked })}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-ring"
               />
-              <span className="text-sm font-medium text-foreground">Geçmişi Göster</span>
+              <span className="text-sm font-medium text-foreground">{sp.showHistory}</span>
             </label>
           </div>
         </div>
@@ -364,7 +362,7 @@ export default function StatusPageSettingsPage() {
         {/* Components Card */}
         <div className="surface p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Bileşenler</h2>
+            <h2 className="text-lg font-semibold text-foreground">{sp.components}</h2>
             {pageData.id && (
               <div className="flex gap-2">
                 <input
@@ -372,22 +370,20 @@ export default function StatusPageSettingsPage() {
                   value={newComponent.name}
                   onChange={(e) => setNewComponent({ ...newComponent, name: e.target.value })}
                   className="flex-1 sm:flex-initial px-3 py-2 border border-border rounded-xl bg-muted text-sm text-foreground focus:ring-2 focus:ring-ring outline-none"
-                  placeholder="Bileşen adı"
+                  placeholder={sp.componentNamePlaceholder}
                 />
                 <button
                   onClick={addComponent}
                   className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground font-medium rounded-xl text-sm transition shrink-0"
                 >
-                  Ekle
+                  {sp.add}
                 </button>
               </div>
             )}
           </div>
           <div className="space-y-2">
             {components.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Henüz bileşen eklenmemiş. Önce durum sayfasını kaydedin.
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-8">{sp.noComponents}</p>
             )}
             {components.map((comp) => (
               <div key={comp.id} className="flex items-center justify-between gap-3 p-3 bg-muted rounded-xl">
@@ -424,13 +420,13 @@ export default function StatusPageSettingsPage() {
         {/* Incidents Card */}
         <div className="surface p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Olaylar</h2>
+            <h2 className="text-lg font-semibold text-foreground">{sp.incidents}</h2>
             {pageData.id && (
               <button
                 onClick={() => setShowNewIncident(!showNewIncident)}
                 className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium rounded-xl text-sm transition shrink-0"
               >
-                + Olay Bildir
+                {sp.reportIncident}
               </button>
             )}
           </div>
@@ -442,14 +438,14 @@ export default function StatusPageSettingsPage() {
                 value={newIncident.title}
                 onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring outline-none"
-                placeholder="Olay başlığı"
+                placeholder={sp.incidentTitlePlaceholder}
               />
               <textarea
                 value={newIncident.message}
                 onChange={(e) => setNewIncident({ ...newIncident, message: e.target.value })}
                 className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring outline-none resize-none"
                 rows={3}
-                placeholder="Olay açıklaması"
+                placeholder={sp.incidentMessagePlaceholder}
               />
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <select
@@ -457,31 +453,28 @@ export default function StatusPageSettingsPage() {
                   onChange={(e) => setNewIncident({ ...newIncident, severity: e.target.value })}
                   className="px-3 py-2 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
                 >
-                  <option value="LOW">Düşük</option>
-                  <option value="MEDIUM">Orta</option>
-                  <option value="HIGH">Yüksek</option>
-                  <option value="URGENT">Acil</option>
+                  {severityOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
                 <button
                   onClick={createIncident}
                   className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium rounded-xl text-sm transition"
                 >
-                  Oluştur
+                  {sp.create}
                 </button>
                 <button
                   onClick={() => setShowNewIncident(false)}
                   className="px-4 py-2 bg-muted text-foreground font-medium rounded-xl text-sm transition border border-border"
                 >
-                  İptal
+                  {c.cancel}
                 </button>
               </div>
             </div>
           )}
 
           {incidents.length === 0 && !showNewIncident && (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Henüz bir olay bildirilmemiş.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">{sp.noIncidents}</p>
           )}
 
           <div className="space-y-3">
@@ -505,7 +498,7 @@ export default function StatusPageSettingsPage() {
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{inc.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(inc.startedAt).toLocaleDateString('tr-TR', {
+                      {new Date(inc.startedAt).toLocaleDateString(i18n.dateLocale, {
                         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </p>
@@ -531,7 +524,7 @@ export default function StatusPageSettingsPage() {
                           </span>
                           <span className="text-muted-foreground"> — {u.message}</span>
                           <p className="text-muted-foreground mt-0.5">
-                            {new Date(u.createdAt).toLocaleDateString('tr-TR', {
+                            {new Date(u.createdAt).toLocaleDateString(i18n.dateLocale, {
                               hour: '2-digit', minute: '2-digit'
                             })}
                           </p>

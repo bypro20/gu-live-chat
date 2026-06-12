@@ -5,32 +5,21 @@ import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
+import { LanguageSwitcher } from '@/components/marketing/language-switcher'
 import { Zap, Shield, Bot, Globe } from 'lucide-react'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { nativeAppHomePath } from '@/lib/native-app'
+import { useLocale } from '@/components/marketing/locale-provider'
+import { getAuthMessages } from '@/lib/auth-i18n'
 
-const markaÖzellikleri = [
-  { simge: Zap, metin: '30 saniyede kurulum' },
-  { simge: Shield, metin: 'KVKK uyumlu güvenli altyapı' },
-  { simge: Bot, metin: 'AI destekli akıllı chatbot' },
-  { simge: Globe, metin: 'Çoklu kanal desteği' },
-]
-
-const oauthHataMesajlari: Record<string, string> = {
-  OAuthSignin: 'Google girişi başlatılamadı. Lütfen tekrar deneyin.',
-  OAuthCallback: 'Google giriş işlemi tamamlanamadı. Lütfen tekrar deneyin.',
-  OAuthCreateAccount: 'Hesap oluşturulamadı. Lütfen e-posta ile kayıt olun.',
-  OAuthAccountNotLinked: 'Bu e-posta zaten kayıtlı. E-posta/şifre ile giriş yapın.',
-  AccessDenied: 'Erişim reddedildi. Hesabınız askıya alınmış olabilir.',
-  Configuration: 'Sunucu yapılandırma hatası. Lütfen birkaç saniye bekleyip tekrar deneyin.',
-  Verification: 'Doğrulama bağlantısı geçersiz veya süresi dolmuş.',
-  Default: 'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.',
-}
+const loginFeatureIcons = [Zap, Shield, Bot, Globe]
 
 export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isNativeApp } = useNativeApp()
+  const { locale } = useLocale()
+  const t = getAuthMessages(locale)
   const [eposta, setEposta] = useState('')
   const [sifre, setSifre] = useState('')
   const [hata, setHata] = useState('')
@@ -42,9 +31,9 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
     const oauthHata = searchParams.get('error')
     if (oauthHata) {
       setOauthHataKodu(oauthHata)
-      setHata(oauthHataMesajlari[oauthHata] || oauthHataMesajlari.Default)
+      setHata(t.login.oauth[oauthHata] || t.login.oauth.Default)
     }
-  }, [searchParams])
+  }, [searchParams, t.login.oauth])
 
   const googleIleGiris = async () => {
     setGoogleYukleniyor(true)
@@ -52,7 +41,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
     try {
       await signIn('google', { callbackUrl: searchParams.get('callbackUrl') || '/dashboard' })
     } catch {
-      setHata('Google girişi başlatılamadı. Lütfen tekrar deneyin.')
+      setHata(t.login.oauth.OAuthSignin)
       setGoogleYukleniyor(false)
     }
   }
@@ -65,7 +54,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
     try {
       const sonuc = await signIn('credentials', { email: eposta, password: sifre, redirect: false })
       if (sonuc?.error) {
-        setHata('E-posta veya şifre hatalı')
+        setHata(t.login.wrongCredentials)
       } else {
         const oturumSonucu = await fetch('/api/auth/session')
         const oturum = await oturumSonucu.json()
@@ -77,7 +66,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
         router.refresh()
       }
     } catch {
-      setHata('Giriş sırasında bir hata oluştu')
+      setHata(t.login.loginError)
     } finally {
       setYukleniyor(false)
     }
@@ -85,35 +74,43 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
 
   return (
     <div className={`min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden flex ${isNativeApp ? 'native-app-auth bg-[#0B1220]' : 'mobile-safe-area'}`}>
-      {/* Sol Panel — Crisp tarzı beyaz/mavi */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-primary-light border-r border-border items-center justify-center p-12 overflow-hidden">
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
         <div className="relative z-10 max-w-md">
           <div className="flex justify-center mb-6">
             <Logo boyut="lg" metinGoster={false} />
           </div>
-          <h2 className="text-3xl font-bold text-foreground text-center">Gu Chat</h2>
+          <h2 className="text-3xl font-bold text-foreground text-center">{t.brandTagline}</h2>
           <p className="text-muted-foreground mt-3 text-lg text-center leading-relaxed">
-            Profesyonel canlı destek sistemi ile müşterilerinize anında yanıt verin.
+            {locale === 'en'
+              ? 'Reply to customers instantly with a professional live chat platform.'
+              : 'Profesyonel canlı destek sistemi ile müşterilerinize anında yanıt verin.'}
           </p>
           <div className="mt-12 space-y-5">
-            {markaÖzellikleri.map(özellik => (
-              <div key={özellik.metin} className="flex items-center gap-4 group">
-                <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
-                  <özellik.simge className="w-5 h-5 text-primary" />
+            {t.loginFeatures.map((metin, i) => {
+              const Icon = loginFeatureIcons[i] ?? Zap
+              return (
+                <div key={metin} className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shadow-xs group-hover:border-primary/30 transition-colors">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-foreground font-medium">{metin}</span>
                 </div>
-                <span className="text-foreground font-medium">{özellik.metin}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div className="mt-12 pt-8 border-t border-border text-center">
-            <p className="text-muted-foreground text-sm">Türk yapımı · KVKK uyumlu · 99.9% uptime</p>
+            <p className="text-muted-foreground text-sm">{t.brandFooter}</p>
           </div>
         </div>
       </div>
 
-      {/* Sağ Panel - Beyaz Form Bölümü (tamamen dolar) */}
-      <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 min-h-screen lg:min-h-0 ${isNativeApp ? 'bg-[#0B1220]' : 'bg-white dark:bg-gray-950'}`}>
+      <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 min-h-screen lg:min-h-0 relative ${isNativeApp ? 'bg-[#0B1220]' : 'bg-white dark:bg-gray-950'}`}>
+        {!isNativeApp && (
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+            <LanguageSwitcher compact />
+          </div>
+        )}
         <div className="w-full max-w-md">
           <div className={`${isNativeApp ? 'flex' : 'lg:hidden flex'} justify-center mb-8`}>
             <Logo boyut={isNativeApp ? 'lg' : 'default'} animasyonlu={isNativeApp} />
@@ -121,21 +118,19 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
 
           <div className="mb-8">
             <h1 className={`text-2xl lg:text-3xl font-bold ${isNativeApp ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-              {isNativeApp ? 'Gu Chat' : 'Hoş Geldiniz'}
+              {isNativeApp ? t.login.nativeTitle : t.login.title}
             </h1>
             <p className={`mt-2 ${isNativeApp ? 'text-slate-400' : 'text-gray-500 dark:text-gray-400'}`}>
-              {isNativeApp ? 'Hesabınıza giriş yapın' : 'Hesabınıza giriş yapın'}
+              {t.login.subtitle}
             </p>
           </div>
 
-          {/* Hata mesajı */}
           {hata && (
             <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg p-3 mb-6 text-sm">
               {hata}
             </div>
           )}
 
-          {/* Google ile giriş */}
           {googleAktif && (
             <div className="space-y-3 mb-6">
               <button
@@ -149,7 +144,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Yönlendiriliyor...
+                    {t.login.googleRedirecting}
                   </>
                 ) : (
                   <>
@@ -159,30 +154,28 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
-                    {oauthHataKodu ? 'Tekrar Dene — Google ile Giriş' : 'Google ile devam et'}
+                    {oauthHataKodu ? t.login.googleRetry : t.login.google}
                   </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Ayırıcı çizgi */}
           {googleAktif && (
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">veya e-posta ile</span>
+                <span className="px-2 bg-white dark:bg-gray-950 text-gray-500">{t.login.orEmail}</span>
               </div>
             </div>
           )}
 
-          {/* Giriş formu */}
           <form onSubmit={formuGonder} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
-                E-posta
+                {t.login.email}
               </label>
               <input
                 id="email"
@@ -197,7 +190,7 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
-                Şifre
+                {t.login.password}
               </label>
               <input
                 id="password"
@@ -210,7 +203,6 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
               />
             </div>
 
-            {/* Giriş butonu - gradient ve gölge efekti */}
             <button
               type="submit"
               disabled={yukleniyor}
@@ -222,33 +214,32 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Giriş yapılıyor...
+                  {t.login.submitting}
                 </span>
               ) : (
-                'Giriş Yap'
+                t.login.submit
               )}
             </button>
           </form>
 
-          {/* Kayıt linki */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Hesabınız yok mu?{' '}
+              {t.login.noAccount}{' '}
               <Link href="/register" className="text-primary hover:underline font-medium">
-                Kayıt Ol
+                {t.login.register}
               </Link>
             </p>
           </div>
 
           {!isNativeApp && (
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Siteye Dön
-            </Link>
-          </div>
+            <div className="mt-6 pt-6 border-t border-border text-center">
+              <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {t.login.backToSite}
+              </Link>
+            </div>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
-# Gu Chat — Google Ads Kurulum Rehberi (En hızlı dönüşüm)
+# Gu Live Chat — Google Ads Kurulum Rehberi (En hızlı dönüşüm)
 
-Gu Chat için **en düşük maliyet / en çok kayıt** kanalı: **Google Arama reklamları**.
+Gu Live Chat için **en düşük maliyet / en çok kayıt** kanalı: **Google Arama reklamları**.
 İnsan zaten "canlı destek yazılımı" arıyor → satın alma niyeti yüksek.
 
 ## 1. Hesap aç (15 dk)
@@ -23,7 +23,7 @@ Gu Chat için **en düşük maliyet / en çok kayıt** kanalı: **Google Arama r
 ## 3. Landing URL (kopyala-yapıştır)
 
 ```
-https://guchat.org/basla?utm_source=google&utm_medium=cpc&utm_campaign=search-canli-destek
+https://gulivechat.com/basla?utm_source=google&utm_medium=cpc&utm_campaign=search-canli-destek
 ```
 
 Bu sayfa reklam için optimize edildi — tek CTA, dikkat dağıtmıyor.
@@ -95,7 +95,7 @@ Google'da kayıt olmayan ziyaretçilere Instagram reklamı (Pixel gerekli).
 
 - [ ] Google Ads hesabı açıldı
 - [ ] Kampanya: sadece Arama
-- [ ] URL: guchat.org/basla
+- [ ] URL: gulivechat.com/basla
 - [ ] 6 anahtar kelime eklendi
 - [ ] Negatif kelimeler eklendi
 - [ ] GA4 ID Vercel'e eklendi

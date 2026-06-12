@@ -3,11 +3,11 @@
  * Site sağlık botu — production kontrol + otomatik onarım tetikler.
  *
  *   CRON_SECRET=... node scripts/site-health-bot.mjs
- *   BASE_URL=https://guchat.org (varsayılan)
+ *   BASE_URL=https://gulivechat.com (varsayılan)
  *
  * Production cron: her 15 dk (vercel.json). Aynı kritik hata için admin bildirimi en fazla 6 saatte bir.
  */
-const BASE = (process.env.BASE_URL || 'https://guchat.org').replace(/\/$/, '')
+const BASE = (process.env.BASE_URL || 'https://gulivechat.com').replace(/\/$/, '')
 const secret = process.env.CRON_SECRET
 
 if (!secret) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
+import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 
 interface Category {
   id: string
@@ -30,6 +31,7 @@ interface Article {
 
 export default function PublicKnowledgePage({ params }: { params: Promise<{ websiteId: string }> }) {
   const { websiteId } = use(params)
+  const { knowledge: k } = useMarketingPages()
   const [articles, setArticles] = useState<Article[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -77,11 +79,11 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{websiteName} - Bilgi Bankası</h1>
-              <p className="text-sm text-muted-foreground mt-1">Sık sorulan sorular ve yardım dokümanları</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{websiteName} - {k.titleSuffix}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{k.subtitle}</p>
             </div>
             <Link href="/" className="shrink-0 text-sm text-muted-foreground hover:text-primary transition">
-              Ana Sayfa
+              {k.homeLink}
             </Link>
           </div>
           <div className="mt-6 relative">
@@ -92,7 +94,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Makale ara..."
+              placeholder={k.searchPlaceholder}
               className="w-full pl-12 pr-4 py-3 sm:py-3.5 border border-border rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition text-base sm:text-lg"
             />
           </div>
@@ -112,7 +114,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                   onClick={() => { setSelectedCategory(null); setSelectedArticle(null) }}
                   className={`shrink-0 lg:shrink lg:w-full whitespace-nowrap text-left px-3 py-2 rounded-lg text-sm transition ${!selectedCategory && !selectedArticle ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
                 >
-                  Tüm Makaleler
+                  {k.allArticles}
                 </button>
                 {categories.filter(c => c._count.articles > 0).map(cat => (
                   <button
@@ -134,14 +136,14 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Geri
+                    {k.back}
                   </button>
                   <div className="surface p-5 sm:p-8">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
                       {selectedArticle.category && (
                         <span className="px-2 py-0.5 bg-primary-light text-primary rounded-full">{selectedArticle.category.name}</span>
                       )}
-                      {selectedArticle.viewCount > 0 && <span>{selectedArticle.viewCount} görüntülenme</span>}
+                      {selectedArticle.viewCount > 0 && <span>{selectedArticle.viewCount} {k.views}</span>}
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{selectedArticle.title}</h1>
                     {selectedArticle.excerpt && (
@@ -156,7 +158,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                 <>
                   {featured.length > 0 && !search && !selectedCategory && (
                     <section className="mb-10">
-                      <h2 className="text-lg font-semibold text-foreground mb-4">Öne Çıkan Makaleler</h2>
+                      <h2 className="text-lg font-semibold text-foreground mb-4">{k.featuredTitle}</h2>
                       <div className="grid gap-4">
                         {featured.map(article => (
                           <button
@@ -175,7 +177,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                   )}
 
                   <section>
-                    {!search && !selectedCategory && <h2 className="text-lg font-semibold text-foreground mb-4">Tüm Makaleler</h2>}
+                    {!search && !selectedCategory && <h2 className="text-lg font-semibold text-foreground mb-4">{k.allArticlesTitle}</h2>}
                     {filtered.length === 0 ? (
                       <div className="text-center py-16">
                         <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
@@ -183,8 +185,8 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <h3 className="font-medium text-foreground">Makale bulunamadı</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Aramanızla eşleşen makale yok</p>
+                        <h3 className="font-medium text-foreground">{k.noResultsTitle}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{k.noResultsDesc}</p>
                       </div>
                     ) : (
                       <div className="grid gap-4">
@@ -204,9 +206,9 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
                               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{article.excerpt}</p>
                             )}
                             <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                              <span>{article.viewCount} görüntülenme</span>
+                              <span>{article.viewCount} {k.views}</span>
                               {article.helpful + article.notHelpful > 0 && (
-                                <span>%{Math.round((article.helpful / (article.helpful + article.notHelpful)) * 100)} faydalı</span>
+                                <span>%{Math.round((article.helpful / (article.helpful + article.notHelpful)) * 100)} {k.helpful}</span>
                               )}
                             </div>
                           </button>
@@ -223,7 +225,7 @@ export default function PublicKnowledgePage({ params }: { params: Promise<{ webs
 
       <footer className="border-t border-border mt-12">
         <div className="max-w-5xl mx-auto px-6 py-8 text-center text-sm text-muted-foreground">
-          {websiteName} &copy; {new Date().getFullYear()} - Gu Live Chat ile desteklenmektedir
+          {websiteName} &copy; {new Date().getFullYear()} - {k.footerPowered}
         </div>
       </footer>
     </div>

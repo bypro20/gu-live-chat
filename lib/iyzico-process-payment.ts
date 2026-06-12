@@ -1,5 +1,4 @@
 import { prisma } from './db'
-import { PLANS } from './constants'
 import { parseMerchantOid } from './payment-orders'
 import { retrieveCheckoutForm } from './iyzico'
 import {
@@ -8,6 +7,8 @@ import {
   renewSubscriptionFromCallback,
 } from './subscription'
 import { activateAddonFromPayment } from './addon-purchase'
+import { isValidRegionalPlanPayment, currencyForRegionalPayment } from './checkout'
+import type { PlanId } from './plan-cta'
 import type { Plan } from '@/app/generated/prisma/client'
 
 async function findWebsiteForOrder(merchantOid: string) {
@@ -105,23 +106,38 @@ export async function processIyzicoCallbackToken(
   const planId = validPlans.includes(parsed.planId) ? parsed.planId : 'STARTER'
   const plan = planId as Plan
 
-  const planData = PLANS.find((p) => p.id === plan)
-  const expectedKurus = planData ? planData.price * 100 : 0
-  const paidKurus = Math.round(parseFloat(result.paidPrice || '0') * 100)
-  if (expectedKurus > 0 && paidKurus !== expectedKurus) {
+  const paidAmount = parseFloat(result.paidPrice || '0')
+  if (paidAmount <= 0 || !isValidRegionalPlanPayment(planId as PlanId, paidAmount)) {
     console.error(
-      `[iyzico] Amount mismatch for ${merchantOid}: expected ${expectedKurus}, got ${paidKurus}`
+      `[iyzico] Amount mismatch for ${merchantOid}: paid ${paidAmount} not valid for plan ${planId}`
     )
     return { ok: true, redirect: 'failed' }
   }
+
+  const invoiceCurrency = currencyForRegionalPayment(planId as PlanId, paidAmount)
+  const invoiceOpts = { paidAmount, currency: invoiceCurrency }
 
   const isRenewal =
     website.subscriptionStatus === 'ACTIVE' && website.plan === plan
 
   if (isRenewal) {
-    await renewSubscriptionFromCallback(website.websiteId, merchantOid, plan)
+    await renewSubscriptionFromCallback(
+      website.websiteId,
+      merchantOid,
+      plan,
+      result.cardUserKey,
+      result.cardToken,
+      invoiceOpts
+    )
   } else {
-    await activateSubscription(website.websiteId, plan, merchantOid)
+    await activateSubscription(
+      website.websiteId,
+      plan,
+      merchantOid,
+      result.cardUserKey,
+      result.cardToken,
+      invoiceOpts
+    )
   }
 
   return { ok: true, redirect: 'success' }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/** Production smoke audit for guchat.org */
-const BASE = process.env.BASE_URL || 'https://guchat.org'
+/** Production smoke audit for gulivechat.com */
+const BASE = process.env.BASE_URL || 'https://gulivechat.com'
 const SOCKET = process.env.SOCKET_URL || 'https://gu-live-chat-socket-production.up.railway.app'
 const WID = process.env.WIDGET_WEBSITE_ID || 'HA0wSGsbImQ39YDJ4UI5UpY8'
 
@@ -34,7 +34,7 @@ const apis = [
   { method: 'GET', path: '/api/admin/inbox/setup', expect: (_, s) => s === 401 },
   { method: 'GET', path: '/api/conversations', expect: (_, s) => s === 401 },
   { method: 'GET', path: '/api/dashboard/stats', expect: (_, s) => s === 401 },
-  { method: 'POST', path: '/api/widget/init', body: { websiteId: WID, fingerprint: 'audit-fp-1', currentPage: 'https://guchat.org/' }, expect: (d, s) => s === 200 && !!d.visitorToken },
+  { method: 'POST', path: '/api/widget/init', body: { websiteId: WID, fingerprint: 'audit-fp-1', currentPage: 'https://gulivechat.com/' }, expect: (d, s) => s === 200 && !!d.visitorToken },
   { method: 'POST', path: '/api/contact', body: { name: 'Audit', email: 'audit@test.com', subject: 'Smoke', message: 'smoke test' }, expect: (d, s) => s === 200 && d.success },
   { method: 'GET', path: '/api/cron/seed-admin', expect: (_, s) => s === 401 },
 ]
@@ -98,7 +98,7 @@ for (const a of apis) {
 
 // Widget message roundtrip (init + message)
 try {
-  const init = await fetchApi({ method: 'POST', path: '/api/widget/init', body: { websiteId: WID, fingerprint: 'audit-msg-fp', currentPage: 'https://guchat.org/' } })
+  const init = await fetchApi({ method: 'POST', path: '/api/widget/init', body: { websiteId: WID, fingerprint: 'audit-msg-fp', currentPage: 'https://gulivechat.com/' } })
   if (!init.data?.visitorToken) throw new Error('no visitorToken')
   const msg = await fetchApi({
     method: 'POST',

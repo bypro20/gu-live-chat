@@ -1,7 +1,6 @@
-import type { Metadata } from 'next'
-import { buildMetadata, PAGE_SEO } from '@/lib/seo'
+import { marketingMetadata } from '@/lib/marketing-pages/metadata'
 
-export const metadata: Metadata = buildMetadata(PAGE_SEO.urunler)
+export const generateMetadata = () => marketingMetadata('urunler')
 
 export default function UrunlerLayout({ children }: { children: React.ReactNode }) {
   return children

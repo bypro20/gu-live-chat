@@ -3,6 +3,7 @@
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import { formatAmount, getInvoiceStatusLabel, getInvoiceStatusColor, getPlanLabel } from '@/lib/invoice-helpers'
 
 interface Invoice {
@@ -22,6 +23,8 @@ interface Invoice {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function InvoicesPage() {
+  const i18n = useSettingsI18n()
+  const { invoices: inv } = i18n
   const { activeWebsite, isLoading: websiteLoading } = useActiveWebsite()
   const { data, error, isLoading } = useSWR<{ invoices: Invoice[] }>(
     activeWebsite ? `/api/invoices?websiteId=${activeWebsite.websiteId}` : null,
@@ -45,7 +48,6 @@ export default function InvoicesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/settings/billing"
@@ -56,34 +58,32 @@ export default function InvoicesPage() {
           </svg>
         </Link>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Fatura Geçmişi</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{inv.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {activeWebsite?.name || 'Site'} faturaları
+            {inv.subtitle(activeWebsite?.name || 'Site')}
           </p>
         </div>
       </div>
 
-      {/* Invoices Table */}
       {invoices.length === 0 ? (
         <div className="surface p-10 sm:p-12 text-center">
           <svg className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-muted-foreground">Henüz fatura bulunmuyor</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">Bir ödeme yaptığınızda faturalar burada görünecek</p>
+          <p className="text-muted-foreground">{inv.noInvoices}</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">{inv.noInvoicesHint}</p>
         </div>
       ) : (
         <div className="surface overflow-hidden">
-          {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Fatura</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Plan</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Dönem</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Tutar</th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Durum</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{inv.colInvoice}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{inv.colPlan}</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{inv.colPeriod}</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{inv.colAmount}</th>
+                  <th className="text-center px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{inv.colStatus}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -94,17 +94,17 @@ export default function InvoicesPage() {
                         #{invoice.id.slice(-8).toUpperCase()}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(invoice.createdAt).toLocaleDateString('tr-TR')}
+                        {new Date(invoice.createdAt).toLocaleDateString(i18n.dateLocale)}
                       </p>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-foreground">
-                        {getPlanLabel(invoice.plan)}
+                        {getPlanLabel(invoice.plan, i18n.locale)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-muted-foreground">
-                        {new Date(invoice.periodStart).toLocaleDateString('tr-TR')} — {new Date(invoice.periodEnd).toLocaleDateString('tr-TR')}
+                        {new Date(invoice.periodStart).toLocaleDateString(i18n.dateLocale)} — {new Date(invoice.periodEnd).toLocaleDateString(i18n.dateLocale)}
                       </p>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -114,7 +114,7 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
-                        {getInvoiceStatusLabel(invoice.status)}
+                        {getInvoiceStatusLabel(invoice.status, i18n.locale)}
                       </span>
                     </td>
                   </tr>
@@ -123,7 +123,6 @@ export default function InvoicesPage() {
             </table>
           </div>
 
-          {/* Mobile Cards */}
           <div className="md:hidden divide-y divide-border">
             {invoices.map((invoice) => (
               <div key={invoice.id} className="p-4">
@@ -132,12 +131,12 @@ export default function InvoicesPage() {
                     #{invoice.id.slice(-8).toUpperCase()}
                   </p>
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
-                    {getInvoiceStatusLabel(invoice.status)}
+                    {getInvoiceStatusLabel(invoice.status, i18n.locale)}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">{new Date(invoice.createdAt).toLocaleDateString('tr-TR')}</p>
+                <p className="text-xs text-muted-foreground">{new Date(invoice.createdAt).toLocaleDateString(i18n.dateLocale)}</p>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-muted-foreground">{getPlanLabel(invoice.plan)}</span>
+                  <span className="text-sm text-muted-foreground">{getPlanLabel(invoice.plan, i18n.locale)}</span>
                   <span className="text-sm font-semibold text-foreground">{formatAmount(invoice.amount, invoice.currency)}</span>
                 </div>
               </div>

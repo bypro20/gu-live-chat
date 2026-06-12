@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ADMIN_USER_DISPLAY_NAME } from '@/lib/site-config'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { ensureAdminMarketingAccess } from '@/lib/marketing-website'
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12)
     const user = await prisma.user.upsert({
       where: { email },
-      create: { email, name: 'Guchat Platform Admin', passwordHash, role: 'ADMIN' },
-      update: { passwordHash, role: 'ADMIN' },
+      create: { email, name: ADMIN_USER_DISPLAY_NAME, passwordHash, role: 'ADMIN' },
+      update: { passwordHash, role: 'ADMIN', name: ADMIN_USER_DISPLAY_NAME },
     })
     const schema = await syncProductionSchema()
     const marketingWebsiteId = await ensureAdminMarketingAccess(user.id)

@@ -6,8 +6,8 @@ import { connectSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-
 import type { SendAttachment } from '@/lib/hooks/use-messages'
 
 const POLL_LIST_MS = 2000
-const POLL_MSG_MS = 2500
-const POLL_IDLE_MS = 5000
+const POLL_MSG_MS = 3000
+const POLL_IDLE_MS = 30000
 
 export interface AdminConversation {
   id: string
@@ -55,9 +55,9 @@ function usePollInterval(fastMs: number, idleMs: number) {
       return
     }
     connectSocket()
-    const update = () => setInterval(isSocketConnected() ? idleMs : fastMs)
+    const update = () => setInterval(isSocketConnected() ? 0 : fastMs)
     update()
-    const id = window.setInterval(update, 2000)
+    const id = window.setInterval(update, 3000)
     return () => window.clearInterval(id)
   }, [fastMs, idleMs])
 

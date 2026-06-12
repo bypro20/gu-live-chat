@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface Campaign {
@@ -22,26 +23,12 @@ interface Campaign {
   createdAt: string
 }
 
-const STATUS_MAP: Record<string, string> = {
-  DRAFT: 'Taslak',
-  ACTIVE: 'Aktif',
-  PAUSED: 'Duraklatıldı',
-  COMPLETED: 'Tamamlandı',
-  CANCELLED: 'İptal Edildi',
-}
-
 const STATUS_COLORS: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   ACTIVE: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   PAUSED: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   COMPLETED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-}
-
-const TYPE_MAP: Record<string, string> = {
-  EMAIL: 'E-posta',
-  IN_APP: 'Uygulama İçi',
-  BROADCAST: 'Toplu Mesaj',
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -53,6 +40,7 @@ const TYPE_COLORS: Record<string, string> = {
 export default function CampaignsPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('campaigns')
   const { activeWebsite } = useActiveWebsite()
+  const { common, campaigns: camp, dateLocale } = useSettingsI18n()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const [sendingId, setSendingId] = useState<string | null>(null)
@@ -103,13 +91,13 @@ export default function CampaignsPage() {
   }
 
   const deleteCampaign = async (id: string) => {
-    if (!confirm('Bu kampanyayı silmek istediğinize emin misiniz?')) return
+    if (!confirm(camp.confirmDelete)) return
     await fetch(`/api/campaigns?id=${id}`, { method: 'DELETE' })
     fetchCampaigns()
   }
 
   const sendCampaign = async (id: string) => {
-    if (!confirm('Bu kampanyayı şimdi göndermek istediğinize emin misiniz?')) return
+    if (!confirm(camp.confirmSend)) return
     setSendingId(id)
     try {
       const res = await fetch('/api/campaigns/send', {
@@ -119,13 +107,13 @@ export default function CampaignsPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(data.error || 'Kampanya gönderilemedi')
+        alert(data.error || camp.sendFailed)
         return
       }
-      alert(`Kampanya gönderildi: ${data.sent ?? 0} alıcı`)
+      alert(camp.sentSuccess(data.sent ?? 0))
       fetchCampaigns()
     } catch {
-      alert('Kampanya gönderilemedi')
+      alert(camp.sendFailed)
     } finally {
       setSendingId(null)
     }
@@ -139,77 +127,77 @@ export default function CampaignsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Kampanyalar</h1>
-          <p className="text-sm text-muted-foreground mt-1">E-posta ve bildirim kampanyalarını yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{camp.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{camp.subtitle}</p>
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
           className="btn-primary w-full sm:w-auto"
         >
-          + Kampanya Oluştur
+          {camp.createCampaign}
         </button>
       </div>
 
       {showCreate && (
         <div className="surface p-5 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Yeni Kampanya</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{camp.newCampaign}</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Kampanya Adı</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{camp.campaignName}</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                  placeholder="Kampanya adı"
+                  placeholder={camp.campaignNamePlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Tür</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{camp.type}</label>
                 <select
                   value={form.type}
                   onChange={(e) => setForm({ ...form, type: e.target.value as Campaign['type'] })}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
-                  <option value="EMAIL">E-posta</option>
-                  <option value="IN_APP">Uygulama İçi</option>
-                  <option value="BROADCAST">Toplu Mesaj</option>
+                  <option value="EMAIL">{camp.types.EMAIL}</option>
+                  <option value="IN_APP">{camp.types.IN_APP}</option>
+                  <option value="BROADCAST">{camp.types.BROADCAST}</option>
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Açıklama</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{common.description}</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Kampanya açıklaması"
+                placeholder={camp.descriptionPlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Konu</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{camp.subject}</label>
               <input
                 type="text"
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="E-posta konusu"
+                placeholder={camp.subjectPlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">İçerik</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{camp.content}</label>
               <textarea
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
-                placeholder="Kampanya içeriği"
+                placeholder={camp.contentPlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Planlanan Tarih</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{camp.scheduledAt}</label>
               <input
                 type="datetime-local"
                 value={form.scheduledAt}
@@ -219,8 +207,8 @@ export default function CampaignsPage() {
             </div>
           </div>
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
-            <button onClick={() => setShowCreate(false)} className="btn-secondary">İptal</button>
-            <button onClick={handleCreate} className="btn-primary">Oluştur</button>
+            <button onClick={() => setShowCreate(false)} className="btn-secondary">{common.cancel}</button>
+            <button onClick={handleCreate} className="btn-primary">{common.create}</button>
           </div>
         </div>
       )}
@@ -237,8 +225,8 @@ export default function CampaignsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
               </svg>
             </div>
-            <h3 className="font-medium text-foreground">Henüz kampanya yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">İlk kampanyanızı oluşturun</p>
+            <h3 className="font-medium text-foreground">{camp.emptyTitle}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{camp.emptyHint}</p>
           </div>
         ) : (
           <>
@@ -247,56 +235,56 @@ export default function CampaignsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kampanya</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Durum</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gönderim</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Açılma</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tıklama</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Yanıt</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">İşlem</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableCampaign}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableStatus}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableSent}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableOpens}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableClicks}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableReplies}</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{camp.tableActions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {campaigns.map((c) => (
-                    <tr key={c.id} className="hover:bg-muted transition">
+                  {campaigns.map((campaign) => (
+                    <tr key={campaign.id} className="hover:bg-muted transition">
                       <td className="px-6 py-4">
-                        <p className="font-medium text-foreground text-sm">{c.name}</p>
+                        <p className="font-medium text-foreground text-sm">{campaign.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[c.type]}`}>{TYPE_MAP[c.type]}</span>
-                          {c.scheduledAt && (
-                            <span className="text-xs text-muted-foreground">{new Date(c.scheduledAt).toLocaleDateString('tr-TR')}</span>
+                          <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[campaign.type]}`}>{camp.types[campaign.type]}</span>
+                          {campaign.scheduledAt && (
+                            <span className="text-xs text-muted-foreground">{new Date(campaign.scheduledAt).toLocaleDateString(dateLocale)}</span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[c.status]}`}>{STATUS_MAP[c.status]}</span>
+                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[campaign.status]}`}>{camp.statuses[campaign.status]}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{c.sentCount}</td>
-                      <td className="px-6 py-4 text-sm text-foreground">{c.openCount}</td>
-                      <td className="px-6 py-4 text-sm text-foreground">{c.clickCount}</td>
-                      <td className="px-6 py-4 text-sm text-foreground">{c.replyCount}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{campaign.sentCount}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{campaign.openCount}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{campaign.clickCount}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{campaign.replyCount}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {c.status === 'DRAFT' && (
-                            <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">Aktifleştir</button>
+                          {campaign.status === 'DRAFT' && (
+                            <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">{camp.activate}</button>
                           )}
-                          {c.status === 'ACTIVE' && c.type === 'EMAIL' && (
+                          {campaign.status === 'ACTIVE' && campaign.type === 'EMAIL' && (
                             <button
-                              onClick={() => sendCampaign(c.id)}
-                              disabled={sendingId === c.id}
+                              onClick={() => sendCampaign(campaign.id)}
+                              disabled={sendingId === campaign.id}
                               className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition disabled:opacity-50"
                             >
-                              {sendingId === c.id ? 'Gönderiliyor...' : 'Gönder'}
+                              {sendingId === campaign.id ? camp.sending : camp.send}
                             </button>
                           )}
-                          {c.status === 'ACTIVE' && (
-                            <button onClick={() => updateStatus(c.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition">Duraklat</button>
+                          {campaign.status === 'ACTIVE' && (
+                            <button onClick={() => updateStatus(campaign.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition">{camp.pause}</button>
                           )}
-                          {c.status === 'PAUSED' && (
-                            <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">Devam Ettir</button>
+                          {campaign.status === 'PAUSED' && (
+                            <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">{camp.resume}</button>
                           )}
-                          {(c.status === 'DRAFT' || c.status === 'PAUSED') && (
-                            <button onClick={() => deleteCampaign(c.id)} className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition">Sil</button>
+                          {(campaign.status === 'DRAFT' || campaign.status === 'PAUSED') && (
+                            <button onClick={() => deleteCampaign(campaign.id)} className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition">{common.delete}</button>
                           )}
                         </div>
                       </td>
@@ -308,46 +296,46 @@ export default function CampaignsPage() {
 
             {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-border">
-              {campaigns.map((c) => (
-                <div key={c.id} className="p-4">
+              {campaigns.map((campaign) => (
+                <div key={campaign.id} className="p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium text-foreground text-sm min-w-0 break-words">{c.name}</p>
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full shrink-0 ${STATUS_COLORS[c.status]}`}>{STATUS_MAP[c.status]}</span>
+                    <p className="font-medium text-foreground text-sm min-w-0 break-words">{campaign.name}</p>
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full shrink-0 ${STATUS_COLORS[campaign.status]}`}>{camp.statuses[campaign.status]}</span>
                   </div>
                   <div className="flex items-center flex-wrap gap-2 mt-1">
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[c.type]}`}>{TYPE_MAP[c.type]}</span>
-                    {c.scheduledAt && (
-                      <span className="text-xs text-muted-foreground">{new Date(c.scheduledAt).toLocaleDateString('tr-TR')}</span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[campaign.type]}`}>{camp.types[campaign.type]}</span>
+                    {campaign.scheduledAt && (
+                      <span className="text-xs text-muted-foreground">{new Date(campaign.scheduledAt).toLocaleDateString(dateLocale)}</span>
                     )}
                   </div>
                   <div className="grid grid-cols-4 gap-2 mt-3 text-center">
-                    <div><p className="text-sm font-semibold text-foreground">{c.sentCount}</p><p className="text-[10px] text-muted-foreground">Gönderim</p></div>
-                    <div><p className="text-sm font-semibold text-foreground">{c.openCount}</p><p className="text-[10px] text-muted-foreground">Açılma</p></div>
-                    <div><p className="text-sm font-semibold text-foreground">{c.clickCount}</p><p className="text-[10px] text-muted-foreground">Tıklama</p></div>
-                    <div><p className="text-sm font-semibold text-foreground">{c.replyCount}</p><p className="text-[10px] text-muted-foreground">Yanıt</p></div>
+                    <div><p className="text-sm font-semibold text-foreground">{campaign.sentCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableSent}</p></div>
+                    <div><p className="text-sm font-semibold text-foreground">{campaign.openCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableOpens}</p></div>
+                    <div><p className="text-sm font-semibold text-foreground">{campaign.clickCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableClicks}</p></div>
+                    <div><p className="text-sm font-semibold text-foreground">{campaign.replyCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableReplies}</p></div>
                   </div>
-                  {(c.status === 'DRAFT' || c.status === 'ACTIVE' || c.status === 'PAUSED') && (
+                  {(campaign.status === 'DRAFT' || campaign.status === 'ACTIVE' || campaign.status === 'PAUSED') && (
                     <div className="flex items-center flex-wrap gap-2 mt-3">
-                      {c.status === 'DRAFT' && (
-                        <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">Aktifleştir</button>
+                      {campaign.status === 'DRAFT' && (
+                        <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">{camp.activate}</button>
                       )}
-                      {c.status === 'ACTIVE' && c.type === 'EMAIL' && (
+                      {campaign.status === 'ACTIVE' && campaign.type === 'EMAIL' && (
                         <button
-                          onClick={() => sendCampaign(c.id)}
-                          disabled={sendingId === c.id}
+                          onClick={() => sendCampaign(campaign.id)}
+                          disabled={sendingId === campaign.id}
                           className="px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg transition disabled:opacity-50"
                         >
-                          {sendingId === c.id ? 'Gönderiliyor...' : 'Gönder'}
+                          {sendingId === campaign.id ? camp.sending : camp.send}
                         </button>
                       )}
-                      {c.status === 'ACTIVE' && (
-                        <button onClick={() => updateStatus(c.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg transition">Duraklat</button>
+                      {campaign.status === 'ACTIVE' && (
+                        <button onClick={() => updateStatus(campaign.id, 'PAUSED')} className="px-3 py-1.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg transition">{camp.pause}</button>
                       )}
-                      {c.status === 'PAUSED' && (
-                        <button onClick={() => updateStatus(c.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">Devam Ettir</button>
+                      {campaign.status === 'PAUSED' && (
+                        <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">{camp.resume}</button>
                       )}
-                      {(c.status === 'DRAFT' || c.status === 'PAUSED') && (
-                        <button onClick={() => deleteCampaign(c.id)} className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg transition">Sil</button>
+                      {(campaign.status === 'DRAFT' || campaign.status === 'PAUSED') && (
+                        <button onClick={() => deleteCampaign(campaign.id)} className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg transition">{common.delete}</button>
                       )}
                     </div>
                   )}

@@ -18,7 +18,7 @@ export default function WidgetLayout({
       style={{
         colorScheme: 'light',
         color: '#1f2937',
-        background: '#ffffff',
+        background: 'transparent',
         width: '100%',
         height: '100%',
       }}

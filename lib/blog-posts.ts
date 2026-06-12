@@ -1,3 +1,6 @@
+import type { SiteLocale } from './regional-config'
+import { BLOG_POSTS_EN } from './blog-posts-en'
+
 export type BlogPost = {
   slug: string
   title: string
@@ -19,7 +22,7 @@ export const BLOG_POSTS: BlogPost[] = [
     content: [
       'Müşteriler anında yanıt bekliyor. Araştırmalar, yanıt süresinin 1 dakikadan fazla gecikmesi halinde dönüşüm oranının %40\'a kadar düştüğünü gösteriyor. Canlı destek yazılımı bu boşluğu kapatır.',
       'Canlı destek, web sitenizdeki ziyaretçilerle gerçek zamanlı iletişim kurmanızı sağlar. Sorular anında yanıtlanır, tereddüt eden müşteriler satın almaya ikna olur. Özellikle e-ticaret sitelerinde sepet terk oranı canlı sohbet ile %20\'ye kadar azalabilir.',
-      'Gu Chat ile widget\'ınızı 30 saniyede kurabilir, chatbot ile tekrarlayan soruları otomatik yanıtlayabilir ve ekibinizin verimliliğini artırabilirsiniz. Ücretsiz paket ile hemen başlayın.',
+      'Gu Live Chat ile widget\'ınızı 30 saniyede kurabilir, chatbot ile tekrarlayan soruları otomatik yanıtlayabilir ve ekibinizin verimliliğini artırabilirsiniz. Ücretsiz paket ile hemen başlayın.',
       'Proaktif mesajlar da büyük fark yaratır: belirli sayfalarda bekleyen ziyaretçilere otomatik yardım teklif ederek dönüşüm fırsatlarını kaçırmazsınız.',
     ],
   },
@@ -28,10 +31,10 @@ export const BLOG_POSTS: BlogPost[] = [
     title: 'Chatbot Kurulum Rehberi — 10 Dakikada Otomatik Yanıt',
     date: '8 Mayıs 2026',
     dateIso: '2026-05-08',
-    excerpt: 'Gu Chat chatbot\'unuzu kod yazmadan kurun. Görsel editör, AI entegrasyonu ve test ipuçları.',
+    excerpt: 'Gu Live Chat chatbot\'unuzu kod yazmadan kurun. Görsel editör, AI entegrasyonu ve test ipuçları.',
     keywords: ['chatbot kurulum', 'chatbot nasıl kurulur'],
     content: [
-      'Gu Chat chatbot\'u görsel bir editör ile kurulur. Kod yazmanıza gerek yok — sürükle-bırak arayüzü ile akışlarınızı dakikalar içinde oluşturursunuz.',
+      'Gu Live Chat chatbot\'u görsel bir editör ile kurulur. Kod yazmanıza gerek yok — sürükle-bırak arayüzü ile akışlarınızı dakikalar içinde oluşturursunuz.',
       'İlk adım: Ayarlar > Chatbot bölümüne gidin ve yeni bir akış oluşturun. Karşılama mesajı, soru-cevap adımları ve temsilciye yönlendirme kurallarını tanımlayın.',
       'Bilgi bankanızı chatbot\'a bağlayarak AI destekli yanıtlar alabilirsiniz. GPT ve Gemini modelleri ile müşterilerinize doğal dilde cevap verin.',
       'Test modunda akışı deneyin, ardından yayına alın. Analitik panelden chatbot performansını takip ederek hangi soruların en çok sorulduğunu görün.',
@@ -61,7 +64,7 @@ export const BLOG_POSTS: BlogPost[] = [
     keywords: ['whatsapp müşteri hizmetleri', 'whatsapp canlı destek'],
     content: [
       'Türkiye\'de milyonlarca kullanıcı WhatsApp üzerinden iletişim kurmayı tercih ediyor. İşletmenizin müşteri hizmetlerini WhatsApp\'a taşımak memnuniyeti ve erişilebilirliği artırır.',
-      'Gu Chat WhatsApp Business entegrasyonu ile gelen WhatsApp mesajlarını birleşik inbox\'ta yönetirsiniz. Widget, e-posta ve diğer kanallarla aynı panelde.',
+      'Gu Live Chat WhatsApp Business entegrasyonu ile gelen WhatsApp mesajlarını birleşik inbox\'ta yönetirsiniz. Widget, e-posta ve diğer kanallarla aynı panelde.',
       'Chatbot akışlarını WhatsApp\'a da uygulayarak sık sorulan soruları otomatik yanıtlayın. Karmaşık talepler otomatik olarak canlı temsilciye aktarılır.',
       'Kurulum: Ayarlar > Kanallar bölümünden WhatsApp Business API bağlantınızı yapın. Eklenti mağazasından WhatsApp kanalını aktifleştirin.',
     ],
@@ -76,7 +79,7 @@ export const BLOG_POSTS: BlogPost[] = [
     content: [
       'E-ticaret sitelerinde ziyaretçilerin %70\'i soru sormadan ayrılır. Ürün boyutu, kargo süresi veya iade politikası hakkında net bilgi alamayan müşteri rakibe gider.',
       'Canlı destek widget\'ı ürün sayfalarında, sepette ve ödeme adımında stratejik konumlandırıldığında dönüşüm oranı %15-25 artabilir.',
-      'Gu Chat proaktif mesaj özelliği ile sepette 30 saniyeden fazla bekleyen ziyaretçilere otomatik yardım teklif edin. "Yardımcı olabilir miyim?" mesajı satış kapısı açar.',
+      'Gu Live Chat proaktif mesaj özelliği ile sepette 30 saniyeden fazla bekleyen ziyaretçilere otomatik yardım teklif edin. "Yardımcı olabilir miyim?" mesajı satış kapısı açar.',
       'Ziyaretçi takibi ile hangi sayfada olduklarını görün, hangi ürüne baktıklarını bilin. Doğru anda doğru mesajı gönderin.',
     ],
   },
@@ -89,9 +92,9 @@ export const BLOG_POSTS: BlogPost[] = [
     keywords: ['canlı destek vs email', 'live chat avantajları'],
     content: [
       'E-posta desteği hâlâ önemli — resmi talepler, fatura sorunları ve detaylı şikayetler için idealdir. Ancak ortalama e-posta yanıt süresi 12 saatin üzerindedir.',
-      'Canlı destek anlık çözüm sunar. Acil sorular, satın alma kararları ve teknik destek için vazgeçilmezdir. Gu Chat her iki kanalı da tek inbox\'ta birleştirir.',
+      'Canlı destek anlık çözüm sunar. Acil sorular, satın alma kararları ve teknik destek için vazgeçilmezdir. Gu Live Chat her iki kanalı da tek inbox\'ta birleştirir.',
       'En iyi strateji: chatbot ile basit soruları otomatik yanıtlayın, canlı temsilci ile karmaşık talepleri çözün, e-posta ile resmi yazışmaları sürdürün.',
-      'Gu Chat birleşik gelen kutusu sayesinde temsilciniz hangi kanaldan gelirse gelsin aynı arayüzden yanıt verir. Müşteri geçmişi tek ekranda.',
+      'Gu Live Chat birleşik gelen kutusu sayesinde temsilciniz hangi kanaldan gelirse gelsin aynı arayüzden yanıt verir. Müşteri geçmişi tek ekranda.',
     ],
   },
   {
@@ -103,7 +106,7 @@ export const BLOG_POSTS: BlogPost[] = [
     keywords: ['ziyaretci takibi', 'canlı ziyaretci izleme'],
     content: [
       'Ziyaretçi takibi, web sitenizdeki kullanıcıları gerçek zamanlı görmenizi sağlar. Hangi sayfada olduklarını, ne kadar süredir gezdiklerini ve nereden geldiklerini bilirsiniz.',
-      'Gu Chat ziyaretçi paneli ile çevrimiçi ziyaretçileri listeleyin, sayfa geçmişlerini görün ve proaktif mesaj gönderin. Profesyonel pakette ekran izleme ile ziyaretçinin gördüğünü de takip edebilirsiniz.',
+      'Gu Live Chat ziyaretçi paneli ile çevrimiçi ziyaretçileri listeleyin, sayfa geçmişlerini görün ve proaktif mesaj gönderin. Profesyonel pakette ekran izleme ile ziyaretçinin gördüğünü de takip edebilirsiniz.',
       'Satış ekibi için altın değerinde: fiyatlandırma sayfasında 2 dakikadan fazla kalan ziyaretçiye özel teklif mesajı gönderin.',
       'Analitik panel ile hangi sayfaların en çok destek talebi oluşturduğunu görün ve içeriği optimize edin.',
     ],
@@ -117,11 +120,19 @@ export const BLOG_POSTS: BlogPost[] = [
     keywords: ['AI müşteri hizmetleri', 'yapay zeka destek'],
     content: [
       'AI müşteri hizmetleri artık lüks değil, gereklilik. Tekrarlayan soruların %60-80\'i yapay zeka ile otomatik yanıtlanabilir.',
-      'Gu Chat AI asistanı bilgi bankanızı okur, müşteri sorusunu anlar ve doğal dilde yanıt verir. Temsilci atanana kadar AI devrede kalır.',
+      'Gu Live Chat AI asistanı bilgi bankanızı okur, müşteri sorusunu anlar ve doğal dilde yanıt verir. Temsilci atanana kadar AI devrede kalır.',
       'GPT-4 ve Gemini modelleri desteklenir. Türkçe dahil 50+ dilde çeviri ile global müşterilerinize de hizmet verin.',
       'AI yanıt önerileri temsilcilere de yardımcı olur: inbox\'ta tek tıkla profesyonel yanıt önerileri alın, yanıt süresini yarıya indirin.',
     ],
   },
 ]
+
+export function getBlogPosts(locale: SiteLocale): BlogPost[] {
+  return locale === 'en' ? BLOG_POSTS_EN : BLOG_POSTS
+}
+
+export function getBlogPost(slug: string, locale: SiteLocale): BlogPost | undefined {
+  return getBlogPosts(locale).find((p) => p.slug === slug)
+}
 
 export const BLOG_BY_SLUG = Object.fromEntries(BLOG_POSTS.map((p) => [p.slug, p])) as Record<string, BlogPost>

@@ -303,7 +303,7 @@ export default function AdminDashboardPage() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-600 text-white rounded-md tracking-[0.08em]">
-                    GU CHAT ADMIN
+                    GU LIVE CHAT ADMIN
                   </span>
                   <span className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
                     <span className="relative flex h-2 w-2">
@@ -314,7 +314,7 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Gu Chat · Yönetim</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Gu Live Chat · Yönetim</h1>
                   <Sparkles className="w-5 h-5 text-amber-400/70" />
                 </div>
                 <p className="text-gray-500 mt-1 text-sm flex items-center gap-2">

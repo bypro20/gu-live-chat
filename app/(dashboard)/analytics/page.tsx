@@ -6,6 +6,7 @@ import { Download } from 'lucide-react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { useToast } from '@/lib/toast'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 async function fetcher(url: string) {
   const res = await fetch(url)
@@ -17,6 +18,7 @@ export default function AnalyticsPage() {
   const { allowed: hasAdvancedAnalytics } = usePlanFeature('advancedAnalytics')
   const { activeWebsite } = useActiveWebsite()
   const { toast } = useToast()
+  const { analytics: a, locale, dateLocale } = useDashboardI18n()
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('7d')
   const [exporting, setExporting] = useState(false)
 
@@ -30,14 +32,14 @@ export default function AnalyticsPage() {
       if (!res.ok) throw new Error('Export failed')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `gu-chat-${type}-${period}.csv`
-      a.click()
+      const el = document.createElement('a')
+      el.href = url
+      el.download = `gu-chat-${type}-${period}.csv`
+      el.click()
       URL.revokeObjectURL(url)
-      toast({ title: 'CSV indirildi', variant: 'success' })
+      toast({ title: a.csvDownloaded, variant: 'success' })
     } catch {
-      toast({ title: 'Dışa aktarma başarısız', variant: 'error' })
+      toast({ title: a.exportFailed, variant: 'error' })
     } finally {
       setExporting(false)
     }
@@ -62,23 +64,38 @@ export default function AnalyticsPage() {
     fetcher
   )
 
-  const periodLabels: Record<string, string> = { '7d': 'Son 7 Gün', '30d': 'Son 30 Gün', '90d': 'Son 90 Gün' }
+  const periodLabels: Record<string, string> = {
+    '7d': a.period7d,
+    '30d': a.period30d,
+    '90d': a.period90d,
+  }
+
+  const exportLabels: Record<string, string> = {
+    conversations: a.exportConversations,
+    visitors: a.exportVisitors,
+    team: a.exportTeam,
+  }
+
+  const roleLabel = (role: string) => {
+    if (role === 'OWNER') return a.roleOwner
+    if (role === 'ADMIN') return a.roleAdmin
+    return a.roleAgent
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analitik</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{a.title}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            {activeWebsite ? `${activeWebsite.name} · ` : ''}Performans metrikleri
+            {activeWebsite ? `${activeWebsite.name} · ` : ''}{a.performanceMetrics}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative group">
             <button
               disabled={!websiteId || exporting || !hasAdvancedAnalytics}
-              title={!hasAdvancedAnalytics ? 'CSV dışa aktarma Profesyonel pakette' : undefined}
+              title={!hasAdvancedAnalytics ? a.exportProOnly : undefined}
               className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-lg border border-border bg-card hover:bg-muted transition disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
@@ -92,7 +109,7 @@ export default function AnalyticsPage() {
                   disabled={exporting}
                   className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-muted transition"
                 >
-                  {t === 'conversations' ? 'Sohbetler' : t === 'visitors' ? 'Ziyaretçiler' : 'Ekip'}
+                  {exportLabels[t]}
                 </button>
               ))}
             </div>
@@ -115,10 +132,9 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
         <StatCard
-          title="Toplam Sohbet"
+          title={a.totalChats}
           value={convLoading ? '-' : String(convData?.totalConversations ?? 0)}
           color="primary"
           icon={
@@ -128,7 +144,7 @@ export default function AnalyticsPage() {
           }
         />
         <StatCard
-          title="Açık Sohbetler"
+          title={a.openChats}
           value={convLoading ? '-' : String(convData?.openConversations ?? 0)}
           color="blue"
           icon={
@@ -138,7 +154,7 @@ export default function AnalyticsPage() {
           }
         />
         <StatCard
-          title="Çözülme Oranı"
+          title={a.resolutionRate}
           value={convLoading ? '-' : `${convData?.resolutionRate ?? 0}%`}
           color="green"
           icon={
@@ -148,7 +164,7 @@ export default function AnalyticsPage() {
           }
         />
         <StatCard
-          title="Ziyaretçiler"
+          title={a.visitors}
           value={visitorLoading ? '-' : String(visitorData?.totalVisitors ?? 0)}
           color="orange"
           icon={
@@ -159,11 +175,9 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {/* Daily Conversations Chart */}
         <div className="surface p-5 sm:p-6">
-          <h2 className="text-base font-bold mb-4">Günlük Sohbet Trafiği</h2>
+          <h2 className="text-base font-bold mb-4">{a.dailyChatTraffic}</h2>
           {convLoading ? (
             <div className="flex items-center justify-center h-48">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -173,7 +187,7 @@ export default function AnalyticsPage() {
               {convData.dailyConversations.slice(-7).map((day: { date: string; count: number }) => (
                 <div key={day.date} className="flex items-center gap-3">
                   <span className="text-xs text-muted-foreground w-16 sm:w-20 shrink-0 tabular-nums">
-                    {new Date(day.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                    {new Date(day.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}
                   </span>
                   <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
                     <div
@@ -187,14 +201,13 @@ export default function AnalyticsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-              <p className="text-sm">Henüz veri yok</p>
+              <p className="text-sm">{a.noData}</p>
             </div>
           )}
         </div>
 
-        {/* Top Pages */}
         <div className="surface p-5 sm:p-6">
-          <h2 className="text-base font-bold mb-4">En Çok Ziyaret Edilen Sayfalar</h2>
+          <h2 className="text-base font-bold mb-4">{a.topPages}</h2>
           {visitorLoading ? (
             <div className="flex items-center justify-center h-48">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -211,15 +224,14 @@ export default function AnalyticsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-              <p className="text-sm">Henüz veri yok</p>
+              <p className="text-sm">{a.noData}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Team Performance */}
       <div className="surface p-5 sm:p-6">
-        <h2 className="text-base font-bold mb-4">Takım Performansı</h2>
+        <h2 className="text-base font-bold mb-4">{a.teamPerformance}</h2>
         {teamLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -229,12 +241,12 @@ export default function AnalyticsPage() {
             <table className="w-full min-w-[560px]">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase pb-3">Temsilci</th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">Rol</th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">Atanan</th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">Çözülen</th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">Mesajlar</th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">Çözülme %</th>
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colAgent}</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colRole}</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colAssigned}</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colResolved}</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colMessages}</th>
+                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase pb-3">{a.colResolutionPct}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -261,7 +273,7 @@ export default function AnalyticsPage() {
                           ? 'bg-primary-light text-primary'
                           : 'bg-muted text-muted-foreground'
                       }`}>
-                        {agent.role === 'OWNER' ? 'Sahip' : agent.role === 'ADMIN' ? 'Yönetici' : 'Temsilci'}
+                        {roleLabel(agent.role)}
                       </span>
                     </td>
                     <td className="text-center text-sm text-foreground py-3 tabular-nums">{agent.assignedConversations}</td>
@@ -283,7 +295,7 @@ export default function AnalyticsPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <p className="text-sm">Henüz takım üyesi yok</p>
+            <p className="text-sm">{a.noTeamMembers}</p>
           </div>
         )}
       </div>

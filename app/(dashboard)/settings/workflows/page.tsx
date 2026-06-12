@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface WorkflowStep {
@@ -22,35 +23,6 @@ interface Workflow {
   triggerConfig: string | null
   order: number
   steps: WorkflowStep[]
-}
-
-const TRIGGER_LABELS: Record<string, string> = {
-  CONVERSATION_CREATED: 'Görüşme Oluşturuldu',
-  CONVERSATION_RESOLVED: 'Görüşme Çözüldü',
-  CONVERSATION_CLOSED: 'Görüşme Kapatıldı',
-  MESSAGE_RECEIVED: 'Mesaj Alındı',
-  VISITOR_CREATED: 'Ziyaretçi Oluşturuldu',
-  VISITOR_SEEN_PAGE: 'Sayfa Görüntülendi',
-  TICKET_CREATED: 'Bilet Oluşturuldu',
-  TICKET_UPDATED: 'Bilet Güncellendi',
-  SCHEDULED: 'Zamanlanmış',
-  WEBHOOK_RECEIVED: 'Webhook Alındı',
-}
-
-const ACTION_LABELS: Record<string, string> = {
-  SEND_MESSAGE: 'Mesaj Gönder',
-  SEND_EMAIL: 'E-posta Gönder',
-  ASSIGN_AGENT: 'Temsilci Ata',
-  CHANGE_STATUS: 'Durumu Değiştir',
-  SET_PRIORITY: 'Öncelik Belirle',
-  ADD_TAG: 'Etiket Ekle',
-  REMOVE_TAG: 'Etiket Kaldır',
-  FORWARD_TO_WEBHOOK: 'Webhook\'a İlet',
-  ADD_NOTE: 'Not Ekle',
-  TRIGGER_CHATBOT: 'Chatbot Tetikle',
-  SEND_NOTIFICATION: 'Bildirim Gönder',
-  DELAY: 'Bekleme',
-  CONDITIONAL_BRANCH: 'Koşullu Dal',
 }
 
 const ACTION_COLORS: Record<string, string> = {
@@ -82,14 +54,11 @@ const TRIGGER_COLORS: Record<string, string> = {
   WEBHOOK_RECEIVED: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
 }
 
-const AVAILABLE_ACTIONS = Object.keys(ACTION_LABELS).map((key) => ({
-  value: key,
-  label: ACTION_LABELS[key],
-}))
-
 export default function WorkflowsPage() {
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('workflows')
   const { activeWebsite } = useActiveWebsite()
+  const { common, workflows: w, workflowTriggers, workflowActions } = useSettingsI18n()
+  const availableActions = Object.entries(workflowActions).map(([value, label]) => ({ value, label }))
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
@@ -155,7 +124,7 @@ export default function WorkflowsPage() {
   }
 
   const deleteWorkflow = async (id: string) => {
-    if (!confirm('Bu iş akışını silmek istediğinize emin misiniz?')) return
+    if (!confirm(w.confirmDelete)) return
     await fetch(`/api/workflows?id=${id}`, { method: 'DELETE' })
     fetchWorkflows()
   }
@@ -193,63 +162,63 @@ export default function WorkflowsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Otomasyonlar</h1>
-          <p className="text-sm text-muted-foreground mt-1">Tekrarlayan işleri otomatikleştirin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{w.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{w.subtitle}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowCreate(true) }}
           className="btn-primary w-full sm:w-auto"
         >
-          + İş Akışı Oluştur
+          {w.createWorkflow}
         </button>
       </div>
 
       {showCreate && (
         <div className="surface p-5 sm:p-6 mb-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">
-            {editingId ? 'İş Akışını Düzenle' : 'Yeni İş Akışı'}
+            {editingId ? w.editWorkflow : w.newWorkflow}
           </h3>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">İş Akışı Adı</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{w.workflowName}</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                  placeholder="İş akışı adı"
+                  placeholder={w.workflowNamePlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Tetikleyici</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{common.trigger}</label>
                 <select
                   value={form.triggerType}
                   onChange={(e) => setForm({ ...form, triggerType: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 >
-                  {Object.entries(TRIGGER_LABELS).map(([value, label]) => (
+                  {Object.entries(workflowTriggers).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Açıklama</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{common.description}</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder="Açıklama"
+                placeholder={w.descriptionPlaceholder}
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-foreground">Adımlar</label>
-                <button onClick={addStep} className="text-xs font-medium text-primary hover:text-primary-hover transition">+ Adım Ekle</button>
+                <label className="text-sm font-medium text-foreground">{common.steps}</label>
+                <button onClick={addStep} className="text-xs font-medium text-primary hover:text-primary-hover transition">{common.addStep}</button>
               </div>
               <div className="space-y-2">
                 {steps.map((step, index) => (
@@ -261,7 +230,7 @@ export default function WorkflowsPage() {
                         onChange={(e) => updateStep(index, 'actionType', e.target.value)}
                         className="flex-1 sm:flex-initial sm:w-auto px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       >
-                        {AVAILABLE_ACTIONS.map((a) => (
+                        {availableActions.map((a) => (
                           <option key={a.value} value={a.value}>{a.label}</option>
                         ))}
                       </select>
@@ -276,14 +245,14 @@ export default function WorkflowsPage() {
                       value={step.config}
                       onChange={(e) => updateStep(index, 'config', e.target.value)}
                       className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder="Yapılandırma"
+                      placeholder={common.config}
                     />
                     <input
                       type="number"
                       value={step.delayMs}
                       onChange={(e) => updateStep(index, 'delayMs', e.target.value)}
                       className="w-full sm:w-28 px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder="Gecikme ms"
+                      placeholder={common.delayMs}
                     />
                     <button onClick={() => removeStep(index)} className="p-1.5 text-muted-foreground hover:text-destructive transition shrink-0 hidden sm:block">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,16 +262,16 @@ export default function WorkflowsPage() {
                   </div>
                 ))}
                 {steps.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic">Henüz adım eklenmedi</p>
+                  <p className="text-sm text-muted-foreground italic">{common.noStepsYet}</p>
                 )}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
-            <button onClick={resetForm} className="btn-secondary">İptal</button>
+            <button onClick={resetForm} className="btn-secondary">{common.cancel}</button>
             <button onClick={handleCreate} className="btn-primary">
-              {editingId ? 'Güncelle' : 'Oluştur'}
+              {editingId ? common.update : common.create}
             </button>
           </div>
         </div>
@@ -320,41 +289,41 @@ export default function WorkflowsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="font-medium text-foreground">Henüz iş akışı yok</h3>
-            <p className="text-sm text-muted-foreground mt-1">İlk otomasyonunuzu oluşturun</p>
+            <h3 className="font-medium text-foreground">{w.emptyTitle}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{w.emptyHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {workflows.map((wf) => (
-              <div key={wf.id} className="p-5">
+            {workflows.map((item) => (
+              <div key={item.id} className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center flex-wrap gap-2">
-                      <h3 className="font-semibold text-foreground">{wf.name}</h3>
-                      <span className={`px-2.5 py-0.5 text-xs rounded-full ${TRIGGER_COLORS[wf.triggerType] || 'bg-muted text-muted-foreground'}`}>
-                        {TRIGGER_LABELS[wf.triggerType] || wf.triggerType}
+                      <h3 className="font-semibold text-foreground">{item.name}</h3>
+                      <span className={`px-2.5 py-0.5 text-xs rounded-full ${TRIGGER_COLORS[item.triggerType] || 'bg-muted text-muted-foreground'}`}>
+                        {workflowTriggers[item.triggerType] || item.triggerType}
                       </span>
                     </div>
-                    {wf.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{wf.description}</p>
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xs text-muted-foreground hidden sm:inline">{wf.isActive ? 'Aktif' : 'Pasif'}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">{item.isActive ? common.active : common.inactive}</span>
                       <button
-                        onClick={() => toggleActive(wf)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${wf.isActive ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        onClick={() => toggleActive(item)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${item.isActive ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
                       >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${wf.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${item.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </label>
-                    <button onClick={() => startEdit(wf)} className="p-1.5 text-muted-foreground hover:text-primary transition">
+                    <button onClick={() => startEdit(item)} className="p-1.5 text-muted-foreground hover:text-primary transition">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
-                    <button onClick={() => deleteWorkflow(wf.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition">
+                    <button onClick={() => deleteWorkflow(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -362,17 +331,17 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
 
-                {wf.steps.length > 0 && (
+                {item.steps.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap mt-2">
-                    {wf.steps.map((step, idx) => (
+                    {item.steps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-1.5">
                         <span className={`px-2.5 py-1 text-xs rounded-lg ${ACTION_COLORS[step.actionType] || 'bg-muted text-muted-foreground'}`}>
-                          {ACTION_LABELS[step.actionType] || step.actionType}
+                          {workflowActions[step.actionType] || step.actionType}
                         </span>
                         {step.delayMs && (
                           <span className="text-xs text-muted-foreground">({step.delayMs}ms)</span>
                         )}
-                        {idx < wf.steps.length - 1 && (
+                        {idx < item.steps.length - 1 && (
                           <svg className="w-4 h-4 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>

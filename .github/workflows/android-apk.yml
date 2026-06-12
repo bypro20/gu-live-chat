@@ -42,17 +42,17 @@ jobs:
       - name: Copy APK to public downloads
         run: |
           mkdir -p public/downloads
-          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk public/downloads/guchat.apk
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk public/downloads/gulivechat.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: guchat-apk
-          path: public/downloads/guchat.apk
+          name: gulivechat-apk
+          path: public/downloads/gulivechat.apk
           retention-days: 90
 
       - name: Upload to release (manual tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: public/downloads/guchat.apk
+          files: public/downloads/gulivechat.apk

@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { useWebsite } from '@/lib/hooks/use-website'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { knowledgeStatusLabels } from '@/lib/settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -36,13 +38,10 @@ const statusColors: Record<string, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 }
 
-const statusLabels: Record<string, string> = {
-  DRAFT: 'Taslak',
-  PUBLISHED: 'Yayında',
-  ARCHIVED: 'Arşiv',
-}
-
 export default function KnowledgeBasePage() {
+  const i18n = useSettingsI18n()
+  const { knowledge: k, common: c } = i18n
+  const statusLabels = knowledgeStatusLabels(i18n)
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('knowledgeBase')
   const { website } = useWebsite()
   const router = useRouter()
@@ -66,7 +65,7 @@ export default function KnowledgeBasePage() {
   }, [website, selectedCategory, statusFilter, search])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu makaleyi silmek istediğinize emin misiniz?')) return
+    if (!confirm(k.deleteArticleConfirm)) return
     try {
       const res = await fetch(`/api/knowledge/articles/${id}`, { method: 'DELETE' })
       if (res.ok) {
@@ -86,25 +85,32 @@ export default function KnowledgeBasePage() {
     return <PlanUpgradePrompt feature="knowledgeBase" />
   }
 
+  const statusFilters = [
+    { value: 'all', label: c.all },
+    { value: 'DRAFT', label: k.statusDraft },
+    { value: 'PUBLISHED', label: k.statusPublished },
+    { value: 'ARCHIVED', label: k.statusArchived },
+  ]
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bilgi Bankası</h1>
-          <p className="text-sm text-muted-foreground mt-1">Makale ve kategorileri yönetin</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{k.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{k.subtitle}</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/settings/knowledge/categories"
             className="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-secondary text-secondary-foreground font-medium rounded-xl transition hover:bg-accent"
           >
-            Kategoriler
+            {k.categories}
           </Link>
           <Link
             href="/settings/knowledge/new"
             className="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl transition hover:bg-primary-hover"
           >
-            + Yeni Makale
+            {k.newArticle}
           </Link>
         </div>
       </div>
@@ -112,13 +118,13 @@ export default function KnowledgeBasePage() {
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-64 shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 lg:content-start">
           <div className="surface p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Kategoriler</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">{k.categories}</h3>
             <div className="space-y-1">
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${!selectedCategory ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
               >
-                Tümü ({articles.length})
+                {c.all} ({articles.length})
               </button>
               {categories.map(cat => (
                 <button
@@ -135,20 +141,15 @@ export default function KnowledgeBasePage() {
           </div>
 
           <div className="surface p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Durum</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">{k.status}</h3>
             <div className="space-y-1">
-              {[
-                { value: 'all', label: 'Tümü' },
-                { value: 'DRAFT', label: 'Taslak' },
-                { value: 'PUBLISHED', label: 'Yayında' },
-                { value: 'ARCHIVED', label: 'Arşiv' },
-              ].map(s => (
+              {statusFilters.map((filter) => (
                 <button
-                  key={s.value}
-                  onClick={() => setStatusFilter(s.value)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${statusFilter === s.value ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
+                  key={filter.value}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${statusFilter === filter.value ? 'bg-primary-light text-primary font-medium' : 'text-muted-foreground hover:bg-accent'}`}
                 >
-                  {s.label}
+                  {filter.label}
                 </button>
               ))}
             </div>
@@ -161,7 +162,7 @@ export default function KnowledgeBasePage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Makale ara..."
+              placeholder={k.searchPlaceholder}
               className="w-full px-4 py-3 border border-border rounded-xl bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
             />
           </div>
@@ -178,10 +179,10 @@ export default function KnowledgeBasePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <h3 className="font-medium text-foreground">Henüz makale yok</h3>
-                <p className="text-sm text-muted-foreground mt-1">İlk bilgi bankası makalesini oluşturun</p>
+                <h3 className="font-medium text-foreground">{k.noArticles}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{k.noArticlesHint}</p>
                 <Link href="/settings/knowledge/new" className="inline-block mt-4 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:bg-primary-hover transition">
-                  Makale Oluştur
+                  {k.createArticle}
                 </Link>
               </div>
             ) : (
@@ -196,7 +197,7 @@ export default function KnowledgeBasePage() {
                           </span>
                           {article.isFeatured && (
                             <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-light text-primary">
-                              Öne Çıkan
+                              {k.featured}
                             </span>
                           )}
                           {article.category && (
@@ -205,11 +206,11 @@ export default function KnowledgeBasePage() {
                         </div>
                         <h3 className="text-sm font-semibold text-foreground truncate">{article.title}</h3>
                         <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>{article.viewCount} görüntülenme</span>
+                          <span>{c.views(article.viewCount)}</span>
                           {article.helpful + article.notHelpful > 0 && (
-                            <span>%{Math.round((article.helpful / (article.helpful + article.notHelpful)) * 100)} faydalı</span>
+                            <span>{c.helpfulPercent(Math.round((article.helpful / (article.helpful + article.notHelpful)) * 100))}</span>
                           )}
-                          <span>{new Date(article.createdAt).toLocaleDateString('tr-TR')}</span>
+                          <span>{new Date(article.createdAt).toLocaleDateString(i18n.dateLocale)}</span>
                         </div>
                       </div>
                       <button

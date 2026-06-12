@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/downloads/guchat.apk',
+        destination: '/downloads/gulivechat.apk',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       {

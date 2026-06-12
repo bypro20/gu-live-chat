@@ -4,6 +4,24 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { connectSocket, getSocket, retainSocket, releaseSocket, isSocketEnabled } from '@/lib/socket-client'
+import {
+  adjustColor,
+  agentBubbleStyle,
+  brandGradient,
+  getComposerRowStyle,
+  getComposerShellStyle,
+  getHeroHeaderStyle,
+  getLauncherStyle,
+  getMessagesAreaStyle,
+  getPanelShellStyle,
+  getTrustBadgeStyle,
+  getTrustStripStyle,
+  getWidgetGlobalCss,
+  hexToRgba,
+  quickChipStyle,
+  visitorBubbleStyle,
+  WIDGET_FONT,
+} from '@/lib/widget-theme'
 import type { Socket } from 'socket.io-client'
 
 interface WidgetConfig {
@@ -251,6 +269,7 @@ export default function WidgetPage() {
   const [config, setConfig] = useState<WidgetConfig | null>(null)
   const [socketConnected, setSocketConnected] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isEmbedded, setIsEmbedded] = useState(false)
   const visitorTokenRef = useRef<string | null>(null)
   const sessionIdRef = useRef<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -390,6 +409,12 @@ export default function WidgetPage() {
 
   useEffect(() => {
     setMounted(true)
+    const embedded = window.parent !== window
+    setIsEmbedded(embedded)
+    if (embedded) {
+      setIsOpen(true)
+      window.parent.postMessage({ type: 'gu:resize', open: true }, '*')
+    }
   }, [])
 
   useEffect(() => {
@@ -1162,119 +1187,66 @@ export default function WidgetPage() {
 
   const mainWidget = (
     <div style={{
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
+      fontFamily: WIDGET_FONT,
       color: '#0F172A',
       colorScheme: 'light',
-      position: 'fixed',
-      bottom: '24px',
-      right: '24px',
+      position: isEmbedded ? 'relative' : 'fixed',
+      bottom: isEmbedded ? undefined : '24px',
+      right: isEmbedded ? undefined : '24px',
+      width: isEmbedded ? '100%' : undefined,
+      height: isEmbedded ? '100%' : undefined,
       zIndex: 2147483645,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'flex-end',
+      alignItems: isEmbedded ? 'stretch' : 'flex-end',
     }}>
-      <style>{`
-        @keyframes gwSlideUp {
-          from { opacity: 0; transform: translateY(20px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
-        }
-        @keyframes gwFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-        @keyframes gwBounce {
-          0%, 60%, 100% { transform: translateY(0);    }
-          30%            { transform: translateY(-5px); }
-        }
-        @keyframes gwCheckIn {
-          0%   { transform: scale(0); opacity: 0; }
-          60%  { transform: scale(1.2);            }
-          100% { transform: scale(1); opacity: 1;  }
-        }
-        @keyframes gwSpin { to { transform: rotate(360deg); } }
-        @keyframes gwPop {
-          0%   { transform: scale(1);    }
-          50%  { transform: scale(1.06); }
-          100% { transform: scale(1);    }
-        }
-        .gw-scroll::-webkit-scrollbar       { width: 3px; }
-        .gw-scroll::-webkit-scrollbar-track { background: transparent; }
-        .gw-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
-        .gw-input::placeholder { color: #94A3B8 !important; opacity: 1; }
-        .gw-msg-btn:hover { opacity: 1 !important; }
-        @media (max-width: 480px) {
-          .gw-panel   { width: 100vw !important; max-height: 100dvh !important; height: 100dvh !important; border-radius: 0 !important; }
-          .gw-wrapper { bottom: 0 !important; right: 0 !important; }
-          .gw-button  { bottom: 16px !important; right: 16px !important; }
-        }
-      `}</style>
+      <style>{getWidgetGlobalCss()}</style>
 
-      {isOpen ? (
-        <div className="gw-panel" style={{
-          width: '390px',
-          maxHeight: '620px',
-          height: 'calc(100dvh - 72px)',
-          background: '#ffffff',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.14), 0 4px 20px rgba(0,0,0,0.07)',
-          animation: 'gwSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
+      {isOpen || isEmbedded ? (
+        <div className="gw-panel" style={getPanelShellStyle(primaryColor, isEmbedded)}>
 
-          {/* ─── HEADER ─────────────────────────────────────────────────────── */}
-          <div style={{
-            padding: '18px 18px 16px',
-            background: '#ffffff',
-            borderBottom: '1px solid #F1F5F9',
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}>
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{
-                width: '46px', height: '46px', borderRadius: '14px',
-                background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', boxShadow: `0 4px 14px ${primaryColor}40`,
-              }}>
-                {avatarEl(46)}
+          {/* ─── HERO HEADER ─────────────────────────────────────────────────── */}
+          <div style={getHeroHeaderStyle(primaryColor)}>
+            <div style={{ position: 'absolute', top: -48, right: -36, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.14)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -24, left: -28, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '16px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px solid rgba(255,255,255,0.45)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                }}>
+                  {avatarEl(48)}
+                </div>
+                <div style={{
+                  position: 'absolute', bottom: -1, right: -1,
+                  width: '14px', height: '14px', borderRadius: '50%',
+                  background: '#6EE7B7', border: '2.5px solid white',
+                  boxShadow: '0 0 8px rgba(110,231,183,0.8)',
+                }} />
               </div>
-              <div style={{
-                position: 'absolute', bottom: '-1px', right: '-1px',
-                width: '13px', height: '13px', borderRadius: '50%',
-                background: '#22C55E', border: '2.5px solid white',
-              }} />
-            </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0F172A', letterSpacing: '-0.02em' }}>
-                {agentName}
-              </p>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
-                {t.online} · {t.typicalReply}
-              </p>
-            </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '16px', color: '#fff', letterSpacing: '-0.03em' }}>
+                  {agentName}
+                </p>
+                <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: '#6EE7B7', boxShadow: '0 0 6px rgba(110,231,183,0.9)' }} />
+                  {t.online} · {t.typicalReply}
+                </p>
+              </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"
-                  style={{ position: 'absolute', left: '8px', pointerEvents: 'none' }}>
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {aiTranslateAvailable && (
                   <button
                     type="button"
                     onClick={() => setAutoTranslateOn((v) => !v)}
-                    title={autoTranslateOn ? 'Otomatik çeviri açık' : 'Otomatik çeviri kapalı'}
                     style={{
-                      background: autoTranslateOn ? `${primaryColor}18` : '#F8FAFC',
-                      color: autoTranslateOn ? primaryColor : '#94A3B8',
-                      border: `1px solid ${autoTranslateOn ? primaryColor + '40' : '#E2E8F0'}`,
+                      background: autoTranslateOn ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.12)',
+                      color: '#fff', border: '1px solid rgba(255,255,255,0.25)',
                       borderRadius: '10px', padding: '5px 8px', fontSize: '10px', fontWeight: 700,
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -1287,41 +1259,59 @@ export default function WidgetPage() {
                   onChange={(e) => { setLang(e.target.value); setTranslations({}) }}
                   aria-label="Dil seçin"
                   style={{
-                    appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
-                    background: '#F8FAFC', color: '#475569',
-                    border: '1px solid #E2E8F0', borderRadius: '10px',
-                    padding: '5px 22px 5px 26px',
-                    fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                    fontFamily: 'inherit', outline: 'none', maxWidth: '110px', lineHeight: 1.3,
+                    appearance: 'none', WebkitAppearance: 'none',
+                    background: 'rgba(255,255,255,0.15)', color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px',
+                    padding: '5px 22px 5px 8px', fontSize: '11px', fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', outline: 'none', maxWidth: '90px',
                   }}
                 >
-                  {WIDGET_LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.code} style={{ color: '#0F172A', background: '#fff' }}>
-                      {l.name}
-                    </option>
+                  {WIDGET_LANGUAGES.slice(0, 8).map((l) => (
+                    <option key={l.code} value={l.code} style={{ color: '#0F172A' }}>{l.code.toUpperCase()}</option>
                   ))}
                 </select>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5"
-                  style={{ position: 'absolute', right: '6px', pointerEvents: 'none' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-                </svg>
+                {!isEmbedded && (
+                  <button
+                    onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
+                    aria-label={t.close}
+                    style={{
+                      width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)',
+                      border: '1px solid rgba(255,255,255,0.25)', borderRadius: '12px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', flexShrink: 0, lineHeight: 0,
+                    }}
+                  >
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
-                aria-label={t.close}
-                style={{
-                  width: '34px', height: '34px', background: '#F1F5F9',
-                  border: 'none', borderRadius: '10px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#64748B', transition: 'all 0.15s', flexShrink: 0, lineHeight: 0,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#E2E8F0'; e.currentTarget.style.color = '#0F172A' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#64748B' }}
-              >
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            </div>
+
+            {!showKnowledgeBase && !showPreChat && messages.length === 0 && (
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
+                {[t.quickChat, t.quickPricing, t.quickSupport].map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      if (label === t.quickChat) inputRef.current?.focus()
+                      else setInputMessage(label.replace(/^[^\s]+\s/, ''))
+                    }}
+                    style={quickChipStyle()}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.32)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)' }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={getTrustStripStyle()}>
+              {['⚡ Anında yanıt', '🔒 Güvenli', '✨ Ücretsiz'].map((badge) => (
+                <span key={badge} style={getTrustBadgeStyle()}>{badge}</span>
+              ))}
             </div>
           </div>
 
@@ -1414,12 +1404,7 @@ export default function WidgetPage() {
               )}
 
               {/* ─── MESSAGES AREA ──────────────────────────────────────────── */}
-              <div className="gw-scroll" style={{
-                flex: 1, overflowY: 'auto', overflowX: 'hidden',
-                padding: '20px 16px 8px',
-                display: 'flex', flexDirection: 'column', gap: '4px',
-                background: '#F8FAFC',
-              }}>
+              <div className="gw-scroll gw-dot-bg" style={getMessagesAreaStyle()}>
                 {/* Date pill */}
                 <div style={{ textAlign: 'center', marginBottom: '12px' }}>
                   <span style={{
@@ -1443,11 +1428,7 @@ export default function WidgetPage() {
                     <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
                       {agentName}
                     </p>
-                    <div style={{
-                      background: '#ffffff', borderRadius: '4px 16px 16px 16px',
-                      padding: '12px 16px',
-                      boxShadow: '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
-                    }}>
+                    <div style={agentBubbleStyle()}>
                       <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', lineHeight: 1.65 }}>
                         {config.welcomeMessage || t.welcomeFallback}
                       </p>
@@ -1506,14 +1487,7 @@ export default function WidgetPage() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <div style={{ maxWidth: '280px' }}>
                           {!(msg.attachments?.length && /^(🖼️|📎)\s/u.test(msg.content)) && (
-                            <div style={{
-                              background: primaryColor,
-                              color: '#ffffff',
-                              borderRadius: '16px 4px 16px 16px',
-                              padding: '11px 16px',
-                              fontSize: '14px', lineHeight: 1.65,
-                              boxShadow: `0 2px 10px ${primaryColor}35`,
-                            }}>
+                            <div style={visitorBubbleStyle(primaryColor)}>
                               {msg.content}
                             </div>
                           )}
@@ -1544,13 +1518,7 @@ export default function WidgetPage() {
                               {msg.senderName}
                             </p>
                           )}
-                          <div style={{
-                            background: '#ffffff',
-                            borderRadius: '4px 16px 16px 16px',
-                            padding: '11px 16px',
-                            fontSize: '14px', lineHeight: 1.65, color: '#0F172A',
-                            boxShadow: '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
-                          }}>
+                          <div style={agentBubbleStyle()}>
                             {msg.content}
                             {translations[msg.id] && (
                               <span style={{
@@ -1796,12 +1764,8 @@ export default function WidgetPage() {
 
           {/* ─── MESSAGE INPUT ───────────────────────────────────────────────── */}
           {!showKnowledgeBase && !showPreChat && (
-            <div style={{
-              padding: '10px 14px 12px',
-              borderTop: '1px solid #F1F5F9',
-              background: '#ffffff', flexShrink: 0, position: 'relative',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
+            <div style={getComposerShellStyle()}>
+              <div style={getComposerRowStyle(primaryColor)}>
                 {showEmojiPicker && (
                   <div ref={emojiPickerRef} style={{
                     position: 'absolute', bottom: '100%', left: 0, marginBottom: '8px',
@@ -1898,15 +1862,13 @@ export default function WidgetPage() {
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStartChat() } }}
                   placeholder={t.inputPlaceholder} rows={1} className="gw-input"
                   style={{
-                    flex: 1, padding: '9px 14px',
-                    border: '1.5px solid #E2E8F0', borderRadius: '14px',
+                    flex: 1, padding: '10px 14px',
+                    border: 'none', borderRadius: '14px',
                     fontSize: '14px', resize: 'none', outline: 'none',
                     fontFamily: 'inherit', lineHeight: 1.55, boxSizing: 'border-box',
-                    background: '#F8FAFC', color: '#0F172A',
+                    background: 'transparent', color: '#0F172A',
                     transition: 'all 0.15s', maxHeight: '120px',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                 />
 
                 <button
@@ -1925,14 +1887,14 @@ export default function WidgetPage() {
                 <button
                   onClick={handleStartChat} disabled={!inputMessage.trim()}
                   style={{
-                    width: '36px', height: '36px',
-                    background: inputMessage.trim() ? primaryColor : '#E2E8F0',
+                    width: '40px', height: '40px',
+                    background: inputMessage.trim() ? brandGradient(primaryColor) : '#E2E8F0',
                     color: inputMessage.trim() ? '#fff' : '#94A3B8',
-                    border: 'none', borderRadius: '11px',
+                    border: 'none', borderRadius: '14px',
                     cursor: inputMessage.trim() ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, transition: 'all 0.15s',
-                    boxShadow: inputMessage.trim() ? `0 2px 10px ${primaryColor}40` : 'none',
+                    flexShrink: 0, transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                    boxShadow: inputMessage.trim() ? `0 4px 14px ${hexToRgba(primaryColor, 0.4)}` : 'none',
                   }}
                   onMouseEnter={(e) => { if (inputMessage.trim()) { e.currentTarget.style.transform = 'scale(1.06)'; e.currentTarget.style.boxShadow = `0 4px 16px ${primaryColor}50` } }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = inputMessage.trim() ? `0 2px 10px ${primaryColor}40` : 'none' }}
@@ -1965,20 +1927,14 @@ export default function WidgetPage() {
         <button
           onClick={() => { setIsOpen(true); sendResizeToParent(true) }}
           className="gw-button"
-          style={{
-            width: '58px', height: '58px', borderRadius: '18px',
-            background: primaryColor,
-            border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 8px 28px ${primaryColor}50`,
-            animation: 'gwPop 3s ease-in-out infinite',
-            transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08) rotate(-4deg)'; e.currentTarget.style.boxShadow = `0 12px 36px ${primaryColor}65` }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; e.currentTarget.style.boxShadow = `0 8px 28px ${primaryColor}50` }}
+          style={getLauncherStyle(primaryColor)}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08) rotate(-3deg)'; e.currentTarget.style.boxShadow = `0 16px 40px ${hexToRgba(primaryColor, 0.55)}` }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; e.currentTarget.style.boxShadow = `0 12px 36px ${hexToRgba(primaryColor, 0.45)}, 0 0 0 1px ${hexToRgba(primaryColor, 0.2)}, inset 0 1px 0 rgba(255,255,255,0.25)` }}
         >
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <path d="M9 10h6" />
+            <path d="M9 14h4" />
           </svg>
         </button>
       )}
@@ -1989,14 +1945,4 @@ export default function WidgetPage() {
     return createPortal(mainWidget, document.body)
   }
   return mainWidget
-}
-
-function adjustColor(hex: string, amount: number): string {
-  hex = hex.replace('#', '')
-  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
-  const num = parseInt(hex, 16)
-  let r = Math.min(255, Math.max(0, (num >> 16) + amount))
-  let g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount))
-  let b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount))
-  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`
 }

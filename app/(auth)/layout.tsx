@@ -1,14 +1,11 @@
-import { Suspense } from 'react'
-import { SessionProvider } from 'next-auth/react'
+import { getServerLocaleContext } from '@/lib/locale-server'
+import { AuthShell } from './auth-shell'
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <SessionProvider>
-      <Suspense fallback={null}>{children}</Suspense>
-    </SessionProvider>
-  )
+  const initialLocale = await getServerLocaleContext()
+  return <AuthShell initialLocale={initialLocale}>{children}</AuthShell>
 }
