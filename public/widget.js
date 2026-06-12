@@ -715,19 +715,33 @@
   var screenCaptureActive = false;
   var screenshotInProgress = false;
 
-  // Dynamically load html-to-image library
+  // Dynamically load html-to-image library (same origin first, then CDN fallback)
   function loadHtmlToImage(callback) {
     if (htmlToImageLoaded) { callback(); return; }
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js';
-    script.onload = function() {
-      htmlToImageLoaded = true;
-      if (callback) callback();
-    };
-    script.onerror = function() {
-      console.warn('[Gu Live Chat] Screen monitoring: html-to-image could not load');
-    };
-    document.head.appendChild(script);
+    var sources = [
+      (typeof getWidgetBaseUrl === 'function' ? getWidgetBaseUrl() : window.location.origin) + '/vendor/html-to-image.min.js',
+      'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js',
+    ];
+    var idx = 0;
+    function tryNext() {
+      if (idx >= sources.length) {
+        console.warn('[Gu Live Chat] Screen monitoring: html-to-image could not load');
+        if (callback) callback();
+        return;
+      }
+      var script = document.createElement('script');
+      script.src = sources[idx++];
+      script.onload = function() {
+        htmlToImageLoaded = true;
+        if (callback) callback();
+      };
+      script.onerror = function() {
+        script.remove();
+        tryNext();
+      };
+      document.head.appendChild(script);
+    }
+    tryNext();
   }
 
   // Pre-load the library in the background

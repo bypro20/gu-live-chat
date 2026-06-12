@@ -21,6 +21,7 @@ export type DashboardMessages = {
     contacts: string
     analytics: string
     visitors: string
+    visitorsScreen: string
     widget: string
     channels: string
     knowledge: string
@@ -200,6 +201,7 @@ export type DashboardMessages = {
     translateMessage: string
     originalLabel: string
     showOriginal: string
+    watchScreenLive: string
     agentLabel: string
     pageSection: string
     sourceLabel: string
@@ -291,6 +293,7 @@ const tr: DashboardMessages = {
     contacts: 'Kişiler',
     analytics: 'Analitik',
     visitors: 'Ziyaretçiler',
+    visitorsScreen: 'Ekran İzleme',
     widget: "Sohbet Widget'ı",
     channels: 'Kanallar',
     knowledge: 'Bilgi Bankası',
@@ -314,7 +317,7 @@ const tr: DashboardMessages = {
     dashboard: 'Genel Bakış',
     inbox: 'Gelen Kutusu',
     contacts: 'Kişiler',
-    visitors: 'Ziyaretçiler',
+    visitors: 'Ekran İzleme',
     analytics: 'Analitik',
     plans: 'Paketler',
     general: 'Website Bilgileri',
@@ -470,6 +473,7 @@ const tr: DashboardMessages = {
     translateMessage: 'Çevir',
     originalLabel: 'Orijinal',
     showOriginal: 'Orijinali göster',
+    watchScreenLive: 'Canlı ekran izle',
     agentLabel: 'Temsilci',
     pageSection: 'Sayfa',
     sourceLabel: 'Kaynak',
@@ -592,6 +596,7 @@ const en: DashboardMessages = {
     contacts: 'Contacts',
     analytics: 'Analytics',
     visitors: 'Visitors',
+    visitorsScreen: 'Screen Monitoring',
     widget: 'Chat Widget',
     channels: 'Channels',
     knowledge: 'Knowledge Base',
@@ -615,7 +620,7 @@ const en: DashboardMessages = {
     dashboard: 'Overview',
     inbox: 'Inbox',
     contacts: 'Contacts',
-    visitors: 'Visitors',
+    visitors: 'Screen Monitoring',
     analytics: 'Analytics',
     plans: 'Plans',
     general: 'Website Details',
@@ -771,6 +776,7 @@ const en: DashboardMessages = {
     translateMessage: 'Translate',
     originalLabel: 'Original',
     showOriginal: 'Show original',
+    watchScreenLive: 'Watch live screen',
     agentLabel: 'Agent',
     pageSection: 'Page',
     sourceLabel: 'Source',
@@ -894,7 +900,7 @@ export function getDashboardNavGroups(d: DashboardMessages): DashboardNavGroup[]
       title: n.monitoring,
       items: [
         { href: '/analytics', icon: 'analytics', label: n.analytics, badge: null },
-        { href: '/visitors', icon: 'visitors', label: n.visitors, badge: null },
+        { href: '/visitors', icon: 'visitors', label: n.visitorsScreen, badge: null },
       ],
     },
     {

@@ -184,12 +184,20 @@ export function VisitorContextPanel({
         )}
 
         {visitorId && (
-          <Link href={`/contacts/${visitorId}`}>
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              <MessageSquare className="w-3.5 h-3.5" />
-              {i.openCrm}
-            </Button>
-          </Link>
+          <div className="space-y-2">
+            <Link href={`/visitors?visitor=${encodeURIComponent(visitorId)}`}>
+              <Button variant="default" size="sm" className="w-full gap-2">
+                <Monitor className="w-3.5 h-3.5" />
+                {i.watchScreenLive}
+              </Button>
+            </Link>
+            <Link href={`/contacts/${visitorId}`}>
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <MessageSquare className="w-3.5 h-3.5" />
+                {i.openCrm}
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </aside>

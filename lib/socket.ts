@@ -608,6 +608,12 @@ export function initSocketServer(httpServer: HTTPServer) {
         console.log(`[Socket] Screen capture started for visitor ${data.visitorId?.substring(0, 8)}...`)
       } else {
         console.log(`[Socket] No visitor socket found for screen capture: ${data.visitorId?.substring(0, 8)}... website ${data.websiteId?.substring(0, 8)}`)
+        socket.emit('agent:screen:error', {
+          visitorId: data.visitorId,
+          websiteId: data.websiteId,
+          code: 'visitor_offline',
+          message: 'Ziyaretçi canlı bağlantıda değil. Widget yüklü sayfada çevrimiçi bir ziyaretçi seçin.',
+        })
       }
     })
 

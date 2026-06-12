@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
-import { connectSocket, getSocket } from '@/lib/socket-client'
+import { connectSocket, getSocket, isSocketEnabled } from '@/lib/socket-client'
+import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
+import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo } from '@/lib/visitors-utils'
@@ -21,6 +23,7 @@ interface AdminVisitorsMonitorProps {
   variant?: 'admin' | 'dashboard'
   websiteId?: string | null
   websiteIds?: string[]
+  initialVisitorId?: string | null
 }
 
 function DeviceIcon({ device }: { device?: string | null }) {
@@ -38,11 +41,13 @@ export function AdminVisitorsMonitor({
   variant = 'admin',
   websiteId = null,
   websiteIds: websiteIdsProp = [],
+  initialVisitorId = null,
 }: AdminVisitorsMonitorProps = {}) {
   const isDashboard = variant === 'dashboard'
   const agentLabel = isDashboard ? 'dashboard' : 'admin'
   const { monitor: m, locale } = useVisitorsI18n()
   const { data: session } = useSession()
+  const { allowed: overlayFeature } = usePlanFeature('overlayAI')
   const {
     visitors,
     activities,
@@ -69,6 +74,7 @@ export function AdminVisitorsMonitor({
   const [webrtcState, setWebrtcState] = useState<WebRTCConnectionState | 'idle' | 'denied'>('idle')
   const [privacyMode, setPrivacyMode] = useState(false)
   const selectedVisitorIdRef = useRef<string | null>(selectedVisitorId)
+  const screenCaptureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => { selectedVisitorIdRef.current = selectedVisitorId }, [selectedVisitorId])
 
   const websiteIds = isDashboard ? websiteIdsProp : adminWebsiteIds
@@ -106,7 +112,7 @@ export function AdminVisitorsMonitor({
         }))
       )
       if (isDashboard) {
-        setOverlayEnabled(!!data.overlayEnabled)
+        setOverlayEnabled(!!data.overlayEnabled || overlayFeature || isPlatformAdminRole(session.user.role))
       } else if (data.websiteIds?.length) {
         setAdminWebsiteIds(data.websiteIds)
       }
@@ -115,7 +121,17 @@ export function AdminVisitorsMonitor({
     } finally {
       setLoading(false)
     }
-  }, [session, setVisitors, setLoading, isDashboard, websiteId])
+  }, [session, setVisitors, setLoading, isDashboard, websiteId, overlayFeature])
+
+  useEffect(() => {
+    if (isDashboard && overlayFeature) setOverlayEnabled(true)
+  }, [isDashboard, overlayFeature])
+
+  useEffect(() => {
+    if (!initialVisitorId) return
+    const match = visitors.get(initialVisitorId)
+    if (match) selectVisitor(initialVisitorId)
+  }, [initialVisitorId, visitors, selectVisitor])
 
   useEffect(() => { fetchLiveVisitors() }, [fetchLiveVisitors])
 
@@ -126,15 +142,22 @@ export function AdminVisitorsMonitor({
 
   // Socket — admin tüm siteleri, dashboard kullanıcı kendi sitelerini dinler
   useEffect(() => {
-    if (!session?.user?.id || websiteIds.length === 0) return
+    if (!session?.user?.id) return
+    if (isDashboard && websiteIds.length === 0 && !websiteId) return
 
     const socket = getSocket() || connectSocket()
     const authenticate = () => {
-      emit('agent:auth', {
-        userId: session.user.id,
-        websiteIds,
-        ...(isDashboard ? {} : { scope: 'platform' as const }),
-      })
+      if (isDashboard) {
+        const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
+        if (ids.length === 0) return
+        emit('agent:auth', { userId: session.user.id, websiteIds: ids })
+      } else {
+        emit('agent:auth', {
+          userId: session.user.id,
+          websiteIds,
+          scope: 'platform',
+        })
+      }
     }
 
     if (socket?.connected) authenticate()
@@ -199,6 +222,10 @@ export function AdminVisitorsMonitor({
 
     const handleVisitorScreenshot = (data: any) => {
       if (!data.screenshot) return
+      if (screenCaptureTimeoutRef.current) {
+        clearTimeout(screenCaptureTimeoutRef.current)
+        screenCaptureTimeoutRef.current = null
+      }
       updateVisitor(data.visitorId as string, {
         screenshotUrl: data.screenshot as string,
         screenshotAt: (data.timestamp as string) || new Date().toISOString(),
@@ -221,6 +248,16 @@ export function AdminVisitorsMonitor({
       setOverlayDeniedMessage(data.message || m.overlayDenied)
     }
 
+    const handleScreenError = (data: any) => {
+      if (selectedVisitorIdRef.current && data.visitorId !== selectedVisitorIdRef.current) return
+      if (screenCaptureTimeoutRef.current) {
+        clearTimeout(screenCaptureTimeoutRef.current)
+        screenCaptureTimeoutRef.current = null
+      }
+      setScreenCapturingId(null)
+      setOverlayDeniedMessage(data.message || m.screenCaptureFailed)
+    }
+
     const unsubs = [
       on('agent:visitor:online', handleVisitorOnline),
       on('agent:visitor:offline', handleVisitorOffline),
@@ -228,16 +265,36 @@ export function AdminVisitorsMonitor({
       on('agent:visitor:cursor', handleVisitorCursor),
       on('agent:visitor:screenshot', handleVisitorScreenshot),
       on('agent:visitor:privacy-mode', handlePrivacyMode),
-      ...(isDashboard ? [on('agent:overlay:denied', handleOverlayDenied)] : []),
+      on('agent:overlay:denied', handleOverlayDenied),
+      on('agent:screen:error', handleScreenError),
     ]
 
     return () => {
       socket?.off('connect', authenticate)
       unsubs.forEach((u) => u())
     }
-  }, [session, websiteIds, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, addActivity, isDashboard])
+  }, [session, websiteIds, websiteId, emit, on, addVisitor, updateVisitor, removeVisitor, updateCursor, addActivity, isDashboard, m])
+
+  const authenticateAgent = useCallback(() => {
+    if (!session?.user?.id) return
+    if (isDashboard) {
+      const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
+      if (ids.length === 0) return
+      emit('agent:auth', { userId: session.user.id, websiteIds: ids })
+    } else {
+      emit('agent:auth', {
+        userId: session.user.id,
+        websiteIds,
+        scope: 'platform',
+      })
+    }
+  }, [session, websiteIds, websiteId, isDashboard, emit])
 
   const handleScreenCaptureToggle = useCallback((visitorId: string, active: boolean) => {
+    if (active && !isSocketEnabled()) {
+      setOverlayDeniedMessage(m.socketOffline)
+      return
+    }
     if (active && isDashboard && !overlayEnabled) {
       setOverlayDeniedMessage(m.overlayDeniedPro)
       return
@@ -245,14 +302,33 @@ export function AdminVisitorsMonitor({
     const visitor = visitors.get(visitorId)
     const targetWebsiteId = visitor?.websiteId || websiteId || undefined
     if (!targetWebsiteId) return
+    if (active && visitor && !visitor.isLive) {
+      setOverlayDeniedMessage(m.visitorNotLive)
+      return
+    }
     if (active) {
+      authenticateAgent()
       setOverlayDeniedMessage(null)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
       setPrivacyMode(false)
       emit('agent:screen:start', { visitorId, websiteId: targetWebsiteId })
+      if (screenCaptureTimeoutRef.current) clearTimeout(screenCaptureTimeoutRef.current)
+      screenCaptureTimeoutRef.current = setTimeout(() => {
+        setScreenCapturingId((current) => {
+          if (current === visitorId) {
+            setOverlayDeniedMessage(m.screenCaptureFailed)
+            return null
+          }
+          return current
+        })
+      }, 20000)
     } else {
+      if (screenCaptureTimeoutRef.current) {
+        clearTimeout(screenCaptureTimeoutRef.current)
+        screenCaptureTimeoutRef.current = null
+      }
       setScreenCapturingId(null)
       setWebrtcStream(null)
       setWebrtcState('idle')
@@ -261,7 +337,7 @@ export function AdminVisitorsMonitor({
       emit('agent:screen:stop', { visitorId, websiteId: targetWebsiteId })
       updateVisitor(visitorId, { screenshotUrl: null, screenshotAt: null })
     }
-  }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel])
+  }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel, authenticateAgent, m])
 
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
     if (active && isDashboard && !overlayEnabled) {
@@ -284,6 +360,13 @@ export function AdminVisitorsMonitor({
 
   useEffect(() => { setPrivacyMode(false) }, [selectedVisitorId])
   useEffect(() => { setOverlayDeniedMessage(null) }, [overlayEnabled, websiteId])
+  useEffect(() => {
+    return () => {
+      if (screenCaptureTimeoutRef.current) clearTimeout(screenCaptureTimeoutRef.current)
+    }
+  }, [])
+
+  const socketReady = isSocketEnabled()
 
   const filtered = Array.from(visitors.values())
     .filter((v) => {
@@ -329,7 +412,13 @@ export function AdminVisitorsMonitor({
   }
 
   return (
-    <div className={`flex flex-col xl:flex-row gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
+    <div className={`flex flex-col gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
+      {!socketReady && (
+        <div className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 shrink-0">
+          {m.socketOffline}
+        </div>
+      )}
+      <div className={`flex flex-col xl:flex-row gap-4 flex-1 min-h-0 ${isDashboard ? '' : ''}`}>
       {/* Sol: liste + aktivite */}
       <div className={`w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'hidden xl:flex' : 'flex'}`}>
         <div className="p-4 border-b border-white/[0.06] shrink-0">
@@ -531,6 +620,7 @@ export function AdminVisitorsMonitor({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

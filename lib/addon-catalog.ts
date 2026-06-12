@@ -370,7 +370,7 @@ export const ADDON_SEED_CATALOG: AddonSeed[] = [
     price: 14900,
     purchaseType: PurchaseType.MONTHLY,
     isFeatured: true,
-    setupGuide: '1. Gelen kutusunda ziyaretçi seçin\n2. Ekran izlemeyi başlatın',
+    setupGuide: '1. Sol menüden Ekran İzleme sayfasını açın\n2. Çevrimiçi ziyaretçiyi seçin\n3. Ekranı İzle butonuna basın',
   },
   {
     slug: 'white-label',

@@ -19,6 +19,9 @@ export type VisitorsMessages = {
     visitorsOnline: (n: number) => string
     overlayDenied: string
     overlayDeniedPro: string
+    screenCaptureFailed: string
+    visitorNotLive: string
+    socketOffline: string
     hdDeniedPro: string
     upgradePlanLink: string
     activityPage: (title: string, url: string) => string
@@ -115,6 +118,9 @@ const tr: VisitorsMessages = {
     visitorsOnline: (n) => `● ${n} ziyaretçi çevrimiçi`,
     overlayDenied: 'Ekran izleme mevcut paketinizde kullanılamaz.',
     overlayDeniedPro: 'Ekran izleme Profesyonel pakette veya ekran izleme eklentisi ile kullanılabilir.',
+    screenCaptureFailed: 'Ekran görüntüsü alınamadı. Ziyaretçinin widget yüklü sayfada çevrimiçi olduğundan emin olun.',
+    visitorNotLive: 'Bu ziyaretçi şu an canlı değil — yalnızca yeşil noktalı (çevrimiçi) ziyaretçiler izlenebilir.',
+    socketOffline: 'Canlı bağlantı yok — ekran izleme için socket sunucusunun çalıştığından emin olun.',
     hdDeniedPro: 'HD ekran paylaşımı Profesyonel pakette kullanılabilir.',
     upgradePlanLink: 'Paketi yükselt',
     activityPage: (title, url) => `Sayfa: ${title || url || '—'}`,
@@ -211,6 +217,9 @@ const en: VisitorsMessages = {
     visitorsOnline: (n) => `● ${n} visitor${n === 1 ? '' : 's'} online`,
     overlayDenied: 'Screen monitoring is not available on your current plan.',
     overlayDeniedPro: 'Screen monitoring is available on Pro or with the screen monitoring add-on.',
+    screenCaptureFailed: 'Could not capture the screen. Make sure the visitor is online on a page with the widget loaded.',
+    visitorNotLive: 'This visitor is not live — only online visitors (green dot) can be monitored.',
+    socketOffline: 'Live connection unavailable — ensure the socket server is running for screen monitoring.',
     hdDeniedPro: 'HD screen sharing is available on Pro.',
     upgradePlanLink: 'Upgrade plan',
     activityPage: (title, url) => `Page: ${title || url || '—'}`,
