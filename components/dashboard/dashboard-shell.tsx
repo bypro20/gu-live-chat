@@ -12,6 +12,7 @@ import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { clearNativeAppMark, nativeAppHomePath } from '@/lib/native-app'
 import { NativeBottomNav } from '@/components/app/native-bottom-nav'
 import { NativeTopBar } from '@/components/app/native-top-bar'
+import { WebsitePickerSheet } from '@/components/app/website-picker-sheet'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { getDashboardNavGroups, getDashboardPageTitle, type DashboardMessages } from '@/lib/dashboard-i18n'
 
@@ -37,6 +38,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [websiteDropdownOpen, setWebsiteDropdownOpen] = useState(false)
   const [inboxUnread, setInboxUnread] = useState(0)
   const [nativeWebsitePickerOpen, setNativeWebsitePickerOpen] = useState(false)
+  const [mobileAccountOpen, setMobileAccountOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { isNativeApp, isNativeCustomerApp } = useNativeApp()
   const d = useDashboardI18n()
@@ -94,6 +96,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMobileMenuOpen(false)
+    setMobileAccountOpen(false)
   }, [pathname])
 
   useEffect(() => {
@@ -270,36 +273,60 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           )}
-          <div
-            className="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-200 group cursor-pointer relative"
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.035)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '' }}
-          >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
-              {userInitial}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-white truncate leading-tight">{session?.user?.name || s.user}</p>
-              <p className="text-[10px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{session?.user?.email}</p>
-            </div>
-            <div className={`flex items-center gap-0.5 ${isNativeApp ? 'hidden' : 'opacity-0 group-hover:opacity-100'} transition-all duration-200`}>
+          <div className="p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.035)' }}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
+                {userInitial}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-white truncate leading-tight">{session?.user?.name || s.user}</p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{session?.user?.email}</p>
+              </div>
               {!isNativeApp && (
-              <a href="/" className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title={s.backToSite}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#E4E3ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h-2z" />
-                </svg>
-              </a>
+                <div className="hidden lg:flex items-center gap-0.5">
+                  <a href="/" className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title={s.backToSite}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#E4E3ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h-2z" />
+                    </svg>
+                  </a>
+                  <button type="button" onClick={() => void handleSignOut()} className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title={s.signOut}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FB7185'; e.currentTarget.style.background = 'rgba(251,113,133,0.1)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </button>
+                </div>
               )}
-              <button onClick={handleSignOut} className="p-1.5 rounded-md transition-all" style={{ color: 'var(--sidebar-foreground)' }} title={s.signOut}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#FB7185'; e.currentTarget.style.background = 'rgba(251,113,133,0.1)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
+            </div>
+
+            <div className="mt-2.5 space-y-2 lg:hidden">
+              {websites.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setNativeWebsitePickerOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-semibold text-white border border-white/15 active:scale-[0.98] transition-transform"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  {s.switchAccount}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-semibold text-white bg-red-500/90 hover:bg-red-500 active:scale-[0.98] transition-all"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
+                {s.signOut}
               </button>
             </div>
           </div>
@@ -330,8 +357,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <AppLogo variant="light" size="sm" showTagline={false} className="max-w-full" />
             )}
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-1">
             <NotificationBell variant="toolbar" />
+            <button
+              type="button"
+              onClick={() => setMobileAccountOpen(true)}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors touch-manipulation"
+              aria-label={s.switchAccount}
+            >
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-indigo-600">
+                {userInitial}
+              </div>
+            </button>
           </div>
         </div>
         )}
@@ -341,39 +378,57 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {isNativeCustomerApp && <NativeBottomNav />}
       </main>
 
-      {isNativeCustomerApp && nativeWebsitePickerOpen && (
-        <div className="native-sheet-backdrop" onClick={() => setNativeWebsitePickerOpen(false)}>
-          <div className="native-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="native-sheet-handle" />
-            <p className="text-base font-bold text-foreground px-4 pb-3">{s.selectWebsite}</p>
-            <div className="max-h-64 overflow-y-auto px-2 pb-4">
-              {websites.map((w) => (
+      <WebsitePickerSheet
+        open={nativeWebsitePickerOpen}
+        onClose={() => setNativeWebsitePickerOpen(false)}
+        websites={websites}
+        activeWebsiteId={activeWebsite?.websiteId}
+        onSelect={switchWebsite}
+      />
+
+      {mobileAccountOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[55] bg-black/50 lg:hidden"
+            aria-label={s.menu}
+            onClick={() => setMobileAccountOpen(false)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-[60] lg:hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="rounded-2xl border border-border bg-card shadow-xl p-3 space-y-2">
+              <p className="px-2 pt-1 text-xs font-semibold text-muted-foreground truncate">{session?.user?.email}</p>
+              {websites.length > 1 && (
                 <button
-                  key={w.websiteId}
                   type="button"
                   onClick={() => {
-                    switchWebsite(w.websiteId)
-                    setNativeWebsitePickerOpen(false)
+                    setMobileAccountOpen(false)
+                    setNativeWebsitePickerOpen(true)
                   }}
-                  className={`native-hub-row w-full text-left ${w.websiteId === activeWebsite?.websiteId ? 'bg-primary/10' : ''}`}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-muted text-foreground"
                 >
-                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold bg-primary/80 shrink-0">
-                    {w.name?.charAt(0)?.toUpperCase() || 'W'}
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-[15px] font-semibold truncate">{w.name}</span>
-                    <span className="block text-xs text-muted-foreground truncate">{w.domain || s.noDomain}</span>
-                  </span>
-                  {w.websiteId === activeWebsite?.websiteId && (
-                    <svg className="w-5 h-5 text-primary shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  {s.switchAccount}
                 </button>
-              ))}
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileAccountOpen(false)
+                  void handleSignOut()
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-red-500"
+              >
+                {s.signOut}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileAccountOpen(false)}
+                className="w-full py-2.5 text-sm font-medium text-muted-foreground"
+              >
+                {d.common.cancel}
+              </button>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )

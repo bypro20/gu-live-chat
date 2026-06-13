@@ -50,9 +50,11 @@ export function NativeTopBar({
           <button
             type="button"
             onClick={onOpenWebsitePicker}
-            className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-muted-foreground truncate max-w-full active:text-foreground"
+            className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-primary truncate max-w-full active:opacity-80"
+            aria-label={shell.switchAccount}
           >
             <span className="truncate">{websiteName}</span>
+            <span className="shrink-0 opacity-80">· {shell.switchAccount}</span>
             <svg className="w-3 h-3 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>

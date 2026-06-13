@@ -62,6 +62,7 @@ export type DashboardMessages = {
     backToSite: string
     menu: string
     selectWebsite: string
+    switchAccount: string
     mainMenu: string
     back: string
   }
@@ -334,6 +335,7 @@ const tr: DashboardMessages = {
     backToSite: 'Siteye Dön',
     menu: 'Menü',
     selectWebsite: 'Website Seç',
+    switchAccount: 'Hesap Değiştir',
     mainMenu: 'Ana menü',
     back: 'Geri',
   },
@@ -637,6 +639,7 @@ const en: DashboardMessages = {
     backToSite: 'Back to site',
     menu: 'Menu',
     selectWebsite: 'Select website',
+    switchAccount: 'Switch account',
     mainMenu: 'Main menu',
     back: 'Back',
   },

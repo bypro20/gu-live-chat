@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { clearNativeAppMark } from '@/lib/native-app'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { WebsitePickerSheet } from '@/components/app/website-picker-sheet'
 
 type HubItem = {
   href: string
@@ -134,8 +135,9 @@ export function NativeSettingsHub() {
   const { data: session } = useSession()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { activeWebsite } = useActiveWebsite()
+  const { activeWebsite, websites, switchWebsite } = useActiveWebsite()
   const [mounted, setMounted] = useState(false)
+  const [websitePickerOpen, setWebsitePickerOpen] = useState(false)
   const groups = useNativeHubGroups()
   const { shell } = useDashboardI18n()
 
@@ -200,9 +202,27 @@ export function NativeSettingsHub() {
         </button>
       )}
 
+      {websites.length > 1 && (
+        <button
+          type="button"
+          onClick={() => setWebsitePickerOpen(true)}
+          className="native-hub-action mb-3"
+        >
+          {shell.switchAccount}
+        </button>
+      )}
+
       <button type="button" onClick={() => void handleSignOut()} className="native-hub-action native-hub-action--danger">
         {shell.signOut}
       </button>
+
+      <WebsitePickerSheet
+        open={websitePickerOpen}
+        onClose={() => setWebsitePickerOpen(false)}
+        websites={websites}
+        activeWebsiteId={activeWebsite?.websiteId}
+        onSelect={switchWebsite}
+      />
     </div>
   )
 }
