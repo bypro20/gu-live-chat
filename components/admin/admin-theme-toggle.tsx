@@ -22,19 +22,23 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
-    setThemeState(stored === 'light' ? 'light' : 'dark')
+    const next = stored === 'light' ? 'light' : 'dark'
+    setThemeState(next)
+    document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
     setMounted(true)
   }, [])
 
   const setTheme = useCallback((next: AdminTheme) => {
     setThemeState(next)
     localStorage.setItem(STORAGE_KEY, next)
+    document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
   }, [])
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark'
       localStorage.setItem(STORAGE_KEY, next)
+      document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
       return next
     })
   }, [])
@@ -100,8 +104,8 @@ export function AdminThemeToggle({ variant = 'sidebar' }: AdminThemeToggleProps)
         {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
       </span>
       <span className="flex-1 text-left">
-        <span className="block text-[13px] font-semibold admin-text">{label}</span>
-        <span className="block text-[10px] admin-text-muted">
+        <span className="block text-[13px] font-semibold admin-sidebar-title">{label}</span>
+        <span className="block text-[10px] admin-sidebar-desc">
           {isDark ? 'Siyah arka plan' : 'Açık arka plan'}
         </span>
       </span>

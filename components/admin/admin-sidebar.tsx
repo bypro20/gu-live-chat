@@ -95,17 +95,17 @@ export function AdminSidebar({
           onClick={onSearchOpen}
           className="admin-sidebar-search-trigger w-full"
         >
-          <Search className="w-4 h-4 shrink-0 text-gray-500" />
-          <span className="flex-1 text-left text-sm text-gray-500">Ara veya git…</span>
-          <kbd className="hidden xl:inline text-[10px] text-gray-600 border border-white/10 rounded px-1.5 py-0.5">⌘K</kbd>
+          <Search className="w-4 h-4 shrink-0 admin-sidebar-icon" />
+          <span className="flex-1 text-left text-sm admin-sidebar-desc">Ara veya git…</span>
+          <kbd className="hidden xl:inline text-[10px] admin-sidebar-muted border rounded px-1.5 py-0.5" style={{ borderColor: 'var(--sidebar-border)' }}>⌘K</kbd>
         </button>
         <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-sidebar-icon pointer-events-none" />
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Menüde filtrele…"
-            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border outline-none focus:ring-1 admin-input"
+            className="admin-sidebar-filter w-full pl-9 pr-3 py-2 text-xs rounded-xl border outline-none focus:ring-1"
           />
         </div>
       </div>
@@ -136,7 +136,7 @@ export function AdminSidebar({
                           <span className="admin-sidebar-badge">{badge > 99 ? '99+' : badge}</span>
                         )}
                       </span>
-                      <span className="block text-[10px] text-gray-500 truncate leading-tight mt-0.5">
+                      <span className="block text-[10px] admin-sidebar-desc truncate leading-tight mt-0.5">
                         {item.description}
                       </span>
                     </span>
@@ -147,7 +147,7 @@ export function AdminSidebar({
           </div>
         ))}
         {groups.length === 0 && (
-          <p className="text-xs text-gray-500 text-center py-6">Eşleşen menü yok</p>
+          <p className="text-xs admin-sidebar-muted text-center py-6">Eşleşen menü yok</p>
         )}
       </nav>
 
@@ -165,13 +165,13 @@ export function AdminSidebar({
             <span className="text-[13px] font-medium">Müşteri Paneli</span>
           </Link>
         )}
-        <div className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.04] transition-colors group">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl transition-colors group hover:bg-[var(--sidebar-surface-hover)]">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
             {userInitial}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold admin-text truncate">{admin.name || 'Admin'}</p>
-            <p className="text-[10px] admin-text-faint truncate">{admin.email}</p>
+            <p className="text-[13px] font-semibold admin-sidebar-title truncate">{admin.name || 'Admin'}</p>
+            <p className="text-[10px] admin-sidebar-muted truncate">{admin.email}</p>
           </div>
           <button
             type="button"

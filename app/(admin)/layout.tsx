@@ -268,7 +268,15 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               isNativeAdminApp ? 'native-app-admin-content' : ''
             }`}
           >
-            {children}
+            <div
+              className={
+                pathname.startsWith('/admin/inbox')
+                  ? 'h-full min-h-0 flex flex-col'
+                  : 'admin-content-root min-h-full'
+              }
+            >
+              {children}
+            </div>
           </div>
 
           {!isFullBleed && (

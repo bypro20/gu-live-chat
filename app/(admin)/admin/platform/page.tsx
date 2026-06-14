@@ -60,7 +60,7 @@ const widgetBadge: Record<string, string> = {
   ACTIVE: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
   INSTALLED: 'bg-sky-500/15 text-sky-400 border-sky-500/25',
   INACTIVE: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-  NEVER: 'bg-white/5 text-gray-500 border-white/10',
+  NEVER: 'admin-badge-muted border',
 }
 
 const widgetLabel: Record<string, string> = {
@@ -78,15 +78,15 @@ function Kpi({ label, value, sub, icon: Icon, accent }: {
   accent?: string
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
+    <div className="admin-kpi-card">
       <div className="flex items-start justify-between gap-2 mb-3">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
+        <p className="text-xs font-medium admin-text-muted uppercase tracking-wide">{label}</p>
         <div className={`p-2 rounded-xl ${accent || 'bg-violet-500/10 text-violet-400'}`}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
-      <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">{value}</p>
-      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+      <p className="text-2xl sm:text-3xl font-bold admin-text tabular-nums">{value}</p>
+      {sub && <p className="text-xs admin-text-muted mt-1">{sub}</p>}
     </div>
   )
 }
@@ -109,7 +109,7 @@ export default function AdminPlatformPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] gap-3 text-gray-500">
+      <div className="flex items-center justify-center min-h-[50vh] gap-3 admin-text-muted">
         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
         Platform analizi yükleniyor…
       </div>
@@ -123,8 +123,8 @@ export default function AdminPlatformPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1600px] mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Platform Merkezi</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold admin-text tracking-tight">Platform Merkezi</h1>
+        <p className="admin-text-muted text-sm mt-1">
           Kim kayıt oldu, hangi siteye widget eklendi, kim Gu Live Chat kullanıyor — A&apos;dan Z&apos;ye görünürlük
         </p>
       </div>
@@ -139,20 +139,20 @@ export default function AdminPlatformPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-            <h2 className="font-semibold text-white flex items-center gap-2">
+        <div className="admin-table-card lg:col-span-2">
+          <div className="admin-table-card-header">
+            <h2 className="font-semibold admin-text flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-400" />
               En aktif siteler (Gu Live Chat kullananlar)
             </h2>
-            <Link href="/admin/customer-sites" className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1">
+            <Link href="/admin/customer-sites" className="admin-text-link text-xs flex items-center gap-1">
               Kullanıcı & site detayı <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="admin-table w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="text-left text-xs text-gray-500 uppercase">
+                <tr className="text-left text-xs admin-text-muted uppercase">
                   <th className="px-5 py-3">Site / Domain</th>
                   <th className="px-3 py-3">Sahip</th>
                   <th className="px-3 py-3">Widget</th>
@@ -160,26 +160,26 @@ export default function AdminPlatformPage() {
                   <th className="px-3 py-3">Sohbet</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y" style={{ borderColor: 'var(--admin-border)' }}>
                 {data.topActiveSites.map((site) => (
-                  <tr key={site.id} className="hover:bg-white/[0.02]">
+                  <tr key={site.id}>
                     <td className="px-5 py-3">
-                      <p className="font-medium text-white">{site.name}</p>
-                      <p className="text-xs text-gray-500">{site.domain}</p>
-                      <p className="text-[10px] text-gray-600 font-mono mt-0.5">{site.websiteId}</p>
+                      <p className="font-medium admin-text">{site.name}</p>
+                      <p className="text-xs admin-text-muted">{site.domain}</p>
+                      <p className="text-[10px] admin-text-faint font-mono mt-0.5">{site.websiteId}</p>
                     </td>
-                    <td className="px-3 py-3 text-xs text-gray-400 truncate max-w-[140px]">{site.ownerEmail}</td>
+                    <td className="px-3 py-3 text-xs admin-text-secondary truncate max-w-[140px]">{site.ownerEmail}</td>
                     <td className="px-3 py-3">
                       <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border ${widgetBadge[site.widgetStatus] || widgetBadge.NEVER}`}>
                         {widgetLabel[site.widgetStatus] || site.widgetStatus}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs admin-text-muted whitespace-nowrap">
                       {site.lastActiveAt
                         ? new Date(site.lastActiveAt).toLocaleString('tr-TR')
                         : '—'}
                     </td>
-                    <td className="px-3 py-3 text-gray-400 tabular-nums">{site.conversations}</td>
+                    <td className="px-3 py-3 admin-text-secondary tabular-nums">{site.conversations}</td>
                   </tr>
                 ))}
               </tbody>
@@ -188,26 +188,26 @@ export default function AdminPlatformPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+          <div className="admin-panel-card">
+            <h2 className="font-semibold admin-text mb-4 flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-400" />
               Widget durumu
             </h2>
             <ul className="space-y-3 text-sm">
-              <li className="flex justify-between"><span className="text-gray-400">Aktif (7 gün)</span><span className="text-emerald-400 font-semibold">{s.widgetActive}</span></li>
-              <li className="flex justify-between"><span className="text-gray-400">Kurulu / kullanılmış</span><span className="text-sky-400 font-semibold">{s.widgetInstalled}</span></li>
-              <li className="flex justify-between"><span className="text-gray-400">Hiç yüklenmemiş</span><span className="text-gray-500 font-semibold">{s.widgetNever}</span></li>
-              <li className="flex justify-between border-t border-white/[0.06] pt-3"><span className="text-gray-400">Hareketsiz siteler</span><span className="text-amber-400 font-semibold">{s.inactiveSiteCount}</span></li>
+              <li className="flex justify-between"><span className="admin-text-secondary">Aktif (7 gün)</span><span className="text-emerald-400 font-semibold">{s.widgetActive}</span></li>
+              <li className="flex justify-between"><span className="admin-text-secondary">Kurulu / kullanılmış</span><span className="text-sky-400 font-semibold">{s.widgetInstalled}</span></li>
+              <li className="flex justify-between"><span className="admin-text-secondary">Hiç yüklenmemiş</span><span className="admin-text-muted font-semibold">{s.widgetNever}</span></li>
+              <li className="flex justify-between border-t pt-3" style={{ borderColor: 'var(--admin-border)' }}><span className="admin-text-secondary">Hareketsiz siteler</span><span className="text-amber-400 font-semibold">{s.inactiveSiteCount}</span></li>
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-            <h2 className="font-semibold text-white mb-3">Plan dağılımı</h2>
+          <div className="admin-panel-card">
+            <h2 className="font-semibold admin-text mb-3">Plan dağılımı</h2>
             <ul className="space-y-2">
               {data.planDistribution.map((p) => (
                 <li key={p.plan} className="flex justify-between text-sm">
-                  <span className="text-gray-400">{p.plan}</span>
-                  <span className="text-white font-medium">{p.count}</span>
+                  <span className="admin-text-secondary">{p.plan}</span>
+                  <span className="admin-text font-medium">{p.count}</span>
                 </li>
               ))}
             </ul>
@@ -216,46 +216,46 @@ export default function AdminPlatformPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+        <div className="admin-panel-card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white flex items-center gap-2">
+            <h2 className="font-semibold admin-text flex items-center gap-2">
               <Users className="w-4 h-4" />
               Son kayıt olan kullanıcılar
             </h2>
-            <Link href="/admin/users" className="text-xs text-violet-400">Tümü →</Link>
+            <Link href="/admin/users" className="admin-text-link text-xs">Tümü →</Link>
           </div>
           <ul className="space-y-3">
             {data.recentUsers.map((u) => (
               <li key={u.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="min-w-0">
-                  <p className="text-white truncate">{u.name || u.email}</p>
-                  <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                  <p className="admin-text truncate">{u.name || u.email}</p>
+                  <p className="text-xs admin-text-muted truncate">{u.email}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs text-gray-500">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</p>
-                  <p className="text-[10px] text-gray-600">{u._count.ownedWebsites} site · {u._count.memberships} üyelik</p>
+                  <p className="text-xs admin-text-muted">{new Date(u.createdAt).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-[10px] admin-text-faint">{u._count.ownedWebsites} site · {u._count.memberships} üyelik</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5">
-          <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-5">
+          <h2 className="font-semibold admin-text mb-4 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-400" />
             Widget henüz kurulmamış / hareketsiz siteler
           </h2>
           {data.inactiveSites.length === 0 ? (
-            <p className="text-sm text-gray-500">Tüm sitelerde en az bir aktivite var.</p>
+            <p className="text-sm admin-text-muted">Tüm sitelerde en az bir aktivite var.</p>
           ) : (
             <ul className="space-y-2 max-h-64 overflow-y-auto">
               {data.inactiveSites.map((site) => (
-                <li key={site.id} className="text-sm flex justify-between gap-2 py-1.5 border-b border-white/[0.04] last:border-0">
+                <li key={site.id} className="text-sm flex justify-between gap-2 py-1.5 border-b last:border-0" style={{ borderColor: 'var(--admin-border)' }}>
                   <div className="min-w-0">
-                    <p className="text-white truncate">{site.name}</p>
-                    <p className="text-xs text-gray-500">{site.ownerEmail}</p>
+                    <p className="admin-text truncate">{site.name}</p>
+                    <p className="text-xs admin-text-muted">{site.ownerEmail}</p>
                   </div>
-                  <code className="text-[10px] text-gray-600 shrink-0">{site.websiteId.slice(0, 8)}…</code>
+                  <code className="text-[10px] admin-text-faint shrink-0">{site.websiteId.slice(0, 8)}…</code>
                 </li>
               ))}
             </ul>
@@ -268,11 +268,11 @@ export default function AdminPlatformPage() {
           <MessageSquare className="w-4 h-4" />
           Tüm müşteri sohbetleri
         </Link>
-        <Link href="/admin/visitors" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/[0.04] text-white text-sm font-medium transition-colors">
+        <Link href="/admin/visitors" className="admin-btn-ghost">
           <Eye className="w-4 h-4" />
           Canlı ekran izleme
         </Link>
-        <Link href="/admin/websites" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/[0.04] text-white text-sm font-medium transition-colors">
+        <Link href="/admin/websites" className="admin-btn-ghost">
           <Code2 className="w-4 h-4" />
           Embed kodları & siteler
         </Link>

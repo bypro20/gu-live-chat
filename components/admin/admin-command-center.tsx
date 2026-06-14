@@ -180,7 +180,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
             return (
               <div
                 key={mod.id}
-                className={`admin-module-card border ${a.border} bg-gradient-to-br ${a.glow} to-transparent`}
+                className={`admin-module-card border ${a.border}`}
               >
                 <div className="flex items-start gap-3 mb-4">
                   <div className={`p-2.5 rounded-xl ${a.bg} ${a.text}`}>
@@ -200,9 +200,9 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
                         {...(link.href.startsWith('/api') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="text-sm font-medium admin-text-secondary group-hover:admin-text">{link.label}</span>
+                          <span className="admin-module-link-label text-sm font-medium admin-text-secondary">{link.label}</span>
                           {link.description && (
-                            <span className="block text-[10px] admin-text-faint truncate">{link.description}</span>
+                            <span className="admin-module-link-desc block text-[10px] admin-text-faint truncate">{link.description}</span>
                           )}
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 admin-text-faint group-hover:text-violet-400 shrink-0 transition-colors" />
