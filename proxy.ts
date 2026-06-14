@@ -4,6 +4,7 @@ import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
 import { isNativeCustomerUserAgent } from '@/lib/native-app'
 import { applySecurityHeaders } from '@/lib/security-headers'
 import { widgetApiCorsHeaders } from '@/lib/widget-api-cors'
+import { auth } from '@/lib/auth'
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
@@ -44,6 +45,7 @@ const IP_CHECK_PATHS = ['/register', '/api/register', '/api/widget', '/login', '
 /** Dashboard / admin JSON API — oturum çerezi zorunlu (route içi yetki ayrı kontrol edilir). */
 const PROTECTED_API_PREFIXES = [
   '/api/admin',
+  '/api/socket',
   '/api/dashboard',
   '/api/analytics',
   '/api/websites',
@@ -198,12 +200,20 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // Admin routes
+  // Admin routes — oturum + ADMIN rolü
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-login')) {
     if (!isLoggedIn) {
       const loginUrl = new URL('/admin-login', req.url)
       loginUrl.searchParams.set('callbackUrl', pathname)
       return withSecurityHeaders(NextResponse.redirect(loginUrl))
+    }
+    try {
+      const session = await auth()
+      if (session?.user?.role !== 'ADMIN') {
+        return withSecurityHeaders(NextResponse.redirect(new URL('/dashboard', req.url)))
+      }
+    } catch {
+      return withSecurityHeaders(NextResponse.redirect(new URL('/admin-login', req.url)))
     }
   }
 

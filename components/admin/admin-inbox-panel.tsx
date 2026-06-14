@@ -19,6 +19,7 @@ import {
   isSocketConnected,
   isSocketEnabled,
 } from '@/lib/socket-client'
+import { fetchAgentSocketAuth } from '@/lib/hooks/use-agent-socket-auth'
 import { unlockInboxAudio } from '@/lib/inbox-sound'
 import { uploadInboxFile, attachmentContent } from '@/lib/inbox-upload'
 import { ConversationListItem } from '@/components/inbox/conversation-list-item'
@@ -300,7 +301,7 @@ export function AdminInboxPanel() {
     if (!socket) return
 
     const auth = () => {
-      socket.emit('agent:auth', { userId: session.user.id, websiteIds: [websiteId] })
+      void fetchAgentSocketAuth(socket.emit.bind(socket), { websiteIds: [websiteId] })
     }
 
     const onConversationNew = (data: { conversationId: string }) => {

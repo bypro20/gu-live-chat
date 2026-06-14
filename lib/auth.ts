@@ -92,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               response_type: 'code',
             },
           },
-          allowDangerousEmailAccountLinking: true,
+          allowDangerousEmailAccountLinking: false,
         })]
       : []),
   ],

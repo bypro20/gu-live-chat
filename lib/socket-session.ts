@@ -7,7 +7,7 @@ export type VerifiedSocketSession = {
   email?: string
 }
 
-/** Validate NextAuth session cookie on Socket.io handshake (never trust client userId). */
+/** Socket.io el sıkışmasında NextAuth oturum çerezini doğrula — client userId'ye güvenme. */
 export async function verifyAgentSocketSession(
   cookieHeader: string | undefined
 ): Promise<VerifiedSocketSession | null> {

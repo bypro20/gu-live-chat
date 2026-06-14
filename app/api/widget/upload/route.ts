@@ -5,6 +5,7 @@ import { isIpBanned } from '@/lib/ip-ban'
 import { PLAN_LIMITS } from '@/lib/constants'
 import { uploadFileBuffer } from '@/lib/file-upload'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { resolveVisitorToken } from '@/lib/secure-tokens'
 
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -34,9 +35,15 @@ export async function POST(req: Request) {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     const websiteId = formData.get('websiteId') as string | null
+    const visitorToken = formData.get('visitorToken') as string | null
 
     if (!websiteId) {
       return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
+    }
+
+    const tokenPayload = visitorToken ? resolveVisitorToken(visitorToken) : null
+    if (!tokenPayload || tokenPayload.websiteId !== websiteId) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
 
     const website = await prisma.website.findUnique({

@@ -298,6 +298,7 @@ export default function WidgetPage() {
     () => typeof window !== 'undefined' && window.parent !== window,
   )
   const visitorTokenRef = useRef<string | null>(null)
+  const visitorIdRef = useRef<string | null>(null)
   const sessionIdRef = useRef<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
@@ -427,6 +428,7 @@ export default function WidgetPage() {
         setIsInitialized(true)
 
         visitorTokenRef.current = data.visitorToken
+        visitorIdRef.current = data.visitorId ?? null
         sessionIdRef.current = data.sessionId
 
         if (embedContext.embedUrl && data.sessionId) {
@@ -518,7 +520,7 @@ export default function WidgetPage() {
       } else if (event.data.type === 'gu:visitor:activity') {
         const socket = getSocket()
         const payload: Record<string, any> = {
-          visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+          visitorId: visitorIdRef.current || '',
           websiteId,
           eventType: event.data.eventType,
           selector: event.data.selector || '',
@@ -549,7 +551,7 @@ export default function WidgetPage() {
             console.log(`[Widget] Forwarding screenshot #${screenshotForwardCount}, size: ${screenshotSize}KB, privacy: ${!!event.data.privacyMode}`)
           }
           socket.emit('visitor:screenshot', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
             screenshot: event.data.screenshot,
             viewportW: event.data.viewportW,
@@ -573,7 +575,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('visitor:privacy-mode', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
             enabled: event.data.enabled,
           })
@@ -582,7 +584,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('webrtc:stream-ready', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
           })
         }
@@ -590,7 +592,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('webrtc:denied', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
           })
         }
@@ -598,7 +600,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('webrtc:stop', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
           })
         }
@@ -606,7 +608,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('webrtc:signal', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
             signal: { type: 'offer', sdp: event.data.sdp },
           })
@@ -615,7 +617,7 @@ export default function WidgetPage() {
         const socket = getSocket()
         if (socket) {
           socket.emit('webrtc:signal', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+            visitorId: visitorIdRef.current || '',
             websiteId,
             signal: { type: 'ice-candidate', candidate: event.data.candidate },
           })
@@ -772,9 +774,14 @@ export default function WidgetPage() {
       if (document.hidden) return
       try {
         const fp = getFingerprint()
-        const res = await fetch(
-          `/api/widget/messages?conversationId=${encodeURIComponent(conversationId)}&fingerprint=${encodeURIComponent(fp)}&websiteId=${encodeURIComponent(websiteId)}`
-        )
+        const token = visitorTokenRef.current
+        const params = new URLSearchParams({
+          conversationId,
+          websiteId,
+          fingerprint: fp,
+        })
+        if (token) params.set('visitorToken', token)
+        const res = await fetch(`/api/widget/messages?${params.toString()}`)
         if (!res.ok) return
         const data = await res.json()
         if (!active) return
@@ -828,7 +835,7 @@ export default function WidgetPage() {
 
       if (socket) {
         socket.emit('visitor:pageview', {
-          visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+          visitorId: visitorIdRef.current || '',
           websiteId,
           url,
           title: title || '',
@@ -1100,6 +1107,9 @@ export default function WidgetPage() {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('websiteId', websiteId)
+      if (visitorTokenRef.current) {
+        fd.append('visitorToken', visitorTokenRef.current)
+      }
 
       const upRes = await fetch('/api/widget/upload', { method: 'POST', body: fd })
       const upData = await upRes.json()

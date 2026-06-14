@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { handleInboundChannelMessage } from '@/lib/channel-inbound'
 import { websiteHasFeature } from '@/lib/addon-features'
 import type { MetaChannelConfig } from '@/lib/channels/meta'
+
+function verifyMetaSignature(rawBody: string, signature: string | null, appSecret: string): boolean {
+  if (!signature || !appSecret) return false
+  const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex')
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
 
 type ChannelType = 'MESSENGER' | 'INSTAGRAM'
 
@@ -69,7 +80,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const rawBody = await request.text()
+    const signature = request.headers.get('x-hub-signature-256')
+    const appSecret = process.env.META_APP_SECRET?.trim() || ''
+
+    if (process.env.NODE_ENV === 'production' && !appSecret) {
+      console.error('[Meta Webhook] META_APP_SECRET missing in production')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
+    }
+
+    if (appSecret && !verifyMetaSignature(rawBody, signature, appSecret)) {
+      console.warn('[Meta Webhook] Invalid signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    }
+
+    const body = JSON.parse(rawBody)
     if (body.object !== 'page' && body.object !== 'instagram') {
       return NextResponse.json({ status: 'ignored' })
     }

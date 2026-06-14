@@ -1,6 +1,8 @@
 export interface TelegramConfig {
   botToken: string
   botUsername?: string
+  /** setWebhook secret_token — X-Telegram-Bot-Api-Secret-Token header */
+  webhookSecret?: string
 }
 
 export async function sendTelegramMessage(

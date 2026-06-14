@@ -12,12 +12,13 @@ import { extendTrialForActivation } from '@/lib/trial'
 import { visitorHasRequiredIdentity, widgetIdentityRequired } from '@/lib/widget-identity'
 import { withWidgetIdentityDefaults } from '@/lib/widget-platform-defaults'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { createVisitorToken } from '@/lib/secure-tokens'
 import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
 import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
-  fingerprint: z.string().min(8).max(128),
+  fingerprint: z.string(),
   visitorName: z.string().optional(),
   visitorEmail: z.string().email().optional().or(z.literal('')),
   currentPage: z.string().optional(),
@@ -186,9 +187,11 @@ export async function POST(req: Request) {
     })
 
     // Generate visitor token — use public websiteId for socket room consistency
-    const visitorToken = Buffer.from(
-      JSON.stringify({ visitorId: visitor.id, websiteId: website.websiteId, sessionId: session.sessionId })
-    ).toString('base64')
+    const visitorToken = createVisitorToken({
+      visitorId: visitor.id,
+      websiteId: website.websiteId,
+      sessionId: session.sessionId,
+    })
 
     // Resolve plan limits for this website
     const planLimits = PLAN_LIMITS[website.plan]

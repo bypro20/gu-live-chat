@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { resolveVisitorToken } from '@/lib/secure-tokens'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * Public endpoint the chat widget polls to receive new messages (agent/bot
@@ -9,16 +11,30 @@ import { prisma } from '@/lib/db'
  */
 export async function GET(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'widget-messages', 120, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const { searchParams } = new URL(req.url)
     const conversationId = searchParams.get('conversationId')
     const fingerprint = searchParams.get('fingerprint')
-    // Optional public websiteId — when sent by the widget it must match the
-    // conversation's website, adding a second tenant-scoping guard on top of
-    // the fingerprint ownership check.
+    const visitorToken = searchParams.get('visitorToken')
     const websiteId = searchParams.get('websiteId')
 
-    if (!conversationId || !fingerprint) {
+    if (!conversationId) {
       return NextResponse.json({ error: 'Eksik parametre' }, { status: 400 })
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      if (!visitorToken) {
+        return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+      }
+    } else if (!visitorToken && !fingerprint) {
+      return NextResponse.json({ error: 'Eksik parametre' }, { status: 400 })
+    }
+
+    const tokenPayload = visitorToken ? resolveVisitorToken(visitorToken) : null
+    if (visitorToken && !tokenPayload) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
 
     const conversation = await prisma.conversation.findUnique({
@@ -26,6 +42,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         status: true,
+        visitorId: true,
         visitor: { select: { fingerprint: true } },
         website: { select: { websiteId: true } },
       },
@@ -35,8 +52,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Sohbet bulunamadı' }, { status: 404 })
     }
 
-    // Ensure the requester actually owns this conversation.
-    if (conversation.visitor?.fingerprint !== fingerprint) {
+    if (tokenPayload) {
+      if (tokenPayload.visitorId !== conversation.visitorId) {
+        return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+      }
+      if (websiteId && tokenPayload.websiteId !== websiteId) {
+        return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+      }
+    } else if (fingerprint) {
+      if (conversation.visitor?.fingerprint !== fingerprint) {
+        return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+      }
+    } else {
       return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
 

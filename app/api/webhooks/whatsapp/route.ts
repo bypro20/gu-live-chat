@@ -57,11 +57,20 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
     const signature = request.headers.get('x-hub-signature-256')
-    const appSecret = process.env.WHATSAPP_APP_SECRET || ''
+    const appSecret = process.env.WHATSAPP_APP_SECRET?.trim() || ''
+
+    if (process.env.NODE_ENV === 'production' && !appSecret) {
+      console.error('[WhatsApp Webhook] WHATSAPP_APP_SECRET missing in production')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
+    }
 
     if (appSecret && !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
       console.warn('[WhatsApp Webhook] Invalid signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    }
+
+    if (!appSecret && process.env.NODE_ENV !== 'production') {
+      console.warn('[WhatsApp Webhook] WHATSAPP_APP_SECRET not set — skipping signature check (dev only)')
     }
 
     const body = JSON.parse(rawBody)

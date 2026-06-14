@@ -27,6 +27,10 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text()
   const signingSecret = process.env.SLACK_SIGNING_SECRET?.trim()
 
+  if (process.env.NODE_ENV === 'production' && !signingSecret) {
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
+  }
+
   if (signingSecret) {
     const ok = verifySlackSignature(
       signingSecret,

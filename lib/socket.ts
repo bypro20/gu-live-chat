@@ -5,6 +5,7 @@ import { socketCorsOrigins } from './socket-cors'
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
 import { verifyAgentSocketSession } from './socket-session'
+import { resolveVisitorToken } from './secure-tokens'
 
 let io: SocketIOServer
 
@@ -337,12 +338,12 @@ export function initSocketServer(httpServer: HTTPServer) {
 
       // Decode visitorToken if provided (from widget init)
       if (data.visitorToken) {
-        try {
-          const decoded = JSON.parse(Buffer.from(data.visitorToken, 'base64').toString())
+        const decoded = resolveVisitorToken(data.visitorToken)
+        if (decoded) {
           visitorId = decoded.visitorId || visitorId
           websiteId = decoded.websiteId || websiteId
           sessionId = decoded.sessionId || ''
-        } catch { /* ignore invalid token */ }
+        }
       }
 
       if (!websiteId) {

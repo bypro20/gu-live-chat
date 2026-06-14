@@ -8,6 +8,7 @@ import { useConversations } from '@/lib/hooks/use-conversations'
 import { useMessages } from '@/lib/hooks/use-messages'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { connectSocket, retainSocket, releaseSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
+import { fetchAgentSocketAuth } from '@/lib/hooks/use-agent-socket-auth'
 import {
   inboxCanAi,
   inboxCanCanned,
@@ -211,8 +212,7 @@ function InboxPageContent() {
       setTypingPreview((prev) => (prev?.conversationId === data.conversationId ? null : prev))
 
     const authenticate = () => {
-      socket.emit('agent:auth', {
-        userId: session.user.id,
+      void fetchAgentSocketAuth(socket.emit.bind(socket), {
         websiteIds: allWebsites
           ? websites.map((w) => w.websiteId)
           : [activeWebsite.websiteId],

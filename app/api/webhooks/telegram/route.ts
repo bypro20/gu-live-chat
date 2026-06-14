@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { handleInboundChannelMessage } from '@/lib/channel-inbound'
 import { websiteHasFeature } from '@/lib/addon-features'
 import type { TelegramConfig } from '@/lib/channels/telegram'
+
+function verifyTelegramSecret(request: NextRequest, cfg: TelegramConfig): boolean {
+  const header = request.headers.get('x-telegram-bot-api-secret-token')
+  const expected = cfg.webhookSecret?.trim()
+  if (!expected) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[Telegram Webhook] webhookSecret not configured — rejecting POST')
+      return false
+    }
+    return true
+  }
+  if (!header) return false
+  try {
+    return crypto.timingSafeEqual(Buffer.from(header), Buffer.from(expected))
+  } catch {
+    return false
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +47,17 @@ export async function POST(request: NextRequest) {
 
     if (!(await websiteHasFeature(website.id, website.plan, 'multiChannel'))) {
       return NextResponse.json({ status: 'plan_denied' })
+    }
+
+    let cfg: TelegramConfig = { botToken: '' }
+    try {
+      cfg = JSON.parse(integration.config || '{}') as TelegramConfig
+    } catch {
+      return NextResponse.json({ error: 'Invalid integration config' }, { status: 400 })
+    }
+
+    if (!verifyTelegramSecret(request, cfg)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -62,6 +92,7 @@ export async function GET(request: NextRequest) {
   if (!websitePublicId) {
     return NextResponse.json({
       hint: 'Webhook URL: /api/webhooks/telegram?websiteId=YOUR_WEBSITE_ID',
+      note: 'setWebhook çağrısında secret_token parametresi kullanın; değeri kanal ayarlarındaki webhookSecret ile eşleşmeli.',
     })
   }
 
@@ -78,18 +109,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Telegram kanalı yapılandırılmamış' }, { status: 404 })
   }
 
-  let cfg: TelegramConfig = { botToken: '' }
-  try {
-    cfg = JSON.parse(integration.config) as TelegramConfig
-  } catch { /* ignore */ }
-
   const base = process.env.NEXTAUTH_URL || 'https://your-domain.com'
   const webhookUrl = `${base}/api/webhooks/telegram?websiteId=${websitePublicId}`
 
   return NextResponse.json({
     webhookUrl,
-    setWebhook: cfg.botToken
-      ? `https://api.telegram.org/bot${cfg.botToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
-      : null,
+    instructions:
+      'Telegram setWebhook URL\'ine secret_token ekleyin. Panelde kayıtlı webhookSecret ile aynı olmalı. Bot token asla bu yanıtta gösterilmez.',
   })
 }

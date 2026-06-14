@@ -56,6 +56,10 @@ export async function POST(req: Request) {
       if (!safeUrl) {
         return NextResponse.json({ error: 'Geçersiz ek dosya adresi' }, { status: 400 })
       }
+      const uploadPrefix = `/uploads/widget/${validated.websiteId}/`
+      if (!safeUrl.includes(uploadPrefix)) {
+        return NextResponse.json({ error: 'Ek dosya bu siteye ait değil' }, { status: 400 })
+      }
       validated.attachment.url = safeUrl
     }
 

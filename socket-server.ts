@@ -29,10 +29,13 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 function authOk(req: IncomingMessage): boolean {
-  const secret =
-    process.env.SOCKET_INTERNAL_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim()
-  if (!secret) return false
+  const secret = process.env.SOCKET_INTERNAL_SECRET?.trim()
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') return false
+    const fallback = process.env.CRON_SECRET?.trim()
+    if (!fallback) return false
+    return (req.headers.authorization || '') === `Bearer ${fallback}`
+  }
   const auth = req.headers.authorization || ''
   return auth === `Bearer ${secret}`
 }

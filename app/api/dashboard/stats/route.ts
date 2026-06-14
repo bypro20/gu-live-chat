@@ -34,9 +34,10 @@ export async function GET(req: Request) {
       where: { websiteId },
       select: { id: true },
     })
-    if (website && websiteIds.includes(website.id)) {
-      filteredWebsiteIds = [website.id]
+    if (!website || !websiteIds.includes(website.id)) {
+      return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
     }
+    filteredWebsiteIds = [website.id]
   }
 
   if (filteredWebsiteIds.length === 0) {
