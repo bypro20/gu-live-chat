@@ -440,15 +440,15 @@ export default function AdminUsersPage() {
       {/* Detail Panel Overlay */}
       {showDetail && selectedUser && (
         <div className="fixed inset-0 z-50 flex" onClick={() => setShowDetail(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative ml-auto w-full max-w-lg h-full overflow-y-auto bg-card border-l border-border shadow-2xl',
+              'relative ml-auto w-full max-w-lg h-full overflow-y-auto admin-modal-panel border-l shadow-2xl',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
+            <div className="sticky top-0 admin-modal-panel border-b px-6 py-4 flex items-center justify-between z-10" style={{ borderColor: 'var(--admin-border)' }}>
               <h2 className="text-lg font-semibold">Kullanıcı Detayı</h2>
               <Button variant="ghost" size="icon" onClick={() => setShowDetail(false)}>
                 <X className="size-4" />
@@ -609,10 +609,10 @@ export default function AdminUsersPage() {
       {/* Add User Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5',
+              'relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}
@@ -661,10 +661,10 @@ export default function AdminUsersPage() {
       {/* Ban Modal */}
       {showBanModal && banData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowBanModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5',
+              'relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}
@@ -714,10 +714,10 @@ export default function AdminUsersPage() {
       {/* Mute Modal */}
       {showMuteModal && muteData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowMuteModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5',
+              'relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}
@@ -761,10 +761,10 @@ export default function AdminUsersPage() {
       {/* IP Ban Modal */}
       {showIpBanModal && selectedUser?.lastIp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowIpBanModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5',
+              'relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}
@@ -800,10 +800,10 @@ export default function AdminUsersPage() {
       {/* Delete Modal */}
       {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
             className={cn(
-              'relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5',
+              'relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5',
               'animate-in-scale'
             )}
             onClick={e => e.stopPropagation()}

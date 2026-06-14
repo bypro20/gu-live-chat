@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, ArrowRight } from 'lucide-react'
 import { getAdminNavFlat, type AdminNavItem } from '@/lib/admin-navigation'
+import { useAdminTheme } from '@/components/admin/admin-theme-toggle'
 
 interface AdminCommandPaletteProps {
   open: boolean
@@ -12,6 +13,7 @@ interface AdminCommandPaletteProps {
 
 export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps) {
   const router = useRouter()
+  const { theme } = useAdminTheme()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -68,7 +70,13 @@ export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps)
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[12vh] sm:pt-[15vh]">
+    <div
+      className="admin-overlay-host fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[12vh] sm:pt-[15vh]"
+      data-admin-theme={theme}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Admin arama"
+    >
       <button
         type="button"
         className="admin-command-palette-overlay absolute inset-0 backdrop-blur-sm"
@@ -86,9 +94,14 @@ export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps)
               setActiveIndex(0)
             }}
             placeholder="Sayfa, modül veya işlem ara… (Esc ile kapat)"
-            className="admin-command-palette-input flex-1 bg-transparent text-sm outline-none border-0 p-0"
+            className="admin-command-palette-input flex-1 text-sm outline-none border-0 p-0 min-w-0"
           />
-          <kbd className="hidden sm:inline text-[10px] admin-text-faint border rounded px-1.5 py-0.5" style={{ borderColor: 'var(--admin-border)' }}>↵</kbd>
+          <kbd
+            className="hidden sm:inline text-[10px] admin-text-faint border rounded px-1.5 py-0.5"
+            style={{ borderColor: 'var(--admin-border)' }}
+          >
+            ↵
+          </kbd>
         </div>
         <div className="max-h-[min(420px,50vh)] overflow-y-auto py-2">
           {items.length === 0 ? (
@@ -116,7 +129,10 @@ export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps)
             ))
           )}
         </div>
-        <div className="px-4 py-2 border-t admin-text-faint text-[10px] flex items-center gap-3" style={{ borderColor: 'var(--admin-border)' }}>
+        <div
+          className="px-4 py-2 border-t admin-text-faint text-[10px] flex items-center gap-3"
+          style={{ borderColor: 'var(--admin-border)' }}
+        >
           <span>↑↓ gezin</span>
           <span>↵ aç</span>
           <span>Esc kapat</span>

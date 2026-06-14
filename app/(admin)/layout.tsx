@@ -165,8 +165,6 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionProvider>
-      <AdminCommandPalette open={paletteOpen} onClose={closePalette} />
-
       <div
         className={`app-shell admin-shell admin-shell-v2 app-shell--mobile-nav relative lg:flex overflow-hidden admin-text ${
           isNativeAdminApp ? 'native-app-shell h-[100dvh]' : 'h-screen'
@@ -174,6 +172,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         data-admin-theme={adminTheme}
         data-sidebar-open={sidebarOpen ? 'true' : 'false'}
       >
+        <AdminCommandPalette open={paletteOpen} onClose={closePalette} />
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden touch-manipulation"

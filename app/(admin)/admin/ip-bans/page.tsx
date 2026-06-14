@@ -214,9 +214,9 @@ export default function AdminIpBansPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
-            className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5 animate-in-scale"
+            className="relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5 animate-in-scale"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -254,9 +254,9 @@ export default function AdminIpBansPage() {
 
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteModal(null)}>
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 admin-modal-backdrop" />
           <div
-            className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5 animate-in-scale"
+            className="relative w-full max-w-md admin-modal-panel border rounded-2xl shadow-2xl p-6 space-y-5 animate-in-scale"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold">IP Engelini Kaldır</h2>

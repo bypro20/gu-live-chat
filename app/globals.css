@@ -529,6 +529,46 @@ body {
     --admin-sidebar-bg-end: #1e293b;
   }
 
+  /* Portal/overlay bileşenleri shell dışında da tema alsın (Cmd+K paleti vb.) */
+  .admin-overlay-host[data-admin-theme='dark'] {
+    --admin-bg: #000000;
+    --admin-bg-subtle: #050505;
+    --admin-bg-elevated: #0a0a0a;
+    --admin-bg-card: #0a0a0a;
+    --admin-bg-hover: #141414;
+    --admin-border: rgba(255, 255, 255, 0.08);
+    --admin-border-strong: rgba(255, 255, 255, 0.12);
+    --admin-text: #f1f5f9;
+    --admin-text-secondary: #cbd5e1;
+    --admin-text-muted: #94a3b8;
+    --admin-text-faint: rgba(255, 255, 255, 0.4);
+    --admin-accent: #a78bfa;
+    --admin-accent-soft: rgba(139, 92, 246, 0.15);
+    --admin-input-bg: rgba(255, 255, 255, 0.06);
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] {
+    --admin-bg: #f1f5f9;
+    --admin-bg-subtle: #e2e8f0;
+    --admin-bg-elevated: #ffffff;
+    --admin-bg-card: #ffffff;
+    --admin-bg-hover: rgba(15, 23, 42, 0.04);
+    --admin-border: #e2e8f0;
+    --admin-border-strong: #cbd5e1;
+    --admin-text: #0f172a;
+    --admin-text-secondary: #334155;
+    --admin-text-muted: #64748b;
+    --admin-text-faint: #94a3b8;
+    --admin-accent: #7c3aed;
+    --admin-accent-soft: rgba(124, 58, 237, 0.1);
+    --admin-input-bg: #ffffff;
+  }
+
+  .admin-overlay-host .admin-text { color: var(--admin-text); }
+  .admin-overlay-host .admin-text-secondary { color: var(--admin-text-secondary); }
+  .admin-overlay-host .admin-text-muted { color: var(--admin-text-muted); }
+  .admin-overlay-host .admin-text-faint { color: var(--admin-text-faint); }
+
   .admin-shell-v2 .admin-main {
     background: var(--admin-bg);
   }
@@ -803,16 +843,33 @@ body {
   }
 
   .admin-command-palette-input {
-    border-color: var(--admin-border);
-    background: var(--admin-input-bg);
+    color: var(--admin-text);
+    background: transparent;
+  }
+
+  .admin-command-palette-input::placeholder {
+    color: var(--admin-text-muted);
+  }
+
+  .admin-command-palette-item {
     color: var(--admin-text);
   }
 
-  .admin-shell-v2[data-admin-theme='dark'] .admin-command-palette-overlay {
+  .admin-command-palette-item .admin-text {
+    color: var(--admin-text);
+  }
+
+  .admin-command-palette-item .admin-text-muted {
+    color: var(--admin-text-muted);
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-command-palette-overlay,
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-overlay {
     background: rgba(0, 0, 0, 0.85);
   }
 
-  .admin-shell-v2[data-admin-theme='light'] .admin-command-palette-overlay {
+  .admin-shell-v2[data-admin-theme='light'] .admin-command-palette-overlay,
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-overlay {
     background: rgba(15, 23, 42, 0.45);
   }
 
@@ -1308,6 +1365,35 @@ body {
     @apply flex flex-col rounded-2xl border overflow-hidden;
     border-color: var(--admin-border);
     background: var(--admin-bg-card);
+    color: var(--admin-text);
+  }
+
+  /* Admin içindeki modal / drawer katmanları */
+  .admin-shell-v2 .admin-modal-backdrop {
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(4px);
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-modal-backdrop {
+    background: rgba(15, 23, 42, 0.45) !important;
+  }
+
+  .admin-shell-v2 .admin-modal-panel {
+    background: var(--admin-bg-elevated) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-text) !important;
+  }
+
+  .admin-shell-v2 .admin-modal-panel .text-foreground {
+    color: var(--admin-text) !important;
+  }
+
+  .admin-shell-v2 .admin-modal-panel .text-muted-foreground {
+    color: var(--admin-text-muted) !important;
+  }
+
+  .admin-shell-v2 .admin-modal-panel h2,
+  .admin-shell-v2 .admin-modal-panel h3 {
     color: var(--admin-text);
   }
 }
