@@ -8,7 +8,7 @@ import { widgetApiCorsHeaders } from '@/lib/widget-api-cors'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 function isWidgetPublicApi(pathname: string) {
-  return pathname.startsWith('/api/widget') || pathname.startsWith('/api/privacy')
+  return pathname.startsWith('/api/widget') || pathname.startsWith('/api/privacy/consent')
 }
 
 function withWidgetPublicApiHeaders(req: NextRequest, res: NextResponse) {
@@ -40,6 +40,48 @@ function getClientIp(req: NextRequest): string | null {
 }
 
 const IP_CHECK_PATHS = ['/register', '/api/register', '/api/widget', '/login', '/admin-login']
+
+/** Dashboard / admin JSON API — oturum çerezi zorunlu (route içi yetki ayrı kontrol edilir). */
+const PROTECTED_API_PREFIXES = [
+  '/api/admin',
+  '/api/dashboard',
+  '/api/analytics',
+  '/api/websites',
+  '/api/conversations',
+  '/api/team',
+  '/api/notifications',
+  '/api/upload',
+  '/api/ai/config',
+  '/api/ai/suggest',
+  '/api/ai/test',
+  '/api/translate',
+  '/api/contacts',
+  '/api/visitors',
+  '/api/inbox',
+  '/api/tickets',
+  '/api/workflows',
+  '/api/webhooks',
+  '/api/campaigns',
+  '/api/proactive',
+  '/api/chatbots',
+  '/api/knowledge',
+  '/api/addons',
+  '/api/checkout',
+  '/api/iyzico/checkout',
+  '/api/iyzico/addon-checkout',
+  '/api/iyzico/subscription',
+  '/api/trial',
+  '/api/user',
+  '/api/invoices',
+  '/api/canned-responses',
+  '/api/ratings',
+  '/api/channels',
+  '/api/privacy',
+]
+
+function requiresSessionForApi(pathname: string): boolean {
+  return PROTECTED_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
 
 async function checkIpBan(req: NextRequest): Promise<NextResponse | null> {
   const { pathname } = req.nextUrl
@@ -113,6 +155,29 @@ export async function proxy(req: NextRequest) {
     return withSecurityHeaders(NextResponse.next())
   }
 
+  // Check for session cookie (NextAuth v5 uses authjs prefix)
+  const sessionToken =
+    req.cookies.get('authjs.session-token') ||
+    req.cookies.get('__Secure-authjs.session-token') ||
+    req.cookies.get('next-auth.session-token') ||
+    req.cookies.get('__Secure-next-auth.session-token')
+
+  const isLoggedIn = !!sessionToken
+
+  // Cron — route handler validates CRON_SECRET; block anonymous browser GET
+  if (pathname.startsWith('/api/cron')) {
+    const authHeader = req.headers.get('authorization') || ''
+    if (!authHeader.startsWith('Bearer ')) {
+      return withSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    }
+    return withSecurityHeaders(NextResponse.next())
+  }
+
+  // Protected JSON API — must have session cookie (role checks stay in route handlers)
+  if (requiresSessionForApi(pathname) && !isLoggedIn) {
+    return withSecurityHeaders(NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 }))
+  }
+
   // Allow static files and Next.js internals
   if (
     pathname.startsWith('/_next') ||
@@ -122,16 +187,6 @@ export async function proxy(req: NextRequest) {
   ) {
     return withSecurityHeaders(NextResponse.next())
   }
-
-  // Check for session cookie (NextAuth v5 uses authjs prefix)
-  const sessionToken =
-    req.cookies.get('authjs.session-token') ||
-    req.cookies.get('__Secure-authjs.session-token') ||
-    // NextAuth v4 fallback
-    req.cookies.get('next-auth.session-token') ||
-    req.cookies.get('__Secure-next-auth.session-token')
-
-  const isLoggedIn = !!sessionToken
 
   // Protected dashboard/app routes
   const protectedPaths = ['/dashboard', '/inbox', '/settings', '/contacts', '/visitors', '/analytics']

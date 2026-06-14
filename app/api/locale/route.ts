@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseLocale, regionConfig } from '@/lib/regional-config'
 import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   const ctx = detectLocaleContext(request)
@@ -10,6 +11,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimitByIp(request, 'locale', 30, 60_000)
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
   const body = await request.json().catch(() => ({}))
   const locale = parseLocale(body.locale)
   if (!locale) {

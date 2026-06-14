@@ -259,7 +259,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </Link>
-            <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" />
+            <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" adminThemed />
           </div>
 
           <div

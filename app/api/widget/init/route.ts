@@ -17,7 +17,7 @@ import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visito
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
-  fingerprint: z.string(),
+  fingerprint: z.string().min(8).max(128),
   visitorName: z.string().optional(),
   visitorEmail: z.string().email().optional().or(z.literal('')),
   currentPage: z.string().optional(),

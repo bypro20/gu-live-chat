@@ -86,7 +86,7 @@ export function AdminSidebar({
     <aside className="admin-sidebar app-sidebar flex flex-col h-full w-[var(--app-sidebar-width)]">
       <div className="admin-sidebar-header">
         <AppLogo variant="admin" href="/admin" />
-        <NotificationBell inboxBasePath="/admin/inbox" />
+        <NotificationBell inboxBasePath="/admin/inbox" adminThemed />
       </div>
 
       <div className="px-3 pt-3 pb-2 shrink-0">

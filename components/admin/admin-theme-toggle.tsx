@@ -20,28 +20,34 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const [theme, setThemeState] = useState<AdminTheme>('dark')
   const [mounted, setMounted] = useState(false)
 
+  const syncThemeDom = useCallback((next: AdminTheme) => {
+    document.querySelectorAll('.admin-shell-v2, .admin-overlay-host').forEach((el) => {
+      el.setAttribute('data-admin-theme', next)
+    })
+  }, [])
+
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
     const next = stored === 'light' ? 'light' : 'dark'
     setThemeState(next)
-    document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
+    syncThemeDom(next)
     setMounted(true)
-  }, [])
+  }, [syncThemeDom])
 
   const setTheme = useCallback((next: AdminTheme) => {
     setThemeState(next)
     localStorage.setItem(STORAGE_KEY, next)
-    document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
-  }, [])
+    syncThemeDom(next)
+  }, [syncThemeDom])
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark'
       localStorage.setItem(STORAGE_KEY, next)
-      document.querySelector('.admin-shell-v2')?.setAttribute('data-admin-theme', next)
+      syncThemeDom(next)
       return next
     })
-  }, [])
+  }, [syncThemeDom])
 
   return (
     <AdminThemeContext.Provider value={{ theme, setTheme, toggleTheme, mounted }}>

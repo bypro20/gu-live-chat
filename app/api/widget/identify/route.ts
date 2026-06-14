@@ -9,7 +9,7 @@ import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const identifySchema = z.object({
   websiteId: z.string().min(1),
-  fingerprint: z.string().min(8),
+  fingerprint: z.string().min(8).max(128),
   name: z.string().min(1).max(120),
   email: z.string().email().max(254),
 })

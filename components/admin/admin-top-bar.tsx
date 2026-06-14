@@ -112,7 +112,7 @@ export function AdminTopBar({
           )}
         </Link>
 
-        <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" />
+        <NotificationBell inboxBasePath="/admin/inbox" variant="toolbar" adminThemed />
         <AdminThemeToggle variant="toolbar" />
       </div>
 

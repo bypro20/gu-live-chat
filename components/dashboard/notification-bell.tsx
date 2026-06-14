@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/lib/hooks/use-notifications'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { formatNotificationTimeAgo } from '@/lib/dashboard-i18n'
+import { AdminOverlayHost } from '@/components/admin/admin-overlay-host'
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -35,6 +36,8 @@ type NotificationBellProps = {
   inboxBasePath?: string
   /** sidebar = koyu kenar çubuğu, toolbar = açık üst bar */
   variant?: 'sidebar' | 'toolbar'
+  /** Admin panelinde portal teması (body'ye taşınan dropdown) */
+  adminThemed?: boolean
 }
 
 function useIsMobilePanel() {
@@ -54,6 +57,7 @@ function useIsMobilePanel() {
 export default function NotificationBell({
   inboxBasePath = '/inbox',
   variant = 'sidebar',
+  adminThemed = false,
 }: NotificationBellProps) {
   const router = useRouter()
   const d = useDashboardI18n()
@@ -153,14 +157,22 @@ export default function NotificationBell({
     }
   }
 
+  const panelSurfaceClass = adminThemed
+    ? 'admin-notification-panel border shadow-2xl shadow-black/50 overflow-hidden flex flex-col'
+    : 'bg-[#1E1B2E] border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden flex flex-col'
+
+  const dropdownPanelClass = adminThemed
+    ? 'fixed w-80 admin-notification-panel border rounded-xl shadow-2xl shadow-black/50 z-[200] overflow-hidden'
+    : 'fixed w-80 bg-[#1E1B2E] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 z-[200] overflow-hidden'
+
   const notificationList = (
     <div className="max-h-[min(24rem,calc(100vh-6rem))] overflow-y-auto overscroll-contain">
       {notifications.length === 0 ? (
-        <div className="px-4 py-8 text-center">
-          <svg className="w-8 h-8 text-gray-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="px-4 py-8 text-center admin-notification-empty">
+          <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
-          <p className="text-xs text-gray-500">{n.empty}</p>
+          <p className="text-xs">{n.empty}</p>
         </div>
       ) : (
         notifications.slice(0, 30).map((notification) => (
@@ -168,20 +180,20 @@ export default function NotificationBell({
             key={notification.id}
             type="button"
             onClick={() => handleNotificationClick(notification)}
-            className={`w-full flex items-start gap-3 px-4 py-3.5 hover:bg-white/[0.06] transition text-left group cursor-pointer touch-manipulation min-h-[52px] ${
-              !notification.readAt ? 'bg-[#1972F5]/8' : ''
-            }`}
+            className={`admin-notification-item w-full flex items-start gap-3 px-4 py-3.5 transition text-left group cursor-pointer touch-manipulation min-h-[52px] ${
+              adminThemed ? 'hover:bg-[var(--admin-bg-hover)]' : 'hover:bg-white/[0.06]'
+            } ${!notification.readAt ? (adminThemed ? 'bg-[var(--admin-accent-soft)]' : 'bg-[#1972F5]/8') : ''}`}
           >
             <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-medium ${!notification.readAt ? 'text-white' : 'text-gray-300'}`}>
+              <p className={`text-xs font-medium ${!notification.readAt ? (adminThemed ? 'admin-text' : 'text-white') : (adminThemed ? 'admin-text-secondary' : 'text-gray-300')}`}>
                 {notification.title}
                 {!notification.readAt && (
                   <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-primary align-middle" />
                 )}
               </p>
-              <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
-              <p className="text-[10px] text-gray-500 mt-1">{formatNotificationTimeAgo(notification.createdAt, d)}</p>
+              <p className={`text-[11px] mt-0.5 line-clamp-2 ${adminThemed ? 'admin-text-muted' : 'text-gray-400'}`}>{notification.message}</p>
+              <p className={`text-[10px] mt-1 ${adminThemed ? 'admin-text-faint' : 'text-gray-500'}`}>{formatNotificationTimeAgo(notification.createdAt, d)}</p>
             </div>
             <span
               role="button"
@@ -210,8 +222,11 @@ export default function NotificationBell({
   )
 
   const panelHeader = (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
-      <h3 className="text-sm font-semibold text-white">{n.title}</h3>
+    <div
+      className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${adminThemed ? '' : 'border-white/[0.06]'}`}
+      style={adminThemed ? { borderColor: 'var(--admin-border)' } : undefined}
+    >
+      <h3 className={`text-sm font-semibold ${adminThemed ? 'admin-text' : 'text-white'}`}>{n.title}</h3>
       {unreadCount > 0 && (
         <button
           type="button"
@@ -236,7 +251,7 @@ export default function NotificationBell({
         />
         <div
           ref={panelRef}
-          className="notification-sheet-panel lg:hidden bg-[#1E1B2E] border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden flex flex-col"
+          className={`notification-sheet-panel lg:hidden ${panelSurfaceClass}`}
         >
           {panelHeader}
           {notificationList}
@@ -245,7 +260,7 @@ export default function NotificationBell({
     ) : (
       <div
         ref={panelRef}
-        className="fixed w-80 bg-[#1E1B2E] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 z-[200] overflow-hidden"
+        className={dropdownPanelClass}
         style={{ top: menuPos.top, left: menuPos.left }}
       >
         {panelHeader}
@@ -279,7 +294,9 @@ export default function NotificationBell({
           </span>
         )}
       </button>
-      {mounted && panel ? createPortal(panel, document.body) : null}
+      {mounted && panel
+        ? createPortal(adminThemed ? <AdminOverlayHost>{panel}</AdminOverlayHost> : panel, document.body)
+        : null}
     </>
   )
 }

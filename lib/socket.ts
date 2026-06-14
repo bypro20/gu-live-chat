@@ -4,6 +4,7 @@ import { prisma } from './db'
 import { socketCorsOrigins } from './socket-cors'
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
+import { verifyAgentSocketSession } from './socket-session'
 
 let io: SocketIOServer
 
@@ -194,7 +195,21 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Agent Authentication ──────────────────────────────────
     socket.on('agent:auth', async (data: { userId: string; websiteIds: string[]; scope?: string }) => {
+      const cookieHeader = socket.handshake.headers.cookie
+      const session = await verifyAgentSocketSession(cookieHeader)
+      if (!session) {
+        console.warn('[Socket] agent:auth denied: no valid session cookie')
+        socket.emit('agent:auth:error', { error: 'Oturum gerekli' })
+        return
+      }
+
       const { userId } = data
+      if (userId !== session.userId) {
+        console.warn(`[Socket] agent:auth denied: userId mismatch (${userId} vs session)`)
+        socket.emit('agent:auth:error', { error: 'Yetkisiz' })
+        return
+      }
+
       const requestedWebsiteIds = Array.isArray(data.websiteIds) ? data.websiteIds : []
 
       // Tenant isolation: never trust the client-supplied website list. Only
@@ -233,19 +248,15 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
 
       // Platform admin: tüm siteler veya marketing sitesi
-      if (websiteIds.length === 0 && userId) {
+      if (websiteIds.length === 0 && session.userId) {
         try {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { role: true },
-          })
-          if (user?.role === 'ADMIN') {
+          if (session.role === 'ADMIN') {
             if (data.scope === 'platform') {
               const allSites = await prisma.website.findMany({ select: { websiteId: true } })
               websiteIds = allSites.map((w) => w.websiteId)
             } else if (requestedWebsiteIds.length > 0) {
               const { ensureAdminMarketingAccess } = await import('./marketing-website')
-              const marketingId = await ensureAdminMarketingAccess(userId)
+              const marketingId = await ensureAdminMarketingAccess(session.userId)
               if (requestedWebsiteIds.includes(marketingId)) {
                 websiteIds = [marketingId]
               }

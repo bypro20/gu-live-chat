@@ -33,7 +33,7 @@ const widgetMessageSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'FILE']).default('TEXT'),
   visitorName: z.string().optional(),
   visitorEmail: z.string().email().optional().or(z.literal('')),
-  fingerprint: z.string(),
+  fingerprint: z.string().min(8).max(128),
   visitorLang: z.string().min(2).max(8).optional(),
   attachment: widgetAttachmentSchema.optional(),
 })

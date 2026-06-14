@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
       role: user.role,
       passwordMatches,
       hasPasswordHash: Boolean(stored?.passwordHash),
-      databaseUrl: process.env.DATABASE_URL?.startsWith('libsql://') ? 'turso' : 'other',
       marketingWebsiteId,
       schema,
     })

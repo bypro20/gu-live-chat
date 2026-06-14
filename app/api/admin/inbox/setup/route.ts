@@ -11,13 +11,10 @@ export async function GET() {
     const site = await resolveAdminInboxSite(check.user.id)
     return NextResponse.json(site)
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error)
     console.error('[Admin inbox setup] error:', error)
     return NextResponse.json(
       {
         error: 'Gelen kutusu kurulamadı',
-        detail,
-        hint: 'curl -H "Authorization: Bearer CRON_SECRET" https://gulivechat.com/api/cron/seed-admin',
       },
       { status: 500 }
     )

@@ -4,7 +4,7 @@ export const registerSchema = z
   .object({
     name: z.string().min(2, 'İsim en az 2 karakter olmalı'),
     email: z.string().email('Geçerli bir e-posta adresi girin'),
-    password: z.string().min(6, 'Şifre en az 6 karakter olmalı'),
+    password: z.string().min(8, 'Şifre en az 8 karakter olmalı'),
     confirmPassword: z.string(),
     websiteName: z.string().optional(),
     websiteDomain: z.string().optional(),

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const schema = z.object({
   subdomain: z.string().min(1),
@@ -9,6 +10,9 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'status-subscribe', 10, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {

@@ -8,7 +8,7 @@ import { mapAdminUser } from '@/lib/admin-users'
 const createUserSchema = z.object({
   email: z.string().email('Geçerli bir e-posta adresi girin'),
   name: z.string().min(1).optional(),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalı'),
+  password: z.string().min(8, 'Şifre en az 8 karakter olmalı'),
   role: z.enum(['USER', 'ADMIN']).default('USER'),
 })
 

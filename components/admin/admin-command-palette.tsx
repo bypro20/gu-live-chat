@@ -88,13 +88,16 @@ export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps)
           <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--admin-accent)' }} />
           <input
             autoFocus
+            autoComplete="off"
+            spellCheck={false}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
               setActiveIndex(0)
             }}
             placeholder="Sayfa, modül veya işlem ara… (Esc ile kapat)"
-            className="admin-command-palette-input flex-1 text-sm outline-none border-0 p-0 min-w-0"
+            className="admin-command-palette-input flex-1 text-sm outline-none border-0 p-0 min-w-0 bg-transparent"
+            style={{ color: 'var(--admin-text)' }}
           />
           <kbd
             className="hidden sm:inline text-[10px] admin-text-faint border rounded px-1.5 py-0.5"
@@ -103,9 +106,14 @@ export function AdminCommandPalette({ open, onClose }: AdminCommandPaletteProps)
             ↵
           </kbd>
         </div>
-        <div className="max-h-[min(420px,50vh)] overflow-y-auto py-2">
+        <div
+          className="max-h-[min(420px,50vh)] overflow-y-auto py-2 admin-command-palette-results"
+          style={{ color: 'var(--admin-text)' }}
+        >
           {items.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm admin-text-muted">Sonuç bulunamadı</p>
+            <p className="px-4 py-8 text-center text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+              Sonuç bulunamadı
+            </p>
           ) : (
             items.map((item, index) => (
               <button

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { notifyAdminsOfContact } from '@/lib/contact-inbox'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { escapeHtml } from '@/lib/html-escape'
 
 const contactSchema = z.object({
   name: z.string().min(1).max(200),
@@ -29,11 +30,11 @@ export async function POST(req: Request) {
     if (isEmailConfigured()) {
       const html = `
         <h2>Gu Live Chat — İletişim Formu</h2>
-        <p><strong>Ad:</strong> ${name}</p>
-        <p><strong>E-posta:</strong> ${email}</p>
-        <p><strong>Konu:</strong> ${subject}</p>
+        <p><strong>Ad:</strong> ${escapeHtml(name)}</p>
+        <p><strong>E-posta:</strong> ${escapeHtml(email)}</p>
+        <p><strong>Konu:</strong> ${escapeHtml(subject)}</p>
         <p><strong>Mesaj:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
       `
       const result = await sendEmail({
         to,

@@ -569,6 +569,113 @@ body {
   .admin-overlay-host .admin-text-muted { color: var(--admin-text-muted); }
   .admin-overlay-host .admin-text-faint { color: var(--admin-text-faint); }
 
+  /* Overlay katmanında shadcn değişkenleri (modal / bildirim) */
+  .admin-overlay-host[data-admin-theme='dark'] {
+    color-scheme: dark;
+    --background: #000000;
+    --foreground: #f1f5f9;
+    --card: #0c0c0c;
+    --card-foreground: #f1f5f9;
+    --popover: #0c0c0c;
+    --popover-foreground: #f1f5f9;
+    --muted: #141414;
+    --muted-foreground: #94a3b8;
+    --accent: #1a1a1a;
+    --accent-foreground: #f1f5f9;
+    --border: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.06);
+    --ring: #8b5cf6;
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] {
+    color-scheme: light;
+    --background: #f1f5f9;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --border: #e2e8f0;
+    --input: #ffffff;
+    --ring: #7c3aed;
+  }
+
+  /* Cmd+K paleti — değişken kaybında bile okunaklı kalsın */
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette {
+    background: #0a0a0a !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-item,
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-results {
+    color: #f1f5f9;
+  }
+
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-item .admin-text-muted,
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-results p {
+    color: #94a3b8 !important;
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-item,
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-results {
+    color: #0f172a;
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-item .admin-text-muted,
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-results p {
+    color: #64748b !important;
+  }
+
+  .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-item--active {
+    background: rgba(139, 92, 246, 0.18) !important;
+  }
+
+  .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-item--active {
+    background: rgba(124, 58, 237, 0.1) !important;
+  }
+
+  /* Admin bildirim paneli (body portal) */
+  .admin-overlay-host .admin-notification-panel {
+    background: var(--admin-bg-elevated) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-text) !important;
+  }
+
+  .admin-overlay-host .admin-notification-panel .text-white {
+    color: var(--admin-text) !important;
+  }
+
+  .admin-overlay-host .admin-notification-panel [class*='border-white'] {
+    border-color: var(--admin-border) !important;
+  }
+
+  .admin-overlay-host .admin-notification-panel [class*='hover:bg-white']:hover {
+    background-color: var(--admin-bg-hover) !important;
+  }
+
+  .admin-overlay-host .admin-notification-item {
+    color: var(--admin-text);
+  }
+
+  .admin-overlay-host .admin-notification-item:hover {
+    background: var(--admin-bg-hover);
+  }
+
+  .admin-overlay-host .admin-notification-empty {
+    color: var(--admin-text-muted);
+  }
+
   .admin-shell-v2 .admin-main {
     background: var(--admin-bg);
   }
@@ -1181,8 +1288,19 @@ body {
   }
 
   .admin-content-root [class*='text-slate-400'],
-  .admin-content-root [class*='text-slate-300'] {
+  .admin-content-root [class*='text-slate-300'],
+  .admin-content-root [class*='text-slate-500'],
+  .admin-content-root [class*='text-slate-200'] {
     color: var(--admin-text-muted) !important;
+  }
+
+  .admin-content-root [class*='text-slate-600'] {
+    color: var(--admin-text-faint) !important;
+  }
+
+  .admin-content-root [class*='bg-slate-950'],
+  .admin-content-root [class*='bg-slate-900'] {
+    background-color: var(--admin-bg-subtle) !important;
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-split-shell {
@@ -1368,32 +1486,65 @@ body {
     color: var(--admin-text);
   }
 
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-title,
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-desc,
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-muted,
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-item {
+    color: var(--sidebar-fg);
+  }
+
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-desc {
+    color: var(--sidebar-fg-muted);
+  }
+
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-muted,
+  .admin-shell-v2 .admin-sidebar .admin-sidebar-icon {
+    color: var(--sidebar-fg-faint);
+  }
+
   /* Admin içindeki modal / drawer katmanları */
-  .admin-shell-v2 .admin-modal-backdrop {
+  .admin-shell-v2 .admin-modal-backdrop,
+  .admin-overlay-host .admin-modal-backdrop {
     background: rgba(0, 0, 0, 0.75) !important;
     backdrop-filter: blur(4px);
   }
 
-  .admin-shell-v2[data-admin-theme='light'] .admin-modal-backdrop {
+  .admin-shell-v2[data-admin-theme='light'] .admin-modal-backdrop,
+  .admin-overlay-host[data-admin-theme='light'] .admin-modal-backdrop {
     background: rgba(15, 23, 42, 0.45) !important;
   }
 
-  .admin-shell-v2 .admin-modal-panel {
+  .admin-shell-v2 .admin-modal-panel,
+  .admin-overlay-host .admin-modal-panel {
     background: var(--admin-bg-elevated) !important;
     border-color: var(--admin-border) !important;
     color: var(--admin-text) !important;
   }
 
-  .admin-shell-v2 .admin-modal-panel .text-foreground {
+  .admin-shell-v2 .admin-modal-panel .text-foreground,
+  .admin-overlay-host .admin-modal-panel .text-foreground {
     color: var(--admin-text) !important;
   }
 
-  .admin-shell-v2 .admin-modal-panel .text-muted-foreground {
+  .admin-shell-v2 .admin-modal-panel .text-muted-foreground,
+  .admin-overlay-host .admin-modal-panel .text-muted-foreground {
     color: var(--admin-text-muted) !important;
   }
 
   .admin-shell-v2 .admin-modal-panel h2,
-  .admin-shell-v2 .admin-modal-panel h3 {
+  .admin-shell-v2 .admin-modal-panel h3,
+  .admin-overlay-host .admin-modal-panel h2,
+  .admin-overlay-host .admin-modal-panel h3 {
+    color: var(--admin-text);
+  }
+
+  .admin-overlay-host .admin-modal-panel label {
+    color: var(--admin-text);
+  }
+
+  .admin-overlay-host .admin-modal-panel :is(input, select, textarea):not([type='color']):not([type='checkbox']):not([type='radio']) {
+    border-color: var(--admin-border);
+    background-color: var(--admin-input-bg);
     color: var(--admin-text);
   }
 }
