@@ -15,7 +15,19 @@ const campaignSchema = z.object({
   subject: z.string().optional(),
   content: z.string().optional(),
   scheduledAt: z.string().optional(),
+  abTestEnabled: z.boolean().optional(),
+  variantBSubject: z.string().optional(),
+  variantBContent: z.string().optional(),
+  abSplitPercent: z.number().int().min(1).max(99).optional(),
 })
+
+const campaignUpdateSchema = campaignSchema
+  .omit({ websiteId: true })
+  .partial()
+  .extend({
+    id: z.string().min(1),
+    status: z.enum(['DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'CANCELLED']).optional(),
+  })
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -94,8 +106,12 @@ export async function PATCH(req: Request) {
 
   try {
     const body = await req.json()
-    const { id, ...updateData } = body
-    if (!id) return NextResponse.json({ error: 'Kampanya ID gerekli' }, { status: 400 })
+    const parsed = campaignUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Geçersiz veri', details: parsed.error.issues }, { status: 400 })
+    }
+
+    const { id, scheduledAt, ...updateData } = parsed.data
 
     const campaign = await prisma.campaign.findUnique({
       where: { id },
@@ -111,13 +127,14 @@ export async function PATCH(req: Request) {
     const planDenied = await planFeatureDeniedAsync(campaign.website.id, campaign.website.plan, 'campaigns')
     if (planDenied) return planDenied
 
-    if (updateData.scheduledAt) {
-      updateData.scheduledAt = new Date(updateData.scheduledAt)
+    const data = {
+      ...updateData,
+      ...(scheduledAt ? { scheduledAt: new Date(scheduledAt) } : {}),
     }
 
     const updated = await prisma.campaign.update({
       where: { id },
-      data: updateData,
+      data,
     })
 
     return NextResponse.json(updated)

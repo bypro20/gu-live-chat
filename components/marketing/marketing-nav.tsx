@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { ArrowRight, Download, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
-import { MobileAndroidNavButton } from '@/components/marketing/mobile-android-bar'
 import { LanguageSwitcher } from '@/components/marketing/language-switcher'
 import { useT } from '@/components/marketing/locale-provider'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'

@@ -37,6 +37,20 @@ type NotificationBellProps = {
   variant?: 'sidebar' | 'toolbar'
 }
 
+function useIsMobilePanel() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  return isMobile
+}
+
 export default function NotificationBell({
   inboxBasePath = '/inbox',
   variant = 'sidebar',
@@ -45,6 +59,8 @@ export default function NotificationBell({
   const d = useDashboardI18n()
   const n = d.notifications
   const c = d.common
+  const isMobilePanel = useIsMobilePanel()
+  const useSheet = variant === 'toolbar' && isMobilePanel
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
@@ -61,6 +77,14 @@ export default function NotificationBell({
 
   useEffect(() => setMounted(true), [])
 
+  useEffect(() => {
+    if (!open || useSheet) return
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open, useSheet])
+
   const updateMenuPosition = useCallback(() => {
     const btn = buttonRef.current
     if (!btn) return
@@ -74,7 +98,7 @@ export default function NotificationBell({
   }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || useSheet) return
     updateMenuPosition()
     const onScrollOrResize = () => updateMenuPosition()
     window.addEventListener('resize', onScrollOrResize)
@@ -83,7 +107,7 @@ export default function NotificationBell({
       window.removeEventListener('resize', onScrollOrResize)
       window.removeEventListener('scroll', onScrollOrResize, true)
     }
-  }, [open, updateMenuPosition])
+  }, [open, updateMenuPosition, useSheet])
 
   useEffect(() => {
     if (!open) return
@@ -102,7 +126,7 @@ export default function NotificationBell({
   }, [open])
 
   const handleOpen = () => {
-    if (!open) updateMenuPosition()
+    if (!open && !useSheet) updateMenuPosition()
     setOpen((v) => !v)
   }
 
@@ -129,86 +153,111 @@ export default function NotificationBell({
     }
   }
 
-  const panel = open && mounted ? (
-    <div
-      ref={panelRef}
-      className="fixed w-80 bg-[#1E1B2E] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 z-[200] overflow-hidden"
-      style={{ top: menuPos.top, left: menuPos.left }}
-    >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <h3 className="text-sm font-semibold text-white">{n.title}</h3>
-        {unreadCount > 0 && (
+  const notificationList = (
+    <div className="max-h-[min(24rem,calc(100vh-6rem))] overflow-y-auto overscroll-contain">
+      {notifications.length === 0 ? (
+        <div className="px-4 py-8 text-center">
+          <svg className="w-8 h-8 text-gray-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <p className="text-xs text-gray-500">{n.empty}</p>
+        </div>
+      ) : (
+        notifications.slice(0, 30).map((notification) => (
           <button
+            key={notification.id}
             type="button"
-            onClick={() => markAllAsRead()}
-            disabled={markingAsRead}
-            className="text-[11px] text-[#60A5FA] hover:text-[#93C5FD] transition disabled:opacity-50 cursor-pointer"
+            onClick={() => handleNotificationClick(notification)}
+            className={`w-full flex items-start gap-3 px-4 py-3.5 hover:bg-white/[0.06] transition text-left group cursor-pointer touch-manipulation min-h-[52px] ${
+              !notification.readAt ? 'bg-[#1972F5]/8' : ''
+            }`}
           >
-            {n.markAllRead}
-          </button>
-        )}
-      </div>
-
-      <div className="max-h-[min(24rem,calc(100vh-6rem))] overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <svg className="w-8 h-8 text-gray-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <p className="text-xs text-gray-500">{n.empty}</p>
-          </div>
-        ) : (
-          notifications.slice(0, 30).map((notification) => (
-            <button
-              key={notification.id}
-              type="button"
-              onClick={() => handleNotificationClick(notification)}
-              className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-white/[0.06] transition text-left group cursor-pointer ${
-                !notification.readAt ? 'bg-[#1972F5]/8' : ''
-              }`}
-            >
-              <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs font-medium ${!notification.readAt ? 'text-white' : 'text-gray-300'}`}>
-                  {notification.title}
-                  {!notification.readAt && (
-                    <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-primary align-middle" />
-                  )}
-                </p>
-                <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
-                <p className="text-[10px] text-gray-500 mt-1">{formatNotificationTimeAgo(notification.createdAt, d)}</p>
-              </div>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
+            <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-medium ${!notification.readAt ? 'text-white' : 'text-gray-300'}`}>
+                {notification.title}
+                {!notification.readAt && (
+                  <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-primary align-middle" />
+                )}
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
+              <p className="text-[10px] text-gray-500 mt-1">{formatNotificationTimeAgo(notification.createdAt, d)}</p>
+            </div>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation()
+                deleteNotification(notification.id)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
                   e.stopPropagation()
                   deleteNotification(notification.id)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.stopPropagation()
-                    deleteNotification(notification.id)
-                  }
-                }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-rose-400 transition cursor-pointer"
-                title={c.delete}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </span>
-            </button>
-          ))
-        )}
-      </div>
+                }
+              }}
+              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-2 -mr-1 text-gray-500 hover:text-rose-400 transition cursor-pointer touch-manipulation"
+              title={c.delete}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </span>
+          </button>
+        ))
+      )}
     </div>
+  )
+
+  const panelHeader = (
+    <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
+      <h3 className="text-sm font-semibold text-white">{n.title}</h3>
+      {unreadCount > 0 && (
+        <button
+          type="button"
+          onClick={() => markAllAsRead()}
+          disabled={markingAsRead}
+          className="text-[11px] text-[#60A5FA] hover:text-[#93C5FD] transition disabled:opacity-50 cursor-pointer touch-manipulation py-2 px-1"
+        >
+          {n.markAllRead}
+        </button>
+      )}
+    </div>
+  )
+
+  const panel = open && mounted ? (
+    useSheet ? (
+      <>
+        <button
+          type="button"
+          className="notification-sheet-backdrop lg:hidden"
+          aria-label={c.cancel}
+          onClick={() => setOpen(false)}
+        />
+        <div
+          ref={panelRef}
+          className="notification-sheet-panel lg:hidden bg-[#1E1B2E] border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden flex flex-col"
+        >
+          {panelHeader}
+          {notificationList}
+        </div>
+      </>
+    ) : (
+      <div
+        ref={panelRef}
+        className="fixed w-80 bg-[#1E1B2E] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 z-[200] overflow-hidden"
+        style={{ top: menuPos.top, left: menuPos.left }}
+      >
+        {panelHeader}
+        {notificationList}
+      </div>
+    )
   ) : null
 
   const buttonClass =
     variant === 'toolbar'
-      ? 'relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer'
-      : 'relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.08] transition cursor-pointer'
+      ? 'relative p-2 min-w-[44px] min-h-[44px] rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer touch-manipulation flex items-center justify-center'
+      : 'relative p-2 min-w-[44px] min-h-[44px] rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.08] transition cursor-pointer touch-manipulation flex items-center justify-center'
 
   return (
     <>
@@ -225,7 +274,7 @@ export default function NotificationBell({
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 min-w-[1rem] h-4 px-1 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-lg shadow-rose-500/50">
+          <span className="absolute top-1 right-1 min-w-[1rem] h-4 px-1 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-lg shadow-rose-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

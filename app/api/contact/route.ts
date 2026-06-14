@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { notifyAdminsOfContact } from '@/lib/contact-inbox'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const contactSchema = z.object({
   name: z.string().min(1).max(200),
@@ -12,6 +13,9 @@ const contactSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'contact', 5, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const body = await req.json()
     const parsed = contactSchema.safeParse(body)
     if (!parsed.success) {

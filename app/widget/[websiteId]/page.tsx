@@ -39,6 +39,11 @@ interface WidgetConfig {
   requireEmail?: boolean
 }
 
+function shouldShowPreChatForm(config: WidgetConfig | null | undefined): boolean {
+  if (!config?.showPreChatForm) return false
+  return config.requireName === true || config.requireEmail === true
+}
+
 interface Attachment {
   id?: string
   url: string
@@ -122,7 +127,8 @@ const WIDGET_STRINGS = {
     quickPricing: '💰 Fiyatlandırma',
     quickSupport: '🛠️ Destek talebi',
     preChatHi: 'Merhaba! 👋',
-    preChatSub: 'Sohbete başlamak için bilgilerinizi girin',
+    preChatSub: 'İsterseniz bilgilerinizi paylaşın (isteğe bağlı)',
+    skipPreChat: 'Atla, doğrudan yaz',
     namePlaceholder: 'Adınız',
     emailPlaceholder: 'E-posta adresiniz',
     startChat: 'Sohbete Başla',
@@ -166,7 +172,8 @@ const WIDGET_STRINGS = {
     quickPricing: '💰 Pricing',
     quickSupport: '🛠️ Support request',
     preChatHi: 'Hello! 👋',
-    preChatSub: 'Enter your details to start chatting',
+    preChatSub: 'Share your details if you like (optional)',
+    skipPreChat: 'Skip, start typing',
     namePlaceholder: 'Your name',
     emailPlaceholder: 'Your email address',
     startChat: 'Start Chat',
@@ -273,7 +280,7 @@ export default function WidgetPage() {
   const params = useParams()
   const websiteId = params.websiteId as string
 
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
   const [config, setConfig] = useState<WidgetConfig | null>(null)
@@ -392,7 +399,7 @@ export default function WidgetPage() {
         setAiTranslateAvailable(!!data.features?.aiTranslate)
         if (data.conversationId) {
           setShowPreChat(false)
-        } else if (data.websiteConfig?.showPreChatForm) {
+        } else if (shouldShowPreChatForm(data.websiteConfig)) {
           setShowPreChat(true)
         }
         setIsInitialized(true)
@@ -432,12 +439,7 @@ export default function WidgetPage() {
 
   useEffect(() => {
     setMounted(true)
-    const embedded = window.parent !== window
-    setIsEmbedded(embedded)
-    if (embedded) {
-      setIsOpen(true)
-      window.parent.postMessage({ type: 'gu:resize', open: true }, '*')
-    }
+    setIsEmbedded(window.parent !== window)
   }, [])
 
   useEffect(() => {
@@ -1194,7 +1196,7 @@ export default function WidgetPage() {
     }}>
       <style>{getWidgetGlobalCss()}</style>
 
-      {isOpen || isEmbedded ? (
+      {isOpen ? (
         <div className="gw-panel" style={getPanelShellStyle(primaryColor, isEmbedded)}>
 
           {/* ─── HERO HEADER ─────────────────────────────────────────────────── */}
@@ -1445,7 +1447,7 @@ export default function WidgetPage() {
                       <button
                         key={key}
                         onClick={() => {
-                          if (key === 'chat' && visitorInfo.name && visitorInfo.email) {
+                          if (key === 'chat') {
                             setShowPreChat(false)
                             setTimeout(() => inputRef.current?.focus(), 80)
                           }
@@ -1698,6 +1700,7 @@ export default function WidgetPage() {
               <p style={{ margin: '0 0 14px', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{t.preChatHi}</p>
               <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748B', lineHeight: 1.5 }}>{t.preChatSub}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {config?.requireName === true && (
                 <div style={{ position: 'relative' }}>
                   <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1714,6 +1717,8 @@ export default function WidgetPage() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
+                )}
+                {config?.requireEmail === true && (
                 <div style={{ position: 'relative' }}>
                   <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1730,42 +1735,40 @@ export default function WidgetPage() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
+                )}
                 <button
                   onClick={() => {
-                    const needsName = config?.requireName !== false
-                    const needsEmail = config?.requireEmail !== false
-                    const nameOk = !needsName || visitorInfo.name.trim().length > 0
-                    const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
-                    if (nameOk && emailOk) {
-                      setShowPreChat(false)
-                      setTimeout(() => inputRef.current?.focus(), 80)
-                    }
+                    setShowPreChat(false)
+                    setTimeout(() => inputRef.current?.focus(), 80)
                   }}
                   style={{
                     width: '100%', padding: '12px',
-                    background: (() => {
-                      const needsName = config?.requireName !== false
-                      const needsEmail = config?.requireEmail !== false
-                      const nameOk = !needsName || visitorInfo.name.trim().length > 0
-                      const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
-                      return nameOk && emailOk ? primaryColor : '#E2E8F0'
-                    })(),
-                    color: (() => {
-                      const needsName = config?.requireName !== false
-                      const needsEmail = config?.requireEmail !== false
-                      const nameOk = !needsName || visitorInfo.name.trim().length > 0
-                      const emailOk = !needsEmail || visitorInfo.email.trim().length > 0
-                      return nameOk && emailOk ? '#fff' : '#94A3B8'
-                    })(),
+                    background: primaryColor,
+                    color: '#fff',
                     border: 'none', borderRadius: '12px',
                     fontSize: '14px', fontWeight: 700, cursor: 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.15s',
-                    boxShadow: visitorInfo.name && visitorInfo.email ? `0 4px 14px ${primaryColor}35` : 'none',
+                    boxShadow: `0 4px 14px ${primaryColor}35`,
                   }}
-                  onMouseEnter={(e) => { if (visitorInfo.name && visitorInfo.email) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px ${primaryColor}45` } }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = visitorInfo.name && visitorInfo.email ? `0 4px 14px ${primaryColor}35` : 'none' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px ${primaryColor}45` }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 14px ${primaryColor}35` }}
                 >
                   {t.startChat}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPreChat(false)
+                    setTimeout(() => inputRef.current?.focus(), 80)
+                  }}
+                  style={{
+                    width: '100%', padding: '8px',
+                    background: 'transparent', color: '#64748B',
+                    border: 'none', fontSize: '13px', fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {t.skipPreChat}
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
                   <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2">
@@ -1937,8 +1940,8 @@ export default function WidgetPage() {
           )}
 
         </div>
-      ) : (
-        /* ─── FLOATING BUTTON ─────────────────────────────────────────────── */
+      ) : isEmbedded ? null : (
+        /* ─── FLOATING BUTTON (standalone /widget preview only) ─────────── */
         <button
           onClick={() => { setIsOpen(true); sendResizeToParent(true) }}
           className="gw-button"

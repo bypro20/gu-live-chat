@@ -6,6 +6,7 @@ import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { isTranslationAvailable } from '@/lib/ai/translate'
 import { normalizeLangCode, resolveSourceLang, isTranslationEngineError, detectLanguageHint, languagesDiffer } from '@/lib/translate-languages'
 import type { DbAiConfig } from '@/lib/ai/provider'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const schema = z.object({
   websiteId: z.string(),
@@ -34,6 +35,9 @@ async function getWebsiteAiConfig(websiteDbId: string): Promise<DbAiConfig | nul
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'widget-translate', 40, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {

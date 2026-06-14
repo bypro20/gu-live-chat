@@ -16,6 +16,7 @@ import {
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
 import type { PlanType } from '@/lib/constants'
+import { isWebsiteAdmin } from '@/lib/website-member'
 
 function buildPlanAiPayload(plan: PlanType) {
   const access = getPlanAiAccess(plan)
@@ -138,6 +139,14 @@ export async function PUT(req: NextRequest) {
     const isMember = website.members.length > 0
     if (!isOwner && !isMember) {
       return NextResponse.json({ error: 'Bu siteye erişim izniniz yok' }, { status: 403 })
+    }
+
+    const canManage = await isWebsiteAdmin(session.user.id, websiteId)
+    if (!canManage) {
+      return NextResponse.json(
+        { error: 'AI yapılandırmasını yalnızca yönetici veya sahip değiştirebilir' },
+        { status: 403 }
+      )
     }
 
     const plan = website.plan as PlanType

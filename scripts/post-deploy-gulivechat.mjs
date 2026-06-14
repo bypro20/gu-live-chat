@@ -3,7 +3,11 @@
 const DOMAIN = 'gulivechat.com'
 const WWW = 'www.gulivechat.com'
 const BASE = `https://${WWW}`
-const CRON = process.env.CRON_SECRET || 'bbb24e55ef705cd8beed91658d7ff8b1772e8c5452b536aa62385fc1a80b6c5d'
+const CRON = process.env.CRON_SECRET
+if (!CRON) {
+  console.error('CRON_SECRET gerekli')
+  process.exit(1)
+}
 const INDEXNOW_KEY = '7f3a9b2e1d4c8f6a5b0e3d2c1b4a5f6'
 
 async function reachable(host) {

@@ -45,17 +45,39 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    return [
+    const baseSecurity = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+      { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
       {
-        source: '/:path*',
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload',
+      },
+    ] as const;
+
+    return [
+      // Müşteri sitelerinde embed edilen sohbet iframe'i — X-Frame-Options SAMEORIGIN engeller
+      {
+        source: '/widget/:path*',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          ...baseSecurity,
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(self), microphone=(self), geolocation=()',
+          },
+        ],
+      },
+      {
+        source: '/((?!widget).*)',
+        headers: [
+          ...baseSecurity,
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
-    ]
+    ];
   },
 };
 

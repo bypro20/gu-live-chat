@@ -35,6 +35,22 @@ export async function PATCH(
       return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 })
     }
 
+    if (member.role === 'OWNER') {
+      return NextResponse.json({ error: 'Sahip rolü değiştirilemez' }, { status: 403 })
+    }
+
+    if (role === 'OWNER') {
+      return NextResponse.json({ error: 'Sahip rolü yalnızca mevcut sahip tarafından atanabilir' }, { status: 403 })
+    }
+
+    if (role === 'ADMIN' && requester.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Yönetici rolü yalnızca site sahibi tarafından atanabilir' }, { status: 403 })
+    }
+
+    if (member.userId === session.user.id && role !== member.role) {
+      return NextResponse.json({ error: 'Kendi rolünüzü değiştiremezsiniz' }, { status: 403 })
+    }
+
     const updated = await prisma.teamMember.update({
       where: { id: memberId },
       data: { role },

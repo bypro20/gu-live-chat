@@ -8,7 +8,9 @@ function redirectUrl(request: NextRequest, status: 'success' | 'failed', returnT
       ? `/settings/addons?payment=${status}`
       : returnTo === 'plans'
         ? `/settings/plans?payment=${status}`
-      : `/settings/billing?payment=${status}`
+        : returnTo === 'trial'
+          ? `/settings/billing?payment=${status}&trial=1`
+          : `/settings/billing?payment=${status}`
   return NextResponse.redirect(new URL(path, base))
 }
 

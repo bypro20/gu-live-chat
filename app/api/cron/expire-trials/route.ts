@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { checkAndExpireTrials } from '@/lib/trial'
 
 // GET /api/cron/expire-trials
 // Called by Vercel Cron daily at 03:00 UTC
 // Downgrades any TRIALING websites whose trialEndsAt has passed
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  const authHeader = request.headers.get('authorization')
-  const providedSecret = authHeader?.replace('Bearer ', '')
-
-  if (!cronSecret) {
-    console.error('[Cron] CRON_SECRET tanımlı değil — istek reddedildi')
-    return NextResponse.json({ error: 'Cron not configured' }, { status: 503 })
-  }
-
-  if (providedSecret !== cronSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = verifyCronRequest(request)
+  if (authError) return authError
 
   try {
     const expired = await checkAndExpireTrials()

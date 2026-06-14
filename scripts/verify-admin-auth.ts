@@ -1,9 +1,14 @@
 /**
  * Verifies admin@gulivechat.com exists in DB with ADMIN role and password matches.
- * Usage: ADMIN_PASSWORD='...' npx tsx scripts/verify-admin-auth.ts
+ * Usage: npx tsx scripts/verify-admin-auth.ts
  */
+import { config } from 'dotenv'
+import { resolve } from 'path'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/db'
+
+config({ path: resolve(process.cwd(), '.env') })
+config({ path: resolve(process.cwd(), '.env.local'), override: true })
 
 const ADMIN_EMAIL = 'admin@gulivechat.com'
 

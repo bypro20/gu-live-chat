@@ -63,6 +63,7 @@ export async function GET(req: NextRequest) {
         _count: {
           select: {
             ownedWebsites: true,
+            memberships: true,
             assignedConversations: true,
           },
         },

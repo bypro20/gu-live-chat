@@ -2,10 +2,11 @@ import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
 import {
-  HomeHero, TrustStrip, MobileAppSection, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
+  HomeHero, TrustStrip, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
   KnowledgeBaseSection, AiAutomationSection, ProductDeepDive,
   UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
 } from '@/components/marketing/home-sections'
+import { WidgetInstallStrip, AnalyticsStrip, PaymentFlowStrip } from '@/components/marketing/feature-micro-showcases'
 import { HOME_FAQS } from '@/lib/home-faqs'
 import { buildMetadata, faqJsonLd, softwareApplicationJsonLd, PAGE_SEO } from '@/lib/seo'
 import type { Metadata } from 'next'
@@ -18,17 +19,19 @@ export default function HomePage() {
       <JsonLd data={[softwareApplicationJsonLd(), faqJsonLd(HOME_FAQS)]} />
       <MarketingNav />
       <HomeHero />
-      <MobileAppSection />
       <TrustStrip />
       <FeatureGrid />
+      <WidgetInstallStrip />
       <AiShowcase />
       <LiveTranslateSection />
       <SharedInbox />
       <KnowledgeBaseSection />
       <AiAutomationSection />
       <ProductDeepDive />
+      <AnalyticsStrip />
       <UseCasesTabs />
       <PricingSection />
+      <PaymentFlowStrip reverse />
       <TestimonialsSection />
       <FaqSection />
       <FooterCta />

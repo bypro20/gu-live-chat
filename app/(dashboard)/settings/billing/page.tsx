@@ -62,6 +62,8 @@ export default function BillingPage() {
   const [cancelling, setCancelling] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [iyzicoEnabled, setIyzicoEnabled] = useState(false)
+  const [trialStarting, setTrialStarting] = useState(false)
+  const [canStartTrialImmediately, setCanStartTrialImmediately] = useState(false)
 
   useEffect(() => {
     fetch('/api/iyzico/status')
@@ -92,6 +94,7 @@ export default function BillingPage() {
       if (res.ok) {
         const data = await res.json()
         setTrialInfo(data)
+        setCanStartTrialImmediately(Boolean(data.canStartImmediately))
       }
     } catch {
       // Non-critical — ignore
@@ -133,7 +136,11 @@ export default function BillingPage() {
     const params = new URLSearchParams(window.location.search)
     const paymentStatus = params.get('payment')
     if (paymentStatus === 'success') {
-      setMessage({ type: 'success', text: b.paymentSuccess })
+      const trialStarted = params.get('trial') === '1'
+      setMessage({
+        type: 'success',
+        text: trialStarted ? b.trialStarted : b.paymentSuccess,
+      })
       trackPurchase({ currency: 'TRY' })
       // Clean URL
       window.history.replaceState({}, '', '/settings/billing')
@@ -214,6 +221,14 @@ export default function BillingPage() {
 
   const startTrial = async () => {
     if (!activeWebsite) return
+    if (!iyzicoEnabled && !canStartTrialImmediately) {
+      setMessage({ type: 'error', text: b.paymentNotConfigured })
+      return
+    }
+
+    setTrialStarting(true)
+    setMessage(null)
+
     try {
       const res = await fetch('/api/trial', {
         method: 'POST',
@@ -221,7 +236,18 @@ export default function BillingPage() {
         body: JSON.stringify({ websiteId: activeWebsite.websiteId }),
       })
       const data = await res.json()
-      if (res.ok) {
+
+      if (data.paymentPageUrl) {
+        window.location.href = data.paymentPageUrl
+        return
+      }
+
+      if (data.checkoutFormContent) {
+        setCheckoutFormContent(data.checkoutFormContent)
+        return
+      }
+
+      if (res.ok && data.started) {
         setMessage({ type: 'success', text: b.trialStarted })
         fetchSubscription()
         fetchTrialInfo()
@@ -230,6 +256,8 @@ export default function BillingPage() {
       }
     } catch {
       setMessage({ type: 'error', text: c.connectionError })
+    } finally {
+      setTrialStarting(false)
     }
   }
 
@@ -352,12 +380,16 @@ export default function BillingPage() {
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
                     {b.trialBillingSubtitle(TRIAL_DAYS, TRIAL_BONUS_WIDGET_DAYS, TRIAL_BONUS_FIRST_CHAT_DAYS)}
                   </p>
+                  <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
+                    {b.trialCardHint}
+                  </p>
                 </div>
                 <button
                   onClick={() => void startTrial()}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition"
+                  disabled={trialStarting || (!iyzicoEnabled && !canStartTrialImmediately)}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition"
                 >
-                  {b.startTrial}
+                  {trialStarting ? b.startingTrial : b.startTrial}
                 </button>
               </div>
             </div>

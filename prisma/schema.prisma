@@ -115,8 +115,8 @@ model Website {
   welcomeMessage String        @default("Merhaba! Size nasıl yardımcı olabiliriz?")
   offlineMessage String        @default("Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.")
   showPreChatForm Boolean      @default(false)
-  requireName     Boolean      @default(true)
-  requireEmail    Boolean      @default(true)
+  requireName     Boolean      @default(false)
+  requireEmail    Boolean      @default(false)
 
   // Relations
   ownerId         String
@@ -1057,6 +1057,18 @@ model Campaign {
   openCount   Int            @default(0)
   clickCount  Int            @default(0)
   replyCount  Int            @default(0)
+
+  // A/B test
+  abTestEnabled      Boolean @default(false)
+  variantBSubject    String?
+  variantBContent    String?
+  abSplitPercent     Int     @default(50) // % assigned to variant A (subject/content)
+  variantASentCount  Int     @default(0)
+  variantBSentCount  Int     @default(0)
+  variantAOpenCount  Int     @default(0)
+  variantBOpenCount  Int     @default(0)
+  variantAClickCount Int     @default(0)
+  variantBClickCount Int     @default(0)
 
   website    Website         @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 

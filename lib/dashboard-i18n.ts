@@ -208,6 +208,9 @@ export type DashboardMessages = {
     sourceLabel: string
     assignedSection: string
     langPairHint: (incoming: string, outgoing: string) => string
+    editContactHint: string
+    nameLabel: string
+    contactSaved: string
   }
   growth: {
     title: string
@@ -481,6 +484,9 @@ const tr: DashboardMessages = {
     sourceLabel: 'Kaynak',
     assignedSection: 'Atanan',
     langPairHint: (incoming, outgoing) => `Gelen mesajlar ${incoming} · Yanıtlarınız ${outgoing}`,
+    editContactHint: 'İsteğe bağlı — ziyaretçi adı ve e-postasını siz girebilirsiniz',
+    nameLabel: 'İsim',
+    contactSaved: 'Kaydedildi',
   },
   growth: {
     title: 'İşletmeniz için fırsatlar',
@@ -785,6 +791,9 @@ const en: DashboardMessages = {
     sourceLabel: 'Source',
     assignedSection: 'Assigned',
     langPairHint: (incoming, outgoing) => `Incoming in ${incoming} · Your replies in ${outgoing}`,
+    editContactHint: 'Optional — you can set the visitor name and email',
+    nameLabel: 'Name',
+    contactSaved: 'Saved',
   },
   growth: {
     title: 'Growth opportunities',

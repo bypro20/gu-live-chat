@@ -13,6 +13,11 @@ const channelSchema = z.object({
   isActive: z.boolean().default(false),
 })
 
+const channelUpdateSchema = channelSchema
+  .omit({ websiteId: true, type: true })
+  .partial()
+  .extend({ id: z.string().min(1) })
+
 export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -90,8 +95,12 @@ export async function PATCH(req: Request) {
 
   try {
     const body = await req.json()
-    const { id, ...updateData } = body
-    if (!id) return NextResponse.json({ error: 'Kanal ID gerekli' }, { status: 400 })
+    const parsed = channelUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Geçersiz veri', details: parsed.error.issues }, { status: 400 })
+    }
+
+    const { id, ...updateData } = parsed.data
 
     const channel = await prisma.channelIntegration.findUnique({
       where: { id },

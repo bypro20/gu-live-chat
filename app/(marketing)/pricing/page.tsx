@@ -18,6 +18,7 @@ import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
+import { PaymentFlowStrip } from '@/components/marketing/feature-micro-showcases'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
@@ -251,6 +252,8 @@ export default function PricingPage() {
             })}
           </div>
         </section>
+
+        <PaymentFlowStrip />
 
         {/* ── Flat pricing callout ─────────────────────────────────────────── */}
         <FadeIn>

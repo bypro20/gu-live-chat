@@ -15,6 +15,8 @@ import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { extendTrialForActivation } from '@/lib/trial'
+import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -37,6 +39,9 @@ const widgetMessageSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'widget-message', 120, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
@@ -44,6 +49,14 @@ export async function POST(req: Request) {
 
     const body = await req.json()
     const validated = widgetMessageSchema.parse(body)
+
+    if (validated.attachment) {
+      const safeUrl = assertSafeHttpsUrl(validated.attachment.url)
+      if (!safeUrl) {
+        return NextResponse.json({ error: 'Geçersiz ek dosya adresi' }, { status: 400 })
+      }
+      validated.attachment.url = safeUrl
+    }
 
     const website = await findWebsiteForWidget(validated.websiteId)
     if (!website) {

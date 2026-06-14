@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import {
   generateAiReply,
   getEnvProviderStatus,
@@ -8,14 +9,9 @@ import {
 } from '@/lib/ai/provider'
 
 function authorizeCron(request: NextRequest): NextResponse | null {
-  const cronSecret = process.env.CRON_SECRET
-  const provided = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!cronSecret) {
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
-  }
-  if (provided !== cronSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = verifyCronRequest(request)
+  if (authError) return authError
+
   return null
 }
 

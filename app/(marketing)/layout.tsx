@@ -3,7 +3,6 @@ import { MarketingProviders } from '@/components/marketing/marketing-providers'
 import { MarketingWidgetLoader } from '@/components/marketing/marketing-widget-loader'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { SourceProtection } from '@/components/marketing/source-protection'
-import { MobileAndroidBar } from '@/components/marketing/mobile-android-bar'
 import { organizationJsonLd } from '@/lib/seo'
 import { getServerLocaleContext } from '@/lib/locale-server'
 
@@ -17,11 +16,10 @@ export default async function MarketingLayout({ children }: { children: React.Re
     <>
       <JsonLd data={organizationJsonLd()} />
       <MarketingProviders initialLocale={initialLocale}>
-        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased pb-32 lg:pb-0">
+        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased">
           <SourceProtection />
           {children}
           <MarketingWidgetLoader />
-          <MobileAndroidBar />
         </div>
       </MarketingProviders>
     </>

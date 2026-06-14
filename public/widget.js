@@ -1,6 +1,33 @@
 (function() {
   'use strict';
 
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function safeCssColor(color) {
+    var c = String(color || '#6366F1').trim();
+    if (/^#[0-9A-Fa-f]{3,8}$/.test(c)) return c;
+    if (/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(c)) return c;
+    return '#6366F1';
+  }
+
+  function safeAvatarUrl(url) {
+    if (!url) return '';
+    try {
+      var u = new URL(String(url));
+      if (u.protocol !== 'https:') return '';
+      return escapeHtml(u.href);
+    } catch (e) {
+      return '';
+    }
+  }
+
   // Gu Live Chat Widget Loader
   var GU_CONFIG = window.$gu ? window.$gu.q || [] : [];
   var WEBSITE_ID = null;
@@ -53,11 +80,11 @@
   forceStyle.id = 'gu-widget-force-style';
   forceStyle.textContent =
     '#gu-chat-dock{position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:14px!important;pointer-events:none!important;filter:none!important;}' +
+    '@media(max-width:768px){#gu-chat-dock{bottom:max(14px,env(safe-area-inset-bottom,14px))!important;right:14px!important;gap:10px!important;}#gu-chat-button{width:60px!important;height:60px!important;border-radius:20px!important;}#gu-teaser-card{width:min(300px,calc(100vw - 28px))!important;border-radius:20px!important;}}' +
     '#gu-teaser-card{pointer-events:auto!important;max-width:calc(100vw - 40px)!important;animation:gu-slide-up 0.55s cubic-bezier(0.16,1,0.3,1)!important;}' +
     '#gu-teaser-top{height:5px!important;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA)!important;background-size:200% 100%!important;animation:gu-shimmer 3s ease infinite!important;}' +
     '#gu-launcher-row{display:flex!important;align-items:center!important;gap:12px!important;pointer-events:none!important;}' +
-    '#gu-status-pill{pointer-events:none!important;display:none;font:700 12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,rgba(16,185,129,0.92),rgba(5,150,105,0.92));box-shadow:0 8px 24px rgba(16,185,129,0.35),0 0 0 1px rgba(255,255,255,0.2);white-space:nowrap;animation:gu-float 3s ease-in-out infinite!important;}' +
-    '@media(min-width:480px){#gu-status-pill{display:block!important;}}' +
+    '#gu-status-pill{pointer-events:none!important;display:none!important;}' +
     '#gu-launcher-wrap{position:relative!important;pointer-events:auto!important;}' +
     '#gu-launcher-ring,#gu-launcher-ring2{position:absolute!important;inset:-4px!important;border-radius:28px!important;pointer-events:none!important;}' +
     '#gu-launcher-ring{animation:gu-ring 2s ease-out infinite!important;border:2px solid rgba(99,102,241,0.55)!important;}' +
@@ -166,7 +193,9 @@
     }
   }
 
-  var chatOpen = false;  // Start closed — user clicks to open chat
+  var chatOpen = false;
+  var userOpenedChat = false;
+  var isMobileViewport = window.matchMedia('(max-width: 768px)').matches;
 
   function showIframe() {
     iframe.style.display = 'block';
@@ -189,10 +218,13 @@
   }
 
   function buildTeaserContent() {
-    var color = appearance.primaryColor || '#6366F1';
-    var initials = (appearance.websiteName || 'CD').slice(0, 2).toUpperCase();
-    var avatarHtml = appearance.avatarUrl
-      ? '<img src="' + appearance.avatarUrl + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'
+    var color = safeCssColor(appearance.primaryColor);
+    var siteName = escapeHtml(appearance.websiteName || 'Destek');
+    var welcome = escapeHtml(appearance.welcomeMessage || 'Merhaba! Size nasıl yardımcı olabiliriz?');
+    var initials = escapeHtml((appearance.websiteName || 'CD').slice(0, 2).toUpperCase());
+    var safeAvatar = safeAvatarUrl(appearance.avatarUrl);
+    var avatarHtml = safeAvatar
+      ? '<img src="' + safeAvatar + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'
       : '<span style="font:800 18px/1 -apple-system,sans-serif;color:#fff;">' + initials + '</span>';
 
     teaserBody.innerHTML =
@@ -202,12 +234,12 @@
           '<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#10B981;border:3px solid #fff;box-shadow:0 0 10px rgba(16,185,129,0.8);"></span>' +
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
-          '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#0F172A;letter-spacing:-0.03em;">' + appearance.websiteName + '</p>' +
+          '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#0F172A;letter-spacing:-0.03em;">' + siteName + '</p>' +
           '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#10B981;">🟢 Çevrimiçi · ~30 sn yanıt</p>' +
         '</div>' +
         '<button type="button" id="gu-teaser-close" aria-label="Kapat" style="width:28px;height:28px;border:none;border-radius:10px;background:#F1F5F9;color:#64748B;font:700 16px/1 sans-serif;cursor:pointer;flex-shrink:0;">×</button>' +
       '</div>' +
-      '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#334155;">' + appearance.welcomeMessage + '</p>' +
+      '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#334155;">' + welcome + '</p>' +
       '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:linear-gradient(135deg,' + color + ',#818CF8);color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>' +
       '<p style="margin:10px 0 0;text-align:center;font:600 10px/1.4 -apple-system,sans-serif;color:#94A3B8;letter-spacing:0.04em;">ÜCRETSİZ · ANINDA YANIT · GÜVENLİ</p>';
 
@@ -256,6 +288,7 @@
   chatBtn.addEventListener('click', function() {
     chatOpen = !chatOpen;
     if (chatOpen) {
+      userOpenedChat = true;
       hideTeaser();
       setUnread(0);
       showIframe();
@@ -285,14 +318,14 @@
   var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:112px;right:20px;z-index:2147483647;width:440px;height:min(680px,calc(100vh - 132px));max-height:calc(100vh - 132px);border-radius:30px;box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(99,102,241,0.2),0 0 120px rgba(99,102,241,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(99,102,241,0.2),0 0 120px rgba(99,102,241,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
   iframe.allow = 'microphone; camera';
   iframe.title = 'Canlı Sohbet';
   document.body.appendChild(iframe);
 
   fetchAppearance(function() {
     applyPrimaryColor(appearance.primaryColor);
-    setTimeout(function() { showTeaser(); }, 1200);
+    // Teaser otomatik açılmaz — kullanıcı launcher'a tıklar
   });
 
   // ─── Proactive Messages ────────────────────────────────────────────
@@ -537,6 +570,7 @@
     if (!event.data || !event.data.type) return;
     if (event.data.type === 'gu:resize') {
       if (event.data.open) {
+        if (!userOpenedChat) return;
         chatOpen = true;
         removeGreeting();
         setUnread(0);
@@ -1199,6 +1233,7 @@
 
     switch(method) {
       case 'open':
+        userOpenedChat = true;
         chatOpen = true;
         removeGreeting();
         setUnread(0);

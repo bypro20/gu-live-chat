@@ -15,9 +15,17 @@ export function generateAddonMerchantOid(websiteId: string, addonSlug: string): 
   return `gu_${websiteId.slice(-8)}_addon_${safeSlug}_${timestamp}_${random}`
 }
 
+/** PRO deneme — kart doğrulama: gu_{suffix}_trial_{ts}_{rand} */
+export function generateTrialMerchantOid(websiteId: string): string {
+  const timestamp = Date.now()
+  const random = crypto.randomBytes(4).toString('hex')
+  return `gu_${websiteId.slice(-8)}_trial_${timestamp}_${random}`
+}
+
 export type ParsedMerchantOid =
   | { kind: 'plan'; websiteIdSuffix: string; planId: string }
   | { kind: 'addon'; websiteIdSuffix: string; addonSlug: string }
+  | { kind: 'trial'; websiteIdSuffix: string }
 
 /** Extract plan or addon purchase info from a merchant OID / basket id. */
 export function parseMerchantOid(merchantOid: string): ParsedMerchantOid | null {
@@ -25,6 +33,9 @@ export function parseMerchantOid(merchantOid: string): ParsedMerchantOid | null 
   if (parts.length < 3 || parts[0] !== 'gu') return null
   if (parts[2] === 'addon' && parts[3]) {
     return { kind: 'addon', websiteIdSuffix: parts[1], addonSlug: parts[3] }
+  }
+  if (parts[2] === 'trial') {
+    return { kind: 'trial', websiteIdSuffix: parts[1] }
   }
   return { kind: 'plan', websiteIdSuffix: parts[1], planId: parts[2] }
 }

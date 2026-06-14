@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { runSeoIndexing } from '@/lib/seo-indexing'
 
 /** GET /api/cron/seo-index — Bing ping + IndexNow (günlük) */
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  const authHeader = request.headers.get('authorization')
-  const providedSecret = authHeader?.replace('Bearer ', '')
-
-  if (!cronSecret) {
-    return NextResponse.json({ error: 'Cron not configured' }, { status: 503 })
-  }
-  if (providedSecret !== cronSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = verifyCronRequest(request)
+  if (authError) return authError
 
   try {
     const result = await runSeoIndexing()

@@ -6,10 +6,13 @@ import { generateWebsiteId } from '@/lib/utils'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { acceptTeamInvite } from '@/lib/team-invite'
-import { startTrial } from '@/lib/trial'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'register', 5, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
@@ -108,12 +111,6 @@ export async function POST(req: Request) {
 
       return { user, website }
     })
-
-    try {
-      await startTrial(result.website.websiteId)
-    } catch (trialErr) {
-      console.error('[register] trial start failed:', trialErr)
-    }
 
     return NextResponse.json({
       user: {

@@ -14,6 +14,7 @@ type RawUser = {
   createdAt: Date
   _count?: {
     ownedWebsites: number
+    memberships?: number
     assignedConversations?: number
   }
   ownedWebsites?: Array<{ id: string; name: string; domain: string }>

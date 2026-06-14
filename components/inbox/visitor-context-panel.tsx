@@ -4,7 +4,6 @@ import { useEffect, useState, type ReactNode, type ComponentType } from 'react'
 import Link from 'next/link'
 import {
   Globe,
-  Mail,
   MapPin,
   Monitor,
   MessageSquare,
@@ -19,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { getStatusLabels, visitorDisplayName } from './utils'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { useLocale } from '@/components/marketing/locale-provider'
+import { VisitorContactEditor } from './visitor-contact-editor'
 import type { InboxConversation } from './types'
 
 type VisitorDetail = {
@@ -47,9 +47,11 @@ type VisitorDetail = {
 export function VisitorContextPanel({
   conversation,
   onClose,
+  onVisitorUpdated,
 }: {
   conversation: InboxConversation
   onClose?: () => void
+  onVisitorUpdated?: (patch: { name: string | null; email: string | null }) => void
 }) {
   const d = useDashboardI18n()
   const i = d.inbox
@@ -109,13 +111,21 @@ export function VisitorContextPanel({
         ) : (
           <>
             <InfoSection title={i.contactSection}>
-              {detail?.email && (
-                <InfoRow icon={Mail} label={i.email} value={detail.email} />
+              {visitorId && (
+                <VisitorContactEditor
+                  visitorId={visitorId}
+                  initialName={detail?.name ?? conversation.visitor.name}
+                  initialEmail={detail?.email ?? conversation.visitor.email}
+                  onSaved={(data) => {
+                    setDetail((prev) => (prev ? { ...prev, ...data } : prev))
+                    onVisitorUpdated?.(data)
+                  }}
+                />
               )}
               {detail?.phone && (
                 <InfoRow icon={Phone} label={i.phone} value={detail.phone} />
               )}
-              {!detail?.email && !detail?.phone && (
+              {!detail?.email && !detail?.phone && !visitorId && (
                 <p className="text-xs text-muted-foreground">{i.noContactInfo}</p>
               )}
             </InfoSection>

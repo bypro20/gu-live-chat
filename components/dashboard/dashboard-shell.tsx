@@ -11,10 +11,17 @@ import { AppLogo } from '@/components/brand/app-logo'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { clearNativeAppMark, nativeAppHomePath } from '@/lib/native-app'
 import { NativeBottomNav } from '@/components/app/native-bottom-nav'
+import { MobileWebBottomNav } from '@/components/app/mobile-web-bottom-nav'
 import { NativeTopBar } from '@/components/app/native-top-bar'
 import { WebsitePickerSheet } from '@/components/app/website-picker-sheet'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { getDashboardNavGroups, getDashboardPageTitle, type DashboardMessages } from '@/lib/dashboard-i18n'
+import {
+  playInboxNotificationSound,
+  requestDesktopNotificationPermission,
+  showDesktopNotification,
+} from '@/lib/inbox-sound'
+import { useToast } from '@/lib/toast'
 
 interface NavItem {
   href: string
@@ -37,11 +44,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { activeWebsite, websites, switchWebsite, isLoading: websitesLoading } = useActiveWebsite()
   const [websiteDropdownOpen, setWebsiteDropdownOpen] = useState(false)
   const [inboxUnread, setInboxUnread] = useState(0)
+  const prevInboxUnreadRef = useRef(0)
+  const inboxUnreadInitRef = useRef(false)
   const [nativeWebsitePickerOpen, setNativeWebsitePickerOpen] = useState(false)
   const [mobileAccountOpen, setMobileAccountOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { isNativeApp, isNativeCustomerApp } = useNativeApp()
   const d = useDashboardI18n()
+  const { toast } = useToast()
   const s = d.shell
   const n = d.nav
 
@@ -56,7 +66,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!activeWebsite?.websiteId || status !== 'authenticated') return
-    if (pathname?.startsWith('/inbox')) return
+
+    requestDesktopNotificationPermission()
 
     const poll = async () => {
       try {
@@ -65,7 +76,27 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )
         if (!res.ok) return
         const data = await res.json()
-        setInboxUnread(data.unreadCount ?? 0)
+        const count = data.unreadCount ?? 0
+        setInboxUnread(count)
+
+        if (!inboxUnreadInitRef.current) {
+          inboxUnreadInitRef.current = true
+          prevInboxUnreadRef.current = count
+          return
+        }
+
+        if (count > prevInboxUnreadRef.current && !pathname?.startsWith('/inbox')) {
+          const delta = count - prevInboxUnreadRef.current
+          playInboxNotificationSound()
+          showDesktopNotification('Yeni mesaj', `${delta} okunmamış mesaj`)
+          toast({
+            title: 'Yeni mesaj',
+            description: `${delta} okunmamış mesaj var`,
+            variant: 'info',
+            duration: 6000,
+          })
+        }
+        prevInboxUnreadRef.current = count
       } catch {
         // polling fallback — sessizce devam
       }
@@ -73,7 +104,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     poll()
     const id = setInterval(poll, 15000)
     return () => clearInterval(id)
-  }, [activeWebsite?.websiteId, status, pathname])
+  }, [activeWebsite?.websiteId, status, pathname, toast])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -128,7 +159,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [mobileMenuOpen])
 
   return (
-    <div className={`app-shell relative lg:flex overflow-hidden bg-background text-foreground w-full max-w-[100vw] ${isNativeApp ? 'native-app-shell h-[100dvh]' : 'h-screen'}`}>
+    <div
+      className={`app-shell relative lg:flex overflow-hidden bg-background text-foreground w-full max-w-[100vw] app-shell--mobile-nav ${
+        isNativeApp ? 'native-app-shell h-[100dvh]' : 'h-screen'
+      }`}
+      data-sidebar-open={mobileMenuOpen ? 'true' : 'false'}
+    >
       {!isNativeCustomerApp && mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-200 animate-in"
@@ -139,7 +175,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {!isNativeCustomerApp && (
       <aside
         className={`app-sidebar fixed lg:static inset-y-0 left-0 z-50 flex flex-col h-full transform transition-transform duration-200 ease-out ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          mobileMenuOpen
+            ? 'translate-x-0 pointer-events-auto'
+            : '-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto'
         }`}
       >
         <div className="relative h-[72px] flex items-center justify-between px-5 border-b border-[var(--sidebar-border)] shrink-0 gap-2">
@@ -376,6 +414,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         {isNativeCustomerApp && <NativeBottomNav />}
+        {!isNativeCustomerApp && !pathname?.startsWith('/inbox') && (
+          <MobileWebBottomNav
+            inboxUnread={inboxUnread}
+            onOpenMenu={() => setMobileMenuOpen(true)}
+          />
+        )}
       </main>
 
       <WebsitePickerSheet
@@ -555,7 +599,7 @@ function SidebarLink({ href, icon, label, badge, active }: {
   return (
     <Link
       href={href}
-      className={`app-sidebar-link ${active ? 'app-sidebar-link--active' : ''}`}
+      className={`app-sidebar-link touch-manipulation min-h-[44px] ${active ? 'app-sidebar-link--active' : ''}`}
     >
       <span className="shrink-0 opacity-90">{icons[icon]}</span>
       <span className="flex-1 tracking-wide">{label}</span>

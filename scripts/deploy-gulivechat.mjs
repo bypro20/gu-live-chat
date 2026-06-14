@@ -13,7 +13,10 @@ const PROJECT = process.env.VERCEL_PROJECT_ID || 'prj_3GcTWiE87xsGrdbFMNkm0FMDvu
 const DOMAIN = 'gulivechat.com'
 const BASE = 'https://www.gulivechat.com'
 const SOCKET = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://gu-live-chat-socket-production.up.railway.app'
-const CRON = process.env.CRON_SECRET || 'bbb24e55ef705cd8beed91658d7ff8b1772e8c5452b536aa62385fc1a80b6c5d'
+const CRON = process.env.CRON_SECRET
+if (!CRON) {
+  throw new Error('CRON_SECRET ortam değişkeni gerekli (deploy iptal)')
+}
 const MARKETING_ID = process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID || 'HA0wSGsbImQ39YDJ4UI5UpY8'
 
 function loadToken() {
@@ -95,9 +98,13 @@ async function main() {
     CONTACT_EMAIL: 'admin@gulivechat.com',
     SUPPORT_EMAIL: 'destek@gulivechat.com',
     ADMIN_EMAIL: 'admin@gulivechat.com',
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
     EMAIL_FROM: 'Gu Live Chat <noreply@gulivechat.com>',
     CRON_SECRET: CRON,
     SOCKET_INTERNAL_SECRET: CRON,
+  }
+  if (!envUpdates.ADMIN_PASSWORD) {
+    throw new Error('ADMIN_PASSWORD ortam değişkeni gerekli (deploy iptal)')
   }
   for (const [k, v] of Object.entries(envUpdates)) {
     await upsertEnv(k, v)

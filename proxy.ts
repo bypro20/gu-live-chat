@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
 import { isNativeCustomerUserAgent } from '@/lib/native-app'
+import { applySecurityHeaders } from '@/lib/security-headers'
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
+function withSecurityHeaders(res: NextResponse) {
+  applySecurityHeaders(res, IS_PRODUCTION)
+  return res
+}
 
 function getClientIp(req: NextRequest): string | null {
   const forwarded = req.headers.get('x-forwarded-for')
@@ -40,8 +48,18 @@ async function checkIpBan(req: NextRequest): Promise<NextResponse | null> {
 }
 
 export async function proxy(req: NextRequest) {
+  if (
+    IS_PRODUCTION &&
+    req.headers.get('x-forwarded-proto') === 'http' &&
+    !req.nextUrl.hostname.includes('localhost')
+  ) {
+    const httpsUrl = req.nextUrl.clone()
+    httpsUrl.protocol = 'https:'
+    return withSecurityHeaders(NextResponse.redirect(httpsUrl, 308))
+  }
+
   const ipBlock = await checkIpBan(req)
-  if (ipBlock) return ipBlock
+  if (ipBlock) return withSecurityHeaders(ipBlock)
 
   const { pathname } = req.nextUrl
   const ua = req.headers.get('user-agent') || ''
@@ -49,24 +67,24 @@ export async function proxy(req: NextRequest) {
 
   // Legacy admin login URL alias
   if (pathname === '/panel-giris') {
-    return NextResponse.redirect(new URL('/admin-login', req.url))
+    return withSecurityHeaders(NextResponse.redirect(new URL('/admin-login', req.url)))
   }
 
   // Müşteri APK — admin rotalarına erişim yok
   if (isCustomerApp) {
     if (pathname.startsWith('/admin') || pathname === '/admin-login' || pathname === '/panel-giris') {
-      return NextResponse.redirect(new URL('/inbox', req.url))
+      return withSecurityHeaders(NextResponse.redirect(new URL('/inbox', req.url)))
     }
   }
 
   // Allow widget routes (public chat widget)
   if (pathname.startsWith('/widget') || pathname.startsWith('/api/widget')) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   // Allow NextAuth routes — auth handles its own security
   if (pathname.startsWith('/api/auth')) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   // Allow static files and Next.js internals
@@ -76,7 +94,7 @@ export async function proxy(req: NextRequest) {
     pathname.startsWith('/public') ||
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|js|css|woff|woff2|ttf|apk)$/)
   ) {
-    return NextResponse.next()
+    return withSecurityHeaders(NextResponse.next())
   }
 
   // Check for session cookie (NextAuth v5 uses authjs prefix)
@@ -95,7 +113,7 @@ export async function proxy(req: NextRequest) {
     if (!isLoggedIn) {
       const loginUrl = new URL('/login', req.url)
       loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
+      return withSecurityHeaders(NextResponse.redirect(loginUrl))
     }
   }
 
@@ -104,18 +122,18 @@ export async function proxy(req: NextRequest) {
     if (!isLoggedIn) {
       const loginUrl = new URL('/admin-login', req.url)
       loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
+      return withSecurityHeaders(NextResponse.redirect(loginUrl))
     }
   }
 
   // Redirect already-logged-in users away from auth pages
   if (pathname === '/login' || pathname === '/register') {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
+      return withSecurityHeaders(NextResponse.redirect(new URL('/dashboard', req.url)))
     }
   }
 
-  const res = NextResponse.next()
+  const res = withSecurityHeaders(NextResponse.next())
   if (
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/widget') &&

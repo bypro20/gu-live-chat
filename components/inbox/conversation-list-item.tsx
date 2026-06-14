@@ -36,8 +36,8 @@ export const ConversationListItem = memo(function ConversationListItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full px-3 py-3 flex items-start gap-3 border-b border-indigo-100/60 transition-all duration-150 text-left',
-        'hover:bg-indigo-50/60',
+        'w-full px-3 py-3.5 flex items-start gap-3 border-b border-indigo-100/60 transition-all duration-150 text-left touch-manipulation min-h-[56px]',
+        'hover:bg-indigo-50/60 active:bg-indigo-100/50',
         selected && 'bg-indigo-50 border-l-[3px] border-l-indigo-500 shadow-sm',
         conversation.unreadCount > 0 && !selected && 'bg-indigo-50/40'
       )}

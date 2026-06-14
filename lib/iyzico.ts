@@ -155,6 +155,8 @@ export async function initializeCheckoutForm(params: {
   buyerIp: string
   locale?: 'tr' | 'en'
   currency?: 'TRY' | 'EUR' | 'USD' | 'GBP' | 'NOK' | 'CHF'
+  /** Kartı iyzico'da sakla (abonelik / deneme sonrası tahsilat için) */
+  registerCard?: boolean
 }): Promise<CheckoutInitResult | { error: string }> {
   if (!isIyzicoConfigured()) {
     return { error: 'Ödeme sistemi henüz yapılandırılmamış' }
@@ -175,6 +177,7 @@ export async function initializeCheckoutForm(params: {
     paymentGroup: 'SUBSCRIPTION',
     callbackUrl: params.callbackUrl,
     enabledInstallments: currency === 'TRY' ? [1, 2, 3, 6, 9] : [1],
+    ...(params.registerCard ? { registerCard: 1 } : {}),
     ...addresses,
     basketItems: [
       {

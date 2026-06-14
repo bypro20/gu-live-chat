@@ -22,6 +22,7 @@ import { MessageComposer, type PendingUpload } from '@/components/inbox/message-
 import { TypingIndicator } from '@/components/inbox/typing-indicator'
 import { VisitorContextPanel } from '@/components/inbox/visitor-context-panel'
 import { ChatHeader } from '@/components/inbox/chat-header'
+import { VisitorContactEditor } from '@/components/inbox/visitor-contact-editor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -685,6 +686,22 @@ function InboxPageContent() {
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
 
+            {(() => {
+              const visitorId = selectedConversation.visitorId || selectedConversation.visitor?.id
+              if (!visitorId) return null
+              return (
+              <div className="xl:hidden shrink-0">
+                <VisitorContactEditor
+                  visitorId={visitorId}
+                  initialName={selectedConversation.visitor.name}
+                  initialEmail={selectedConversation.visitor.email}
+                  variant="compact"
+                  onSaved={() => void mutateConversations()}
+                />
+              </div>
+              )
+            })()}
+
             <LanguageBar
               agentLang={agentLang}
               onAgentLangChange={setAgentLang}
@@ -765,7 +782,10 @@ function InboxPageContent() {
       </div>
 
       {selectedConversation && (
-        <VisitorContextPanel conversation={selectedConversation} />
+        <VisitorContextPanel
+          conversation={selectedConversation}
+          onVisitorUpdated={() => void mutateConversations()}
+        />
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { PLAN_LIMITS } from '@/lib/constants'
 import { uploadFileBuffer } from '@/lib/file-upload'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -22,6 +23,9 @@ const MAX_SIZE = 10 * 1024 * 1024
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'widget-upload', 20, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })

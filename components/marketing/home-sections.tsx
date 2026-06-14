@@ -11,7 +11,12 @@ import {
   Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
-import { HeroPreview } from '@/components/marketing/hero-preview'
+import { HeroShowcase, HeroTrustPills } from '@/components/marketing/hero-showcase'
+import {
+  AiReplyShowcase,
+  AutomationShowcase,
+  InboxFlowShowcase,
+} from '@/components/marketing/feature-micro-showcases'
 import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { trialHeroLine } from '@/lib/trial-config'
 import { useT, useLocale } from '@/components/marketing/locale-provider'
@@ -20,10 +25,8 @@ import { getPlanEntry } from '@/lib/plan-i18n'
 import { APK_DOWNLOAD_FILENAME, APK_DOWNLOAD_PATH } from '@/lib/site-config'
 
 const FEATURE_ICONS = [MessageCircle, Bot, Inbox, Languages, Users, BookOpen, BarChart3] as const
-const CHANNEL_ICONS = [MessageCircle, Mail, Smartphone, MessageSquare, MessageCircle, MessageCircle] as const
 const PRODUCT_ICONS = [MessageCircle, Users, Bot, BarChart3] as const
 const USE_CASE_ICONS = { support: Headphones, sales: TrendingUp, marketing: Megaphone } as const
-const FLOW_ICONS = [Zap, Bot, Workflow] as const
 
 const plans = [
   { id: 'FREE' as const, monthly: 0, highlighted: false },
@@ -83,51 +86,78 @@ export function HomeHero() {
   const t = useT()
   const { locale } = useLocale()
   return (
-    <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
-      <div className="absolute inset-0 bg-mesh pointer-events-none" />
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[720px] h-[320px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-      <div className="relative max-w-6xl mx-auto">
-        <div className="text-center max-w-4xl mx-auto">
-          <FadeIn>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 bg-primary-light text-primary border border-primary/10">
-              <Sparkles className="w-3.5 h-3.5" />
-              {t.hero.badge}
-            </span>
-          </FadeIn>
-          <FadeIn delay={0.06}>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.08] text-foreground">
-              {locale === 'tr' ? (
-                <>Ziyaretçinizi müşteriye dönüştürmenin <span className="text-gradient-brand">en etkili yolu</span></>
-              ) : (
-                <>Turn visitors into customers — <span className="text-gradient-brand">faster</span></>
-              )}
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.12}>
-            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {t.hero.subtitle}
-            </p>
-          </FadeIn>
-          <FadeIn delay={0.18}>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-lg mx-auto">
-              <Link href="/register" className="btn-primary px-8 py-4 text-base w-full sm:w-auto shadow-brand-lg hover:scale-[1.02] transition-transform">
-                {t.hero.cta} <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link href="/basla" className="btn-secondary px-8 py-4 text-base w-full sm:w-auto">
-                {t.hero.demo}
-              </Link>
-            </div>
-            <p className="mt-5 text-sm text-muted-foreground">
-              {locale === 'tr' ? trialHeroLine() : t.hero.trial}
-            </p>
+    <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Arka plan — Linear / Crisp tarzı grid + aurora */}
+      <div className="absolute inset-0 bg-[#fafbff]" />
+      <div
+        className="absolute inset-0 opacity-[0.35] pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(99,102,241,0.06) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(99,102,241,0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }}
+      />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-gradient-to-r from-indigo-400/15 via-violet-400/10 to-cyan-400/10 blur-3xl pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 lg:gap-16 items-center">
+          {/* Sol — metin (Crisp/Tidio split hero) */}
+          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
+            <FadeIn>
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 bg-white text-indigo-700 border border-indigo-100 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5" />
+                {t.hero.badge}
+              </span>
+            </FadeIn>
+            <FadeIn delay={0.05}>
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.15rem] font-extrabold tracking-tight leading-[1.06] text-slate-900">
+                {locale === 'tr' ? (
+                  <>
+                    Web sitenize{' '}
+                    <span className="text-gradient-brand">canlı sohbet</span>
+                    {' '}ekleyin — ziyaretçileriniz anında yanıt alsın
+                  </>
+                ) : (
+                  <>
+                    Add <span className="text-gradient-brand">live chat</span> to your site — instant answers for every visitor
+                  </>
+                )}
+              </h1>
+            </FadeIn>
+            <FadeIn delay={0.1}>
+              <p className="mt-5 text-lg text-slate-600 leading-relaxed">
+                {t.hero.subtitle}
+              </p>
+            </FadeIn>
+            <FadeIn delay={0.14}>
+              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-500 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 hover:scale-[1.02] transition-all"
+                >
+                  {t.hero.cta} <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/basla"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                >
+                  {t.hero.demo}
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-slate-500">
+                {locale === 'tr' ? trialHeroLine() : t.hero.trial}
+              </p>
+              <HeroTrustPills />
+            </FadeIn>
+          </div>
+
+          {/* Sağ — ürün kompoziti */}
+          <FadeIn delay={0.12} className="relative pt-4 lg:pt-0">
+            <HeroShowcase />
           </FadeIn>
         </div>
-        <FadeIn delay={0.22} className="mt-16 sm:mt-20">
-          <div className="relative mx-auto max-w-5xl">
-            <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 to-transparent rounded-3xl blur-2xl pointer-events-none" />
-            <HeroPreview />
-          </div>
-        </FadeIn>
       </div>
     </section>
   )
@@ -260,7 +290,7 @@ export function AiShowcase() {
   return (
     <section id="ai" className="py-20 px-4 sm:px-6 bg-muted/30">
       <div className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
           <FadeIn>
             <span className="section-label mb-4">{h.label}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">
@@ -295,20 +325,8 @@ export function AiShowcase() {
             </Link>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <div className="relative rounded-2xl border border-border bg-card shadow-sm overflow-hidden aspect-video flex items-center justify-center bg-gradient-brand-subtle">
-              <div className="absolute inset-0 bg-grid opacity-40" />
-              <div className="relative text-center p-8">
-                <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center mx-auto mb-4 animate-float">
-                  <Sparkles className="w-8 h-8" />
-                </div>
-                <p className="font-semibold text-lg">{h.steps[activeStep].title}</p>
-                <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">{h.steps[activeStep].desc}</p>
-                <div className="mt-6 flex justify-center gap-1.5">
-                  {h.steps.map((_, i) => (
-                    <div key={i} className={`h-1 rounded-full transition-all ${activeStep === i ? 'w-6 bg-primary' : 'w-1.5 bg-border'}`} />
-                  ))}
-                </div>
-              </div>
+            <div className="flex justify-center lg:justify-end">
+              <AiReplyShowcase />
             </div>
           </FadeIn>
         </div>
@@ -322,7 +340,7 @@ export function LiveTranslateSection() {
   return (
     <section id="translate" className="py-20 px-4 sm:px-6 bg-muted/30">
       <div className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
           <FadeIn>
             <span className="section-label mb-4">{h.label}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">
@@ -368,34 +386,10 @@ export function SharedInbox() {
   return (
     <section className="py-20 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
           <FadeIn delay={0.05}>
-            <div className="surface p-6 lg:p-8">
-              <div className="flex flex-wrap gap-2 mb-6">
-                {h.channels.map((label, i) => {
-                  const Icon = CHANNEL_ICONS[i] ?? MessageCircle
-                  return (
-                  <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-primary-light text-primary border-primary/20">
-                    <Icon className="w-3.5 h-3.5" />{label}
-                  </span>
-                  )
-                })}
-              </div>
-              <div className="space-y-3">
-                {h.samples.map((c) => (
-                  <div key={c.name} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{c.name[0]}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium truncate">{c.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-primary-light text-primary rounded font-medium">{c.from}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{c.msg}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{c.time}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="flex justify-center lg:justify-start">
+              <InboxFlowShowcase />
             </div>
           </FadeIn>
           <FadeIn>
@@ -454,7 +448,7 @@ export function AiAutomationSection() {
   return (
     <section className="py-20 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
           <FadeIn>
             <span className="section-label mb-4">{h.label}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">{h.title}</h2>
@@ -470,22 +464,8 @@ export function AiAutomationSection() {
             </ul>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <div className="surface p-6 space-y-4">
-              {h.flows.map((flow, i) => {
-                const Icon = FLOW_ICONS[i] ?? Workflow
-                return (
-                <div key={flow.trigger} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/60">
-                  <div className="w-9 h-9 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{flow.trigger}</p>
-                    <p className="text-sm font-medium">{flow.action}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
-                )
-              })}
+            <div className="flex justify-center lg:justify-end">
+              <AutomationShowcase />
             </div>
           </FadeIn>
         </div>

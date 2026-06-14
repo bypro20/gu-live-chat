@@ -9,6 +9,7 @@ import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { extendTrialForActivation } from '@/lib/trial'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -70,6 +71,9 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimitByIp(req, 'widget-init', 60, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
     const clientIp = getClientIp(req)
     if (await isIpBanned(clientIp)) {
       return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })

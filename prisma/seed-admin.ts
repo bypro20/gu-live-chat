@@ -1,16 +1,24 @@
 import bcrypt from 'bcryptjs'
+import { config } from 'dotenv'
+import { resolve } from 'path'
 import { prisma } from '../lib/db'
 import { ensureMarketingWebsite } from '../lib/marketing-website'
 import { ADMIN_USER_DISPLAY_NAME } from '../lib/site-config'
+import { syncProductionSchema } from '../lib/db-schema-sync'
+
+config({ path: resolve(process.cwd(), '.env') })
+config({ path: resolve(process.cwd(), '.env.local'), override: true })
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
   const password = process.env.ADMIN_PASSWORD
 
   if (!email || !password) {
     console.error('ADMIN_EMAIL ve ADMIN_PASSWORD ortam değişkenleri gerekli')
     process.exit(1)
   }
+
+  await syncProductionSchema()
 
   const passwordHash = await bcrypt.hash(password, 12)
 

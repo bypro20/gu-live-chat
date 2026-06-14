@@ -6,14 +6,7 @@ import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import AiBotSettings from './ai-bot-settings'
-
-interface BotStep {
-  id?: string
-  type: string
-  message: string
-  options?: Array<{ label: string; nextStepId?: string }>
-  order: number
-}
+import FlowStepEditor, { type BotStep } from '@/components/chatbot/flow-step-editor'
 
 interface Chatbot {
   id: string
@@ -22,15 +15,6 @@ interface Chatbot {
   isActive: boolean
   trigger: string
   steps: BotStep[]
-}
-
-const STEP_ICONS: Record<string, string> = {
-  MESSAGE: '💬',
-  CHOICE: '🔘',
-  COLLECT_EMAIL: '📧',
-  COLLECT_NAME: '👤',
-  ASSIGN_AGENT: '👥',
-  END: '✅',
 }
 
 export default function ChatbotPage() {
@@ -88,21 +72,10 @@ export default function ChatbotPage() {
     setSteps([...steps, { type, message: '', order: steps.length }])
   }
 
-  const removeStep = (index: number) => {
-    setSteps(steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i })))
-  }
-
-  const updateStep = (index: number, field: string, value: string) => {
-    const updated = [...steps]
-    updated[index] = { ...updated[index], [field]: value }
-    setSteps(updated)
-  }
-
   if (!planLoading && !planAllowed) {
     return <PlanUpgradePrompt feature="chatbot" />
   }
 
-  const stepTypes = cb.stepTypes
   const triggerLabels = cb.triggers
 
   return (
@@ -163,113 +136,40 @@ export default function ChatbotPage() {
             )}
           </div>
 
-          {/* Steps */}
-          <div className="space-y-3 mb-6">
-            <h3 className="text-sm font-semibold text-foreground">{cb.flowSteps}</h3>
-            {steps.map((step, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-muted rounded-xl border border-border">
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                  {index + 1}
-                </div>
-                <div className="flex-1 min-w-0 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{STEP_ICONS[step.type]}</span>
-                    <span className="text-sm font-medium text-foreground">{stepTypes[step.type]?.label}</span>
-                  </div>
-                  {(step.type === 'MESSAGE' || step.type === 'COLLECT_EMAIL' || step.type === 'COLLECT_NAME' || step.type === 'ASSIGN_AGENT') && (
-                    <input
-                      type="text"
-                      value={step.message}
-                      onChange={(e) => updateStep(index, 'message', e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      placeholder={step.type === 'MESSAGE' ? cb.messagePlaceholder : step.type === 'ASSIGN_AGENT' ? cb.transferPlaceholder : cb.promptPlaceholder}
-                    />
-                  )}
-                  {step.type === 'CHOICE' && (
-                    <div className="space-y-2">
-                      {step.options?.map((opt, optIndex) => (
-                        <div key={optIndex} className="flex items-center gap-2">
-                          <div className="w-5 h-5 shrink-0 rounded-full border-2 border-primary flex items-center justify-center text-xs text-primary">
-                            {String.fromCharCode(65 + optIndex)}
-                          </div>
-                          <input
-                            type="text"
-                            value={opt.label}
-                            onChange={(e) => {
-                              const updated = [...steps]
-                              const options = [...(updated[index].options || [])]
-                              options[optIndex] = { ...options[optIndex], label: e.target.value }
-                              updated[index] = { ...updated[index], options }
-                              setSteps(updated)
-                            }}
-                            className="flex-1 min-w-0 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                            placeholder={cb.optionText}
-                          />
-                          <button
-                            onClick={() => {
-                              const updated = [...steps]
-                              const options = (updated[index].options || []).filter((_, i) => i !== optIndex)
-                              updated[index] = { ...updated[index], options }
-                              setSteps(updated)
-                            }}
-                            className="text-destructive hover:opacity-80 text-sm shrink-0"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const updated = [...steps]
-                          const options = [...(updated[index].options || []), { label: '' }]
-                          updated[index] = { ...updated[index], options }
-                          setSteps(updated)
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {cb.addOption}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {steps.length > 1 && (
-                  <button onClick={() => removeStep(index)} className="text-muted-foreground hover:text-destructive transition shrink-0">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          {/* Visual flow editor (v2) */}
+          <FlowStepEditor
+            steps={steps}
+            onChange={setSteps}
+            onAddStep={addStep}
+            labels={{
+              flowSteps: cb.flowSteps,
+              dragToReorder: cb.dragToReorder,
+              dropHere: cb.dropHere,
+              addStep: cb.addStep,
+              messagePlaceholder: cb.messagePlaceholder,
+              transferPlaceholder: cb.transferPlaceholder,
+              promptPlaceholder: cb.promptPlaceholder,
+              optionText: cb.optionText,
+              addOption: cb.addOption,
+              stepTypes: cb.stepTypes,
+            }}
+          />
 
-          {/* Add Step Buttons */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {Object.entries(stepTypes).map(([type, info]) => (
-              <button
-                key={type}
-                onClick={() => addStep(type)}
-                className="px-3 py-2 bg-muted hover:bg-accent rounded-lg text-sm transition flex items-center gap-1.5 text-foreground"
-              >
-                <span>{STEP_ICONS[type]}</span>
-                <span>{info.label}</span>
-              </button>
-            ))}
-          </div>
-
+          <div className="mt-6">
           {createError && (
             <div className="rounded-lg bg-destructive/10 text-destructive text-sm px-4 py-2.5">
               {createError}
             </div>
           )}
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
             <button onClick={() => { setShowBuilder(false); setCreateError(null) }} className="btn-secondary">
               {common.cancel}
             </button>
             <button onClick={handleCreate} disabled={saving || !botName.trim()} className="btn-primary disabled:opacity-50">
               {saving ? common.saving : cb.createChatbot}
             </button>
+          </div>
           </div>
         </div>
       )}

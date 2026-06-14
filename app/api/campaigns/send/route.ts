@@ -54,6 +54,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (campaign.abTestEnabled && (!campaign.variantBSubject || !campaign.variantBContent)) {
+      return NextResponse.json(
+        { error: 'A/B testi için B varyantının konusu ve içeriği gerekli' },
+        { status: 400 }
+      )
+    }
+
     if (campaign.status === 'COMPLETED') {
       return NextResponse.json({ error: 'Bu kampanya zaten gönderildi' }, { status: 400 })
     }
@@ -121,21 +128,33 @@ export async function POST(req: NextRequest) {
 
     let sentCount = 0
     let failedCount = 0
+    let variantASent = 0
+    let variantBSent = 0
     const errors: string[] = []
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+    const splitPercent = campaign.abTestEnabled
+      ? Math.min(99, Math.max(1, campaign.abSplitPercent))
+      : 100
 
     for (const email of recipientEmails) {
+      const useVariantA = !campaign.abTestEnabled || Math.random() * 100 < splitPercent
+      const subject = useVariantA ? campaign.subject! : campaign.variantBSubject!
+      const content = useVariantA ? campaign.content! : campaign.variantBContent!
+
       const result = await sendEmail({
         to: email,
-        subject: campaign.subject,
-        html: campaign.content,
-        text: campaign.content.replace(/<[^>]+>/g, ''),
+        subject,
+        html: content,
+        text: content.replace(/<[^>]+>/g, ''),
         from: `${campaign.website.name} <noreply@gulive.com>`,
       })
 
       if (result.success) {
         sentCount++
+        if (campaign.abTestEnabled) {
+          if (useVariantA) variantASent++
+          else variantBSent++
+        }
       } else {
         failedCount++
         errors.push(`${email}: ${result.error}`)
@@ -149,6 +168,12 @@ export async function POST(req: NextRequest) {
         status: 'COMPLETED',
         sentAt: new Date(),
         sentCount: sentCount,
+        ...(campaign.abTestEnabled
+          ? {
+              variantASentCount: { increment: variantASent },
+              variantBSentCount: { increment: variantBSent },
+            }
+          : {}),
       },
     })
 
@@ -157,6 +182,7 @@ export async function POST(req: NextRequest) {
       sentCount,
       failedCount,
       total: recipientEmails.length,
+      ...(campaign.abTestEnabled ? { variantASent, variantBSent } : {}),
       errors: errors.slice(0, 10), // Cap error list
     })
   } catch (error) {

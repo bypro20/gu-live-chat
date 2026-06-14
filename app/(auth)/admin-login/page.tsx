@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn, getSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Logo } from '@/components/marketing/logo'
 import { Shield } from 'lucide-react'
@@ -10,19 +10,42 @@ import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { getNativeAppPlatform, markNativeApp, nativeAdminHomePath } from '@/lib/native-app'
 
 /** signIn(redirect:false) sets the cookie asynchronously — poll until the session is readable. */
-async function waitForAdminSession(maxAttempts = 10, delayMs = 200): Promise<boolean> {
+async function waitForAdminSession(
+  expectedEmail: string,
+  maxAttempts = 24,
+  delayMs = 250
+): Promise<boolean> {
+  const normalizedEmail = expectedEmail.trim().toLowerCase()
+
   for (let i = 0; i < maxAttempts; i++) {
+    const session = await getSession()
+    if (
+      session?.user?.role === 'ADMIN' &&
+      session.user.email?.trim().toLowerCase() === normalizedEmail
+    ) {
+      return true
+    }
+
     const meRes = await fetch('/api/admin/me', {
       credentials: 'include',
       cache: 'no-store',
     })
     if (meRes.ok) return true
-    // 403 = logged in but not ADMIN; don't retry
-    if (meRes.status === 403) return false
+
+    // Stale non-admin session can briefly return 403 while the new cookie settles.
+    if (meRes.status === 403 && i >= 8) {
+      const settled = await getSession()
+      if (settled?.user?.role !== 'ADMIN') return false
+    }
+
     await new Promise((r) => setTimeout(r, delayMs))
   }
+
   const session = await getSession()
-  return session?.user?.role === 'ADMIN'
+  return (
+    session?.user?.role === 'ADMIN' &&
+    session.user.email?.trim().toLowerCase() === normalizedEmail
+  )
 }
 
 function AdminLoginForm() {
@@ -43,14 +66,16 @@ function AdminLoginForm() {
     const normalizedEmail = email.trim().toLowerCase()
 
     try {
+      await signOut({ redirect: false })
+
       const result = await signIn('credentials', {
         email: normalizedEmail,
         password,
         redirect: false,
       })
 
-      if (result?.ok) {
-        const isAdmin = await waitForAdminSession()
+      if (result?.ok && !result?.error) {
+        const isAdmin = await waitForAdminSession(normalizedEmail)
         if (isAdmin) {
           markNativeApp('admin')
           const target = callbackUrl.startsWith('/') ? callbackUrl : '/admin'

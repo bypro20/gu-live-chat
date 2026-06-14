@@ -122,7 +122,7 @@ export function MessageComposer({
   }
 
   return (
-    <div className={cn('shrink-0', className)} style={inboxComposerShellStyle()}>
+    <div className={cn('shrink-0 inbox-composer-shell', className)} style={inboxComposerShellStyle()}>
       {autoTranslate && detectedLang && (
         <div className="flex items-center gap-1.5 px-4 pt-2 text-[11px] text-muted-foreground">
           <Languages className="w-3 h-3 shrink-0" />

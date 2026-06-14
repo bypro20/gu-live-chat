@@ -8,6 +8,8 @@ import {
 } from './subscription'
 import { activateAddonFromPayment } from './addon-purchase'
 import { isValidRegionalPlanPayment, currencyForRegionalPayment } from './checkout'
+import { startTrial } from './trial'
+import { TRIAL_CARD_VERIFY_AMOUNT_TRY } from './trial-config'
 import type { PlanId } from './plan-cta'
 import type { Plan } from '@/app/generated/prisma/client'
 
@@ -99,6 +101,41 @@ export async function processIyzicoCallbackToken(
       }
     }
     await activateAddonFromPayment(website.websiteId, parsed.addonSlug)
+    return { ok: true, redirect: 'success' }
+  }
+
+  if (parsed.kind === 'trial') {
+    const paidAmount = parseFloat(result.paidPrice || '0')
+    if (Math.abs(paidAmount - TRIAL_CARD_VERIFY_AMOUNT_TRY) >= 0.02) {
+      console.error(
+        `[iyzico] Trial verify amount mismatch for ${merchantOid}: paid ${paidAmount}, expected ${TRIAL_CARD_VERIFY_AMOUNT_TRY}`
+      )
+      return { ok: true, redirect: 'failed' }
+    }
+
+    if (!result.cardUserKey || !result.cardToken) {
+      console.error(`[iyzico] Trial checkout missing stored card for ${merchantOid}`)
+      return { ok: true, redirect: 'failed' }
+    }
+
+    const trialInfo = await prisma.website.findUnique({
+      where: { websiteId: website.websiteId },
+      select: { trialUsed: true, subscriptionStatus: true },
+    })
+    if (!trialInfo || trialInfo.trialUsed || trialInfo.subscriptionStatus === 'TRIALING') {
+      return { ok: true, redirect: 'success' }
+    }
+
+    await prisma.website.update({
+      where: { websiteId: website.websiteId },
+      data: {
+        paytrUserToken: result.cardUserKey,
+        paytrCardToken: result.cardToken,
+        paytrMerchantOid: merchantOid,
+      },
+    })
+
+    await startTrial(website.websiteId)
     return { ok: true, redirect: 'success' }
   }
 

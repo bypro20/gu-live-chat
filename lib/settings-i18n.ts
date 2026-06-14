@@ -355,7 +355,9 @@ export type SettingsMessages = {
     trialBonusChat: (days: number) => string
     trialBillingTitle: (days: number) => string
     trialBillingSubtitle: (days: number, widgetBonus: number, chatBonus: number) => string
+    trialCardHint: string
     startTrial: string
+    startingTrial: string
     currentPlan: string
     freePlan: string
     basicFeatures: string
@@ -552,6 +554,9 @@ export type SettingsMessages = {
     emptyHint: string
     stepCount: (n: number) => string
     defaultWelcome: string
+    dragToReorder: string
+    dropHere: string
+    addStep: string
     stepTypes: Record<string, { label: string; description: string }>
     triggers: Record<string, string>
   }
@@ -661,6 +666,14 @@ export type SettingsMessages = {
     tableClicks: string
     tableReplies: string
     tableActions: string
+    abTest: string
+    abTestHint: string
+    variantA: string
+    variantB: string
+    abSplitPercent: string
+    abSplitHint: string
+    abBadge: string
+    tableAbResults: string
     activate: string
     send: string
     sending: string
@@ -1001,11 +1014,11 @@ const tr: SettingsMessages = {
     offlineMessage: 'Çevrimdışı Mesajı',
     behavior: 'Davranış',
     preChatForm: 'Sohbet öncesi form',
-    preChatFormDesc: 'Ziyaretçilerden isim ve e-posta bilgilerini toplayın',
-    requireName: 'İsim zorunlu',
-    requireNameDesc: 'Formda isim alanı zorunlu olsun',
-    requireEmail: 'E-posta zorunlu',
-    requireEmailDesc: 'Formda e-posta alanı zorunlu olsun',
+    preChatFormDesc: 'Kapalıyken ziyaretçi doğrudan mesaj yazar. Açıkken isteğe bağlı alanları seçin.',
+    requireName: 'İsim iste',
+    requireNameDesc: 'Formda isim alanı gösterilsin (zorunlu değil)',
+    requireEmail: 'E-posta iste',
+    requireEmailDesc: 'Formda e-posta alanı gösterilsin (zorunlu değil)',
     soundNotifications: 'Ses bildirimleri',
     soundNotificationsDesc: 'Ziyaretçi tarafında yeni mesaj sesi (yakında)',
     autoOpen: 'Otomatik açılma',
@@ -1043,8 +1056,10 @@ const tr: SettingsMessages = {
     trialBonusChat: (days) => ` · İlk sohbetle +${days} gün`,
     trialBillingTitle: (days) => `${days} Gün Ücretsiz PRO Deneyin`,
     trialBillingSubtitle: (days, widgetBonus, chatBonus) =>
-      `Tüm PRO özelliklerini ${days} gün boyunca ücretsiz kullanın. Widget kurunca +${widgetBonus}, ilk sohbetle +${chatBonus} gün daha.`,
-    startTrial: 'Denemeyi Başlat',
+      `${days} gün boyunca tüm PRO özellikleri. Başlatmak için kredi kartı bilgilerinizi girin; kartınız kayıtlıysa veya hesabınızda aktif bakiye varsa doğrudan başlar. Widget kurunca +${widgetBonus}, ilk sohbetle +${chatBonus} gün daha.`,
+    trialCardHint: 'Deneme bitiminde PRO plan ücreti kayıtlı kartınızdan tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.',
+    startTrial: 'Kart ile Denemeyi Başlat',
+    startingTrial: 'Başlatılıyor…',
     currentPlan: 'Mevcut Planınız',
     freePlan: 'Ücretsiz',
     basicFeatures: 'Temel özellikler',
@@ -1272,6 +1287,9 @@ const tr: SettingsMessages = {
     emptyHint: 'Yukarıdaki butonu kullanarak ilk chatbotunuzu oluşturun',
     stepCount: (n) => `${n} adım`,
     defaultWelcome: 'Merhaba! Size nasıl yardımcı olabiliriz?',
+    dragToReorder: 'Sürükleyerek sıralayın',
+    dropHere: 'Buraya bırakın',
+    addStep: 'Adım Ekle',
     stepTypes: {
       MESSAGE: { label: 'Mesaj', description: 'Bir metin mesajı gönder' },
       CHOICE: { label: 'Seçenek', description: 'Tıklanabilir seçenekler sun' },
@@ -1454,6 +1472,14 @@ const tr: SettingsMessages = {
     tableClicks: 'Tıklama',
     tableReplies: 'Yanıt',
     tableActions: 'İşlem',
+    abTest: 'A/B Testi',
+    abTestHint: 'İki farklı konu ve içerik varyantını karşılaştırın',
+    variantA: 'Varyant A',
+    variantB: 'Varyant B',
+    abSplitPercent: 'A varyantı oranı (%)',
+    abSplitHint: 'Kalan alıcılar B varyantını alır',
+    abBadge: 'A/B',
+    tableAbResults: 'A/B Sonuçları',
     activate: 'Aktifleştir',
     send: 'Gönder',
     sending: 'Gönderiliyor...',
@@ -1804,11 +1830,11 @@ const en: SettingsMessages = {
     offlineMessage: 'Offline Message',
     behavior: 'Behavior',
     preChatForm: 'Pre-chat form',
-    preChatFormDesc: 'Collect visitor name and email before chat',
-    requireName: 'Require name',
-    requireNameDesc: 'Make the name field required',
-    requireEmail: 'Require email',
-    requireEmailDesc: 'Make the email field required',
+    preChatFormDesc: 'When off, visitors message directly. When on, choose optional fields.',
+    requireName: 'Ask for name',
+    requireNameDesc: 'Show name field on form (not required unless filled)',
+    requireEmail: 'Ask for email',
+    requireEmailDesc: 'Show email field on form (not required unless filled)',
     soundNotifications: 'Sound notifications',
     soundNotificationsDesc: 'Play sound for new messages on visitor side (coming soon)',
     autoOpen: 'Auto open',
@@ -1846,8 +1872,10 @@ const en: SettingsMessages = {
     trialBonusChat: (days) => ` · +${days} days on first chat`,
     trialBillingTitle: (days) => `Try PRO Free for ${days} Days`,
     trialBillingSubtitle: (days, widgetBonus, chatBonus) =>
-      `Use all PRO features free for ${days} days. +${widgetBonus} days when you install the widget, +${chatBonus} more on your first chat.`,
-    startTrial: 'Start Trial',
+      `All PRO features for ${days} days. Enter your card to start; if a card is already on file or your account has an active balance, trial starts immediately. +${widgetBonus} days when the widget is installed, +${chatBonus} on first chat.`,
+    trialCardHint: 'After the trial, PRO is charged to your saved card. Cancel anytime.',
+    startTrial: 'Start Trial with Card',
+    startingTrial: 'Starting…',
     currentPlan: 'Your Current Plan',
     freePlan: 'Free',
     basicFeatures: 'Basic features',
@@ -2075,6 +2103,9 @@ const en: SettingsMessages = {
     emptyHint: 'Use the button above to create your first chatbot',
     stepCount: (n) => `${n} step${n === 1 ? '' : 's'}`,
     defaultWelcome: 'Hello! How can we help you?',
+    dragToReorder: 'Drag to reorder',
+    dropHere: 'Drop here',
+    addStep: 'Add Step',
     stepTypes: {
       MESSAGE: { label: 'Message', description: 'Send a text message' },
       CHOICE: { label: 'Choice', description: 'Offer clickable options' },
@@ -2257,6 +2288,14 @@ const en: SettingsMessages = {
     tableClicks: 'Clicks',
     tableReplies: 'Replies',
     tableActions: 'Actions',
+    abTest: 'A/B Test',
+    abTestHint: 'Compare two subject and content variants',
+    variantA: 'Variant A',
+    variantB: 'Variant B',
+    abSplitPercent: 'Variant A split (%)',
+    abSplitHint: 'Remaining recipients receive variant B',
+    abBadge: 'A/B',
+    tableAbResults: 'A/B Results',
     activate: 'Activate',
     send: 'Send',
     sending: 'Sending...',

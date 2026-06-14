@@ -23,6 +23,7 @@ import { ConversationListItem } from '@/components/inbox/conversation-list-item'
 import { MessageThread } from '@/components/inbox/message-thread'
 import { MessageComposer, type PendingUpload } from '@/components/inbox/message-composer'
 import { ChatHeader } from '@/components/inbox/chat-header'
+import { VisitorContactEditor } from '@/components/inbox/visitor-contact-editor'
 import { ConnectionBadge } from '@/components/inbox/connection-badge'
 import { InboxMessageArea } from '@/components/inbox/inbox-message-area'
 import { VisitorContextPanel } from '@/components/inbox/visitor-context-panel'
@@ -629,6 +630,22 @@ export function AdminInboxPanel() {
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
 
+            {(() => {
+              const visitorId = selectedConversation.visitorId || selectedConversation.visitor?.id
+              if (!visitorId) return null
+              return (
+              <div className="xl:hidden shrink-0">
+                <VisitorContactEditor
+                  visitorId={visitorId}
+                  initialName={selectedConversation.visitor.name}
+                  initialEmail={selectedConversation.visitor.email}
+                  variant="compact"
+                  onSaved={() => void mutateConversations()}
+                />
+              </div>
+              )
+            })()}
+
             <LanguageBar
               agentLang={agentLang}
               onAgentLangChange={setAgentLang}
@@ -686,7 +703,10 @@ export function AdminInboxPanel() {
       </div>
 
       {selectedConversation && (
-        <VisitorContextPanel conversation={selectedConversation} />
+        <VisitorContextPanel
+          conversation={selectedConversation}
+          onVisitorUpdated={() => void mutateConversations()}
+        />
       )}
     </div>
   )

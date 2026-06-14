@@ -12,7 +12,10 @@ const APEX = 'gulivechat.com'
 const SOCKET = 'https://gu-live-chat-socket-production.up.railway.app'
 const CORS = 'https://www.gulivechat.com,https://gulivechat.com,https://guchat.org'
 const GOOGLE_VERIFY = 'PuI4LA0pzgjODjKhje4b8QMkmg7UwvJDaP-vs59zwEY'
-const CRON = process.env.CRON_SECRET || 'bbb24e55ef705cd8beed91658d7ff8b1772e8c5452b536aa62385fc1a80b6c5d'
+const CRON = process.env.CRON_SECRET
+if (!CRON) {
+  throw new Error('CRON_SECRET ortam değişkeni gerekli')
+}
 
 function loadToken() {
   if (process.env.VERCEL_TOKEN) return process.env.VERCEL_TOKEN

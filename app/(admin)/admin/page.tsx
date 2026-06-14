@@ -724,6 +724,8 @@ export default function AdminDashboardPage() {
               Hızlı Erişim
             </h3>
             <div className="space-y-2">
+              <QuickActionButton href="/admin/platform" icon={BarChart3} label="Platform Merkezi (A-Z)" color="violet" />
+              <QuickActionButton href="/admin/conversations" icon={MessageSquare} label="Tüm Sohbetler" color="orange" />
               <QuickActionButton href="/admin/inbox" icon={MessageSquare} label="Gelen Kutusu" color="orange" />
               <QuickActionButton href="/admin/users" icon={Users} label="Kullanıcıları Yönet" color="blue" />
               <QuickActionButton href="/admin/websites" icon={Globe} label="Siteleri Yönet" color="sky" />
@@ -841,6 +843,7 @@ function QuickActionButton({ href, icon: Icon, label, color }: {
     emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20',
     amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20',
     orange: 'text-orange-400 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20',
+    violet: 'text-violet-400 bg-violet-500/10 border-violet-500/20 hover:bg-violet-500/20',
   }
   return (
     <Link

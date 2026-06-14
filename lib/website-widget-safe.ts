@@ -23,8 +23,8 @@ const DEFAULTS: Omit<WidgetWebsiteRow, 'id' | 'websiteId' | 'name' | 'plan'> = {
   offlineMessage: 'Şu an çevrimdışıyız. Bir mesaj bırakın, size dönelim.',
   avatarUrl: null,
   showPreChatForm: false,
-  requireName: true,
-  requireEmail: true,
+  requireName: false,
+  requireEmail: false,
 }
 
 function mapRow(row: Record<string, unknown>): WidgetWebsiteRow {
@@ -39,8 +39,8 @@ function mapRow(row: Record<string, unknown>): WidgetWebsiteRow {
     offlineMessage: String(row.offlineMessage ?? DEFAULTS.offlineMessage),
     avatarUrl: row.avatarUrl != null ? String(row.avatarUrl) : null,
     showPreChatForm: row.showPreChatForm === 1 || row.showPreChatForm === true,
-    requireName: row.requireName !== 0 && row.requireName !== false,
-    requireEmail: row.requireEmail !== 0 && row.requireEmail !== false,
+    requireName: row.requireName === 1 || row.requireName === true,
+    requireEmail: row.requireEmail === 1 || row.requireEmail === true,
   }
 }
 

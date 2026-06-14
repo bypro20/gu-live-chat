@@ -1,38 +1,13 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
+import { fetchAdminWebsitesRich } from '@/lib/admin-platform-intel'
 
 export async function GET() {
   try {
-    const session = await auth()
+    const check = await requireAdmin()
+    if ('error' in check) return check.error
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 })
-    }
-
-    const websites = await prisma.website.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-        websiteId: true,
-        plan: true,
-        createdAt: true,
-        owner: { select: { id: true, email: true, name: true } },
-        _count: { select: { conversations: true, members: true } },
-      },
-    })
-
+    const websites = await fetchAdminWebsitesRich()
     return NextResponse.json(websites)
   } catch (error) {
     console.error('Admin websites error:', error)

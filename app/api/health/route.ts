@@ -1,51 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-/** Public health probe — DB + app uptime. */
+/** Minimal public health probe — no internal topology details. */
 export async function GET() {
-  const started = Date.now()
-  let db = false
+  let ok = false
   try {
     await prisma.$queryRaw`SELECT 1`
-    db = true
+    ok = true
   } catch {
-    db = false
+    ok = false
   }
 
-  const socketUrl = (
-    process.env.SOCKET_SERVER_URL ||
-    process.env.NEXT_PUBLIC_SOCKET_URL ||
-    ''
-  )
-    .trim()
-    .replace(/\/$/, '')
-
-  let socket = false
-  if (socketUrl && !socketUrl.includes('.vercel.app')) {
-    try {
-      const res = await fetch(`${socketUrl}/health`, {
-        signal: AbortSignal.timeout(4000),
-      })
-      if (res.ok) {
-        const data = (await res.json()) as { service?: string; status?: string }
-        socket = data.service === 'gu-live-chat-socket' && data.status === 'ok'
-      }
-    } catch {
-      socket = false
-    }
-  }
-
-  const ok = db
-  return NextResponse.json(
-    {
-      ok,
-      db,
-      redis: false,
-      socket,
-      socketConfigured: !!process.env.NEXT_PUBLIC_SOCKET_URL?.trim(),
-      latencyMs: Date.now() - started,
-      version: process.env.npm_package_version || '1.0.0',
-    },
-    { status: ok ? 200 : 503 }
-  )
+  return NextResponse.json({ ok }, { status: ok ? 200 : 503 })
 }

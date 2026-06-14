@@ -182,6 +182,17 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'websites.signupReferrer', sql: `ALTER TABLE "websites" ADD COLUMN "signupReferrer" TEXT` },
     { label: 'websites.referralCode', sql: `ALTER TABLE "websites" ADD COLUMN "referralCode" TEXT` },
     { label: 'websites.signupLandingPage', sql: `ALTER TABLE "websites" ADD COLUMN "signupLandingPage" TEXT` },
+    // campaigns — A/B test
+    { label: 'campaigns.abTestEnabled', sql: `ALTER TABLE "campaigns" ADD COLUMN "abTestEnabled" BOOLEAN NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantBSubject', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBSubject" TEXT` },
+    { label: 'campaigns.variantBContent', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBContent" TEXT` },
+    { label: 'campaigns.abSplitPercent', sql: `ALTER TABLE "campaigns" ADD COLUMN "abSplitPercent" INTEGER NOT NULL DEFAULT 50` },
+    { label: 'campaigns.variantASentCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantASentCount" INTEGER NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantBSentCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBSentCount" INTEGER NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantAOpenCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantAOpenCount" INTEGER NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantBOpenCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBOpenCount" INTEGER NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantAClickCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantAClickCount" INTEGER NOT NULL DEFAULT 0` },
+    { label: 'campaigns.variantBClickCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBClickCount" INTEGER NOT NULL DEFAULT 0` },
   ]
 
   for (const { label, sql } of statements) {

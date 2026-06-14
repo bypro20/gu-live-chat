@@ -20,6 +20,14 @@ interface Campaign {
   openCount: number
   clickCount: number
   replyCount: number
+  abTestEnabled: boolean
+  variantBSubject: string | null
+  variantBContent: string | null
+  abSplitPercent: number
+  variantASentCount: number
+  variantBSentCount: number
+  variantAOpenCount: number
+  variantBOpenCount: number
   createdAt: string
 }
 
@@ -48,6 +56,7 @@ export default function CampaignsPage() {
   const [form, setForm] = useState({
     name: '', description: '', type: 'EMAIL' as Campaign['type'],
     subject: '', content: '', target: 'ALL_VISITORS', scheduledAt: '',
+    abTestEnabled: false, variantBSubject: '', variantBContent: '', abSplitPercent: 50,
   })
 
   const fetchCampaigns = useCallback(async () => {
@@ -76,7 +85,11 @@ export default function CampaignsPage() {
     })
     if (res.ok) {
       setShowCreate(false)
-      setForm({ name: '', description: '', type: 'EMAIL', subject: '', content: '', target: 'ALL_VISITORS', scheduledAt: '' })
+      setForm({
+        name: '', description: '', type: 'EMAIL', subject: '', content: '',
+        target: 'ALL_VISITORS', scheduledAt: '', abTestEnabled: false,
+        variantBSubject: '', variantBContent: '', abSplitPercent: 50,
+      })
       fetchCampaigns()
     }
   }
@@ -183,7 +196,7 @@ export default function CampaignsPage() {
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                placeholder={camp.subjectPlaceholder}
+                placeholder={form.abTestEnabled ? `${camp.variantA}: ${camp.subjectPlaceholder}` : camp.subjectPlaceholder}
               />
             </div>
             <div>
@@ -193,9 +206,65 @@ export default function CampaignsPage() {
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
-                placeholder={camp.contentPlaceholder}
+                placeholder={form.abTestEnabled ? `${camp.variantA}: ${camp.contentPlaceholder}` : camp.contentPlaceholder}
               />
             </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.abTestEnabled}
+                  onChange={(e) => setForm({ ...form, abTestEnabled: e.target.checked })}
+                  className="mt-1 rounded border-border"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">{camp.abTest}</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">{camp.abTestHint}</span>
+                </span>
+              </label>
+
+              {form.abTestEnabled && (
+                <div className="space-y-4 pl-7 border-l-2 border-primary/20">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">{camp.variantB} — {camp.subject}</label>
+                    <input
+                      type="text"
+                      value={form.variantBSubject}
+                      onChange={(e) => setForm({ ...form, variantBSubject: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      placeholder={camp.subjectPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">{camp.variantB} — {camp.content}</label>
+                    <textarea
+                      value={form.variantBContent}
+                      onChange={(e) => setForm({ ...form, variantBContent: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                      placeholder={camp.contentPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                      {camp.abSplitPercent}: {form.abSplitPercent}%
+                    </label>
+                    <input
+                      type="range"
+                      min={10}
+                      max={90}
+                      step={5}
+                      value={form.abSplitPercent}
+                      onChange={(e) => setForm({ ...form, abSplitPercent: Number(e.target.value) })}
+                      className="w-full accent-primary"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{camp.abSplitHint}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">{camp.scheduledAt}</label>
               <input
@@ -251,6 +320,9 @@ export default function CampaignsPage() {
                         <p className="font-medium text-foreground text-sm">{campaign.name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[campaign.type]}`}>{camp.types[campaign.type]}</span>
+                          {campaign.abTestEnabled && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">{camp.abBadge}</span>
+                          )}
                           {campaign.scheduledAt && (
                             <span className="text-xs text-muted-foreground">{new Date(campaign.scheduledAt).toLocaleDateString(dateLocale)}</span>
                           )}
@@ -259,7 +331,15 @@ export default function CampaignsPage() {
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[campaign.status]}`}>{camp.statuses[campaign.status]}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{campaign.sentCount}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">
+                        {campaign.abTestEnabled && campaign.status === 'COMPLETED' ? (
+                          <div className="text-xs space-y-0.5">
+                            <div>A: {campaign.variantASentCount} / B: {campaign.variantBSentCount}</div>
+                          </div>
+                        ) : (
+                          campaign.sentCount
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-sm text-foreground">{campaign.openCount}</td>
                       <td className="px-6 py-4 text-sm text-foreground">{campaign.clickCount}</td>
                       <td className="px-6 py-4 text-sm text-foreground">{campaign.replyCount}</td>
@@ -304,12 +384,22 @@ export default function CampaignsPage() {
                   </div>
                   <div className="flex items-center flex-wrap gap-2 mt-1">
                     <span className={`px-2 py-0.5 text-xs rounded-full ${TYPE_COLORS[campaign.type]}`}>{camp.types[campaign.type]}</span>
+                    {campaign.abTestEnabled && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">{camp.abBadge}</span>
+                    )}
                     {campaign.scheduledAt && (
                       <span className="text-xs text-muted-foreground">{new Date(campaign.scheduledAt).toLocaleDateString(dateLocale)}</span>
                     )}
                   </div>
                   <div className="grid grid-cols-4 gap-2 mt-3 text-center">
-                    <div><p className="text-sm font-semibold text-foreground">{campaign.sentCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableSent}</p></div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {campaign.abTestEnabled && campaign.status === 'COMPLETED'
+                          ? `${campaign.variantASentCount}/${campaign.variantBSentCount}`
+                          : campaign.sentCount}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{camp.tableSent}</p>
+                    </div>
                     <div><p className="text-sm font-semibold text-foreground">{campaign.openCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableOpens}</p></div>
                     <div><p className="text-sm font-semibold text-foreground">{campaign.clickCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableClicks}</p></div>
                     <div><p className="text-sm font-semibold text-foreground">{campaign.replyCount}</p><p className="text-[10px] text-muted-foreground">{camp.tableReplies}</p></div>

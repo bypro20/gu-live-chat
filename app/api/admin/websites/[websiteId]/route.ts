@@ -15,8 +15,8 @@ const widgetSelect = {
   offlineMessage: true,
   avatarUrl: true,
   showPreChatForm: true,
-  requireName: true,
-  requireEmail: true,
+  requireName: false,
+  requireEmail: false,
 } as const
 
 async function requirePlatformAdmin() {
