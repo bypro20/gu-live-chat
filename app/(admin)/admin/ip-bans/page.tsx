@@ -5,10 +5,10 @@ import { Ban, Plus, Trash2, X, Clock, Hash, Loader2, Search, Shield } from 'luci
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/lib/toast'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 interface IpBan {
   id: string
@@ -112,73 +112,72 @@ export default function AdminIpBansPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">IP Engelleme</h1>
-          <p className="text-gray-500 mt-1">Toplam {bans.length} engelli IP adresi</p>
-        </div>
+    <div className="admin-page space-y-6">
+      <AdminPageHeader
+        title="IP Engelleme"
+        description={`Toplam ${bans.length} engelli IP adresi`}
+      >
         <Button onClick={() => setShowAddModal(true)} size="lg">
           <Plus className="size-4" />
           IP Engelle
         </Button>
-      </div>
+      </AdminPageHeader>
 
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 admin-text-muted" />
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="IP veya sebep ara..."
-          className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:border-primary/50"
+          className="admin-form-input h-10 pl-10 pr-4"
         />
       </div>
 
-      <Card className="overflow-hidden border-white/10 bg-white/[0.03]">
+      <div className="admin-table-card overflow-hidden">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+            <div className="flex items-center justify-center py-16 admin-text-muted gap-2">
               <Loader2 className="size-5 animate-spin" />
               Yükleniyor...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+            <div className="flex flex-col items-center justify-center py-16 admin-text-muted">
               <Shield className="size-8 mb-2 opacity-40" />
               Engelli IP bulunamadı
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
+                <tr className="border-b" style={{ borderColor: 'var(--admin-border)' }}>
                   {['IP Adresi', 'Sebep', 'Engellenme', 'Bitiş', 'İşlem'].map(h => (
-                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold admin-text-muted uppercase tracking-wider">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y" style={{ borderColor: 'var(--admin-border)' }}>
                 {filtered.map((ban, i) => (
                   <tr
                     key={ban.id}
                     className={cn(
-                      'transition-colors hover:bg-white/[0.04]',
+                      'transition-colors hover:bg-[var(--admin-bg-hover)]',
                       isExpired(ban) && 'opacity-50',
                     )}
                     style={{ animationDelay: `${i * 30}ms` }}
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <Hash className="size-3.5 text-gray-500" />
-                        <span className="text-sm font-mono text-white">{ban.ipAddress}</span>
+                        <Hash className="size-3.5 admin-text-muted" />
+                        <span className="text-sm font-mono admin-text">{ban.ipAddress}</span>
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm text-gray-400">{ban.reason || '—'}</span>
+                      <span className="text-sm admin-text-secondary">{ban.reason || '—'}</span>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm admin-text-secondary">
                         {new Date(ban.createdAt).toLocaleString('tr-TR')}
                       </span>
                     </td>
@@ -211,7 +210,7 @@ export default function AdminIpBansPage() {
             </table>
           )}
         </div>
-      </Card>
+      </div>
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>

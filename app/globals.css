@@ -1152,11 +1152,23 @@ body {
     .admin-table-card,
     .admin-live-summary,
     .admin-form-section,
+    .admin-detail-section,
+    .admin-split-detail-header,
+    .admin-monitor-panel,
+    .admin-stat-card,
     .surface,
     .app-panel
   ) {
     background-color: #0c0c0c;
     border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-split-list {
+    background-color: #080808;
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-split-detail-header {
+    background-color: #0a0a0a;
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-pulse-metric:hover,
@@ -1191,12 +1203,112 @@ body {
     .admin-table-card,
     .admin-live-summary,
     .admin-form-section,
+    .admin-detail-section,
+    .admin-split-list,
+    .admin-split-detail-header,
+    .admin-monitor-panel,
+    .admin-stat-card,
     .surface,
     .app-panel
   ) {
     background-color: #ffffff;
     border-color: #e2e8f0;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Split panel — Kullanıcı & Site, tam ekran listeler */
+  .admin-split-shell {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+  }
+
+  .admin-split-list {
+    background: var(--admin-bg-elevated);
+    border-color: var(--admin-border);
+  }
+
+  .admin-split-detail {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+  }
+
+  .admin-split-detail-header {
+    border-color: var(--admin-border);
+    background: var(--admin-bg-elevated);
+  }
+
+  .admin-detail-section {
+    @apply rounded-xl border p-4;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
+  }
+
+  .admin-detail-section-title {
+    @apply text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2;
+    color: var(--admin-text-muted);
+  }
+
+  .admin-split-list-item {
+    @apply w-full text-left px-4 py-3.5 border-b transition-colors;
+    border-color: var(--admin-border);
+    color: var(--admin-text);
+  }
+
+  .admin-split-list-item:hover {
+    background: var(--admin-bg-hover);
+  }
+
+  .admin-split-list-item--active {
+    background: rgba(139, 92, 246, 0.12);
+    box-shadow: inset 2px 0 0 #8b5cf6;
+  }
+
+  .admin-stat-card {
+    @apply rounded-lg border p-3 text-center;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-card);
+  }
+
+  .admin-btn-secondary {
+    @apply px-3 py-2 rounded-lg text-xs font-medium border transition-colors;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-hover);
+    color: var(--admin-text-secondary);
+  }
+
+  .admin-btn-secondary:hover {
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
+  }
+
+  .admin-filter-chip {
+    @apply px-2.5 py-1 text-[11px] font-medium rounded-md whitespace-nowrap transition;
+    color: var(--admin-text-muted);
+  }
+
+  .admin-filter-chip:hover {
+    background: var(--admin-bg-hover);
+    color: var(--admin-text);
+  }
+
+  .admin-filter-chip--active {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.35);
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-filter-chip--active {
+    background: rgba(124, 58, 237, 0.1);
+    color: #6d28d9;
+    box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.25);
+  }
+
+  .admin-monitor-panel {
+    @apply flex flex-col rounded-2xl border overflow-hidden;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
   }
 }
 

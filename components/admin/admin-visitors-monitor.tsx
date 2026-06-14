@@ -417,6 +417,23 @@ export function AdminVisitorsMonitor({
 
   const geoVisitors = filtered.filter((v) => v.latitude != null && v.longitude != null)
 
+  const listPanelClass = isDashboard
+    ? 'w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px]'
+    : 'admin-monitor-panel w-full xl:w-[400px] shrink-0 min-h-[480px]'
+  const detailPanelClass = isDashboard
+    ? 'flex-1 flex flex-col min-h-[480px] bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden'
+    : 'admin-monitor-panel flex-1 min-h-[480px]'
+  const textPrimary = isDashboard ? 'text-white' : 'admin-text'
+  const textMuted = isDashboard ? 'text-gray-500' : 'admin-text-muted'
+  const textSecondary = isDashboard ? 'text-gray-400' : 'admin-text-secondary'
+  const inputClass = isDashboard
+    ? 'w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-white/10 bg-white/[0.04] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30'
+    : 'admin-form-input w-full pl-9 pr-8 py-2 text-xs rounded-xl'
+  const rowHover = isDashboard ? 'hover:bg-white/[0.03]' : 'hover:bg-[var(--admin-bg-hover)]'
+  const rowActive = isDashboard ? 'bg-white/[0.04]' : 'admin-split-list-item--active'
+  const borderSubtle = isDashboard ? 'border-white/[0.06]' : ''
+  const divideSubtle = isDashboard ? 'divide-white/[0.04]' : ''
+
   if (upgradeRequired) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
@@ -448,10 +465,10 @@ export function AdminVisitorsMonitor({
       )}
       <div className={`flex flex-col xl:flex-row gap-4 flex-1 min-h-0 ${isDashboard ? '' : ''}`}>
       {/* Sol: liste + aktivite */}
-      <div className={`w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'hidden xl:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-white/[0.06] shrink-0">
+      <div className={`${listPanelClass} ${selectedVisitor ? 'hidden xl:flex' : 'flex'}`}>
+        <div className={`p-4 border-b shrink-0 ${borderSubtle}`} style={!isDashboard ? { borderColor: 'var(--admin-border)' } : undefined}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <h2 className={`text-sm font-semibold flex items-center gap-2 ${textPrimary}`}>
               <Users className="w-4 h-4 text-emerald-400" />
               {m.liveVisitors}
               <span className="text-xs font-bold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full tabular-nums">{filtered.length}</span>
@@ -464,23 +481,23 @@ export function AdminVisitorsMonitor({
               placeholder={m.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-white/10 bg-white/[0.04] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+              className={inputClass}
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+              <button type="button" onClick={() => setSearchQuery('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${textMuted} hover:opacity-80`}>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-white/[0.04]">
+        <div className={`flex-1 overflow-y-auto min-h-0 divide-y ${divideSubtle}`} style={!isDashboard ? { borderColor: 'var(--admin-border)' } : undefined}>
           {loading && filtered.length === 0 ? (
             <div className="flex items-center justify-center h-40">
               <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
+            <div className={`p-8 text-center text-sm ${textMuted}`}>
               <Eye className="w-10 h-10 mx-auto mb-3 opacity-30" />
               {m.noActiveVisitors}
             </div>
@@ -491,7 +508,7 @@ export function AdminVisitorsMonitor({
                 <div key={visitor.visitorId}>
                   <button
                     onClick={() => selectVisitor(expanded ? null : visitor.visitorId)}
-                    className={`w-full text-left p-3.5 hover:bg-white/[0.03] transition-colors ${expanded ? 'bg-white/[0.04]' : ''}`}
+                    className={`w-full text-left p-3.5 transition-colors ${rowHover} ${expanded ? rowActive : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative shrink-0">
@@ -504,14 +521,14 @@ export function AdminVisitorsMonitor({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-white truncate">{visitor.name || m.anonymous}</p>
-                          <span className="text-[10px] text-gray-500 shrink-0">{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
+                          <p className={`text-sm font-semibold truncate ${textPrimary}`}>{visitor.name || m.anonymous}</p>
+                          <span className={`text-[10px] shrink-0 ${textMuted}`}>{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
                         </div>
                         <p className="text-[11px] text-violet-300 truncate mt-0.5 flex items-center gap-1">
                           <MousePointer2 className="w-3 h-3 shrink-0" />
                           {visitor.currentTitle || visitor.currentPage || '—'}
                         </p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] text-gray-500">
+                        <div className={`flex items-center gap-2 mt-1 flex-wrap text-[10px] ${textMuted}`}>
                           <DeviceIcon device={visitor.device} />
                           {visitor.device && (
                             <span>{getDeviceLabel(visitor.device, locale)}</span>
@@ -530,7 +547,7 @@ export function AdminVisitorsMonitor({
                         {visitor.pages && visitor.pages.length > 0 && (
                           <div className="mt-2 space-y-1">
                             {visitor.pages.slice(0, 3).map((p, i) => (
-                              <div key={i} className="text-[10px] text-gray-400 truncate flex items-center gap-1">
+                              <div key={i} className={`text-[10px] truncate flex items-center gap-1 ${textSecondary}`}>
                                 <span className="w-1 h-1 rounded-full bg-violet-400/60 shrink-0" />
                                 {p.title || p.url}
                               </div>
@@ -589,11 +606,13 @@ export function AdminVisitorsMonitor({
       </div>
 
       {/* Sağ: ekran izleme */}
-      <div className={`flex-1 flex flex-col min-h-[480px] bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden ${selectedVisitor ? 'flex' : 'hidden xl:flex'}`}>
+      <div className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden xl:flex'}`}>
         {selectedVisitor && (
           <button
+            type="button"
             onClick={() => selectVisitor(null)}
-            className="xl:hidden flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 border-b border-white/[0.06] shrink-0"
+            className={`xl:hidden flex items-center gap-1.5 px-3 py-2 text-xs border-b shrink-0 ${textSecondary} ${borderSubtle}`}
+            style={!isDashboard ? { borderColor: 'var(--admin-border)' } : undefined}
           >
             {m.backToList}
           </button>
@@ -644,8 +663,8 @@ export function AdminVisitorsMonitor({
                 <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                   <Eye className="w-10 h-10 text-violet-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{m.screenWatchTitle}</h3>
-                <p className="text-sm text-gray-500 max-w-sm">
+                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>{m.screenWatchTitle}</h3>
+                <p className={`text-sm max-w-sm ${textMuted}`}>
                   {m.screenWatchDesc}
                 </p>
                 {filtered.length > 0 && (
