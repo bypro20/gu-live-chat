@@ -17,7 +17,7 @@ export function HeroPreview() {
           </div>
           <div className="flex-1 flex justify-center">
             <div className="px-4 py-0.5 bg-background border border-border rounded-md text-[11px] text-muted-foreground font-medium">
-              app.gulivechat.com/inbox
+              gulivechat.com/inbox
             </div>
           </div>
         </div>

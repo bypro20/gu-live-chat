@@ -57,6 +57,12 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
     setYukleniyor(true)
     setHata('')
 
+    if (form.password.length < 8) {
+      setHata(t.register.passwordMinLength)
+      setYukleniyor(false)
+      return
+    }
+
     if (form.password !== form.confirmPassword) {
       setHata(t.register.passwordMismatch)
       setYukleniyor(false)
@@ -261,7 +267,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                   className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
               </div>
               <div>
@@ -276,6 +282,7 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
                   className="w-full px-4 py-3 border border-border dark:border-gray-600 rounded-xl bg-muted/40 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   placeholder="••••••••"
                   required
+                  minLength={8}
                 />
               </div>
             </div>

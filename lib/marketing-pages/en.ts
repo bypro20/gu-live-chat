@@ -345,7 +345,7 @@ export const marketingEn: MarketingPages = {
           },
           {
             q: 'Where is the API documentation?',
-            a: 'REST API access is available on Professional and above. Contact support@gulivechat.com.',
+            a: 'REST API access is available on Professional and above. Contact destek@gulivechat.com.',
           },
         ],
       },

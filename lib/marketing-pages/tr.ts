@@ -485,13 +485,13 @@ export const marketingTr: MarketingPages = {
       "Gu Live Chat üzerinden dijital abonelik paketleri ve eklentiler sunulur. Fiziksel ürün bulunmaz; satın alma sonrası hizmet anında hesabınıza tanımlanır.",
     paymentTitle: 'Güvenli Ödeme (iyzico)',
     paymentText:
-      'Abonelik ödemeleri iyzico güvenli ödeme altyapısı ile ışlenir. Visa ve MasterCard kabul edilir. Kredi kartı bilgileriniz tarafımızca saklanmaz.',
+      'Abonelik ödemeleri iyzico güvenli ödeme altyapısı ile işlenir. Visa ve MasterCard kabul edilir. Kredi kartı bilgileriniz tarafımızca saklanmaz.',
     legalDocsTitle: 'Yasal Belgeler',
     legalLinks: [
       { label: 'Gizlilik Sözleşmesi', href: '/gizlilik' },
-      { label: 'Teslimat ve Iade Şartları', href: '/teslimat-iade' },
-      { label: 'Mesafeli Satış Sözleşmesi', href: '/mesafeli-satış' },
-      { label: 'Ödeme Güvenliği', href: '/ödeme-güvenliği' },
+      { label: 'Teslimat ve İade Şartları', href: '/teslimat-iade' },
+      { label: 'Mesafeli Satış Sözleşmesi', href: '/mesafeli-satis' },
+      { label: 'Ödeme Güvenliği', href: '/odeme-guvenligi' },
     ],
     corpFields: {
       tradeName: 'Ticaret Unvanı',
@@ -515,7 +515,7 @@ export const marketingTr: MarketingPages = {
       'Canlı sohbet widget - sitenize tek satır kod',
       'AI chatbot - tekrarlayan soruları otomatik yanıtla',
       'WhatsApp ve e-posta - tek gelen kutusu',
-      'Ziyaretçı takibi - kim sitede, hangi sayfada',
+      'Ziyaretçi takibi - kim sitede, hangi sayfada',
     ],
     cta: 'Ücretsiz Hesap Oluştur',
     statSetup: '30 sn',
@@ -524,7 +524,7 @@ export const marketingTr: MarketingPages = {
     statConversionLabel: 'Dönüşüm artışı*',
     statCompliance: 'KVKK',
     statComplianceLabel: 'Uyumlu altyapı',
-    disclaimer: '*Canlı destek kullanan ışletmelerde ortalama dönüşüm iyileşmesi - sektöre göre değışir.',
+    disclaimer: '*Canlı destek kullanan işletmelerde ortalama dönüşüm iyileşmesi — sektöre göre değişir.',
     copyright: 'Gu Live Chat © 2026 - gulivechat.com',
   },
   seoLandings: {

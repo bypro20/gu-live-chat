@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-/** Minimal public health probe — no internal topology details. */
+/** Public health probe — minimal topology; admin panel db/socket göstergeleri için genişletilmiş alanlar. */
 export async function GET() {
-  let ok = false
+  let dbOk = false
   try {
     await prisma.$queryRaw`SELECT 1`
-    ok = true
+    dbOk = true
   } catch {
-    ok = false
+    dbOk = false
   }
 
-  return NextResponse.json({ ok }, { status: ok ? 200 : 503 })
+  const socketConfigured = Boolean(
+    process.env.SOCKET_SERVER_URL?.trim() ||
+      process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
+  )
+
+  const ok = dbOk
+
+  return NextResponse.json(
+    {
+      ok,
+      db: dbOk,
+      socket: socketConfigured,
+    },
+    { status: ok ? 200 : 503 }
+  )
 }

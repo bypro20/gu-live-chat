@@ -52,6 +52,7 @@ export type AuthMessages = {
     hasAccount: string
     login: string
     passwordMismatch: string
+    passwordMinLength: string
     registerError: string
   }
   errors: {
@@ -145,6 +146,7 @@ export function getAuthMessages(locale: SiteLocale): AuthMessages {
         hasAccount: 'Already have an account?',
         login: 'Sign In',
         passwordMismatch: 'Passwords do not match',
+        passwordMinLength: 'Password must be at least 8 characters',
         registerError: 'An error occurred during registration',
       },
       errors: {
@@ -215,6 +217,7 @@ export function getAuthMessages(locale: SiteLocale): AuthMessages {
       hasAccount: 'Zaten hesabınız var mı?',
       login: 'Giriş Yap',
       passwordMismatch: 'Şifreler eşleşmiyor',
+      passwordMinLength: 'Şifre en az 8 karakter olmalıdır',
       registerError: 'Kayıt sırasında bir hata oluştu',
     },
     errors: {

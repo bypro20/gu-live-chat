@@ -100,7 +100,22 @@ const PROTECTED_API_PREFIXES = [
   '/api/privacy',
 ]
 
+/** Oturum gerektirmeyen API uçları (webhook, kayıt, davet önizleme vb.) */
+function isPublicApiRoute(pathname: string): boolean {
+  if (pathname.startsWith('/api/webhooks/')) return true
+  if (pathname.startsWith('/api/iyzico/callback')) return true
+  if (pathname.startsWith('/api/v1/')) return true
+  if (pathname === '/api/register') return true
+  if (pathname === '/api/contact') return true
+  if (pathname === '/api/health') return true
+  if (pathname === '/api/locale') return true
+  if (pathname === '/api/status-page/subscribe') return true
+  if (pathname === '/api/team/invite') return true
+  return false
+}
+
 function requiresSessionForApi(pathname: string): boolean {
+  if (isPublicApiRoute(pathname)) return false
   return PROTECTED_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }
 

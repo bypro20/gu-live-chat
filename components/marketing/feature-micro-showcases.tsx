@@ -223,7 +223,7 @@ export function InboxFlowShowcase({ className = '' }: { className?: string }) {
 
   return (
     <div className={`relative w-full ${className}`}>
-      <DemoChrome url="app.gulivechat.com/inbox">
+      <DemoChrome url="gulivechat.com/inbox">
         <div className="flex min-h-[300px]">
           <div className="w-24 sm:w-28 border-r border-slate-100 bg-slate-50 p-2 space-y-2">
             {[1, 2, 3].map((i) => (
