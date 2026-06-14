@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Check, ExternalLink, Megaphone } from 'lucide-react'
 import { MARKETING_CAMPAIGN_LINKS, MARKETING_SETUP_STEPS } from '@/lib/marketing-campaigns'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 function EnvStatus({ name }: { name: string }) {
   const value = process.env[name]
@@ -51,22 +52,15 @@ function CampaignLinkRow({ link }: { link: (typeof MARKETING_CAMPAIGN_LINKS)[num
 
 export default function AdminMarketingPage() {
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12">
+    <div className="admin-page max-w-5xl space-y-8 pb-12">
       <div>
-        <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white mb-4">
+        <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm admin-text-muted hover:admin-text mb-4">
           <ArrowLeft className="w-4 h-4" /> Admin paneli
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-300 flex items-center justify-center">
-            <Megaphone className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Pazarlama & Reklam Merkezi</h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Pixel kurulumu, hazır kampanya linkleri ve sosyal medya reklam rehberi
-            </p>
-          </div>
-        </div>
+        <AdminPageHeader
+          title="Pazarlama & Reklam Merkezi"
+          description="Pixel kurulumu, hazır kampanya linkleri ve sosyal medya reklam rehberi"
+        />
       </div>
 
       <section className="rounded-2xl border border-slate-700/80 bg-slate-900/60 p-6 space-y-4">

@@ -7,6 +7,7 @@ import {
   type WidgetWebsiteInfo,
   widgetConfigToPayload,
 } from '@/components/settings/widget-settings-panel'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 type AdminWebsiteRow = {
   id: string
@@ -17,7 +18,7 @@ type AdminWebsiteRow = {
 
 export default function AdminWidgetPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-sm text-gray-400">Yükleniyor…</div>}>
+    <Suspense fallback={<div className="admin-page admin-text-muted text-sm">Yükleniyor…</div>}>
       <AdminWidgetContent />
     </Suspense>
   )
@@ -88,33 +89,32 @@ function AdminWidgetContent() {
   const selected = websites.find((w) => w.id === selectedId)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-white">Sohbet Widget Ayarları</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Her sitenin widget rengini, mesajlarını ve davranışını buradan yönetin
-        </p>
-      </div>
+    <div className="admin-page max-w-6xl">
+      <AdminPageHeader
+        title="Sohbet Widget Ayarları"
+        description="Her sitenin widget rengini, mesajlarını ve davranışını buradan yönetin"
+      />
 
       {loading ? (
-        <p className="text-sm text-gray-400">Yükleniyor…</p>
+        <p className="text-sm admin-text-muted">Yükleniyor…</p>
       ) : (
         <>
-          <div className="mb-6 app-panel p-4 sm:p-5">
-            <label className="block text-sm font-medium text-white mb-2">Site seçin</label>
+          <div className="admin-form-section mb-6">
+            <label className="admin-form-label" htmlFor="admin-widget-site">Site seçin</label>
             <select
+              id="admin-widget-site"
               value={selectedId || ''}
               onChange={(e) => setSelectedId(e.target.value)}
-              className="w-full max-w-md px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-sm outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              className="admin-form-select max-w-md px-4 py-2.5 cursor-pointer"
             >
               {websites.map((w) => (
-                <option key={w.id} value={w.id} className="text-gray-900">
+                <option key={w.id} value={w.id}>
                   {w.name} — {w.domain}
                 </option>
               ))}
             </select>
             {selected && (
-              <p className="text-xs text-gray-500 mt-2 font-mono break-all">
+              <p className="text-xs admin-text-muted mt-2 font-mono break-all">
                 ID: {selected.websiteId}
               </p>
             )}
@@ -125,19 +125,17 @@ function AdminWidgetContent() {
           )}
 
           {loadingSite ? (
-            <p className="text-sm text-gray-400">Widget ayarları yükleniyor…</p>
+            <p className="text-sm admin-text-muted">Widget ayarları yükleniyor…</p>
           ) : (
-            <div className="text-foreground">
-              <WidgetSettingsPanel
-                website={website}
-                onSave={handleSave}
-                subtitle={
-                  selected
-                    ? `${selected.name} sitesinin canlı widget görünümünü özelleştirin. Değişiklikler kaydedildiğinde sitede hemen yansır.`
-                    : undefined
-                }
-              />
-            </div>
+            <WidgetSettingsPanel
+              website={website}
+              onSave={handleSave}
+              subtitle={
+                selected
+                  ? `${selected.name} sitesinin canlı widget görünümünü özelleştirin. Değişiklikler kaydedildiğinde sitede hemen yansır.`
+                  : undefined
+              }
+            />
           )}
         </>
       )}

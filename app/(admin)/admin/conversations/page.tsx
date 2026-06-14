@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { MessageSquare, Search, Globe, User, ExternalLink } from 'lucide-react'
 import { useToast } from '@/lib/toast'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 type Conversation = {
   id: string
@@ -59,16 +60,11 @@ export default function AdminConversationsPage() {
   }, [load])
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-          <MessageSquare className="w-7 h-7 text-violet-400" />
-          Tüm Sohbetler
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Platform genelinde tüm müşteri sitelerindeki konuşmalar — hangi kullanıcı, hangi site
-        </p>
-      </div>
+    <div className="admin-page max-w-[1400px]">
+      <AdminPageHeader
+        title="Tüm Sohbetler"
+        description="Platform genelinde tüm müşteri sitelerindeki konuşmalar — hangi kullanıcı, hangi site"
+      />
 
       <form
         className="mb-5 flex gap-2 max-w-xl"

@@ -641,8 +641,8 @@ body {
   }
 
   .admin-sidebar-group-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.12em] px-2;
-    color: #a78bfa;
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] px-2;
+    color: #ddd6fe;
   }
 
   .admin-sidebar-item {
@@ -984,6 +984,159 @@ body {
     border-color: var(--admin-border);
   }
 
+  .admin-page {
+    @apply p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto;
+  }
+
+  .admin-page-header h1 {
+    color: var(--admin-text);
+  }
+
+  .admin-form-section {
+    @apply rounded-2xl border p-4 sm:p-5 lg:p-6;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
+  }
+
+  .admin-form-label {
+    @apply block text-sm font-medium mb-2;
+    color: var(--admin-text);
+  }
+
+  .admin-form-input,
+  .admin-form-select,
+  .admin-form-textarea {
+    @apply w-full rounded-xl border text-sm outline-none transition-colors;
+    border-color: var(--admin-border);
+    background: var(--admin-input-bg);
+    color: var(--admin-text);
+  }
+
+  .admin-form-input:focus,
+  .admin-form-select:focus,
+  .admin-form-textarea:focus {
+    border-color: rgba(139, 92, 246, 0.45);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+  }
+
+  .admin-form-input::placeholder,
+  .admin-form-textarea::placeholder {
+    color: var(--admin-text-muted);
+  }
+
+  /* Dashboard/shadcn bileşenlerini admin içeriğinde temaya bağla */
+  .admin-shell-v2[data-admin-theme='dark'] .admin-content-root {
+    color-scheme: dark;
+    --background: #000000;
+    --foreground: #f1f5f9;
+    --card: #0c0c0c;
+    --card-foreground: #f1f5f9;
+    --popover: #0c0c0c;
+    --popover-foreground: #f1f5f9;
+    --muted: #141414;
+    --muted-foreground: #94a3b8;
+    --accent: #1a1a1a;
+    --accent-foreground: #f1f5f9;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --input: rgba(255, 255, 255, 0.06);
+    --ring: #8b5cf6;
+    --primary-light: rgba(139, 92, 246, 0.12);
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-content-root {
+    color-scheme: light;
+    --background: #f1f5f9;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --input: #ffffff;
+    --ring: #7c3aed;
+    --primary-light: rgba(124, 58, 237, 0.08);
+  }
+
+  .admin-content-root .app-panel,
+  .admin-content-root .surface {
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    background: var(--admin-bg-card);
+    color: var(--admin-text);
+    box-shadow: none;
+  }
+
+  .admin-content-root .text-foreground {
+    color: var(--admin-text);
+  }
+
+  .admin-content-root .text-muted-foreground {
+    color: var(--admin-text-muted);
+  }
+
+  .admin-content-root .bg-background {
+    background-color: var(--admin-input-bg);
+  }
+
+  .admin-content-root .bg-card {
+    background-color: var(--admin-bg-card);
+  }
+
+  .admin-content-root .border-border {
+    border-color: var(--admin-border);
+  }
+
+  .admin-content-root .border-border-strong {
+    border-color: var(--admin-border-strong);
+  }
+
+  .admin-content-root h1,
+  .admin-content-root h2,
+  .admin-content-root h3,
+  .admin-content-root h4 {
+    color: var(--admin-text);
+  }
+
+  .admin-content-root :is(input, select, textarea):not([type='color']):not([type='checkbox']):not([type='radio']):not([type='range']) {
+    border-color: var(--admin-border);
+    background-color: var(--admin-input-bg);
+    color: var(--admin-text);
+  }
+
+  .admin-content-root :is(input, select, textarea)::placeholder {
+    color: var(--admin-text-muted);
+  }
+
+  .admin-content-root [class*='bg-slate-900'],
+  .admin-content-root [class*='bg-slate-800'] {
+    background-color: var(--admin-bg-card) !important;
+  }
+
+  .admin-content-root [class*='border-slate'] {
+    border-color: var(--admin-border) !important;
+  }
+
+  .admin-content-root [class*='text-slate-400'],
+  .admin-content-root [class*='text-slate-300'] {
+    color: var(--admin-text-muted) !important;
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-split-shell {
+    background: #000000;
+    color: #f1f5f9;
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .bg-gray-300 {
+    background-color: #475569 !important;
+  }
+
   /* Karanlık mod — içerik alanı tam siyah */
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root {
     background: #000000;
@@ -997,7 +1150,10 @@ body {
     .admin-pulse-metric,
     .admin-kpi-card,
     .admin-table-card,
-    .admin-live-summary
+    .admin-live-summary,
+    .admin-form-section,
+    .surface,
+    .app-panel
   ) {
     background-color: #0c0c0c;
     border-color: rgba(255, 255, 255, 0.08);
@@ -1033,7 +1189,10 @@ body {
     .admin-pulse-metric,
     .admin-kpi-card,
     .admin-table-card,
-    .admin-live-summary
+    .admin-live-summary,
+    .admin-form-section,
+    .surface,
+    .app-panel
   ) {
     background-color: #ffffff;
     border-color: #e2e8f0;

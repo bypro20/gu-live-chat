@@ -173,9 +173,9 @@ export default function AdminCustomerSitesPage() {
 
   return (
     <div className="admin-split-shell h-full min-h-0 flex flex-col overflow-hidden">
-      <div className="shrink-0 px-4 sm:px-6 py-4 border-b border-white/[0.06]">
-        <h1 className="text-lg sm:text-xl font-bold text-white">Kullanıcı & Site Bilgileri</h1>
-        <p className="text-xs sm:text-sm text-gray-400 mt-1">
+      <div className="shrink-0 px-4 sm:px-6 py-4 border-b admin-form-section rounded-none border-x-0 border-t-0">
+        <h1 className="text-lg sm:text-xl font-bold admin-text">Kullanıcı & Site Bilgileri</h1>
+        <p className="text-xs sm:text-sm admin-text-muted mt-1">
           Kim hangi siteye embed kodunu ekledi, widget ne zaman aktif oldu — tek ekranda
         </p>
       </div>

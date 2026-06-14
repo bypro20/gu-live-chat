@@ -8,6 +8,7 @@ import {
 import { getDeviceLabel, getBrowserLabel, formatDuration } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { AdminVisitorsMonitor } from '@/components/admin/admin-visitors-monitor'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 interface HistorySession {
   id: string
@@ -209,19 +210,12 @@ export default function AdminVisitorsPage() {
   const browserTotal = Object.values(browsers).reduce((a, b) => a + b, 0) || 1
 
   return (
-    <div className="p-4 lg:p-6 xl:p-8 max-w-[1440px] mx-auto min-h-screen">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <span className="px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-md tracking-[0.08em] shadow-lg shadow-emerald-500/25">
-              CANLI
-            </span>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Canlı Ziyaretçiler</h1>
-          </div>
-          <p className="text-gray-500 text-sm mt-1">Tüm sitelerdeki ziyaretçileri gerçek zamanlı takip edin</p>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="admin-page max-w-[1440px]">
+      <AdminPageHeader
+        title="Canlı Ziyaretçiler"
+        description="Tüm sitelerdeki ziyaretçileri gerçek zamanlı takip edin"
+      >
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -245,13 +239,14 @@ export default function AdminVisitorsPage() {
             ))}
           </div>
           <button
+            type="button"
             onClick={fetchData}
             className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
-      </div>
+      </AdminPageHeader>
 
       {/* STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">

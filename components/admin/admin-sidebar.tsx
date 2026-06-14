@@ -131,7 +131,7 @@ export function AdminSidebar({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold truncate">{item.label}</span>
+                        <span className="text-[13px] font-semibold truncate admin-sidebar-title">{item.label}</span>
                         {badge != null && (
                           <span className="admin-sidebar-badge">{badge > 99 ? '99+' : badge}</span>
                         )}

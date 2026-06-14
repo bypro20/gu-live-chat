@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useToast } from '@/lib/toast'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 function passwordStrength(password: string) {
   const checks = [
@@ -208,14 +209,11 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1100px] mx-auto">
-      <div className="mb-6 lg:mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Admin Ayarları</h1>
-          <Settings className="w-5 h-5 text-gray-500" />
-        </div>
-        <p className="text-gray-500 text-sm">Platform genel ayarlarını yönetin</p>
-      </div>
+    <div className="admin-page max-w-[1100px]">
+      <AdminPageHeader
+        title="Admin Ayarları"
+        description="Platform genel ayarlarını yönetin"
+      />
 
       <div className="space-y-5 lg:space-y-6">
         <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 sm:p-6">

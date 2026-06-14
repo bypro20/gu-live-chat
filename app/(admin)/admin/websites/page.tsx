@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/lib/toast'
+import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
 interface TeamMember {
   role: string
@@ -122,16 +123,11 @@ export default function AdminWebsitesPage() {
   const activeCount = websites.filter((w) => w.widgetStatus === 'ACTIVE').length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1600px] mx-auto">
-      <div className="mb-6 lg:mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Site & Widget Yönetimi</h1>
-          <Globe className="w-5 h-5 text-gray-500" />
-        </div>
-        <p className="text-gray-500 text-sm">
-          {websites.length} site · {activeCount} aktif widget · embed kodu ve kullanım durumu
-        </p>
-      </div>
+    <div className="admin-page">
+      <AdminPageHeader
+        title="Site & Widget Yönetimi"
+        description={`${websites.length} site · ${activeCount} aktif widget · embed kodu ve kullanım durumu`}
+      />
 
       <div className="mb-5 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 sm:max-w-md">
