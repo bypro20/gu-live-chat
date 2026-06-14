@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { createWebsiteSchema } from '@/lib/validators/website'
 import { generateWebsiteId } from '@/lib/utils'
+import { WIDGET_IDENTITY_CREATE_DATA } from '@/lib/widget-platform-defaults'
 import { ensureAdminMarketingAccess } from '@/lib/marketing-website'
 
 export async function GET() {
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
         domain: validated.domain,
         websiteId: generateWebsiteId(),
         ownerId: session.user.id,
+        ...WIDGET_IDENTITY_CREATE_DATA,
         members: {
           create: {
             userId: session.user.id,

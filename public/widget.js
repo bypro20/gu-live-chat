@@ -91,6 +91,7 @@
     '#gu-launcher-ring2{animation:gu-ring 2s ease-out 1s infinite!important;border:2px solid rgba(59,130,246,0.35)!important;}' +
     '#gu-chat-button{position:relative!important;width:76px!important;height:76px!important;border-radius:24px!important;z-index:1!important;visibility:visible!important;pointer-events:auto!important;background:linear-gradient(135deg,#60A5FA 0%,#6366F1 35%,#8B5CF6 70%,#3B82F6 100%)!important;background-size:200% 200%!important;animation:gu-float 2.8s ease-in-out infinite,gu-shimmer 5s ease infinite!important;box-shadow:0 20px 56px rgba(99,102,241,0.5),0 0 0 2px rgba(255,255,255,0.35) inset,0 0 48px rgba(99,102,241,0.35)!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1)!important;}' +
     '#gu-widget-iframe{position:fixed!important;bottom:112px!important;right:20px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
+    '@media(max-width:768px){#gu-widget-iframe.gu-iframe-mobile-full{top:0!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;box-shadow:none!important;transform:none!important;}}' +
     'html,body{transform:none!important;filter:none!important;}' +
     '#root,#app,#__next,[class*="wrapper"],[class*="container"],[class*="app-root"],[class*="layout"]{transform:none!important;filter:none!important;}' +
     '#gu-chat-button svg{display:block;pointer-events:none;}' +
@@ -199,15 +200,23 @@
 
   function showIframe() {
     iframe.style.display = 'block';
+    if (isMobileViewport) {
+      iframe.classList.add('gu-iframe-mobile-full');
+      chatDock.style.display = 'none';
+    }
     // Animate in on the next frame so the transition runs.
     requestAnimationFrame(function() {
       iframe.style.opacity = '1';
-      iframe.style.transform = 'translateY(0) scale(1)';
+      iframe.style.transform = isMobileViewport ? 'none' : 'translateY(0) scale(1)';
     });
   }
   function hideIframe() {
     iframe.style.opacity = '0';
-    iframe.style.transform = 'translateY(12px) scale(0.98)';
+    iframe.style.transform = isMobileViewport ? 'none' : 'translateY(12px) scale(0.98)';
+    if (isMobileViewport) {
+      iframe.classList.remove('gu-iframe-mobile-full');
+      chatDock.style.display = 'flex';
+    }
     setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 260);
   }
 
@@ -283,6 +292,22 @@
   function setIconChat() { chatBtn.innerHTML = CHAT_ICON; chatBtn.appendChild(unreadBadge); }
   function setIconClose() { chatBtn.innerHTML = CLOSE_ICON; chatBtn.appendChild(unreadBadge); }
 
+  function notifyIframeOpen() {
+    if (!iframe.contentWindow) return;
+    var attempts = 0;
+    (function sendOpen() {
+      if (!chatOpen || !iframe.contentWindow) return;
+      iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
+      attempts += 1;
+      if (attempts < 20) setTimeout(sendOpen, 250);
+    })();
+  }
+
+  function notifyIframeClose() {
+    if (!iframe.contentWindow) return;
+    iframe.contentWindow.postMessage({ type: 'gu:close' }, '*');
+  }
+
   chatBtn.innerHTML = CHAT_ICON;
   chatBtn.appendChild(unreadBadge);
   chatBtn.addEventListener('click', function() {
@@ -292,11 +317,11 @@
       hideTeaser();
       setUnread(0);
       showIframe();
-      iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
+      notifyIframeOpen();
       setIconClose();
     } else {
       hideIframe();
-      iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'gu:close' }, '*');
+      notifyIframeClose();
       setIconChat();
       if (!greetingDismissed) showTeaser();
     }
@@ -315,7 +340,10 @@
 
   // Create iframe — DIRECTLY on document.body (no container)
   var iframe = document.createElement('iframe');
-  var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID;
+  var iframeSrc = getWidgetBaseUrl() + '/widget/' + WEBSITE_ID
+    + '?embedUrl=' + encodeURIComponent(window.location.href)
+    + '&embedReferrer=' + encodeURIComponent(document.referrer || '')
+    + '&embedTitle=' + encodeURIComponent(document.title || '');
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
   iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(99,102,241,0.2),0 0 120px rgba(99,102,241,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
@@ -596,6 +624,12 @@
   var trackPageView = function() {
     if (iframe.contentWindow) {
       iframe.contentWindow.postMessage({
+        type: 'gu:embed-context',
+        url: window.location.href,
+        title: document.title,
+        referrer: document.referrer,
+      }, '*');
+      iframe.contentWindow.postMessage({
         type: 'gu:pageview',
         url: window.location.href,
         title: document.title,
@@ -604,13 +638,11 @@
     }
   };
 
-  // Send initial page view + auto-open widget inside iframe
+  // Send initial page view + sync open state after iframe loads
   iframe.addEventListener('load', function() {
     trackPageView();
     fetchProactiveMessages();
-    if (chatOpen && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
-    }
+    if (chatOpen) notifyIframeOpen();
   });
 
   // Track URL changes (SPA) — observe only <title> and <head>, not entire subtree
@@ -1334,6 +1366,9 @@
     content.appendChild(buttons);
     banner.appendChild(content);
 
+    // Sohbet balonunun üstünde — altta üst üste binmesin
+    banner.style.bottom = 'max(100px, calc(88px + env(safe-area-inset-bottom, 0px)))';
+
     return banner;
   }
 
@@ -1368,11 +1403,11 @@
     } else if (privacyConfig.showConsentBanner === false) {
       initWidget(false);
     } else {
-      chatBtn.style.display = 'none';
-      iframe.style.display = 'none';
-      chatBtn.style.pointerEvents = 'none';
-      var consentBanner = createConsentBanner();
-      document.body.appendChild(consentBanner);
+      // Keep launcher visible — hiding chat until cookie consent looked like a broken widget.
+      initWidget(false);
+      if (!document.getElementById('gu-consent-banner')) {
+        document.body.appendChild(createConsentBanner());
+      }
     }
   }
 

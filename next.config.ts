@@ -61,12 +61,47 @@ const nextConfig: NextConfig = {
       {
         source: '/widget/:path*',
         headers: [
-          ...baseSecurity,
+          ...baseSecurity.filter((h) => h.key !== 'Cross-Origin-Resource-Policy'),
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
           { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
           {
             key: 'Permissions-Policy',
             value: 'camera=(self), microphone=(self), geolocation=()',
           },
+        ],
+      },
+      // widget.js — müşteri sitelerinden script olarak yüklenir
+      {
+        source: '/widget.js',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+        ],
+      },
+      {
+        source: '/vendor/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+        ],
+      },
+      // Embed launcher XHR — myqar.net vb. cross-origin istekler
+      {
+        source: '/api/widget/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+        ],
+      },
+      {
+        source: '/api/privacy/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
         ],
       },
       {

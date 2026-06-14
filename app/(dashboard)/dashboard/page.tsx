@@ -27,6 +27,7 @@ import {
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { GrowthOpportunities } from '@/components/dashboard/growth-opportunities'
+import { LiveVisitorsSummary } from '@/components/visitors/live-visitors-summary'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 
 export default function DashboardPage() {
@@ -153,6 +154,10 @@ export default function DashboardPage() {
             <div key={card.label}>{inner}</div>
           )
         })}
+      </div>
+
+      <div className="mb-8">
+        <LiveVisitorsSummary variant="dashboard" websiteId={activeWebsite?.websiteId ?? null} limit={6} />
       </div>
 
       <div className="mb-8">

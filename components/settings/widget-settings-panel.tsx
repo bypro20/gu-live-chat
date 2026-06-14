@@ -42,9 +42,9 @@ function getDefaultConfig(w: SettingsMessages['widget']): WidgetConfigState {
     welcomeMessage: w.defaultWelcome,
     offlineMessage: w.defaultOffline,
     avatarUrl: '',
-    showPreChatForm: false,
-    requireName: false,
-    requireEmail: false,
+    showPreChatForm: true,
+    requireName: true,
+    requireEmail: true,
     soundEnabled: true,
     autoOpen: false,
     autoOpenDelay: 5,
@@ -230,7 +230,13 @@ export function WidgetSettingsPanel({
                 label={w.preChatForm}
                 description={w.preChatFormDesc}
                 checked={config.showPreChatForm}
-                onChange={(checked) => setConfig({ ...config, showPreChatForm: checked })}
+                onChange={(checked) =>
+                  setConfig({
+                    ...config,
+                    showPreChatForm: checked,
+                    ...(checked ? { requireName: true, requireEmail: true } : {}),
+                  })
+                }
               />
               {config.showPreChatForm && (
                 <>

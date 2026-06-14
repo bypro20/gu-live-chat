@@ -10,7 +10,7 @@ import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
-import { formatTimeAgo } from '@/lib/visitors-utils'
+import { formatTimeAgo, getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
@@ -180,10 +180,18 @@ export function AdminVisitorsMonitor({
       addVisitor({
         visitorId: data.visitorId as string,
         name: (data.name as string) || m.anonymous,
+        email: (data.email as string) || undefined,
+        browser: (data.browser as string) || null,
+        os: (data.os as string) || null,
+        device: (data.device as string) || null,
+        country: (data.country as string) || null,
+        city: (data.city as string) || null,
+        region: (data.region as string) || null,
         currentPage: (data.currentPage as string) || '',
         currentTitle: (data.currentTitle as string) || '',
         isLive: true,
         websiteId: data.websiteId as string,
+        websiteName: (data.websiteName as string) || undefined,
         startedAt: (data.connectedAt as string) || new Date().toISOString(),
         lastActiveAt: new Date().toISOString(),
       })
@@ -505,10 +513,17 @@ export function AdminVisitorsMonitor({
                         </p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] text-gray-500">
                           <DeviceIcon device={visitor.device} />
+                          {visitor.device && (
+                            <span>{getDeviceLabel(visitor.device, locale)}</span>
+                          )}
+                          {visitor.browser && (
+                            <span>{getBrowserLabel(visitor.browser, locale)}</span>
+                          )}
                           {visitor.websiteName && <span className="text-violet-400/80">{visitor.websiteName}</span>}
-                          {visitor.city && (
+                          {(visitor.city || visitor.country) && (
                             <span className="flex items-center gap-0.5">
-                              <MapPin className="w-3 h-3" />{visitor.city}{visitor.country ? `, ${visitor.country}` : ''}
+                              <MapPin className="w-3 h-3" />
+                              {[visitor.city, visitor.country].filter(Boolean).join(', ')}
                             </span>
                           )}
                         </div>

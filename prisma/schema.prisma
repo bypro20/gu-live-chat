@@ -114,9 +114,9 @@ model Website {
   avatarUrl     String?
   welcomeMessage String        @default("Merhaba! Size nasıl yardımcı olabiliriz?")
   offlineMessage String        @default("Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.")
-  showPreChatForm Boolean      @default(false)
-  requireName     Boolean      @default(false)
-  requireEmail    Boolean      @default(false)
+  showPreChatForm Boolean      @default(true)
+  requireName     Boolean      @default(true)
+  requireEmail    Boolean      @default(true)
 
   // Relations
   ownerId         String

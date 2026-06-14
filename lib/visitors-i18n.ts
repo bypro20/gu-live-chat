@@ -99,6 +99,14 @@ export type VisitorsMessages = {
     tablet: string
     desktop: string
   }
+  summary: {
+    title: string
+    subtitle: (total: number, live: number) => string
+    viewAll: string
+    refresh: string
+    loading: string
+    empty: string
+  }
 }
 
 const tr: VisitorsMessages = {
@@ -199,6 +207,14 @@ const tr: VisitorsMessages = {
     tablet: 'Tablet',
     desktop: 'Masaüstü',
   },
+  summary: {
+    title: 'Anlık Ziyaretçi Takibi',
+    subtitle: (total, live) => `${total} ziyaretçi · ${live} canlı`,
+    viewAll: 'Tümünü gör',
+    refresh: 'Yenile',
+    loading: 'Ziyaretçiler yükleniyor…',
+    empty: 'Şu an aktif ziyaretçi yok',
+  },
 }
 
 const en: VisitorsMessages = {
@@ -298,6 +314,14 @@ const en: VisitorsMessages = {
     mobile: 'Mobile',
     tablet: 'Tablet',
     desktop: 'Desktop',
+  },
+  summary: {
+    title: 'Live Visitor Tracking',
+    subtitle: (total, live) => `${total} visitor${total === 1 ? '' : 's'} · ${live} live`,
+    viewAll: 'View all',
+    refresh: 'Refresh',
+    loading: 'Loading visitors…',
+    empty: 'No active visitors right now',
   },
 }
 

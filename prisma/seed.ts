@@ -3,6 +3,7 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import bcrypt from 'bcryptjs'
+import { WIDGET_IDENTITY_CREATE_DATA } from '../lib/widget-platform-defaults'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -34,6 +35,7 @@ async function main() {
       welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
       offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
       plan: 'FREE',
+      ...WIDGET_IDENTITY_CREATE_DATA,
     },
   })
   console.log(`✅ Website: ${website.domain}`)

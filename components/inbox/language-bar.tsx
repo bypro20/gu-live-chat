@@ -26,7 +26,7 @@ export function LanguageBar({
   const pairActive = autoTranslate && visitorLang && languagesDiffer(agentLang, visitorLang)
 
   return (
-    <div className="px-4 py-2 border-b border-border bg-muted/30 flex flex-wrap items-center gap-2 text-xs">
+    <div className="px-4 py-2 border-b border-border bg-muted/30 flex flex-wrap items-center gap-2 text-xs shrink-0">
       <Languages className="w-3.5 h-3.5 text-primary shrink-0" />
       <span className="text-muted-foreground">{i.yourLanguage}</span>
       <select

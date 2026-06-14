@@ -22,7 +22,6 @@ import { MessageComposer, type PendingUpload } from '@/components/inbox/message-
 import { TypingIndicator } from '@/components/inbox/typing-indicator'
 import { VisitorContextPanel } from '@/components/inbox/visitor-context-panel'
 import { ChatHeader } from '@/components/inbox/chat-header'
-import { VisitorContactEditor } from '@/components/inbox/visitor-contact-editor'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,6 +30,8 @@ import { useInboxSoundAlert, playNewMessageSound } from '@/lib/hooks/use-inbox-s
 import { unlockInboxAudio } from '@/lib/inbox-sound'
 import { ConnectionBadge } from '@/components/inbox/connection-badge'
 import { InboxMessageArea } from '@/components/inbox/inbox-message-area'
+import { useInboxMessageScroll } from '@/lib/hooks/use-inbox-message-scroll'
+import { useInboxMobileChat, INBOX_CHAT_PANEL_MOBILE } from '@/lib/hooks/use-inbox-mobile-chat'
 import { useAgentLanguage } from '@/lib/hooks/use-agent-language'
 import { useInboxAutoTranslate } from '@/lib/hooks/use-inbox-auto-translate'
 import { LanguageBar } from '@/components/inbox/language-bar'
@@ -79,8 +80,6 @@ function InboxPageContent() {
   const [uploading, setUploading] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [liveConnected, setLiveConnected] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const prevMessageCountRef = useRef(0)
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
@@ -123,6 +122,13 @@ function InboxPageContent() {
   const { messages, isLoading: messagesLoading, sendMessage, sending, mutate: mutateMessages } =
     useMessages(selectedId)
 
+  const { containerRef: messageScrollRef, handleScroll: onMessageScroll } = useInboxMessageScroll(
+    messages.length,
+    selectedId,
+  )
+
+  useInboxMobileChat(!!selectedId)
+
   useEffect(() => {
     connectSocket()
     const unlock = () => unlockInboxAudio()
@@ -150,15 +156,6 @@ function InboxPageContent() {
     if (!conversationFromUrl || isLoading) return
     if (conversations.some((c) => c.id === conversationFromUrl)) setSelectedId(conversationFromUrl)
   }, [conversationFromUrl, conversations, isLoading])
-
-  useEffect(() => {
-    if (messages.length <= prevMessageCountRef.current) {
-      prevMessageCountRef.current = messages.length
-      return
-    }
-    prevMessageCountRef.current = messages.length
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
-  }, [messages])
 
   const handleIncomingMessage = useCallback(
     (data: {
@@ -472,8 +469,8 @@ function InboxPageContent() {
     <div className="h-full min-h-0 w-full max-w-full flex overflow-hidden bg-slate-50">
       {/* Sidebar */}
       <div
-        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex-col bg-white shrink-0 shadow-sm ${
-          selectedConversation ? 'hidden lg:flex' : 'flex'
+        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex flex-col min-h-0 bg-white shrink-0 shadow-sm ${
+          selectedConversation ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
         }`}
       >
         <div className="p-4 border-b border-border space-y-3">
@@ -642,8 +639,8 @@ function InboxPageContent() {
 
       {/* Chat panel */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-slate-100/80 ${
-          selectedConversation ? 'flex' : 'hidden lg:flex'
+        className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-100/80 ${
+          selectedConversation ? INBOX_CHAT_PANEL_MOBILE : 'hidden lg:flex'
         }`}
       >
         {!selectedConversation ? (
@@ -686,22 +683,6 @@ function InboxPageContent() {
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
 
-            {(() => {
-              const visitorId = selectedConversation.visitorId || selectedConversation.visitor?.id
-              if (!visitorId) return null
-              return (
-              <div className="xl:hidden shrink-0">
-                <VisitorContactEditor
-                  visitorId={visitorId}
-                  initialName={selectedConversation.visitor.name}
-                  initialEmail={selectedConversation.visitor.email}
-                  variant="compact"
-                  onSaved={() => void mutateConversations()}
-                />
-              </div>
-              )
-            })()}
-
             <LanguageBar
               agentLang={agentLang}
               onAgentLangChange={setAgentLang}
@@ -710,7 +691,7 @@ function InboxPageContent() {
               canTranslate={canTranslate}
             />
 
-            <InboxMessageArea>
+            <InboxMessageArea ref={messageScrollRef} onAreaScroll={onMessageScroll}>
               {messagesLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -739,7 +720,6 @@ function InboxPageContent() {
                 </div>
               )}
               {aiError && <p className="text-xs text-destructive text-center">{aiError}</p>}
-              <div ref={messagesEndRef} />
             </InboxMessageArea>
 
             <MessageComposer

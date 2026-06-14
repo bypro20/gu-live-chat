@@ -67,7 +67,7 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
           )}
           {visitor.country && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
-              📍 {visitor.country}{visitor.city ? `, ${visitor.city}` : ''}
+              📍 {[visitor.city, visitor.region, visitor.country].filter(Boolean).join(', ')}
             </span>
           )}
         </div>

@@ -3,6 +3,7 @@ import type { Server as HTTPServer } from 'http'
 import { prisma } from './db'
 import { socketCorsOrigins } from './socket-cors'
 import { websiteHasFeature } from './addon-features'
+import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
 
 let io: SocketIOServer
 
@@ -27,6 +28,84 @@ interface VisitorSessionInfo {
 }
 
 const agentOnline = new Map<string, Set<string>>() // websiteId -> Set of userIds
+
+async function buildVisitorOnlinePayload(
+  visitorId: string,
+  websiteId: string,
+  sessionId: string,
+  sessionInfo: VisitorSessionInfo
+) {
+  const payload = {
+    visitorId,
+    websiteId,
+    name: 'Anonim' as string | null,
+    email: null as string | null,
+    country: null as string | null,
+    city: null as string | null,
+    region: null as string | null,
+    browser: null as string | null,
+    os: null as string | null,
+    device: null as string | null,
+    websiteName: null as string | null,
+    currentPage: sessionInfo.currentPage || '',
+    currentTitle: sessionInfo.currentTitle || '',
+    connectedAt: sessionInfo.connectedAt.toISOString(),
+  }
+
+  if (!visitorId) return payload
+
+  try {
+    const [visitor, session, website] = await Promise.all([
+      prisma.visitor.findUnique({
+        where: { id: visitorId },
+        select: {
+          name: true,
+          email: true,
+          browser: true,
+          os: true,
+          device: true,
+          country: true,
+          city: true,
+        },
+      }),
+      sessionId
+        ? prisma.visitorSession.findUnique({
+            where: { sessionId },
+            select: {
+              country: true,
+              city: true,
+              region: true,
+              browser: true,
+              os: true,
+              device: true,
+              currentPage: true,
+              currentTitle: true,
+            },
+          })
+        : null,
+      prisma.website.findUnique({
+        where: { websiteId },
+        select: { name: true },
+      }),
+    ])
+
+    payload.name = visitor?.name?.trim() || visitor?.email?.split('@')[0] || 'Anonim'
+    payload.email = visitor?.email || null
+    payload.country = session?.country || visitor?.country || null
+    payload.city = session?.city || visitor?.city || null
+    payload.region = session?.region || null
+    payload.browser = session?.browser || visitor?.browser || null
+    payload.os = session?.os || visitor?.os || null
+    payload.device = session?.device || visitor?.device || null
+    payload.websiteName = website?.name || null
+    payload.currentPage = sessionInfo.currentPage || session?.currentPage || payload.currentPage
+    payload.currentTitle = sessionInfo.currentTitle || session?.currentTitle || payload.currentTitle
+  } catch {
+    // DB lookup optional — basic payload still works
+  }
+
+  return payload
+}
 const visitorSessions = new Map<string, VisitorSessionInfo>() // socketId -> session info
 
 function isAgentAuthed(socket: { userId?: string; websiteIds?: string[] }, websiteId?: string): boolean {
@@ -290,14 +369,10 @@ export function initSocketServer(httpServer: HTTPServer) {
       const onlineCount = agentOnline.get(websiteId)?.size || 0
       socket.emit('visitor:online', { agentsOnline: onlineCount })
 
-      // Notify agents about new visitor
-      io.to(`website:${websiteId}`).emit('agent:visitor:online', {
-        visitorId,
-        websiteId,
-        currentPage: '',
-        currentTitle: '',
-        connectedAt: sessionInfo.connectedAt.toISOString(),
-      })
+      void (async () => {
+        const payload = await buildVisitorOnlinePayload(visitorId, websiteId, sessionId, sessionInfo)
+        io.to(`website:${websiteId}`).emit('agent:visitor:online', payload)
+      })()
 
       console.log(`[Socket] Visitor ${visitorId.substring(0, 8)}... connected to website ${websiteId} (room: website:${websiteId})`)
       socket.emit('visitor:auth:ok', { visitorId, websiteId })
@@ -431,39 +506,47 @@ export function initSocketServer(httpServer: HTTPServer) {
 
     // ─── Visitor Page Views ─────────────────────────────────────
     socket.on('visitor:pageview', async (data: { visitorId: string; websiteId: string; url: string; title: string; referrer?: string }) => {
-      // Update in-memory session
-      const session = visitorSessions.get(socket.id)
-      if (session) {
-        session.currentPage = data.url
-        session.currentTitle = data.title || ''
-        session.lastActiveAt = new Date()
+      if (!isValidCustomerEmbedUrl(data.url)) return
+
+      const embedUrl = normalizeExternalUrl(data.url)!
+      const live = visitorSessions.get(socket.id)
+
+      if (live) {
+        live.currentPage = embedUrl
+        live.currentTitle = data.title || ''
+        live.lastActiveAt = new Date()
       }
 
-      // Persist to database
-      if (session?.sessionId) {
+      if (live?.sessionId) {
         try {
+          const dbSession = await prisma.visitorSession.findUnique({
+            where: { sessionId: live.sessionId },
+            select: { id: true, landingPage: true },
+          })
+          if (!dbSession) return
+
+          const landingWasWrong =
+            !dbSession.landingPage ||
+            isWidgetPlatformUrl(dbSession.landingPage) ||
+            !isValidCustomerEmbedUrl(dbSession.landingPage)
+
           await prisma.visitorSession.update({
-            where: { sessionId: session.sessionId },
+            where: { sessionId: live.sessionId },
             data: {
-              currentPage: data.url,
+              currentPage: embedUrl,
               currentTitle: data.title || null,
               lastActiveAt: new Date(),
+              ...(landingWasWrong ? { landingPage: embedUrl } : {}),
             },
           })
-          const dbSession = await prisma.visitorSession.findUnique({
-            where: { sessionId: session.sessionId },
-            select: { id: true },
+
+          await prisma.pageView.create({
+            data: {
+              sessionId: dbSession.id,
+              url: embedUrl,
+              title: data.title || null,
+            },
           })
-          if (dbSession) {
-            await prisma.pageView.create({
-              data: {
-                sessionId: dbSession.id,
-                url: data.url,
-                title: data.title || null,
-                viewedAt: new Date(),
-              },
-            })
-          }
         } catch {
           // Session may not exist in DB if visitor connected before init completed
         }
@@ -474,7 +557,7 @@ export function initSocketServer(httpServer: HTTPServer) {
         visitorId: data.visitorId,
         websiteId: data.websiteId,
         eventType: 'pageview',
-        url: data.url,
+        url: embedUrl,
         title: data.title,
         referrer: data.referrer,
         timestamp: new Date().toISOString(),

@@ -145,8 +145,8 @@ export default function AdminPlatformPage() {
               <Activity className="w-4 h-4 text-emerald-400" />
               En aktif siteler (Gu Live Chat kullananlar)
             </h2>
-            <Link href="/admin/websites" className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1">
-              Tüm siteler <ArrowRight className="w-3 h-3" />
+            <Link href="/admin/customer-sites" className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1">
+              Kullanıcı & site detayı <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="overflow-x-auto">

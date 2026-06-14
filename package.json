@@ -21,6 +21,7 @@
     "db:push": "npx prisma db push",
     "prisma:generate": "npx prisma generate",
     "db:seed-admin": "npx tsx prisma/seed-admin.ts",
+    "myqr:ensure": "npx tsx scripts/ensure-myqr-site.ts",
     "ai:push-env": "node scripts/push-ai-env.mjs",
     "ai:bootstrap-keys": "node scripts/bootstrap-ai-keys.mjs"
   },

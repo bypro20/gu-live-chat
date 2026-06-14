@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { connectSocket, getSocket, retainSocket, releaseSocket, isSocketEnabled } from '@/lib/socket-client'
 import {
   adjustColor,
@@ -25,6 +25,12 @@ import {
 import type { Socket } from 'socket.io-client'
 import { useWidgetTranslations } from '@/lib/hooks/use-widget-translations'
 import { readAutoTranslatePref, writeAutoTranslatePref } from '@/lib/widget-translate-cache'
+import {
+  validateVisitorIdentityInput,
+  widgetIdentityRequired,
+} from '@/lib/widget-identity'
+import { recordWidgetPageview, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
+import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 
 interface WidgetConfig {
   primaryColor: string
@@ -39,9 +45,8 @@ interface WidgetConfig {
   requireEmail?: boolean
 }
 
-function shouldShowPreChatForm(config: WidgetConfig | null | undefined): boolean {
-  if (!config?.showPreChatForm) return false
-  return config.requireName === true || config.requireEmail === true
+function needsIdentityGate(config: WidgetConfig | null | undefined): boolean {
+  return widgetIdentityRequired(config)
 }
 
 interface Attachment {
@@ -126,8 +131,9 @@ const WIDGET_STRINGS = {
     quickChat: '💬 Sohbet başlat',
     quickPricing: '💰 Fiyatlandırma',
     quickSupport: '🛠️ Destek talebi',
-    preChatHi: 'Merhaba! 👋',
-    preChatSub: 'İsterseniz bilgilerinizi paylaşın (isteğe bağlı)',
+    preChatHi: 'Sohbete başlamadan önce',
+    preChatSub: 'Size daha iyi yardımcı olabilmemiz için adınızı ve e-posta adresinizi girin.',
+    preChatRequired: 'İsim ve e-posta zorunludur — anonim sohbet kabul edilmez.',
     skipPreChat: 'Atla, doğrudan yaz',
     namePlaceholder: 'Adınız',
     emailPlaceholder: 'E-posta adresiniz',
@@ -171,8 +177,9 @@ const WIDGET_STRINGS = {
     quickChat: '💬 Start chat',
     quickPricing: '💰 Pricing',
     quickSupport: '🛠️ Support request',
-    preChatHi: 'Hello! 👋',
-    preChatSub: 'Share your details if you like (optional)',
+    preChatHi: 'Before we chat',
+    preChatSub: 'Please enter your name and email so we can assist you properly.',
+    preChatRequired: 'Name and email are required — anonymous chat is not available.',
     skipPreChat: 'Skip, start typing',
     namePlaceholder: 'Your name',
     emailPlaceholder: 'Your email address',
@@ -278,6 +285,7 @@ function getInitials(name: string): string {
 
 export default function WidgetPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const websiteId = params.websiteId as string
 
   const [isOpen, setIsOpen] = useState(false)
@@ -286,7 +294,9 @@ export default function WidgetPage() {
   const [config, setConfig] = useState<WidgetConfig | null>(null)
   const [socketConnected, setSocketConnected] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [isEmbedded, setIsEmbedded] = useState(false)
+  const [isEmbedded, setIsEmbedded] = useState(
+    () => typeof window !== 'undefined' && window.parent !== window,
+  )
   const visitorTokenRef = useRef<string | null>(null)
   const sessionIdRef = useRef<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -295,7 +305,9 @@ export default function WidgetPage() {
   const [queuePosition, setQueuePosition] = useState(0)
   const [estimatedWait, setEstimatedWait] = useState('')
   const [visitorInfo, setVisitorInfo] = useState({ name: '', email: '' })
-  const [showPreChat, setShowPreChat] = useState(false)
+  const [identityComplete, setIdentityComplete] = useState(false)
+  const [identitySubmitting, setIdentitySubmitting] = useState(false)
+  const [identityError, setIdentityError] = useState<string | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [conversationStatus, setConversationStatus] = useState<string | null>(null)
   const [avatarLoaded, setAvatarLoaded] = useState(false)
@@ -335,7 +347,7 @@ export default function WidgetPage() {
   // English for interface labels while message translation still targets it.
   const t: WidgetStrings = WIDGET_STRINGS[lang as keyof typeof WIDGET_STRINGS] || WIDGET_STRINGS.en
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const seenAgentCountRef = useRef(0)
@@ -363,6 +375,7 @@ export default function WidgetPage() {
   useEffect(() => {
     const initWidget = async () => {
       const fingerprint = getFingerprint()
+      const embedContext = await resolveWidgetEmbedContext(searchParams)
 
       try {
         const res = await fetch('/api/widget/init', {
@@ -371,8 +384,8 @@ export default function WidgetPage() {
           body: JSON.stringify({
             websiteId,
             fingerprint,
-            currentPage: window.location.href,
-            referrer: document.referrer,
+            currentPage: embedContext.embedUrl || undefined,
+            referrer: embedContext.embedReferrer || undefined,
             userAgent: navigator.userAgent,
           }),
         })
@@ -397,15 +410,33 @@ export default function WidgetPage() {
         setConfig(data.websiteConfig)
         setConversationId(data.conversationId)
         setAiTranslateAvailable(!!data.features?.aiTranslate)
-        if (data.conversationId) {
-          setShowPreChat(false)
-        } else if (shouldShowPreChatForm(data.websiteConfig)) {
-          setShowPreChat(true)
+
+        const profile = data.visitorProfile as { name?: string | null; email?: string | null } | undefined
+        if (profile?.name || profile?.email) {
+          setVisitorInfo({
+            name: profile.name?.trim() ?? '',
+            email: profile.email?.trim() ?? '',
+          })
         }
+
+        const gateRequired = needsIdentityGate(data.websiteConfig)
+        const complete = gateRequired
+          ? !!data.identityComplete
+          : true
+        setIdentityComplete(complete)
         setIsInitialized(true)
 
         visitorTokenRef.current = data.visitorToken
         sessionIdRef.current = data.sessionId
+
+        if (embedContext.embedUrl && data.sessionId) {
+          void recordWidgetPageview({
+            sessionId: data.sessionId,
+            url: embedContext.embedUrl,
+            title: embedContext.embedTitle,
+            referrer: embedContext.embedReferrer,
+          })
+        }
       } catch (error) {
         console.error('[Gu Widget] Init failed:', error)
         setInitError('Bağlantı hatası')
@@ -423,7 +454,7 @@ export default function WidgetPage() {
     }
 
     initWidget()
-  }, [websiteId])
+  }, [websiteId, searchParams.toString()])
 
   useEffect(() => {
     if (!isInitialized) return
@@ -439,11 +470,23 @@ export default function WidgetPage() {
 
   useEffect(() => {
     setMounted(true)
-    setIsEmbedded(window.parent !== window)
+    const embedded = window.parent !== window
+    setIsEmbedded(embedded)
+    if (embedded) {
+      document.documentElement.setAttribute('data-widget-embed', '1')
+      // Embed iframe: panel her zaman hazır olsun (gu:open kaçırılsa bile boş kutu kalmasın)
+      setIsOpen(true)
+      window.parent?.postMessage({ type: 'gu:resize', open: true }, '*')
+    }
+    return () => document.documentElement.removeAttribute('data-widget-embed')
   }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesScrollRef.current
+    if (!el) return
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight
+    })
   }, [messages, isTyping])
 
   // Report unread agent/bot messages to the parent launcher (badge) while the
@@ -468,8 +511,10 @@ export default function WidgetPage() {
 
       if (event.data.type === 'gu:open') {
         setIsOpen(true)
+        window.parent?.postMessage({ type: 'gu:resize', open: true }, '*')
       } else if (event.data.type === 'gu:close') {
         setIsOpen(false)
+        window.parent?.postMessage({ type: 'gu:resize', open: false }, '*')
       } else if (event.data.type === 'gu:visitor:activity') {
         const socket = getSocket()
         const payload: Record<string, any> = {
@@ -773,27 +818,29 @@ export default function WidgetPage() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'gu:pageview') {
-        const { url, title, referrer } = event.data
-        const socket = getSocket()
+      const type = event.data?.type
+      if (type !== 'gu:pageview' && type !== 'gu:embed-context') return
 
-        if (socket) {
-          socket.emit('visitor:pageview', {
-            visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
-            websiteId,
-            url,
-            title: title || '',
-            referrer: referrer || '',
-          })
-        } else {
-          if (sessionIdRef.current) {
-            fetch('/api/widget/session/pageview', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId: sessionIdRef.current, url, title, referrer }),
-            }).catch(() => { })
-          }
-        }
+      const { url, title, referrer } = event.data
+      if (!isValidCustomerEmbedUrl(url)) return
+
+      const socket = getSocket()
+
+      if (socket) {
+        socket.emit('visitor:pageview', {
+          visitorId: visitorTokenRef.current ? JSON.parse(atob(visitorTokenRef.current)).visitorId : '',
+          websiteId,
+          url,
+          title: title || '',
+          referrer: referrer || '',
+        })
+      } else if (sessionIdRef.current) {
+        void recordWidgetPageview({
+          sessionId: sessionIdRef.current,
+          url,
+          title,
+          referrer,
+        })
       }
     }
 
@@ -809,7 +856,7 @@ export default function WidgetPage() {
   }, [inputMessage])
 
   useEffect(() => {
-    if (!conversationId || showPreChat) return
+    if (!conversationId || !identityComplete) return
     const socket = getSocket()
     if (!socket?.connected) return
 
@@ -845,7 +892,7 @@ export default function WidgetPage() {
         clearTimeout(typingTimerRef.current)
       }
     }
-  }, [inputMessage, conversationId, showPreChat])
+  }, [inputMessage, conversationId, identityComplete])
 
   const sendResizeToParent = (open: boolean) => {
     window.parent.postMessage({ type: 'gu:resize', open }, '*')
@@ -910,6 +957,10 @@ export default function WidgetPage() {
   }
 
   const handleOpenKB = async () => {
+    if (!identityComplete && needsIdentityGate(config)) {
+      setIdentityError(t.preChatRequired)
+      return
+    }
     setShowKnowledgeBase(true)
     if (kbArticles.length > 0) return
     setKbLoading(true)
@@ -924,7 +975,44 @@ export default function WidgetPage() {
     }
   }
 
+  const handleSubmitIdentity = useCallback(async () => {
+    const err = validateVisitorIdentityInput(config, visitorInfo.name, visitorInfo.email)
+    if (err) {
+      setIdentityError(err)
+      return
+    }
+    setIdentitySubmitting(true)
+    setIdentityError(null)
+    try {
+      const res = await fetch('/api/widget/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId,
+          fingerprint: getFingerprint(),
+          name: visitorInfo.name.trim(),
+          email: visitorInfo.email.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setIdentityError(data.error || 'Bilgiler kaydedilemedi')
+        return
+      }
+      setIdentityComplete(true)
+      setTimeout(() => inputRef.current?.focus(), 80)
+    } catch {
+      setIdentityError('Bağlantı hatası — lütfen tekrar deneyin')
+    } finally {
+      setIdentitySubmitting(false)
+    }
+  }, [config, visitorInfo, websiteId])
+
   const handleStartChat = useCallback(async () => {
+    if (!identityComplete) {
+      setIdentityError(t.preChatRequired)
+      return
+    }
     const content = inputMessage.trim()
     if (!content) return
 
@@ -939,7 +1027,6 @@ export default function WidgetPage() {
 
     setMessages((prev) => [...prev, newMessage])
     setInputMessage('')
-    setShowPreChat(false)
 
     const socket = getSocket()
     if (socket?.connected && conversationId) {
@@ -983,7 +1070,7 @@ export default function WidgetPage() {
       setSendError('Bağlantı hatası — mesaj gönderilemedi')
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [inputMessage, websiteId, conversationId, visitorInfo, lang])
+  }, [inputMessage, websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired])
 
   const handlePickFile = () => {
     setUploadError(null)
@@ -995,6 +1082,11 @@ export default function WidgetPage() {
     // Reset the input so the same file can be re-selected later.
     if (e.target) e.target.value = ''
     if (!file) return
+
+    if (!identityComplete && needsIdentityGate(config)) {
+      setUploadError(t.preChatRequired)
+      return
+    }
 
     setUploadError(null)
 
@@ -1162,12 +1254,13 @@ export default function WidgetPage() {
 
   if (!isInitialized || !config) {
     const loadingWidget = (
-      <div style={{ width: '100vw', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
+      <div style={{ width: '100%', height: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#ffffff', gap: '12px' }}>
         <div style={{ width: '36px', height: '36px', border: '3px solid rgba(25,114,245,0.15)', borderTopColor: '#1972F5', borderRadius: '50%', animation: 'gwSpin 0.8s linear infinite' }} />
+        <p style={{ margin: 0, fontSize: '13px', color: '#64748B', fontWeight: 600 }}>{t.loading}</p>
         <style>{`@keyframes gwSpin { to { transform: rotate(360deg) } }`}</style>
       </div>
     )
-    if (typeof window !== 'undefined' && mounted) {
+    if (typeof window !== 'undefined' && mounted && !isEmbedded) {
       return createPortal(loadingWidget, document.body)
     }
     return loadingWidget
@@ -1179,17 +1272,20 @@ export default function WidgetPage() {
       : <span style={{ fontSize: size * 0.38, fontWeight: 700, color: 'white', letterSpacing: '-0.5px', userSelect: 'none' }}>{agentInitials || '?'}</span>
   )
 
+  const identityGate = !!config && needsIdentityGate(config) && !identityComplete
+
   const mainWidget = (
     <div style={{
       fontFamily: WIDGET_FONT,
       color: '#0F172A',
       colorScheme: 'light',
-      position: isEmbedded ? 'relative' : 'fixed',
+      position: isEmbedded ? 'absolute' : 'fixed',
+      inset: isEmbedded ? 0 : undefined,
       bottom: isEmbedded ? undefined : '24px',
       right: isEmbedded ? undefined : '24px',
       width: isEmbedded ? '100%' : undefined,
       height: isEmbedded ? '100%' : undefined,
-      zIndex: 2147483645,
+      zIndex: isEmbedded ? 1 : 2147483645,
       display: 'flex',
       flexDirection: 'column',
       alignItems: isEmbedded ? 'stretch' : 'flex-end',
@@ -1197,7 +1293,7 @@ export default function WidgetPage() {
       <style>{getWidgetGlobalCss()}</style>
 
       {isOpen ? (
-        <div className="gw-panel" style={getPanelShellStyle(primaryColor, isEmbedded)}>
+        <div className={`gw-panel${isEmbedded ? ' gw-embedded' : ''}`} style={{ ...getPanelShellStyle(primaryColor, isEmbedded), flex: isEmbedded ? 1 : undefined, minHeight: isEmbedded ? 0 : undefined }}>
 
           {/* ─── HERO HEADER ─────────────────────────────────────────────────── */}
           <div style={getHeroHeaderStyle(primaryColor)}>
@@ -1286,7 +1382,7 @@ export default function WidgetPage() {
               </div>
             </div>
 
-            {!showKnowledgeBase && !showPreChat && messages.length === 0 && (
+            {!showKnowledgeBase && identityComplete && messages.length === 0 && (
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
                 {[t.quickChat, t.quickPricing, t.quickSupport].map((label) => (
                   <button
@@ -1374,6 +1470,86 @@ export default function WidgetPage() {
               )}
             </div>
 
+          ) : identityGate ? (
+            <div className="gw-scroll gw-dot-bg" style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              padding: '24px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: '12px',
+            }}>
+              <p style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>{t.preChatHi}</p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748B', lineHeight: 1.55 }}>{t.preChatSub}</p>
+              <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#94A3B8', fontWeight: 600 }}>{t.preChatRequired}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+                {config?.requireName === true && (
+                <div style={{ position: 'relative' }}>
+                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input type="text" placeholder={t.namePlaceholder} value={visitorInfo.name} autoComplete="name"
+                    onChange={(e) => { setVisitorInfo(prev => ({ ...prev, name: e.target.value })); setIdentityError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
+                    style={{
+                      width: '100%', padding: '12px 14px 12px 38px',
+                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
+                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
+                  />
+                </div>
+                )}
+                {config?.requireEmail === true && (
+                <div style={{ position: 'relative' }}>
+                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input type="email" placeholder={t.emailPlaceholder} value={visitorInfo.email} autoComplete="email"
+                    onChange={(e) => { setVisitorInfo(prev => ({ ...prev, email: e.target.value })); setIdentityError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
+                    style={{
+                      width: '100%', padding: '12px 14px 12px 38px',
+                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
+                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
+                  />
+                </div>
+                )}
+                {identityError && (
+                  <p style={{ margin: 0, fontSize: '12px', color: '#EF4444', fontWeight: 600 }}>{identityError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void handleSubmitIdentity()}
+                  disabled={identitySubmitting}
+                  style={{
+                    width: '100%', padding: '13px',
+                    background: identitySubmitting ? '#94A3B8' : primaryColor,
+                    color: '#fff',
+                    border: 'none', borderRadius: '12px',
+                    fontSize: '14px', fontWeight: 700, cursor: identitySubmitting ? 'wait' : 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: identitySubmitting ? 'none' : `0 4px 14px ${primaryColor}35`,
+                  }}
+                >
+                  {identitySubmitting ? t.sending : t.startChat}
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '4px' }}>
+                  <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#CBD5E1', fontWeight: 500 }}>{t.sslNote}</p>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               {/* ─── PROACTIVE BANNER ───────────────────────────────────────── */}
@@ -1401,7 +1577,7 @@ export default function WidgetPage() {
               )}
 
               {/* ─── MESSAGES AREA ──────────────────────────────────────────── */}
-              <div className="gw-scroll gw-dot-bg" style={getMessagesAreaStyle()}>
+              <div ref={messagesScrollRef} className="gw-scroll gw-dot-bg" style={getMessagesAreaStyle()}>
                 {/* Date pill */}
                 <div style={{ textAlign: 'center', marginBottom: '12px' }}>
                   <span style={{
@@ -1448,7 +1624,6 @@ export default function WidgetPage() {
                         key={key}
                         onClick={() => {
                           if (key === 'chat') {
-                            setShowPreChat(false)
                             setTimeout(() => inputRef.current?.focus(), 80)
                           }
                           setInputMessage(label.replace(/^[\S]+\s/, ''))
@@ -1685,103 +1860,12 @@ export default function WidgetPage() {
                   </div>
                 )}
 
-                <div ref={messagesEndRef} />
               </div>
             </>
           )}
 
-          {/* ─── PRE-CHAT FORM ───────────────────────────────────────────────── */}
-          {!showKnowledgeBase && showPreChat && (
-            <div style={{
-              padding: '20px 20px 16px',
-              borderTop: '1px solid #F1F5F9',
-              background: '#ffffff', flexShrink: 0,
-            }}>
-              <p style={{ margin: '0 0 14px', fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>{t.preChatHi}</p>
-              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748B', lineHeight: 1.5 }}>{t.preChatSub}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {config?.requireName === true && (
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <input type="text" placeholder={t.namePlaceholder} value={visitorInfo.name}
-                    onChange={(e) => setVisitorInfo(prev => ({ ...prev, name: e.target.value }))}
-                    style={{
-                      width: '100%', padding: '11px 14px 11px 38px',
-                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
-                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A', transition: 'all 0.15s',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
-                  />
-                </div>
-                )}
-                {config?.requireEmail === true && (
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <input type="email" placeholder={t.emailPlaceholder} value={visitorInfo.email}
-                    onChange={(e) => setVisitorInfo(prev => ({ ...prev, email: e.target.value }))}
-                    style={{
-                      width: '100%', padding: '11px 14px 11px 38px',
-                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
-                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A', transition: 'all 0.15s',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
-                  />
-                </div>
-                )}
-                <button
-                  onClick={() => {
-                    setShowPreChat(false)
-                    setTimeout(() => inputRef.current?.focus(), 80)
-                  }}
-                  style={{
-                    width: '100%', padding: '12px',
-                    background: primaryColor,
-                    color: '#fff',
-                    border: 'none', borderRadius: '12px',
-                    fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.15s',
-                    boxShadow: `0 4px 14px ${primaryColor}35`,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 18px ${primaryColor}45` }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 14px ${primaryColor}35` }}
-                >
-                  {t.startChat}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPreChat(false)
-                    setTimeout(() => inputRef.current?.focus(), 80)
-                  }}
-                  style={{
-                    width: '100%', padding: '8px',
-                    background: 'transparent', color: '#64748B',
-                    border: 'none', fontSize: '13px', fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  {t.skipPreChat}
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
-                  <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#CBD5E1', fontWeight: 500 }}>{t.sslNote}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ─── MESSAGE INPUT ───────────────────────────────────────────────── */}
-          {!showKnowledgeBase && !showPreChat && (
+          {!showKnowledgeBase && !identityGate && (
             <div style={getComposerShellStyle()}>
               <div style={getComposerRowStyle(primaryColor)}>
                 {showEmojiPicker && (
@@ -1959,7 +2043,7 @@ export default function WidgetPage() {
     </div>
   )
 
-  if (typeof window !== 'undefined' && mounted) {
+  if (typeof window !== 'undefined' && mounted && !isEmbedded) {
     return createPortal(mainWidget, document.body)
   }
   return mainWidget

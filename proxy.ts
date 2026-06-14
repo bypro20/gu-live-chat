@@ -3,8 +3,25 @@ import type { NextRequest } from 'next/server'
 import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
 import { isNativeCustomerUserAgent } from '@/lib/native-app'
 import { applySecurityHeaders } from '@/lib/security-headers'
+import { widgetApiCorsHeaders } from '@/lib/widget-api-cors'
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
+function isWidgetPublicApi(pathname: string) {
+  return pathname.startsWith('/api/widget') || pathname.startsWith('/api/privacy')
+}
+
+function withWidgetPublicApiHeaders(req: NextRequest, res: NextResponse) {
+  const origin = req.headers.get('origin')
+  for (const [key, value] of Object.entries(widgetApiCorsHeaders(req))) {
+    res.headers.set(key, value)
+  }
+  res.headers.set('X-Content-Type-Options', 'nosniff')
+  if (IS_PRODUCTION) {
+    res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  }
+  return res
+}
 
 function withSecurityHeaders(res: NextResponse) {
   applySecurityHeaders(res, IS_PRODUCTION)
@@ -77,9 +94,18 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // Allow widget routes (public chat widget)
-  if (pathname.startsWith('/widget') || pathname.startsWith('/api/widget')) {
-    return withSecurityHeaders(NextResponse.next())
+  // Embed widget + public API — müşteri sitelerinden cross-origin erişim
+  if (pathname.startsWith('/widget') || isWidgetPublicApi(pathname)) {
+    if (req.method === 'OPTIONS' && isWidgetPublicApi(pathname)) {
+      return withWidgetPublicApiHeaders(req, new NextResponse(null, { status: 204 }))
+    }
+    const res = NextResponse.next()
+    if (isWidgetPublicApi(pathname)) {
+      return withWidgetPublicApiHeaders(req, res)
+    }
+    res.headers.set('Cross-Origin-Resource-Policy', 'cross-origin')
+    res.headers.set('Content-Security-Policy', 'frame-ancestors *')
+    return res
   }
 
   // Allow NextAuth routes — auth handles its own security

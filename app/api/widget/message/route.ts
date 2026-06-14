@@ -15,6 +15,7 @@ import { canCreateConversation } from '@/lib/plan-limits'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { extendTrialForActivation } from '@/lib/trial'
+import { resolveVisitorIdentity } from '@/lib/widget-identity'
 import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
@@ -88,6 +89,28 @@ export async function POST(req: Request) {
         data: {
           ...(validated.visitorName ? { name: validated.visitorName } : {}),
           ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
+        },
+      })
+    }
+
+    const identity = resolveVisitorIdentity(
+      website,
+      validated.visitorName,
+      validated.visitorEmail,
+      visitor,
+    )
+    if (identity.error) {
+      return NextResponse.json({ error: identity.error, code: 'IDENTITY_REQUIRED' }, { status: 400 })
+    }
+    if (
+      (validated.visitorName || validated.visitorEmail) &&
+      (identity.name !== visitor.name || identity.email !== visitor.email)
+    ) {
+      visitor = await prisma.visitor.update({
+        where: { id: visitor.id },
+        data: {
+          ...(identity.name ? { name: identity.name } : {}),
+          ...(identity.email ? { email: identity.email } : {}),
         },
       })
     }

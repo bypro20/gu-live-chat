@@ -74,6 +74,9 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
       data: {
         name: MARKETING_NAME,
         domain: MARKETING_DOMAIN,
+        showPreChatForm: true,
+        requireName: true,
+        requireEmail: true,
       },
     })
   } catch (e) {
@@ -129,6 +132,9 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
         ownerId: ownerUserId,
         welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
         offlineMessage: 'Şu an çevrimdışıyız. Mesaj bırakın, size dönelim.',
+        showPreChatForm: true,
+        requireName: true,
+        requireEmail: true,
         plan: 'PRO',
         subscriptionStatus: 'ACTIVE',
         members: {

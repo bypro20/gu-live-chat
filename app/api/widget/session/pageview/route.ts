@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
 
 const pageviewSchema = z.object({
   sessionId: z.string(),
@@ -26,13 +27,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Oturum bulunamadı' }, { status: 404 })
     }
 
+    if (!isValidCustomerEmbedUrl(validated.url)) {
+      return NextResponse.json({ error: 'Geçersiz embed sayfası' }, { status: 400 })
+    }
+
+    const embedUrl = normalizeExternalUrl(validated.url)!
+    const landingWasWrong =
+      !session.landingPage ||
+      isWidgetPlatformUrl(session.landingPage) ||
+      !isValidCustomerEmbedUrl(session.landingPage)
+
     // Update session's current page and last active time
     await prisma.visitorSession.update({
       where: { id: session.id },
       data: {
-        currentPage: validated.url,
+        currentPage: embedUrl,
         currentTitle: validated.title || null,
         lastActiveAt: new Date(),
+        ...(landingWasWrong ? { landingPage: embedUrl } : {}),
       },
     })
 
@@ -40,9 +52,8 @@ export async function POST(req: Request) {
     await prisma.pageView.create({
       data: {
         sessionId: session.id,
-        url: validated.url,
+        url: embedUrl,
         title: validated.title || null,
-        viewedAt: new Date(),
       },
     })
 
@@ -51,7 +62,7 @@ export async function POST(req: Request) {
       websiteDbId: session.website.id,
       websitePublicId: session.website.websiteId,
       visitorId: session.visitor.id,
-      pageUrl: validated.url,
+      pageUrl: embedUrl,
       pageTitle: validated.title,
     })
 

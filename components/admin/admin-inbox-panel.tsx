@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Volume2, VolumeX, MessageSquare, Search } from 'lucide-react'
+import { useInboxMessageScroll } from '@/lib/hooks/use-inbox-message-scroll'
+import { useInboxMobileChat, INBOX_CHAT_PANEL_MOBILE } from '@/lib/hooks/use-inbox-mobile-chat'
 import {
   useAdminInboxConversations,
   useAdminInboxMessages,
@@ -23,7 +25,6 @@ import { ConversationListItem } from '@/components/inbox/conversation-list-item'
 import { MessageThread } from '@/components/inbox/message-thread'
 import { MessageComposer, type PendingUpload } from '@/components/inbox/message-composer'
 import { ChatHeader } from '@/components/inbox/chat-header'
-import { VisitorContactEditor } from '@/components/inbox/visitor-contact-editor'
 import { ConnectionBadge } from '@/components/inbox/connection-badge'
 import { InboxMessageArea } from '@/components/inbox/inbox-message-area'
 import { VisitorContextPanel } from '@/components/inbox/visitor-context-panel'
@@ -64,7 +65,6 @@ export function AdminInboxPanel() {
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
   const [uploading, setUploading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
@@ -119,6 +119,13 @@ export function AdminInboxPanel() {
   const { messages, sendMessage, sending, isLoading: messagesLoading, mutate: mutateMessages } =
     useAdminInboxMessages(selectedId)
 
+  const { containerRef: messageScrollRef, handleScroll: onMessageScroll } = useInboxMessageScroll(
+    messages.length,
+    selectedId,
+  )
+
+  useInboxMobileChat(!!selectedId)
+
   useInboxSoundAlert(conversations, soundOn, liveConnected)
 
   const filteredConversations = useMemo(() => {
@@ -153,10 +160,6 @@ export function AdminInboxPanel() {
     const firstUnread = filteredConversations.find((c) => c.unreadCount > 0)
     setSelectedId((firstUnread ?? filteredConversations[0]).id)
   }, [filteredConversations, selectedId, searchParams])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
 
   useEffect(() => {
     if (!isSocketEnabled()) {
@@ -450,8 +453,8 @@ export function AdminInboxPanel() {
     <div className="inbox-shell h-full min-h-0 w-full max-w-full flex overflow-hidden bg-slate-50">
       {/* Sidebar — müşteri paneli ile aynı */}
       <div
-        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex-col bg-white shrink-0 shadow-sm ${
-          selectedConversation ? 'hidden lg:flex' : 'flex'
+        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex flex-col min-h-0 bg-white shrink-0 shadow-sm ${
+          selectedConversation ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
         }`}
       >
         <div className="p-4 border-b border-border space-y-3">
@@ -586,8 +589,8 @@ export function AdminInboxPanel() {
 
       {/* Chat panel */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-slate-100/80 ${
-          selectedConversation ? 'flex' : 'hidden lg:flex'
+        className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-100/80 ${
+          selectedConversation ? `${INBOX_CHAT_PANEL_MOBILE}` : 'hidden lg:flex'
         }`}
       >
         {!selectedConversation ? (
@@ -630,22 +633,6 @@ export function AdminInboxPanel() {
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
 
-            {(() => {
-              const visitorId = selectedConversation.visitorId || selectedConversation.visitor?.id
-              if (!visitorId) return null
-              return (
-              <div className="xl:hidden shrink-0">
-                <VisitorContactEditor
-                  visitorId={visitorId}
-                  initialName={selectedConversation.visitor.name}
-                  initialEmail={selectedConversation.visitor.email}
-                  variant="compact"
-                  onSaved={() => void mutateConversations()}
-                />
-              </div>
-              )
-            })()}
-
             <LanguageBar
               agentLang={agentLang}
               onAgentLangChange={setAgentLang}
@@ -654,7 +641,7 @@ export function AdminInboxPanel() {
               canTranslate
             />
 
-            <InboxMessageArea>
+            <InboxMessageArea ref={messageScrollRef} onAreaScroll={onMessageScroll}>
               {messagesLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -673,7 +660,6 @@ export function AdminInboxPanel() {
                   primaryColor={inboxPrimary}
                 />
               )}
-              <div ref={messagesEndRef} />
             </InboxMessageArea>
 
             <MessageComposer

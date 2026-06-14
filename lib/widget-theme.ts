@@ -1,6 +1,6 @@
 /** Shared widget design — embed launcher, iframe panel, dashboard preview. */
 
-export const WIDGET_ASSET_VERSION = '2026.06.13b'
+export const WIDGET_ASSET_VERSION = '2026.06.15a'
 
 export function adjustColor(hex: string, amount: number): string {
   let h = hex.replace('#', '')
@@ -110,8 +110,14 @@ export function getWidgetGlobalCss(): string {
       opacity: 0.85;
     }
     @media (max-width: 480px) {
-      .gw-panel   { width: 100vw !important; max-height: 100dvh !important; height: 100dvh !important; border-radius: 0 !important; }
+      .gw-panel:not(.gw-embedded) { width: 100vw !important; max-height: 100dvh !important; height: 100dvh !important; border-radius: 0 !important; }
+      .gw-panel.gw-embedded { width: 100% !important; height: 100% !important; max-height: 100% !important; min-height: 0 !important; border-radius: 0 !important; }
       .gw-wrapper { bottom: 0 !important; right: 0 !important; width: 100% !important; height: 100% !important; }
+    }
+    html[data-widget-embed], html[data-widget-embed] body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
     }
   `
 }
@@ -180,8 +186,11 @@ export function getTrustBadgeStyle(): Record<string, string | number> {
 export function getMessagesAreaStyle(): Record<string, string | number> {
   return {
     flex: 1,
+    minHeight: 0,
     overflowY: 'auto',
     overflowX: 'hidden',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
     padding: '18px 18px 10px',
     display: 'flex',
     flexDirection: 'column',
@@ -191,7 +200,7 @@ export function getMessagesAreaStyle(): Record<string, string | number> {
 
 export function getComposerShellStyle(): Record<string, string | number> {
   return {
-    padding: '12px 16px 16px',
+    padding: '12px 16px max(16px, env(safe-area-inset-bottom, 16px))',
     borderTop: '1px solid rgba(99,102,241,0.1)',
     background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.95) 100%)',
     backdropFilter: 'blur(20px)',

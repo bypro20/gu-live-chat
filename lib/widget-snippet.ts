@@ -5,7 +5,7 @@ const APP_URL = getSiteUrl()
 
 export function buildWidgetInstallSnippet(websiteId: string) {
   const id = websiteId || 'WEBSITE_ID'
-  return `<!-- Gu Live Chat — bu WEBSITE_ID yalnızca sizin panelinize bağlıdır -->
+  return `<!-- Gu Live Chat — ziyaretçi adı ve e-posta zorunlu (platform standardı) -->
 <script>
   window.$gu = window.$gu || function() {
     (window.$gu.q = window.$gu.q || []).push(arguments);

@@ -1,7 +1,110 @@
 import { prisma } from '@/lib/db'
 import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
+import {
+  buildRegisteredSiteUrl,
+  extractUrlHost,
+  isValidCustomerEmbedUrl,
+  normalizeExternalUrl,
+} from '@/lib/widget-embed-url'
+
+export { buildRegisteredSiteUrl, normalizeExternalUrl }
 
 export type WidgetUsageStatus = 'ACTIVE' | 'INSTALLED' | 'INACTIVE' | 'NEVER'
+
+export type WebsiteEmbedIntel = {
+  firstPageUrl: string | null
+  lastPageUrl: string | null
+  embedHosts: string[]
+  embedPages: string[]
+}
+
+function aggregateVerifiedEmbedLocations(
+  rows: Array<{
+    websiteId: string
+    url: string
+    at: Date
+  }>,
+): Map<string, WebsiteEmbedIntel> {
+  const bySite = new Map<
+    string,
+    {
+      first: { url: string; at: number } | null
+      last: { url: string; at: number } | null
+      hosts: Set<string>
+      pages: Set<string>
+    }
+  >()
+
+  for (const row of rows) {
+    if (!isValidCustomerEmbedUrl(row.url)) continue
+    const url = normalizeExternalUrl(row.url)
+    if (!url) continue
+
+    let entry = bySite.get(row.websiteId)
+    if (!entry) {
+      entry = { first: null, last: null, hosts: new Set(), pages: new Set() }
+      bySite.set(row.websiteId, entry)
+    }
+
+    const host = extractUrlHost(url)
+    if (host) entry.hosts.add(host)
+    entry.pages.add(url)
+
+    const at = row.at.getTime()
+    if (!entry.first || at < entry.first.at) entry.first = { url, at }
+    if (!entry.last || at > entry.last.at) entry.last = { url, at }
+  }
+
+  const result = new Map<string, WebsiteEmbedIntel>()
+  for (const [websiteId, entry] of bySite) {
+    result.set(websiteId, {
+      firstPageUrl: entry.first?.url ?? null,
+      lastPageUrl: entry.last?.url ?? null,
+      embedHosts: [...entry.hosts].sort(),
+      embedPages: [...entry.pages].sort(),
+    })
+  }
+  return result
+}
+
+async function getWebsiteEmbedLocationMaps() {
+  const [pageViews, sessions] = await Promise.all([
+    prisma.pageView.findMany({
+      select: {
+        url: true,
+        viewedAt: true,
+        session: { select: { websiteId: true } },
+      },
+      orderBy: { viewedAt: 'asc' },
+    }),
+    prisma.visitorSession.findMany({
+      select: {
+        websiteId: true,
+        landingPage: true,
+        currentPage: true,
+        startedAt: true,
+        lastActiveAt: true,
+      },
+    }),
+  ])
+
+  const rows: Array<{ websiteId: string; url: string; at: Date }> = []
+
+  for (const pv of pageViews) {
+    rows.push({ websiteId: pv.session.websiteId, url: pv.url, at: pv.viewedAt })
+  }
+
+  for (const session of sessions) {
+    if (session.landingPage) {
+      rows.push({ websiteId: session.websiteId, url: session.landingPage, at: session.startedAt })
+    }
+    if (session.currentPage) {
+      rows.push({ websiteId: session.websiteId, url: session.currentPage, at: session.lastActiveAt })
+    }
+  }
+
+  return aggregateVerifiedEmbedLocations(rows)
+}
 
 export function computeWidgetUsageStatus(input: {
   lastActiveAt: Date | null
@@ -46,6 +149,7 @@ export async function getWebsiteIntelMaps() {
     prisma.visitorSession.groupBy({
       by: ['websiteId'],
       _max: { lastActiveAt: true },
+      _min: { startedAt: true },
       _count: { id: true },
     }),
     prisma.visitor.groupBy({
@@ -57,7 +161,11 @@ export async function getWebsiteIntelMaps() {
   const sessionBySite = new Map(
     sessionGroups.map((g) => [
       g.websiteId,
-      { lastActiveAt: g._max.lastActiveAt, sessionCount: g._count.id },
+      {
+        lastActiveAt: g._max.lastActiveAt,
+        firstSessionAt: g._min.startedAt,
+        sessionCount: g._count.id,
+      },
     ]),
   )
   const visitorsBySite = new Map(visitorGroups.map((g) => [g.websiteId, g._count.id]))
@@ -87,7 +195,16 @@ export async function fetchAdminWebsitesRich() {
       signupLandingPage: true,
       createdAt: true,
       updatedAt: true,
-      owner: { select: { id: true, email: true, name: true, lastSeenAt: true } },
+      owner: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          lastSeenAt: true,
+          createdAt: true,
+          role: true,
+        },
+      },
       members: {
         select: {
           role: true,
@@ -106,10 +223,13 @@ export async function fetchAdminWebsitesRich() {
   })
 
   const { sessionBySite } = await getWebsiteIntelMaps()
+  const embedBySite = await getWebsiteEmbedLocationMaps()
 
   return websites.map((w) => {
     const sess = sessionBySite.get(w.id)
+    const embed = embedBySite.get(w.id)
     const lastActiveAt = sess?.lastActiveAt ?? null
+    const widgetFirstSeenAt = sess?.firstSessionAt ?? null
     const widgetStatus = computeWidgetUsageStatus({
       lastActiveAt,
       conversationCount: w._count.conversations,
@@ -121,7 +241,13 @@ export async function fetchAdminWebsitesRich() {
     return {
       ...w,
       embedSnippet: buildWidgetInstallSnippet(w.websiteId),
+      registeredSiteUrl: buildRegisteredSiteUrl(w.domain),
+      widgetFirstPageUrl: embed?.firstPageUrl ?? null,
+      widgetLastPageUrl: embed?.lastPageUrl ?? null,
+      widgetEmbedHosts: embed?.embedHosts ?? [],
+      widgetEmbedPages: embed?.embedPages ?? [],
       lastActiveAt,
+      widgetFirstSeenAt,
       widgetStatus,
       widgetStatusLabel: widgetStatusLabel(widgetStatus),
       isTrialActive:

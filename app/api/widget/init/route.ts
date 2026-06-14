@@ -9,7 +9,11 @@ import { websiteHasAutoTranslate } from '@/lib/plan-features'
 import { resolveAgentsOnline } from '@/lib/agents-online'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { extendTrialForActivation } from '@/lib/trial'
+import { visitorHasRequiredIdentity, widgetIdentityRequired } from '@/lib/widget-identity'
+import { withWidgetIdentityDefaults } from '@/lib/widget-platform-defaults'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
+import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -20,36 +24,6 @@ const widgetInitSchema = z.object({
   referrer: z.string().optional(),
   userAgent: z.string().optional(),
 })
-
-// ─── User-Agent Parsing ─────────────────────────────────────────────
-function parseUserAgent(ua: string): { browser: string; os: string; device: string } {
-  let browser = 'Unknown'
-  let os = 'Unknown'
-  let device = 'Desktop'
-
-  if (!ua) return { browser, os, device }
-
-  // Device detection
-  if (/iPhone/i.test(ua)) { device = 'Mobile'; os = 'iOS' }
-  else if (/iPad/i.test(ua)) { device = 'Tablet'; os = 'iPadOS' }
-  else if (/Android/i.test(ua)) {
-    device = /Mobile/i.test(ua) ? 'Mobile' : 'Tablet'
-    os = 'Android'
-  }
-  else if (/Mac/i.test(ua)) os = 'macOS'
-  else if (/Windows/i.test(ua)) os = 'Windows'
-  else if (/Linux/i.test(ua)) os = 'Linux'
-  else if (/CrOS/i.test(ua)) os = 'Chrome OS'
-
-  // Browser detection (order matters — more specific first)
-  if (/Edg\//i.test(ua)) browser = 'Edge'
-  else if (/OPR|Opera/i.test(ua)) browser = 'Opera'
-  else if (/Firefox/i.test(ua)) browser = 'Firefox'
-  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari'
-  else if (/Chrome/i.test(ua)) browser = 'Chrome'
-
-  return { browser, os, device }
-}
 
 // ─── Extract page title from URL ─────────────────────────────────────
 function extractPageTitle(url: string | null): string | null {
@@ -87,12 +61,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
     }
 
-    // Parse user-agent
-    const ua = parseUserAgent(validated.userAgent || '')
+    const sessionMetadata = await buildVisitorSessionMetadata({
+      userAgent: validated.userAgent,
+      clientIp,
+    })
+    const visitorProfileUpdate = buildVisitorGeoUpdate(sessionMetadata)
 
     let isNewVisitor = false
 
-    let visitor: { id: string } | null = null
+    let visitor: { id: string; name: string | null; email: string | null } | null = null
     try {
       visitor = await prisma.visitor.findUnique({
         where: {
@@ -101,13 +78,13 @@ export async function POST(req: Request) {
             fingerprint: validated.fingerprint,
           },
         },
-        select: { id: true },
+        select: { id: true, name: true, email: true },
       })
     } catch (visitorLookupErr) {
       console.warn('[widget/init] visitor lookup failed:', visitorLookupErr)
       try {
-        const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
-          `SELECT id FROM visitors WHERE websiteId = ? AND fingerprint = ? LIMIT 1`,
+        const rows = await prisma.$queryRawUnsafe<Array<{ id: string; name: string | null; email: string | null }>>(
+          `SELECT id, name, email FROM visitors WHERE websiteId = ? AND fingerprint = ? LIMIT 1`,
           website.id,
           validated.fingerprint
         )
@@ -126,9 +103,7 @@ export async function POST(req: Request) {
             fingerprint: validated.fingerprint,
             name: validated.visitorName || null,
             email: validated.visitorEmail || null,
-            browser: ua.browser,
-            os: ua.os,
-            device: ua.device,
+            ...visitorProfileUpdate,
           },
         })
       } catch {
@@ -138,6 +113,9 @@ export async function POST(req: Request) {
             fingerprint: validated.fingerprint,
             name: validated.visitorName || null,
             email: validated.visitorEmail || null,
+            browser: sessionMetadata.browser,
+            os: sessionMetadata.os,
+            device: sessionMetadata.device,
           },
         })
       }
@@ -148,9 +126,7 @@ export async function POST(req: Request) {
           data: {
             ...(validated.visitorName ? { name: validated.visitorName } : {}),
             ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
-            browser: ua.browser,
-            os: ua.os,
-            device: ua.device,
+            ...visitorProfileUpdate,
           },
         })
       } catch {
@@ -159,10 +135,18 @@ export async function POST(req: Request) {
           data: {
             ...(validated.visitorName ? { name: validated.visitorName } : {}),
             ...(validated.visitorEmail ? { email: validated.visitorEmail } : {}),
+            browser: sessionMetadata.browser,
+            os: sessionMetadata.os,
+            device: sessionMetadata.device,
           },
         })
       }
     }
+
+    const embedPage =
+      validated.currentPage && isValidCustomerEmbedUrl(validated.currentPage)
+        ? normalizeExternalUrl(validated.currentPage)
+        : null
 
     let session: { sessionId: string }
     try {
@@ -171,11 +155,11 @@ export async function POST(req: Request) {
           visitorId: visitor.id,
           websiteId: website.id,
           sessionId: crypto.randomUUID(),
-          landingPage: validated.currentPage || null,
-          currentPage: validated.currentPage || null,
-          currentTitle: extractPageTitle(validated.currentPage ?? null) ?? null,
-          referrer: validated.referrer ?? null,
-          userAgent: validated.userAgent ?? null,
+          landingPage: embedPage,
+          currentPage: embedPage,
+          currentTitle: extractPageTitle(embedPage) ?? null,
+          referrer: validated.referrer?.trim() || null,
+          ...sessionMetadata,
         },
         select: { sessionId: true },
       })
@@ -224,6 +208,8 @@ export async function POST(req: Request) {
 
     const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
 
+    const identityPolicy = withWidgetIdentityDefaults(website)
+
     void extendTrialForActivation(website.websiteId, 'widget').catch((err) => {
       console.warn('[widget/init] trial widget bonus skipped:', err)
     })
@@ -246,6 +232,12 @@ export async function POST(req: Request) {
       visitorId: visitor.id,
       sessionId: session.sessionId,
       conversationId: existingConversation?.id || null,
+      visitorProfile: {
+        name: visitor.name,
+        email: visitor.email,
+      },
+      identityRequired: widgetIdentityRequired(identityPolicy),
+      identityComplete: visitorHasRequiredIdentity(identityPolicy, visitor),
       features: {
         fileUpload,
         aiTranslate,
@@ -258,9 +250,9 @@ export async function POST(req: Request) {
         avatarUrl: website.avatarUrl,
         websiteName: website.name,
         agentsOnline,
-        showPreChatForm: website.showPreChatForm,
-        requireName: website.requireName,
-        requireEmail: website.requireEmail,
+        showPreChatForm: identityPolicy.showPreChatForm,
+        requireName: identityPolicy.requireName,
+        requireEmail: identityPolicy.requireEmail,
       },
     })
   } catch (error: unknown) {

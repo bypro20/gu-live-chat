@@ -22,6 +22,7 @@ import {
   showDesktopNotification,
 } from '@/lib/inbox-sound'
 import { useToast } from '@/lib/toast'
+import { useLiveVisitorNotify } from '@/lib/hooks/use-live-visitor-notify'
 
 interface NavItem {
   href: string
@@ -52,6 +53,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isNativeApp, isNativeCustomerApp } = useNativeApp()
   const d = useDashboardI18n()
   const { toast } = useToast()
+  const { liveCount: liveVisitorCount } = useLiveVisitorNotify({
+    enabled: status === 'authenticated' && !!activeWebsite?.websiteId,
+    variant: 'dashboard',
+    userId: session?.user?.id,
+    websiteId: activeWebsite?.websiteId ?? null,
+    websiteIds: websites.map((w) => w.websiteId),
+  })
   const s = d.shell
   const n = d.nav
 
@@ -255,7 +263,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                         ? inboxUnread > 99
                           ? '99+'
                           : String(inboxUnread)
-                        : item.badge
+                        : item.href === '/visitors' && liveVisitorCount > 0
+                          ? liveVisitorCount > 99
+                            ? '99+'
+                            : String(liveVisitorCount)
+                          : item.badge
                     }
                     active={isActive(item.href)}
                   />

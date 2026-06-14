@@ -1,6 +1,8 @@
 import { prisma } from './db'
 import type { Plan } from '@/app/generated/prisma/client'
 
+import { WIDGET_IDENTITY_DEFAULTS } from './widget-platform-defaults'
+
 export type WidgetWebsiteRow = {
   id: string
   websiteId: string
@@ -22,9 +24,9 @@ const DEFAULTS: Omit<WidgetWebsiteRow, 'id' | 'websiteId' | 'name' | 'plan'> = {
   welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
   offlineMessage: 'Şu an çevrimdışıyız. Bir mesaj bırakın, size dönelim.',
   avatarUrl: null,
-  showPreChatForm: false,
-  requireName: false,
-  requireEmail: false,
+  showPreChatForm: WIDGET_IDENTITY_DEFAULTS.showPreChatForm,
+  requireName: WIDGET_IDENTITY_DEFAULTS.requireName,
+  requireEmail: WIDGET_IDENTITY_DEFAULTS.requireEmail,
 }
 
 function mapRow(row: Record<string, unknown>): WidgetWebsiteRow {
@@ -38,9 +40,18 @@ function mapRow(row: Record<string, unknown>): WidgetWebsiteRow {
     welcomeMessage: String(row.welcomeMessage ?? DEFAULTS.welcomeMessage),
     offlineMessage: String(row.offlineMessage ?? DEFAULTS.offlineMessage),
     avatarUrl: row.avatarUrl != null ? String(row.avatarUrl) : null,
-    showPreChatForm: row.showPreChatForm === 1 || row.showPreChatForm === true,
-    requireName: row.requireName === 1 || row.requireName === true,
-    requireEmail: row.requireEmail === 1 || row.requireEmail === true,
+    showPreChatForm:
+      row.showPreChatForm == null
+        ? DEFAULTS.showPreChatForm
+        : row.showPreChatForm === 1 || row.showPreChatForm === true,
+    requireName:
+      row.requireName == null
+        ? DEFAULTS.requireName
+        : row.requireName === 1 || row.requireName === true,
+    requireEmail:
+      row.requireEmail == null
+        ? DEFAULTS.requireEmail
+        : row.requireEmail === 1 || row.requireEmail === true,
   }
 }
 

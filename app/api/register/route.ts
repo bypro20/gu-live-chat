@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { registerSchema } from '@/lib/validators/auth'
 import { generateWebsiteId } from '@/lib/utils'
+import { WIDGET_IDENTITY_CREATE_DATA } from '@/lib/widget-platform-defaults'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { acceptTeamInvite } from '@/lib/team-invite'
@@ -84,6 +85,7 @@ export async function POST(req: Request) {
           domain: validated.websiteDomain!,
           websiteId: generateWebsiteId(),
           ownerId: user.id,
+          ...WIDGET_IDENTITY_CREATE_DATA,
           signupUtmSource: validated.utmSource,
           signupUtmMedium: validated.utmMedium,
           signupUtmCampaign: validated.utmCampaign,

@@ -92,11 +92,11 @@ export async function GET(req: Request) {
             city: true,
           },
         },
+        pages: { orderBy: { viewedAt: 'desc' }, take: 8 },
       },
       orderBy: { lastActiveAt: 'desc' },
     })
 
-    // Merge with live Socket.io data (use public websiteId for socket room matching)
     const liveVisitors = getLiveVisitors(website.websiteId)
     const liveSocketIds = new Set(liveVisitors.map(v => v.visitorId))
 
@@ -107,28 +107,78 @@ export async function GET(req: Request) {
         visitorId: s.visitor.id,
         name: s.visitor.name || 'Anonim',
         email: s.visitor.email,
-        browser: s.visitor.browser,
-        os: s.visitor.os,
-        device: s.visitor.device,
-        country: s.visitor.country,
-        city: s.visitor.city,
-        currentPage: liveData?.currentPage || s.currentPage,
-        currentTitle: liveData?.currentTitle || s.currentTitle,
+        browser: s.browser || s.visitor.browser,
+        os: s.os || s.visitor.os,
+        device: s.device || s.visitor.device,
+        country: s.country || s.visitor.country,
+        city: s.city || s.visitor.city,
+        region: s.region,
+        latitude: s.latitude,
+        longitude: s.longitude,
+        ipAddress: s.ipAddress,
+        currentPage: liveData?.currentPage || s.currentPage || '',
+        currentTitle: liveData?.currentTitle || s.currentTitle || '',
         cursorX: liveData?.cursorX,
         cursorY: liveData?.cursorY,
         viewportW: liveData?.viewportW,
         viewportH: liveData?.viewportH,
         scrollY: liveData?.scrollY,
         documentH: liveData?.documentH,
+        screenshotUrl: liveData?.screenshotUrl,
+        screenshotAt: liveData?.screenshotAt,
         landingPage: s.landingPage,
         referrer: s.referrer,
-        startedAt: s.startedAt,
-        lastActiveAt: liveData?.lastActiveAt || s.lastActiveAt,
+        startedAt: s.startedAt.toISOString(),
+        lastActiveAt: liveData?.lastActiveAt || s.lastActiveAt.toISOString(),
+        pages: s.pages.map((p) => ({
+          title: p.title,
+          url: p.url,
+          viewedAt: p.viewedAt.toISOString(),
+        })),
         isLive: liveSocketIds.has(s.visitor.id),
         websiteId: website.websiteId,
         websiteName: website.name,
       }
     })
+
+    for (const live of liveVisitors) {
+      if (visitors.some((v) => v.visitorId === live.visitorId)) continue
+      visitors.unshift({
+        sessionId: '',
+        visitorId: live.visitorId,
+        name: 'Anonim',
+        email: null,
+        browser: null,
+        os: null,
+        device: null,
+        country: null,
+        city: null,
+        region: null,
+        latitude: null,
+        longitude: null,
+        ipAddress: null,
+        currentPage: live.currentPage || '',
+        currentTitle: live.currentTitle || '',
+        landingPage: live.currentPage,
+        referrer: null,
+        startedAt: live.connectedAt,
+        lastActiveAt: live.lastActiveAt,
+        cursorX: live.cursorX,
+        cursorY: live.cursorY,
+        viewportW: live.viewportW,
+        viewportH: live.viewportH,
+        scrollY: live.scrollY,
+        documentH: live.documentH,
+        screenshotUrl: live.screenshotUrl,
+        screenshotAt: live.screenshotAt,
+        pages: live.currentPage
+          ? [{ title: live.currentTitle, url: live.currentPage, viewedAt: live.lastActiveAt }]
+          : [],
+        isLive: true,
+        websiteId: website.websiteId,
+        websiteName: website.name,
+      })
+    }
 
     return NextResponse.json({
       count: visitors.length,
