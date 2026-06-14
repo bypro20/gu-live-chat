@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gu Live Chat — Reklam Videosu</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; text-align: center; max-width: 420px; }
+    .phone {
+      width: min(100%, 380px);
+      background: #1e293b;
+      border-radius: 28px;
+      padding: 12px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+      border: 1px solid #334155;
+    }
+    video {
+      width: 100%;
+      border-radius: 18px;
+      display: block;
+      background: #000;
+    }
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    a, button {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    .primary { background: #6366f1; color: white; }
+    .secondary { background: #334155; color: #e2e8f0; }
+    .hint { margin-top: 24px; font-size: 0.8rem; color: #64748b; text-align: center; max-width: 480px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Gu Live Chat — Reels Reklam</h1>
+  <p>9:16 · 1080×1920 · ~23 sn · Instagram / TikTok formatı</p>
+
+  <div class="phone">
+    <video id="v" controls playsinline autoplay muted loop>
+      <source src="./gulivechat-reklam-reels.mp4" type="video/mp4" />
+      Tarayıcınız video oynatmayı desteklemiyor.
+    </video>
+  </div>
+
+  <div class="actions">
+    <a class="primary" href="./gulivechat-reklam-reels.mp4" download="gulivechat-reklam-reels.mp4">Videoyu İndir</a>
+    <button class="secondary" type="button" onclick="document.getElementById('v').play()">▶ Oynat</button>
+    <button class="secondary" type="button" onclick="document.getElementById('v').muted=false">Sesi Aç</button>
+  </div>
+
+  <p class="hint">
+    Video otomatik oynatılmazsa <strong>Oynat</strong> butonuna basın.
+    Telefona atmak için <strong>Videoyu İndir</strong> kullanın veya dosyayı
+    <code>gulivechat-reklam-reels.mp4</code> olarak paylaşın.
+  </p>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>imvd</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#0b0d12;color:#e8eaed;min-height:100vh}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    h1{font-size:2rem;font-weight:800;letter-spacing:-.03em}
+    .sub{color:#8b92a5;margin:6px 0 20px}
+    .badge{display:inline-block;background:#162a1e;color:#5ee9a8;font-size:.75rem;padding:4px 10px;border-radius:99px;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:340px 1fr;gap:20px}
+    @media(max-width:860px){.grid{grid-template-columns:1fr}}
+    .card{background:#141820;border:1px solid #252b38;border-radius:16px;padding:18px}
+    label{display:block;font-size:.78rem;color:#8b92a5;margin:12px 0 6px}
+    input[type=text],textarea,select{width:100%;background:#0f131a;border:1px solid #2a3142;color:#fff;border-radius:10px;padding:10px 12px;font:inherit}
+    textarea{resize:vertical;min-height:72px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    button{border:none;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:.9rem}
+    .p{background:#3b6ef5;color:#fff;flex:1}
+    .p:disabled,.s:disabled{opacity:.45;cursor:not-allowed}
+    .s{background:#1c2230;color:#e8eaed;border:1px solid #2a3142}
+    .status{margin-top:12px;font-size:.85rem;color:#8b92a5;min-height:2.5em;white-space:pre-wrap}
+    .preview{background:#000;border-radius:12px;min-height:280px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:12px}
+    .preview img,.preview video{max-width:100%;max-height:420px;display:block}
+    .ph{color:#5f6575;text-align:center;padding:30px}
+    .dur{display:flex;gap:6px}
+    .dur label{margin:0;flex:1}
+    .dur input{display:none}
+    .dur span{display:block;text-align:center;padding:9px;border:1px solid #2a3142;border-radius:8px;cursor:pointer;font-size:.85rem}
+    .dur input:checked+span{background:#3b6ef5;border-color:#3b6ef5;color:#fff}
+    .admin-ok{background:#162a1e;border:1px solid #2d5a40;color:#5ee9a8;padding:10px 12px;border-radius:10px;font-size:.82rem;margin-bottom:14px}
+    .link{font-size:.82rem;color:#7eb8ff;margin-bottom:12px}
+    .link a{color:#7eb8ff}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge" id="modeBadge">localhost</span>
+  <h1>imvd</h1>
+  <p class="sub">Kendi sisteminizde · ücretsiz · prompt ile resim + HD video</p>
+  <p class="link">Adres: <a href="http://127.0.0.1:7860" id="appLink">http://127.0.0.1:7860</a></p>
+
+  <div id="klingStatus" class="admin-ok">Sistem kontrol ediliyor...</div>
+
+  <div class="grid">
+    <div class="card">
+      <label>Resim promptu</label>
+      <textarea id="prompt" placeholder="Örn: lüks parfüm şişesi, altın kapak, mermer masa, reklam fotoğrafı"></textarea>
+
+      <label>Hareket promptu (opsiyonel)</label>
+      <textarea id="motion" placeholder="Örn: yavaş zoom, sinematik hareket"></textarea>
+
+      <label>Format</label>
+      <select id="aspect">
+        <option value="9:16">9:16 — Reels / TikTok</option>
+        <option value="1:1">1:1 — Feed</option>
+        <option value="4:5">4:5 — Instagram</option>
+        <option value="16:9">16:9 — YouTube</option>
+      </select>
+
+      <label>Resim hızı (CPU)</label>
+      <div class="dur" id="speedRow">
+        <label><input type="radio" name="speed" value="fast" checked><span>⚡ Hızlı</span></label>
+        <label><input type="radio" name="speed" value="normal"><span>🎨 Normal</span></label>
+      </div>
+
+      <label>Süre</label>
+      <div class="dur">
+        <label><input type="radio" name="dur" value="5" checked><span>5 sn</span></label>
+        <label><input type="radio" name="dur" value="8"><span>8 sn</span></label>
+        <label><input type="radio" name="dur" value="10"><span>10 sn</span></label>
+      </div>
+
+      <div class="row">
+        <button class="s" id="imgBtn">🖼️ Resim Üret</button>
+        <button class="p" id="fullBtn">🚀 Resim + Video</button>
+      </div>
+      <div class="row">
+        <button class="s" id="freeBtn">⚡ Canlandır</button>
+      </div>
+      <p class="status" id="status">Hazır</p>
+    </div>
+
+    <div class="card">
+      <div class="preview" id="imgBox"><div class="ph">Üretilen görsel burada</div></div>
+      <div class="preview" id="vidBox"><div class="ph">Video burada</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let currentImageUrl = null;
+const adminKey = 'imvd-admin';
+
+async function api(path, body) {
+  try {
+    const r = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, admin_key: adminKey }),
+    });
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error('Sunucu yanıtı okunamadı'); }
+    if (!r.ok || j.error) throw new Error(j.error || 'İstek başarısız');
+    return j;
+  } catch (e) {
+    if (e.message.includes('fetch')) {
+      throw new Error('Sunucu kapalı!\nTerminal: cd tools/imvd && python3 server.py\nSonra: http://127.0.0.1:7860');
+    }
+    throw e;
+  }
+}
+
+function setStatus(t) { $('status').textContent = t; }
+function dur() { return +document.querySelector('input[name=dur]:checked').value; }
+function imgSpeed() { return document.querySelector('input[name=speed]:checked')?.value || 'fast'; }
+
+function speedHint(d) {
+  if (!d?.local || !d?.sd_local_info) return '';
+  const f = d.sd_local_info.fast;
+  const n = d.sd_local_info.normal;
+  return `Hızlı: ${f['9:16'][0]}×${f['9:16'][1]}, ${f.steps} adım (~1-2 dk) · Normal: ${n['9:16'][0]}×${n['9:16'][1]}, ${n.steps} adım (~3-5 dk)`;
+}
+
+function showImage(url) {
+  if (!url) return;
+  currentImageUrl = url.split('?')[0];
+  const src = currentImageUrl + '?t=' + Date.now();
+  $('imgBox').innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = 'üretilen görsel';
+  img.src = src;
+  img.onload = () => setStatus('✅ Görsel yüklendi');
+  img.onerror = () => {
+    $('imgBox').innerHTML = '<div class="ph">Görsel yüklenemedi — sayfayı yenileyin</div>';
+    setStatus('❌ Görsel görüntülenemedi');
+  };
+  $('imgBox').appendChild(img);
+}
+
+function showVideo(url) {
+  if (!url) return;
+  const src = url + '?t=' + Date.now();
+  $('vidBox').innerHTML = `<video src="${src}" controls autoplay loop playsinline></video>`;
+}
+
+fetch('/health').then(r => r.json()).then(d => {
+  window._health = d;
+  if (d.local) {
+    $('modeBadge').textContent = 'yerel · ücretsiz';
+    if (d.image_ai) {
+      const eng = d.sd_local ? 'Stable Diffusion' : d.sd_webui ? 'SD WebUI' : d.ollama_image ? 'Ollama' : 'yerel AI';
+      const hint = speedHint(d);
+      $('klingStatus').textContent = `✅ ${eng} + yerel HD video — kredi/API yok${hint ? '\n' + hint : ''}`;
+      setStatus('Hazır — varsayılan: Hızlı mod');
+    } else {
+      $('klingStatus').className = 'token-warn';
+      $('klingStatus').innerHTML = '⚠️ Yerel resim AI kurulumu: <code>cd tools/imvd && bash install-local.sh</code> sonra sunucuyu yeniden başlatın';
+      setStatus('Kurulum gerekli — video canlandırma zaten ücretsiz');
+    }
+  } else if (d.kling) {
+    $('modeBadge').textContent = 'Kling AI';
+    $('klingStatus').textContent = '✅ Kling AI bağlı — bulut modu';
+    setStatus('Hazır — prompt yazın');
+  } else {
+    $('modeBadge').textContent = 'bulut';
+    $('klingStatus').className = 'token-warn';
+    $('klingStatus').textContent = '⚠️ Bulut modu — Kling veya Replicate anahtarı gerekli (.env → IMVD_MODE=local ile ücretsiz moda geçin)';
+    setStatus('IMVD_MODE=local önerilir');
+  }
+}).catch(() => {
+  $('klingStatus').className = 'token-warn';
+  $('klingStatus').textContent = '❌ Sunucu kapalı — python3 server.py';
+});
+
+$('imgBtn').onclick = async () => {
+  const prompt = $('prompt').value.trim();
+  if (!prompt) return alert('Prompt yazın');
+  $('imgBtn').disabled = $('fullBtn').disabled = true;
+  const spd = imgSpeed();
+  const hint = spd === 'fast' ? 'Hızlı mod — ~1-2 dk (CPU)' : 'Normal mod — ~3-5 dk (CPU)';
+  setStatus('Resim üretiliyor...\n' + hint);
+  try {
+    const j = await api('/api/generate-image', { prompt, aspect: $('aspect').value, speed: spd });
+    showImage(j.image_url);
+    setStatus('✅ ' + j.engine);
+  } catch (e) { setStatus('❌ ' + e.message); }
+  $('imgBtn').disabled = $('fullBtn').disabled = false;
+};
+
+$('fullBtn').onclick = async () => {
+  const prompt = $('prompt').value.trim();
+  if (!prompt) return alert('Prompt yazın');
+  $('imgBtn').disabled = $('fullBtn').disabled = $('freeBtn').disabled = true;
+  const spd = imgSpeed();
+  const hint = spd === 'fast' ? 'Hızlı resim — ~1-2 dk' : 'Normal resim — ~3-5 dk';
+  setStatus('Resim + video üretiliyor...\n' + hint);
+  try {
+    const j = await api('/api/full', {
+      prompt, motion_prompt: $('motion').value,
+      aspect: $('aspect').value, duration: dur(), speed: spd,
+    });
+    showImage(j.image_url);
+    showVideo(j.video_url);
+    setStatus(`✅ ${j.image_engine} → ${j.video_engine}`);
+  } catch (e) { setStatus('❌ ' + e.message); }
+  $('imgBtn').disabled = $('fullBtn').disabled = $('freeBtn').disabled = false;
+};
+
+$('freeBtn').onclick = async () => {
+  if (!currentImageUrl) return alert('Önce resim üretin');
+  $('freeBtn').disabled = true;
+  setStatus('Canlandırılıyor...');
+  try {
+    const j = await api('/api/animate', {
+      image_path: currentImageUrl,
+      motion_prompt: $('motion').value,
+      duration: dur(),
+      aspect: $('aspect').value,
+      use_ai: false,
+    });
+    showVideo(j.video_url);
+    setStatus('✅ ' + j.engine);
+  } catch (e) { setStatus('❌ ' + e.message); }
+  $('freeBtn').disabled = false;
+};
+</script>
+</body>
+</html>

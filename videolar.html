@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gu Live Chat — Videolar</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, sans-serif;
+      background: #0f172a; color: #f8fafc;
+      padding: 24px 16px 48px;
+    }
+    h1 { text-align: center; font-size: 1.35rem; margin-bottom: 8px; }
+    .note {
+      text-align: center; color: #94a3b8; font-size: 0.95rem;
+      max-width: 520px; margin: 0 auto 28px; line-height: 1.5;
+    }
+    .card {
+      max-width: 420px; margin: 0 auto 32px;
+      background: #1e293b; border-radius: 20px; padding: 16px;
+      border: 1px solid #334155;
+    }
+    .card h2 { font-size: 1rem; margin: 0 0 12px; color: #e2e8f0; }
+    video {
+      width: 100%; border-radius: 12px; background: #000;
+      display: block;
+    }
+    .btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    a, button {
+      flex: 1; min-width: 120px; text-align: center;
+      padding: 12px 16px; border-radius: 10px; font-weight: 600;
+      font-size: 0.9rem; text-decoration: none; border: none; cursor: pointer;
+    }
+    .play { background: #6366f1; color: #fff; }
+    .dl { background: #334155; color: #e2e8f0; }
+    .warn {
+      max-width: 420px; margin: 24px auto 0; padding: 14px 16px;
+      background: #422006; border: 1px solid #854d0e; border-radius: 12px;
+      color: #fde68a; font-size: 0.85rem; line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gu Live Chat — Reklam Videoları</h1>
+  <p class="note">
+    MP4 dosyasına çift tıklamayın — Cursor/IDE içinde açılmaz.<br>
+    Bu sayfada <strong>Oynat</strong> butonuna basın veya linki tarayıcıya yapıştırın.
+  </p>
+
+  <div class="card">
+    <h2>40 sn — Gerçek görüntü + ses ⭐</h2>
+    <p style="font-size:0.85rem;color:#94a3b8;margin:0 0 10px">Stok B-roll · Türkçe seslendirme · 9:16 Instagram</p>
+    <video id="v1" controls playsinline preload="metadata"
+      src="http://127.0.0.1:8765/gulivechat-reklam-40sn.mp4"></video>
+    <div class="btns">
+      <button class="play" type="button" onclick="document.getElementById('v1').play()">▶ Oynat</button>
+      <a class="dl" href="http://127.0.0.1:8765/gulivechat-reklam-40sn.mp4" download>İndir</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>23 sn — Sessiz versiyon</h2>
+    <video id="v2" controls playsinline preload="metadata"
+      src="http://127.0.0.1:8765/gulivechat-reklam-reels.mp4"></video>
+    <div class="btns">
+      <button class="play" type="button" onclick="document.getElementById('v2').play()">▶ Oynat</button>
+      <a class="dl" href="http://127.0.0.1:8765/gulivechat-reklam-reels.mp4" download>İndir</a>
+    </div>
+  </div>
+
+  <div class="warn">
+    <strong>Link kopyala:</strong><br>
+    http://127.0.0.1:8765/videolar.html<br><br>
+    Sunucu kapalıysa terminalde:<br>
+    <code>cd /home/bypro20/gu-live-chat && python3 -m http.server 8765</code>
+  </div>
+</body>
+</html>

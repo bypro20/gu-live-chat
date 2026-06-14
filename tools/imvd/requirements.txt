@@ -1,0 +1,10 @@
+pillow>=10.0.0
+imageio-ffmpeg>=0.5.0
+python-dotenv>=1.0.0
+
+# Arayüz (isteğe bağlı)
+gradio>=5.0.0
+
+# AI mod (isteğe bağlı — Replicate ücretsiz deneme kredisi)
+replicate>=0.25.0
+httpx>=0.27.0

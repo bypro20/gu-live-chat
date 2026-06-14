@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>imvd</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e8eaed;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 6px; }
+    .sub { color: #9aa0a6; font-size: 0.9rem; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; max-width: 1200px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: #1a1d27;
+      border: 1px solid #2d3142;
+      border-radius: 14px;
+      padding: 18px;
+    }
+    label { display: block; font-size: 0.8rem; color: #9aa0a6; margin: 12px 0 6px; }
+    select, input[type="range"], input[type="file"] { width: 100%; }
+    select {
+      background: #252836; color: #fff; border: 1px solid #3d4254;
+      border-radius: 8px; padding: 10px;
+    }
+    .row { display: flex; gap: 8px; margin-top: 16px; }
+    button {
+      flex: 1; border: none; border-radius: 10px; padding: 12px 16px;
+      font-weight: 600; cursor: pointer; font-size: 0.95rem;
+    }
+    .primary { background: #4f8cff; color: #fff; }
+    .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ghost { background: #252836; color: #e8eaed; border: 1px solid #3d4254; }
+    #previewWrap {
+      aspect-ratio: 9/16; max-height: 70vh; background: #000;
+      border-radius: 12px; overflow: hidden; display: flex;
+      align-items: center; justify-content: center; position: relative;
+    }
+    #previewWrap canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .placeholder { color: #5f6368; text-align: center; padding: 40px; }
+    .status { margin-top: 12px; font-size: 0.85rem; color: #9aa0a6; min-height: 1.2em; }
+    .badge {
+      display: inline-block; background: #1e3a2f; color: #6ee7a0;
+      font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px;
+    }
+    .val { float: right; color: #4f8cff; }
+  </style>
+</head>
+<body>
+  <h1>imvd</h1>
+  <p class="sub">Tamamen ücretsiz · Kurulum yok · Tarayıcıda çalışır · 9:16 · 1:1 · 16:9</p>
+
+  <div class="grid">
+    <div class="panel">
+      <span class="badge">Hızlı mod — anında</span>
+
+      <label>Görsel yükle</label>
+      <input type="file" id="file" accept="image/*" />
+
+      <label>Hareket <span class="val" id="presetLabel">Sinematik</span></label>
+      <select id="preset">
+        <option value="cinematic">Sinematik (reklam)</option>
+        <option value="zoom_in">Yakınlaştır (ürün)</option>
+        <option value="zoom_out">Uzaklaştır</option>
+        <option value="pan_left">Sola kaydır</option>
+        <option value="pan_right">Sağa kaydır</option>
+        <option value="pan_up">Yukarı kaydır</option>
+        <option value="pan_down">Aşağı kaydır</option>
+        <option value="pulse">Nabız</option>
+      </select>
+
+      <label>Format</label>
+      <select id="aspect">
+        <option value="9:16">9:16 — Reels / TikTok / Story</option>
+        <option value="1:1">1:1 — Feed kare</option>
+        <option value="4:5">4:5 — Instagram dikey</option>
+        <option value="16:9">16:9 — YouTube / Banner</option>
+      </select>
+
+      <label>Süre <span class="val" id="durVal">4 sn</span></label>
+      <input type="range" id="duration" min="2" max="10" step="0.5" value="4" />
+
+      <label>Hareket şiddeti <span class="val" id="intVal">1.15</span></label>
+      <input type="range" id="intensity" min="1.05" max="1.35" step="0.01" value="1.15" />
+
+      <div class="row">
+        <button class="primary" id="exportBtn" disabled>MP4 İndir</button>
+        <button class="ghost" id="previewBtn" disabled>Önizle</button>
+      </div>
+      <p class="status" id="status">Görsel yükleyin</p>
+    </div>
+
+    <div class="panel">
+      <div id="previewWrap">
+        <div class="placeholder" id="ph">Önizleme burada görünür</div>
+        <canvas id="canvas" hidden></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ASPECTS = { '9:16': [1080,1920], '1:1': [1080,1080], '4:5': [1080,1350], '16:9': [1920,1080] };
+    let img = null;
+    const file = document.getElementById('file');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+    const exportBtn = document.getElementById('exportBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const ph = document.getElementById('ph');
+
+    function ease(t) { return t * t * (3 - 2 * t); }
+
+    function motion(preset, t, cx, cy, maxS) {
+      const e = ease(t);
+      switch (preset) {
+        case 'zoom_in': return [cx, cy, 1 + e * (maxS - 1)];
+        case 'zoom_out': return [cx, cy, maxS - e * (maxS - 1)];
+        case 'pan_left': return [cx * (1 + e * 0.12), cy, 1.08];
+        case 'pan_right': return [cx * (1 - e * 0.12), cy, 1.08];
+        case 'pan_up': return [cx, cy * (1 + e * 0.10), 1.08];
+        case 'pan_down': return [cx, cy * (1 - e * 0.10), 1.08];
+        case 'pulse': return [cx, cy, 1.05 * (1 + Math.sin(t * Math.PI * 2) * 0.015)];
+        default: return [cx * (1 - e * 0.04), cy * (1 - e * 0.02), 1 + e * (maxS - 1)];
+      }
+    }
+
+    function drawFrame(t) {
+      const [ow, oh] = ASPECTS[document.getElementById('aspect').value];
+      canvas.width = ow; canvas.height = oh;
+      const maxS = parseFloat(document.getElementById('intensity').value);
+      const preset = document.getElementById('preset').value;
+      const iw = img.width, ih = img.height;
+      const scale = Math.max(ow / iw, oh / ih);
+      const bw = iw * scale, bh = ih * scale;
+      const tmp = document.createElement('canvas');
+      tmp.width = bw; tmp.height = bh;
+      tmp.getContext('2d').drawImage(img, 0, 0, bw, bh);
+      const cx = ow / 2, cy = oh / 2;
+      const [mx, my, s] = motion(preset, t, cx, cy, maxS);
+      const vw = ow / s, vh = oh / s;
+      const sx = mx - vw / 2, sy = my - vh / 2;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, ow, oh);
+      ctx.drawImage(tmp, sx, sy, vw, vh, 0, 0, ow, oh);
+    }
+
+    file.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      const im = new Image();
+      im.onload = () => {
+        img = im;
+        ph.hidden = true;
+        canvas.hidden = false;
+        drawFrame(0);
+        exportBtn.disabled = false;
+        previewBtn.disabled = false;
+        status.textContent = 'Hazır — önizle veya MP4 indir';
+      };
+      im.src = url;
+    });
+
+    document.getElementById('duration').oninput = e => {
+      document.getElementById('durVal').textContent = e.target.value + ' sn';
+    };
+    document.getElementById('intensity').oninput = e => {
+      document.getElementById('intVal').textContent = e.target.value;
+      if (img) drawFrame(0);
+    };
+    document.getElementById('aspect').onchange = () => { if (img) drawFrame(0); };
+    document.getElementById('preset').onchange = e => {
+      document.getElementById('presetLabel').textContent = e.target.selectedOptions[0].text.split(' ')[0];
+      if (img) drawFrame(0);
+    };
+
+    previewBtn.onclick = () => {
+      if (!img) return;
+      const dur = parseFloat(document.getElementById('duration').value);
+      const fps = 30;
+      const n = Math.floor(dur * fps);
+      let i = 0;
+      status.textContent = 'Önizleniyor...';
+      const loop = () => {
+        drawFrame(i / (n - 1));
+        i++;
+        if (i < n) requestAnimationFrame(loop);
+        else status.textContent = 'Önizleme bitti';
+      };
+      loop();
+    };
+
+    exportBtn.onclick = async () => {
+      if (!img) return;
+      exportBtn.disabled = true;
+      status.textContent = 'Video oluşturuluyor...';
+      const dur = parseFloat(document.getElementById('duration').value);
+      const fps = 30;
+      const n = Math.max(2, Math.floor(dur * fps));
+      const stream = canvas.captureStream(fps);
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9' : 'video/webm';
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+      const chunks = [];
+      rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: mime });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'imvd-canli.webm';
+        a.click();
+        exportBtn.disabled = false;
+        status.textContent = 'İndirildi (WebM — Instagram/TikTok için MP4\'e çevirebilirsiniz)';
+      };
+      rec.start();
+      for (let i = 0; i < n; i++) {
+        drawFrame(i / (n - 1));
+        await new Promise(r => setTimeout(r, 1000 / fps));
+      }
+      rec.stop();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Yerel ücretsiz AI — CPU (hafif kurulum)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1.0
+diffusers>=0.30.0
+transformers>=4.40.0
+accelerate>=0.30.0
+safetensors>=0.4.0
