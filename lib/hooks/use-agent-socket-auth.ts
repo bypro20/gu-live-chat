@@ -1,38 +1,21 @@
-type SocketEmit = (event: string, payload: Record<string, unknown>) => void
+'use client'
 
-type AgentSocketAuthOptions = {
-  websiteIds: string[]
-  scope?: 'platform'
-}
+import { fetchAgentSocketToken } from '@/lib/socket-agent-auth'
 
-/** Sunucudan doğrulanmış agent kimliği alıp socket'e gönderir. */
+type EmitFn = (event: string, data: unknown) => void
+
 export async function fetchAgentSocketAuth(
-  emit: SocketEmit,
-  options: AgentSocketAuthOptions
-): Promise<void> {
-  try {
-    const res = await fetch('/api/socket/agent-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        websiteIds: options.websiteIds,
-        scope: options.scope,
-      }),
-    })
-    if (!res.ok) return
-    const data = (await res.json()) as {
-      userId?: string
-      websiteIds?: string[]
-      scope?: string
-    }
-    if (!data.userId || !Array.isArray(data.websiteIds)) return
-    emit('agent:auth', {
-      userId: data.userId,
-      websiteIds: data.websiteIds,
-      ...(data.scope ? { scope: data.scope } : {}),
-    })
-  } catch {
-    // Socket yeniden bağlanınca tekrar denenecek
-  }
+  emit: EmitFn,
+  options: { websiteIds: string[]; scope?: 'platform' }
+): Promise<boolean> {
+  const token = await fetchAgentSocketToken(options.scope)
+  if (!token) return false
+  emit('agent:auth', {
+    token,
+    websiteIds: options.websiteIds,
+    scope: options.scope,
+  })
+  return true
 }
+
+export { emitAgentSocketAuth } from '@/lib/socket-agent-auth'

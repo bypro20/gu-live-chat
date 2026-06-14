@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
 import { getAuthUrl, getSiteUrl } from './site-config'
+import { checkRateLimit } from './rate-limit'
 
 /** NextAuth callback URL — custom domain (gulivechat.com), not *.vercel.app */
 function normalizeSiteUrl(url: string | undefined): string | undefined {
@@ -46,6 +47,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         try {
           const email = (credentials.email as string).trim().toLowerCase()
+
+          const limited = checkRateLimit(`login:${email}`, 12, 15 * 60_000)
+          if (!limited.ok) {
+            return null
+          }
+
           const user = await prisma.user.findUnique({
             where: { email },
           })

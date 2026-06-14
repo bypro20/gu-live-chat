@@ -2,10 +2,9 @@ import { Server as SocketIOServer } from 'socket.io'
 import type { Server as HTTPServer } from 'http'
 import { prisma } from './db'
 import { socketCorsOrigins } from './socket-cors'
+import { resolveAgentSocketToken, resolveVisitorToken } from './secure-tokens'
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
-import { verifyAgentSocketSession } from './socket-session'
-import { resolveVisitorToken } from './secure-tokens'
 
 let io: SocketIOServer
 
@@ -195,19 +194,22 @@ export function initSocketServer(httpServer: HTTPServer) {
     console.log(`[Socket] Connected: ${socket.id}`)
 
     // ─── Agent Authentication ──────────────────────────────────
-    socket.on('agent:auth', async (data: { userId: string; websiteIds: string[]; scope?: string }) => {
-      const cookieHeader = socket.handshake.headers.cookie
-      const session = await verifyAgentSocketSession(cookieHeader)
-      if (!session) {
-        console.warn('[Socket] agent:auth denied: no valid session cookie')
-        socket.emit('agent:auth:error', { error: 'Oturum gerekli' })
-        return
-      }
+    socket.on('agent:auth', async (data: { token?: string; userId?: string; websiteIds: string[]; scope?: string }) => {
+      let userId = ''
+      let scope = data.scope
 
-      const { userId } = data
-      if (userId !== session.userId) {
-        console.warn(`[Socket] agent:auth denied: userId mismatch (${userId} vs session)`)
-        socket.emit('agent:auth:error', { error: 'Yetkisiz' })
+      if (data.token) {
+        const payload = resolveAgentSocketToken(data.token)
+        if (!payload) {
+          console.warn('[Socket] agent:auth denied: invalid token')
+          return
+        }
+        userId = payload.userId
+        if (payload.scope === 'platform') scope = 'platform'
+      } else if (process.env.NODE_ENV !== 'production' && data.userId) {
+        userId = data.userId
+      } else {
+        console.warn('[Socket] agent:auth denied: token required')
         return
       }
 
@@ -249,15 +251,19 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
 
       // Platform admin: tüm siteler veya marketing sitesi
-      if (websiteIds.length === 0 && session.userId) {
+      if (websiteIds.length === 0 && userId) {
         try {
-          if (session.role === 'ADMIN') {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+          })
+          if (user?.role === 'ADMIN') {
             if (data.scope === 'platform') {
               const allSites = await prisma.website.findMany({ select: { websiteId: true } })
               websiteIds = allSites.map((w) => w.websiteId)
             } else if (requestedWebsiteIds.length > 0) {
               const { ensureAdminMarketingAccess } = await import('./marketing-website')
-              const marketingId = await ensureAdminMarketingAccess(session.userId)
+              const marketingId = await ensureAdminMarketingAccess(userId)
               if (requestedWebsiteIds.includes(marketingId)) {
                 websiteIds = [marketingId]
               }
@@ -336,14 +342,21 @@ export function initSocketServer(httpServer: HTTPServer) {
       let websiteId = data.websiteId || ''
       let sessionId = ''
 
-      // Decode visitorToken if provided (from widget init)
       if (data.visitorToken) {
         const decoded = resolveVisitorToken(data.visitorToken)
-        if (decoded) {
-          visitorId = decoded.visitorId || visitorId
-          websiteId = decoded.websiteId || websiteId
-          sessionId = decoded.sessionId || ''
+        if (!decoded) {
+          console.warn('[Socket] visitor:auth denied: invalid token')
+          return
         }
+        visitorId = decoded.visitorId
+        websiteId = decoded.websiteId
+        sessionId = decoded.sessionId || ''
+      } else if (process.env.NODE_ENV !== 'production' && data.visitorId && data.websiteId) {
+        visitorId = data.visitorId
+        websiteId = data.websiteId
+      } else {
+        console.warn('[Socket] visitor:auth denied: token required')
+        return
       }
 
       if (!websiteId) {
@@ -397,10 +410,21 @@ export function initSocketServer(httpServer: HTTPServer) {
       socket.join(`conversation:${data.conversationId}`)
     })
 
-    socket.on('visitor:join-conversation', (data: { conversationId: string }) => {
-      if (data.conversationId) {
-        socket.join(`conversation:${data.conversationId}`)
-      }
+    socket.on('visitor:join-conversation', async (data: { conversationId: string }) => {
+      const live = getVisitorSession(socket)
+      if (!live?.visitorId || !data.conversationId) return
+
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: data.conversationId },
+        select: {
+          visitorId: true,
+          website: { select: { websiteId: true } },
+        },
+      })
+      if (!conversation || conversation.visitorId !== live.visitorId) return
+      if (live.websiteId && conversation.website.websiteId !== live.websiteId) return
+
+      socket.join(`conversation:${data.conversationId}`)
     })
 
     // ─── Agent Messages ────────────────────────────────────────
@@ -474,6 +498,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     const typingThrottle = new Map<string, NodeJS.Timeout>()
 
     socket.on('visitor:typing', (data: { conversationId: string; visitorId: string; content?: string }) => {
+      const live = getVisitorSession(socket)
+      if (!live?.visitorId || !data.conversationId) return
+      if (data.visitorId && live.visitorId !== data.visitorId) return
+
       socket.to(`conversation:${data.conversationId}`).emit('agent:typing', data)
 
       const key = `${data.conversationId}:${data.visitorId}`
@@ -490,6 +518,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     socket.on('visitor:typing:stop', (data: { conversationId: string; visitorId: string }) => {
+      const live = getVisitorSession(socket)
+      if (!live?.visitorId || !data.conversationId) return
+      if (data.visitorId && live.visitorId !== data.visitorId) return
+
       socket.to(`conversation:${data.conversationId}`).emit('agent:typing:stop', data)
 
       const key = `${data.conversationId}:${data.visitorId}`
@@ -513,6 +545,10 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     socket.on('visitor:read', (data: { conversationId: string; messageIds: string[]; visitorId: string }) => {
+      const live = getVisitorSession(socket)
+      if (!live?.visitorId || !data.conversationId) return
+      if (data.visitorId && live.visitorId !== data.visitorId) return
+
       socket.to(`conversation:${data.conversationId}`).emit('agent:read', data)
     })
 

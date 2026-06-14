@@ -30,5 +30,10 @@ export function applySecurityHeaders(res: NextResponse, isProduction: boolean) {
 
   if (isProduction) {
     res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+    res.headers.get('Content-Security-Policy')
+    const csp = res.headers.get('Content-Security-Policy')
+    if (csp && !csp.includes('upgrade-insecure-requests')) {
+      res.headers.set('Content-Security-Policy', `${csp}; upgrade-insecure-requests`)
+    }
   }
 }

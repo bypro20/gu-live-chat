@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { uploadFileBuffer } from '@/lib/file-upload'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -12,6 +13,9 @@ const ALLOWED_TYPES = [
 ]
 
 export async function POST(req: Request) {
+  const limited = rateLimitByIp(req, 'dashboard-upload', 20, 60_000)
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })

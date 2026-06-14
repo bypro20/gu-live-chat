@@ -40,7 +40,26 @@ function getClientIp(req: NextRequest): string | null {
   return null
 }
 
-const IP_CHECK_PATHS = ['/register', '/api/register', '/api/widget', '/login', '/admin-login']
+const IP_CHECK_PATHS = ['/register', '/api/register', '/api/widget', '/login', '/admin-login', '/api/auth']
+
+/** Bilinen saldırı / tarama yolları — 404 ile sessizce reddet */
+const BLOCKED_PATH_PATTERNS = [
+  '/.env',
+  '/.git',
+  '/wp-admin',
+  '/wp-login',
+  '/phpmyadmin',
+  '/xmlrpc.php',
+  '/vendor/phpunit',
+  '/actuator',
+  '/cgi-bin',
+  '/.well-known/acme-challenge/../',
+]
+
+function isBlockedProbe(pathname: string): boolean {
+  const lower = pathname.toLowerCase()
+  return BLOCKED_PATH_PATTERNS.some((p) => lower.startsWith(p) || lower.includes(p))
+}
 
 /** Dashboard / admin JSON API — oturum çerezi zorunlu (route içi yetki ayrı kontrol edilir). */
 const PROTECTED_API_PREFIXES = [
@@ -102,7 +121,9 @@ async function checkIpBan(req: NextRequest): Promise<NextResponse | null> {
       return new NextResponse('Erişim engellendi', { status: 403 })
     }
   } catch {
-    // Fail open if DB unavailable in edge context
+    if (IS_PRODUCTION) {
+      return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+    }
   }
 
   return null
@@ -123,6 +144,11 @@ export async function proxy(req: NextRequest) {
   if (ipBlock) return withSecurityHeaders(ipBlock)
 
   const { pathname } = req.nextUrl
+
+  if (isBlockedProbe(pathname)) {
+    return withSecurityHeaders(new NextResponse(null, { status: 404 }))
+  }
+
   const ua = req.headers.get('user-agent') || ''
   const isCustomerApp = isNativeCustomerUserAgent(ua)
 
@@ -178,6 +204,18 @@ export async function proxy(req: NextRequest) {
   // Protected JSON API — must have session cookie (role checks stay in route handlers)
   if (requiresSessionForApi(pathname) && !isLoggedIn) {
     return withSecurityHeaders(NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 }))
+  }
+
+  // Admin API — oturum + ADMIN rolü (çift katman)
+  if (pathname.startsWith('/api/admin') && isLoggedIn) {
+    try {
+      const session = await auth()
+      if (session?.user?.role !== 'ADMIN') {
+        return withSecurityHeaders(NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 }))
+      }
+    } catch {
+      return withSecurityHeaders(NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 }))
+    }
   }
 
   // Allow static files and Next.js internals

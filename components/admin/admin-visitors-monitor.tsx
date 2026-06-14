@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { connectSocket, getSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
+import { emitAgentSocketAuth } from '@/lib/socket-agent-auth'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
@@ -163,13 +164,9 @@ export function AdminVisitorsMonitor({
       if (isDashboard) {
         const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
         if (ids.length === 0) return
-        emit('agent:auth', { userId: session.user.id, websiteIds: ids })
+        void emitAgentSocketAuth(emit, ids)
       } else {
-        emit('agent:auth', {
-          userId: session.user.id,
-          websiteIds,
-          scope: 'platform',
-        })
+        void emitAgentSocketAuth(emit, websiteIds, 'platform')
       }
     }
 
@@ -304,13 +301,9 @@ export function AdminVisitorsMonitor({
     if (isDashboard) {
       const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
       if (ids.length === 0) return
-      emit('agent:auth', { userId: session.user.id, websiteIds: ids })
+      void emitAgentSocketAuth(emit, ids)
     } else {
-      emit('agent:auth', {
-        userId: session.user.id,
-        websiteIds,
-        scope: 'platform',
-      })
+      void emitAgentSocketAuth(emit, websiteIds, 'platform')
     }
   }, [session, websiteIds, websiteId, isDashboard, emit])
 

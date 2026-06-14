@@ -10,6 +10,7 @@ import {
 } from '@/lib/inbox-sound'
 import { connectSocket, getSocket, isSocketEnabled } from '@/lib/socket-client'
 import { useSocket } from '@/lib/hooks/use-socket'
+import { emitAgentSocketAuth } from '@/lib/socket-agent-auth'
 import { useToast } from '@/lib/toast'
 import { getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
@@ -174,11 +175,11 @@ export function useLiveVisitorNotify({
     const socket = getSocket() || connectSocket()
     const authenticate = () => {
       if (variant === 'admin') {
-        emit('agent:auth', { userId, websiteIds: [], scope: 'platform' })
+        void emitAgentSocketAuth(emit, [], 'platform')
       } else {
         const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
         if (ids.length === 0) return
-        emit('agent:auth', { userId, websiteIds: ids })
+        void emitAgentSocketAuth(emit, ids)
       }
     }
 
