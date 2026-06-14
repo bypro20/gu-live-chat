@@ -230,9 +230,9 @@ export function organizationJsonLd() {
         },
         address: {
           '@type': 'PostalAddress',
-          addressLocality: 'İstanbul',
+          streetAddress: 'Haydar Mahallesi, Öner Sokak No: 29',
+          addressLocality: 'Denizli',
           addressCountry: 'TR',
-          streetAddress: SITE_LEGAL.address,
         },
         ...(socialSameAs().length ? { sameAs: socialSameAs() } : {}),
       },

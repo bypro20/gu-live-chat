@@ -139,13 +139,14 @@ export function ContactPageClient() {
           </button>
 
           <div className="surface p-5 space-y-3 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">{SITE_LEGAL.contactName}</p>
             <div className="flex items-start gap-3">
               <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               <span>{SITE_LEGAL.address}</span>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-primary shrink-0" />
-              <a href={`tel:${SITE_LEGAL.phone.replace(/\s/g, '')}`} className="hover:text-primary transition-colors">
+              <a href={`tel:+90${SITE_LEGAL.phone.replace(/\D/g, '').replace(/^0/, '')}`} className="hover:text-primary transition-colors">
                 {SITE_LEGAL.phone}
               </a>
             </div>
