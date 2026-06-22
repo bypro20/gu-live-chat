@@ -41,6 +41,17 @@ export function isSpeechInputSupported(): boolean {
   return getSpeechRecognitionCtor() !== null
 }
 
+function buildSessionTranscript(event: SpeechRecognitionEventLike): { text: string; hasFinal: boolean } {
+  let text = ''
+  let hasFinal = false
+  for (let i = 0; i < event.results.length; i++) {
+    const result = event.results[i]
+    text += result[0]?.transcript ?? ''
+    if (result.isFinal) hasFinal = true
+  }
+  return { text: text.trim(), hasFinal }
+}
+
 type UseSpeechInputOptions = {
   speechLocale: string
   onFinalText: (text: string) => void
@@ -55,10 +66,12 @@ export function useSpeechInput({
   const [listening, setListening] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  const activeRef = useRef(false)
   const baseTextRef = useRef('')
   const supported = isSpeechInputSupported()
 
   const stop = useCallback(() => {
+    activeRef.current = false
     recognitionRef.current?.stop()
     setListening(false)
   }, [])
@@ -72,47 +85,47 @@ export function useSpeechInput({
       }
 
       recognitionRef.current?.abort()
+      activeRef.current = true
+      baseTextRef.current = currentValue.trimEnd()
 
       const recognition = new Ctor()
       recognition.lang = speechLocale
       recognition.continuous = true
       recognition.interimResults = true
       recognition.maxAlternatives = 1
-      baseTextRef.current = currentValue.trimEnd()
 
       recognition.onresult = (event) => {
-        let interim = ''
-        let finalChunk = ''
+        const { text: sessionText, hasFinal } = buildSessionTranscript(event)
+        if (!sessionText) return
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i]
-          const transcript = result[0]?.transcript ?? ''
-          if (result.isFinal) {
-            finalChunk += transcript
-          } else {
-            interim += transcript
-          }
-        }
+        const prefix = baseTextRef.current
+        const joined = prefix ? `${prefix} ${sessionText}` : sessionText
 
-        if (finalChunk) {
-          const prefix = baseTextRef.current
-          const joined = prefix ? `${prefix} ${finalChunk.trim()}` : finalChunk.trim()
+        if (hasFinal) {
           baseTextRef.current = joined
           onFinalText(joined)
-        } else if (interim && onInterimText) {
-          const prefix = baseTextRef.current
-          onInterimText(prefix ? `${prefix} ${interim}` : interim)
+        } else if (onInterimText) {
+          onInterimText(joined)
         }
       }
 
       recognition.onerror = (event) => {
-        if (event.error !== 'aborted' && event.error !== 'no-speech') {
-          setError(event.error)
-        }
+        if (event.error === 'aborted') return
+        if (event.error === 'no-speech') return
+        setError(event.error)
+        activeRef.current = false
         setListening(false)
       }
 
       recognition.onend = () => {
+        if (activeRef.current) {
+          try {
+            recognition.start()
+            return
+          } catch {
+            activeRef.current = false
+          }
+        }
         setListening(false)
       }
 
@@ -123,6 +136,7 @@ export function useSpeechInput({
       try {
         recognition.start()
       } catch {
+        activeRef.current = false
         setError('start-failed')
         setListening(false)
       }
@@ -143,6 +157,7 @@ export function useSpeechInput({
 
   useEffect(() => {
     return () => {
+      activeRef.current = false
       recognitionRef.current?.abort()
     }
   }, [])

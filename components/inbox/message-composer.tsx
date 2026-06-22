@@ -16,9 +16,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { languageLabel } from '@/lib/translate-languages'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
-import { useLocale } from '@/components/marketing/locale-provider'
 import { useSpeechInput } from '@/lib/hooks/use-speech-input'
-import { resolveSpeechLocale } from '@/lib/speech-locale'
 import { inboxComposerRowStyle, inboxComposerShellStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 export type PendingUpload = {
@@ -87,11 +85,10 @@ export function MessageComposer({
   primaryColor,
 }: MessageComposerProps) {
   const inbox = useDashboardI18n().inbox
-  const { locale: siteLocale } = useLocale()
   const primary = resolveInboxPrimary(primaryColor)
   const resolvedPlaceholder = placeholder ?? inbox.writeMessage
-  const speechLocale = siteLocale === 'tr' ? 'tr-TR' : resolveSpeechLocale(agentLang)
-  const speechLangLabel = languageLabel(siteLocale === 'tr' ? 'tr' : agentLang)
+  const speechLocale = 'tr-TR'
+  const speechLangLabel = languageLabel('tr')
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [dragOver, setDragOver] = useState(false)
