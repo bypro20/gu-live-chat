@@ -348,6 +348,15 @@ export default function KayitFormu({ googleAktif }: { googleAktif: boolean }) {
               {t.register.login}
             </Link>
           </p>
+
+          <div className="mt-6 pt-6 border-t border-border text-center">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              {t.login.backToSite}
+            </Link>
+          </div>
         </div>
       </div>
     </div>
