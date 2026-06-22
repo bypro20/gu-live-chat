@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { speechLocaleForLang } from '@/lib/speech-locale'
 
 type SpeechRecognitionInstance = {
   lang: string
@@ -42,13 +43,15 @@ export function isSpeechInputSupported(): boolean {
 }
 
 type UseSpeechInputOptions = {
-  speechLocale: string
+  lang: string
+  siteLocale?: 'tr' | 'en'
   onFinalText: (text: string) => void
   onInterimText?: (text: string) => void
 }
 
 export function useSpeechInput({
-  speechLocale,
+  lang,
+  siteLocale,
   onFinalText,
   onInterimText,
 }: UseSpeechInputOptions) {
@@ -74,7 +77,7 @@ export function useSpeechInput({
       recognitionRef.current?.abort()
 
       const recognition = new Ctor()
-      recognition.lang = speechLocale
+      recognition.lang = speechLocaleForLang(lang, siteLocale)
       recognition.continuous = true
       recognition.interimResults = true
       recognition.maxAlternatives = 1
@@ -127,7 +130,7 @@ export function useSpeechInput({
         setListening(false)
       }
     },
-    [speechLocale, onFinalText, onInterimText],
+    [lang, siteLocale, onFinalText, onInterimText],
   )
 
   const toggle = useCallback(
@@ -147,5 +150,5 @@ export function useSpeechInput({
     }
   }, [])
 
-  return { supported, listening, error, toggle, stop, speechLocale }
+  return { supported, listening, error, toggle, stop }
 }

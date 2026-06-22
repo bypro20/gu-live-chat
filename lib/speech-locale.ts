@@ -24,15 +24,11 @@ const SPEECH_LOCALES: Record<string, string> = {
   el: 'el-GR',
 }
 
-export function resolveSpeechLocale(agentLang?: string | null): string {
-  const code = normalizeLangCode(agentLang || 'tr')
-  return SPEECH_LOCALES[code] ?? 'tr-TR'
-}
-
-/** @deprecated use resolveSpeechLocale(agentLang) */
 export function speechLocaleForLang(code?: string | null, siteLocale?: 'tr' | 'en'): string {
-  if (siteLocale === 'tr' && (!code || normalizeLangCode(code) === 'en')) {
+  // Türkçe panelde ses tanıma varsayılan olarak Türkçe
+  const normalized = normalizeLangCode(code || (siteLocale === 'tr' ? 'tr' : 'en'))
+  if (siteLocale === 'tr' && normalized === 'en') {
     return 'tr-TR'
   }
-  return resolveSpeechLocale(code || siteLocale)
+  return SPEECH_LOCALES[normalized] ?? `${normalized}-${normalized.toUpperCase()}`
 }
