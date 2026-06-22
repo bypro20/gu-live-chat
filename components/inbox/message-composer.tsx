@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   Send,
   Paperclip,
@@ -9,15 +9,11 @@ import {
   Loader2,
   X,
   ImageIcon,
-  Mic,
-  MicOff,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { languageLabel } from '@/lib/translate-languages'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
-import { useLocale } from '@/components/marketing/locale-provider'
-import { useSpeechInput } from '@/lib/hooks/use-speech-input'
 import { inboxComposerRowStyle, inboxComposerShellStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 export type PendingUpload = {
@@ -86,45 +82,20 @@ export function MessageComposer({
   primaryColor,
 }: MessageComposerProps) {
   const inbox = useDashboardI18n().inbox
-  const { locale: siteLocale } = useLocale()
   const primary = resolveInboxPrimary(primaryColor)
   const resolvedPlaceholder = placeholder ?? inbox.writeMessage
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [dragOver, setDragOver] = useState(false)
-  const [interimText, setInterimText] = useState<string | null>(null)
-
-  const onFinalSpeech = useCallback(
-    (text: string) => {
-      setInterimText(null)
-      onChange(text)
-    },
-    [onChange],
-  )
-
-  const { supported: speechSupported, listening, error: speechError, toggle: toggleSpeech, stop: stopSpeech } =
-    useSpeechInput({
-      lang: agentLang,
-      siteLocale,
-      onFinalText: onFinalSpeech,
-      onInterimText: setInterimText,
-    })
-
-  const displayValue = interimText ?? value
-
-  useEffect(() => {
-    return () => stopSpeech()
-  }, [stopSpeech])
 
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 128)}px`
-  }, [displayValue])
+  }, [value])
 
   const cannedQuery = value.startsWith('/') ? value.slice(1).toLowerCase() : ''
-  const speechLangLabel = languageLabel(siteLocale === 'tr' ? 'tr' : agentLang)
   const filteredCanned = showCannedPicker
     ? cannedResponses.filter((r) => {
         if (!cannedQuery) return true
@@ -159,14 +130,6 @@ export function MessageComposer({
         </div>
       )}
       {sendError && <p className="px-4 pt-2 text-xs text-destructive">{sendError}</p>}
-      {speechError && speechError !== 'unsupported' && (
-        <p className="px-4 pt-2 text-xs text-destructive">{inbox.voiceError}</p>
-      )}
-      {listening && (
-        <p className="px-4 pt-2 text-xs text-primary font-medium animate-pulse">
-          {inbox.voiceListening(speechLangLabel)}
-        </p>
-      )}
 
       {pendingUpload && (
         <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
@@ -268,37 +231,14 @@ export function MessageComposer({
 
         <textarea
           ref={textareaRef}
-          value={displayValue}
-          onChange={(e) => {
-            if (listening) stopSpeech()
-            setInterimText(null)
-            onChange(e.target.value)
-          }}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={listening ? inbox.voiceListening(speechLangLabel) : resolvedPlaceholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled || sending}
           rows={1}
-          className={cn(
-            'flex-1 min-h-[44px] max-h-32 px-1 py-2.5 bg-transparent border-0 resize-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none',
-            listening && 'placeholder:text-primary/70',
-          )}
+          className="flex-1 min-h-[44px] max-h-32 px-1 py-2.5 bg-transparent border-0 resize-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
         />
-        {speechSupported && (
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className={cn(
-              'h-11 w-11 shrink-0 rounded-2xl transition-colors',
-              listening && 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700',
-            )}
-            disabled={disabled || sending}
-            onClick={() => toggleSpeech(value)}
-            title={listening ? inbox.voiceStop : inbox.voiceInput(speechLangLabel)}
-          >
-            {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </Button>
-        )}
         <Button
           type="button"
           size="icon"
@@ -307,7 +247,7 @@ export function MessageComposer({
             background: `linear-gradient(145deg, ${primary}, ${primary}dd)`,
             boxShadow: `0 2px 8px ${primary}33`,
           }}
-          disabled={(!displayValue.trim() && !pendingUpload) || sending || translating || uploading || disabled}
+          disabled={(!value.trim() && !pendingUpload) || sending || translating || uploading || disabled}
           onClick={() => void onSend()}
           title={inbox.send}
         >

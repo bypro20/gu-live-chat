@@ -180,11 +180,6 @@ export type DashboardMessages = {
     addFile: string
     aiSuggest: string
     sendHint: string
-    voiceInput: (lang: string) => string
-    voiceListening: (lang: string) => string
-    voiceStop: string
-    voiceUnsupported: string
-    voiceError: string
     yourLanguage: string
     liveTranslateActive: (lang: string) => string
     detectingVisitorLang: string
@@ -460,12 +455,7 @@ const tr: DashboardMessages = {
     send: 'Gönder',
     addFile: 'Dosya ekle',
     aiSuggest: 'AI öneri',
-    sendHint: 'Enter gönder · Shift+Enter yeni satır · 🎤 sesli yaz',
-    voiceInput: (lang) => `Sesle yaz (${lang})`,
-    voiceListening: (lang) => `Dinleniyor… ${lang} konuşun`,
-    voiceStop: 'Dinlemeyi durdur',
-    voiceUnsupported: 'Tarayıcınız sesli yazmayı desteklemiyor (Chrome önerilir)',
-    voiceError: 'Mikrofon hatası — izin verildiğinden emin olun',
+    sendHint: 'Enter gönder · Shift+Enter yeni satır',
     yourLanguage: 'Diliniz:',
     liveTranslateActive: (lang) => `↔ ${lang} canlı çeviri aktif`,
     detectingVisitorLang: 'Ziyaretçi dili algılanıyor…',
@@ -772,12 +762,7 @@ const en: DashboardMessages = {
     send: 'Send',
     addFile: 'Attach file',
     aiSuggest: 'AI suggest',
-    sendHint: 'Enter to send · Shift+Enter for new line · 🎤 voice input',
-    voiceInput: (lang) => `Voice input (${lang})`,
-    voiceListening: (lang) => `Listening… speak in ${lang}`,
-    voiceStop: 'Stop listening',
-    voiceUnsupported: 'Voice input is not supported in this browser (Chrome recommended)',
-    voiceError: 'Microphone error — check permissions',
+    sendHint: 'Enter to send · Shift+Enter for new line',
     yourLanguage: 'Your language:',
     liveTranslateActive: (lang) => `↔ Live translation with ${lang}`,
     detectingVisitorLang: 'Detecting visitor language…',
