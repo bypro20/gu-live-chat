@@ -17,7 +17,6 @@ export function useAgentLanguage() {
       if (saved) {
         setAgentLangState(normalizeLangCode(saved))
       } else {
-        // Site Türkçe ise varsayılan temsilci dili Türkçe (tarayıcı en-US olsa bile)
         setAgentLangState(siteLocale === 'tr' ? 'tr' : normalizeLangCode(navigator.language))
       }
     } catch {

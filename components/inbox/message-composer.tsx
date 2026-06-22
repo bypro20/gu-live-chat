@@ -18,6 +18,7 @@ import { languageLabel } from '@/lib/translate-languages'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { useSpeechInput } from '@/lib/hooks/use-speech-input'
+import { resolveSpeechLocale } from '@/lib/speech-locale'
 import { inboxComposerRowStyle, inboxComposerShellStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 export type PendingUpload = {
@@ -89,6 +90,8 @@ export function MessageComposer({
   const { locale: siteLocale } = useLocale()
   const primary = resolveInboxPrimary(primaryColor)
   const resolvedPlaceholder = placeholder ?? inbox.writeMessage
+  const speechLocale = siteLocale === 'tr' ? 'tr-TR' : resolveSpeechLocale(agentLang)
+  const speechLangLabel = languageLabel(siteLocale === 'tr' ? 'tr' : agentLang)
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -104,8 +107,7 @@ export function MessageComposer({
 
   const { supported: speechSupported, listening, error: speechError, toggle: toggleSpeech, stop: stopSpeech } =
     useSpeechInput({
-      lang: agentLang,
-      siteLocale,
+      speechLocale,
       onFinalText: onFinalSpeech,
       onInterimText: setInterimText,
     })
@@ -124,7 +126,6 @@ export function MessageComposer({
   }, [displayValue])
 
   const cannedQuery = value.startsWith('/') ? value.slice(1).toLowerCase() : ''
-  const speechLangLabel = languageLabel(siteLocale === 'tr' ? 'tr' : agentLang)
   const filteredCanned = showCannedPicker
     ? cannedResponses.filter((r) => {
         if (!cannedQuery) return true
@@ -164,7 +165,7 @@ export function MessageComposer({
       )}
       {listening && (
         <p className="px-4 pt-2 text-xs text-primary font-medium animate-pulse">
-          {inbox.voiceListening(speechLangLabel)}
+          {inbox.voiceListening(speechLangLabel)} ({speechLocale})
         </p>
       )}
 

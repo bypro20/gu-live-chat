@@ -6,7 +6,7 @@ export function applySecurityHeaders(res: NextResponse, isProduction: boolean) {
   res.headers.set('X-Frame-Options', 'SAMEORIGIN')
   res.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
   res.headers.set('Cross-Origin-Resource-Policy', 'same-site')
-  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=(), payment=()')
   res.headers.set('X-DNS-Prefetch-Control', 'off')
   res.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
   res.headers.set('Origin-Agent-Cluster', '?1')
