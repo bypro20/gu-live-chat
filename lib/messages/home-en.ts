@@ -1,11 +1,12 @@
 import type { HomeMessages } from './home-types'
+import { TRIAL_DAYS } from '@/lib/trial-config'
 
 export const homeEn: HomeMessages = {
   trustStrip: {
     title: 'Why Gu Live Chat?',
     stats: [
       { value: '30 sec', label: 'Setup time' },
-      { value: '7 days', label: 'Free PRO trial' },
+      { value: `${TRIAL_DAYS} days`, label: 'Free PRO trial' },
       { value: '50+', label: 'Languages supported' },
       { value: 'GDPR', label: 'Ready infrastructure' },
     ],
@@ -149,7 +150,7 @@ export const homeEn: HomeMessages = {
     title: 'Frequently asked questions',
     items: [
       { q: 'How long does it take to add Gu Live Chat to my site?', a: 'Add one line of code — it works in 30 seconds. No technical skills required. WordPress, Shopify, and all websites are supported.' },
-      { q: 'Is live chat software free?', a: 'Yes. The free plan includes 2 agents, 100 chats per month, a basic widget, and email notifications. Upgrade anytime for more capacity.' },
+      { q: 'Is live chat software free?', a: 'Yes. The free plan includes 2 agents, 300 chats per month, a basic widget, and email notifications. 14-day PRO trial with no credit card required.' },
       { q: 'Do you support WhatsApp live chat?', a: 'Yes. On the Professional plan, WhatsApp Business integration lets you manage WhatsApp messages in the unified inbox.' },
       { q: 'Is there chatbot and AI support?', a: 'Yes. A visual chatbot builder and GPT/Gemini-powered AI assistant are included on the Professional plan. Answer repetitive questions 24/7.' },
       { q: 'Can I change plans?', a: 'Yes. Upgrade or downgrade anytime. No data loss — changes take effect immediately.' },

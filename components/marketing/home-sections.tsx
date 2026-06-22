@@ -30,9 +30,9 @@ const USE_CASE_ICONS = { support: Headphones, sales: TrendingUp, marketing: Mega
 
 const plans = [
   { id: 'FREE' as const, monthly: 0, highlighted: false },
-  { id: 'STARTER' as const, monthly: 790, highlighted: false },
-  { id: 'PRO' as const, monthly: 1990, highlighted: true },
-  { id: 'BUSINESS' as const, monthly: 4990, highlighted: false },
+  { id: 'STARTER' as const, monthly: 490, highlighted: false },
+  { id: 'PRO' as const, monthly: 990, highlighted: true },
+  { id: 'BUSINESS' as const, monthly: 2490, highlighted: false },
 ]
 
 function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
@@ -105,6 +105,11 @@ export function HomeHero() {
         <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 lg:gap-16 items-center">
           {/* Sol — metin (Crisp/Tidio split hero) */}
           <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
+            <FadeIn>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 text-white shadow-lg shadow-fuchsia-500/25 animate-pulse">
+                🚀 {locale === 'tr' ? 'PRO 14 gün ücretsiz — lansman fiyatı ₺990/ay' : '14-day PRO trial — launch price from $49/mo'}
+              </div>
+            </FadeIn>
             <FadeIn>
               <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 bg-white text-indigo-700 border border-indigo-100 shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -574,7 +579,7 @@ export function PricingSection() {
         <FadeIn>
           <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 text-white shadow-lg shadow-fuchsia-500/25">
-              🚀 {locale === 'tr' ? 'Lansmana özel fiyatlar' : 'Launch pricing'}
+              🚀 {locale === 'tr' ? 'PRO sadece ₺990/ay — 14 gün ücretsiz' : 'PRO from $49/mo — 14-day free trial'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">{t.pricing.title}</h2>
             <p className="mt-3 text-muted-foreground">{t.pricing.subtitle}</p>

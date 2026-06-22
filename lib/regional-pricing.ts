@@ -11,21 +11,21 @@ export type RegionalPlanPrice = {
 export const REGIONAL_PLAN_PRICES: Record<MarketRegion, Record<PlanId, RegionalPlanPrice>> = {
   TR: {
     FREE: { monthly: 0, yearlyMonthly: 0, currency: 'TRY' },
-    STARTER: { monthly: 790, yearlyMonthly: 632, currency: 'TRY' },
-    PRO: { monthly: 1990, yearlyMonthly: 1592, currency: 'TRY' },
-    BUSINESS: { monthly: 4990, yearlyMonthly: 3992, currency: 'TRY' },
+    STARTER: { monthly: 490, yearlyMonthly: 392, currency: 'TRY' },
+    PRO: { monthly: 990, yearlyMonthly: 792, currency: 'TRY' },
+    BUSINESS: { monthly: 2490, yearlyMonthly: 1992, currency: 'TRY' },
   },
   EU: {
     FREE: { monthly: 0, yearlyMonthly: 0, currency: 'EUR' },
-    STARTER: { monthly: 29, yearlyMonthly: 23, currency: 'EUR' },
-    PRO: { monthly: 59, yearlyMonthly: 47, currency: 'EUR' },
-    BUSINESS: { monthly: 149, yearlyMonthly: 119, currency: 'EUR' },
+    STARTER: { monthly: 19, yearlyMonthly: 15, currency: 'EUR' },
+    PRO: { monthly: 39, yearlyMonthly: 31, currency: 'EUR' },
+    BUSINESS: { monthly: 99, yearlyMonthly: 79, currency: 'EUR' },
   },
   GLOBAL: {
     FREE: { monthly: 0, yearlyMonthly: 0, currency: 'USD' },
-    STARTER: { monthly: 39, yearlyMonthly: 31, currency: 'USD' },
-    PRO: { monthly: 79, yearlyMonthly: 63, currency: 'USD' },
-    BUSINESS: { monthly: 199, yearlyMonthly: 159, currency: 'USD' },
+    STARTER: { monthly: 25, yearlyMonthly: 20, currency: 'USD' },
+    PRO: { monthly: 49, yearlyMonthly: 39, currency: 'USD' },
+    BUSINESS: { monthly: 129, yearlyMonthly: 103, currency: 'USD' },
   },
 }
 

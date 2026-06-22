@@ -1,12 +1,12 @@
 import type { HomeMessages } from './home-types'
-import { trialFreeTierFaqLine } from '@/lib/trial-config'
+import { trialFreeTierFaqLine, TRIAL_DAYS } from '@/lib/trial-config'
 
 export const homeTr: HomeMessages = {
   trustStrip: {
     title: 'Neden Gu Live Chat?',
     stats: [
       { value: '30 sn', label: 'Kurulum süresi' },
-      { value: '7 gün', label: 'Ücretsiz PRO deneme' },
+      { value: `${TRIAL_DAYS} gün`, label: 'Ücretsiz PRO deneme' },
       { value: '50+', label: 'Dil desteği' },
       { value: 'KVKK', label: 'Uyumlu altyapı' },
     ],
@@ -150,7 +150,7 @@ export const homeTr: HomeMessages = {
     title: 'Sık sorulan sorular',
     items: [
       { q: "Gu Live Chat'i siteme eklemek ne kadar sürer?", a: 'Tek satır kodu sitenize ekleyin — 30 saniyede çalışmaya başlar. Teknik bilgi gerekmez. WordPress, Shopify ve tüm web siteleri desteklenir.' },
-      { q: 'Canlı destek yazılımı ücretsiz mi?', a: `Evet, ücretsiz paket ile 2 temsilci, ayda 100 sohbet, temel widget ve e-posta bildirimleri sunulur. ${trialFreeTierFaqLine()}` },
+      { q: 'Canlı destek yazılımı ücretsiz mi?', a: `Evet, ücretsiz paket ile 2 temsilci, ayda 300 sohbet, temel widget ve e-posta bildirimleri sunulur. ${trialFreeTierFaqLine()}` },
       { q: 'WhatsApp canlı destek destekleniyor mu?', a: "Evet, Profesyonel pakette WhatsApp Business entegrasyonu ile WhatsApp mesajlarını birleşik inbox'ta yönetirsiniz." },
       { q: 'Chatbot ve AI destek var mı?', a: 'Evet, görsel chatbot editörü ve GPT/Gemini destekli AI asistan Profesyonel pakette yer alır. Tekrarlayan soruları 7/24 otomatik yanıtlayın.' },
       { q: 'Paket değiştirebilir miyim?', a: 'Evet, istediğiniz zaman yükseltme veya düşürme yapabilirsiniz. Veri kaybı olmaz, geçiş anında gerçekleşir.' },

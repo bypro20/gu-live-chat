@@ -1,4 +1,5 @@
 import type { MarketingPages } from './types'
+import { TRIAL_DAYS } from '@/lib/trial-config'
 
 export const marketingEn: MarketingPages = {
   common: {
@@ -410,7 +411,7 @@ export const marketingEn: MarketingPages = {
     homeCrumb: 'Home',
     blogCrumb: 'Blog',
     notFound: 'Post not found',
-    trialNote: '7-day free trial — no credit card required',
+    trialNote: `${TRIAL_DAYS}-day free trial — no credit card required`,
   },
   knowledge: {
     titleSuffix: 'Knowledge Base',
@@ -579,7 +580,7 @@ export const marketingEn: MarketingPages = {
       faqs: [
         {
           q: 'Is live support free?',
-          a: 'Yes. Gu Live Chat includes a free tier with 2 agents and 100 chats per month, plus a 7-day PRO trial with no credit card required.',
+          a: `Yes. Gu Live Chat includes a free tier with 2 agents and 300 chats per month, plus a ${TRIAL_DAYS}-day PRO trial with no credit card required.`,
         },
         {
           q: 'How long does setup take?',

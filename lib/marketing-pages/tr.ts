@@ -1,4 +1,4 @@
-import { trialFreeTierFaqLine } from '@/lib/trial-config'
+import { trialFreeTierFaqLine, TRIAL_DAYS } from '@/lib/trial-config'
 import type { MarketingPages } from './types'
 
 export const marketingTr: MarketingPages = {
@@ -411,7 +411,7 @@ export const marketingTr: MarketingPages = {
     homeCrumb: 'Ana Sayfa',
     blogCrumb: 'Blog',
     notFound: 'Yazı bulunamadı',
-    trialNote: '7 gün ücretsiz deneme — kredi kartı gerekmez',
+    trialNote: `${TRIAL_DAYS} gün ücretsiz deneme — kredi kartı gerekmez`,
   },
   knowledge: {
     titleSuffix: 'Bilgi Bankası',
@@ -510,7 +510,7 @@ export const marketingTr: MarketingPages = {
     title: 'Müşterilerinize anında ulaşın, satışları artırın',
     titleHighlight: 'anında',
     subtitle: 'Web sitenize 30 saniyede canlı sohbet ekleyin. AI destekli, WhatsApp entegre, ücretsiz başlayın.',
-    proofs: ['Kredi kartı gerekmez', '7 gün PRO ücretsiz', 'Kurulum 30 saniye', 'KVKK uyumlu'],
+    proofs: ['Kredi kartı gerekmez', `${TRIAL_DAYS} gün PRO ücretsiz`, 'Kurulum 30 saniye', 'KVKK uyumlu'],
     bullets: [
       'Canlı sohbet widget - sitenize tek satır kod',
       'AI chatbot - tekrarlayan soruları otomatik yanıtla',

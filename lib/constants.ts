@@ -1,7 +1,7 @@
 export const PLAN_LIMITS = {
   FREE: {
     maxAgents: 2,
-    maxConversationsPerMonth: 100,
+    maxConversationsPerMonth: 300,
     chatbot: false,
     visitorTracking: false,
     cannedResponses: false,
@@ -111,7 +111,7 @@ export const PLANS = [
     description: 'Küçük işletmeler için temel canlı destek',
     features: [
       '2 temsilci',
-      '100 sohbet/ay',
+      '300 sohbet/ay',
       'Temel widget',
       'E-posta bildirimleri',
       'Temel istatistikler',
@@ -121,7 +121,7 @@ export const PLANS = [
   {
     id: 'STARTER',
     name: 'Başlangıç',
-    price: 790,
+    price: 490,
     popular: false,
     description: 'Büyüyen işletmeler için gelişmiş özellikler',
     features: [
@@ -139,7 +139,7 @@ export const PLANS = [
   {
     id: 'PRO',
     name: 'Profesyonel',
-    price: 1990,
+    price: 990,
     popular: true,
     description: 'Profesyonel ekipler için tam donanım',
     features: [
@@ -163,7 +163,7 @@ export const PLANS = [
   {
     id: 'BUSINESS',
     name: 'Kurumsal',
-    price: 4990,
+    price: 2490,
     popular: false,
     description: 'Kurumsal çözümler için sınırsız paket',
     features: [

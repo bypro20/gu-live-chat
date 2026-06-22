@@ -13,7 +13,7 @@ const catalogTr: Record<PlanId, PlanCatalogEntry> = {
   FREE: {
     name: 'Ücretsiz',
     description: 'Küçük işletmeler için temel canlı destek',
-    features: ['2 temsilci', '100 sohbet/ay', 'Temel widget', 'E-posta bildirimleri', 'Temel istatistikler'],
+    features: ['2 temsilci', '300 sohbet/ay', 'Temel widget', 'E-posta bildirimleri', 'Temel istatistikler'],
   },
   STARTER: {
     name: 'Başlangıç',
@@ -75,7 +75,7 @@ const catalogEn: Record<PlanId, PlanCatalogEntry> = {
   FREE: {
     name: 'Free',
     description: 'Essential live chat for small businesses',
-    features: ['2 agents', '100 chats/month', 'Basic widget', 'Email notifications', 'Basic analytics'],
+    features: ['2 agents', '300 chats/month', 'Basic widget', 'Email notifications', 'Basic analytics'],
   },
   STARTER: {
     name: 'Starter',

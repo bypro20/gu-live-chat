@@ -87,7 +87,7 @@ export function PaymentFlowShowcase({ className = '' }: { className?: string }) 
           >
             <p className="text-sm font-bold text-slate-800">PRO Plan · {isTr ? 'Aylık' : 'Monthly'}</p>
             <p className="text-xs text-slate-500 mt-1">{isTr ? '2.000 sohbet · 500 site' : '2,000 chats · 500 sites'}</p>
-            <p className="text-lg font-extrabold text-indigo-600 mt-2">₺1.990<span className="text-xs font-medium text-slate-400">/ay</span></p>
+            <p className="text-lg font-extrabold text-indigo-600 mt-2">₺990<span className="text-xs font-medium text-slate-400">/ay</span></p>
           </div>
 
           <div
@@ -140,7 +140,7 @@ export function PaymentFlowShowcase({ className = '' }: { className?: string }) 
               step >= 3 ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            {isTr ? '7 gün ücretsiz deneme · İstediğiniz zaman iptal' : '7-day free trial · Cancel anytime'}
+            {isTr ? '14 gün ücretsiz deneme · İstediğiniz zaman iptal' : '14-day free trial · Cancel anytime'}
           </p>
         </div>
       </DemoChrome>

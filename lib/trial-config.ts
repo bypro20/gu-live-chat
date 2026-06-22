@@ -1,5 +1,5 @@
 /** PRO deneme süresi — tek kaynak */
-export const TRIAL_DAYS = 7
+export const TRIAL_DAYS = 14
 /** Deneme başlatırken kart doğrulama (TRY) — iyzico minimum tahsilat */
 export const TRIAL_CARD_VERIFY_AMOUNT_TRY = 1
 export const TRIAL_BONUS_WIDGET_DAYS = 3

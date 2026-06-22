@@ -1,5 +1,6 @@
 import type { SiteLocale } from './regional-config'
 import { formatPlanCount } from './plan-i18n'
+import { TRIAL_DAYS } from './trial-config'
 
 type FeatureValue = boolean | string | null
 
@@ -99,7 +100,7 @@ export function getPricingFaqs(locale: SiteLocale): { q: string; a: string }[] {
       },
       {
         q: 'Is there a free trial?',
-        a: 'Yes — start on the free plan or try PRO features with a 7-day trial after signup. No credit card required to begin.',
+        a: `Yes — start on the free plan or try PRO features with a ${TRIAL_DAYS}-day trial after signup. No credit card required to begin.`,
       },
       {
         q: 'Can I change plans anytime?',
@@ -126,7 +127,7 @@ export function getPricingFaqs(locale: SiteLocale): { q: string; a: string }[] {
     },
     {
       q: 'Ücretsiz deneme var mı?',
-      a: 'Evet — ücretsiz paketle başlayın veya kayıt sonrası 7 günlük PRO denemesi kullanın. Başlamak için kredi kartı gerekmez.',
+      a: `Evet — ücretsiz paketle başlayın veya kayıt sonrası ${TRIAL_DAYS} günlük PRO denemesi kullanın. Başlamak için kredi kartı gerekmez.`,
     },
     {
       q: 'İstediğim zaman plan değiştirebilir miyim?',
