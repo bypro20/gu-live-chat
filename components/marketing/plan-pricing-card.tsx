@@ -13,19 +13,19 @@ const TIER_STYLES: Record<
     badge: 'bg-muted text-muted-foreground',
   },
   STARTER: {
-    accent: 'bg-gradient-to-r from-sky-500 to-blue-500',
-    ring: 'border-border hover:border-sky-200 dark:hover:border-sky-800',
-    badge: 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
+    accent: 'bg-gradient-to-r from-violet-500 to-purple-500',
+    ring: 'border-border hover:border-violet-200 dark:hover:border-violet-800',
+    badge: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
   },
   PRO: {
-    accent: 'bg-gradient-to-r from-blue-600 to-indigo-600',
-    ring: 'border-primary ring-1 ring-primary/20 shadow-brand',
-    badge: 'bg-primary text-primary-foreground',
+    accent: 'bg-gradient-to-r from-fuchsia-500 via-purple-600 to-orange-500',
+    ring: 'border-fuchsia-400 ring-2 ring-fuchsia-300/40 shadow-brand-lg',
+    badge: 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white',
   },
   BUSINESS: {
-    accent: 'bg-gradient-to-r from-slate-700 to-slate-900',
-    ring: 'border-border hover:border-slate-400 dark:hover:border-slate-600',
-    badge: 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900',
+    accent: 'bg-gradient-to-r from-purple-700 to-fuchsia-700',
+    ring: 'border-border hover:border-purple-400 dark:hover:border-purple-600',
+    badge: 'bg-purple-900 text-white dark:bg-purple-100 dark:text-purple-900',
   },
 }
 

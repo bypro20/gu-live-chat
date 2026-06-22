@@ -21,7 +21,7 @@ export const tr = {
   },
   pricing: {
     title: 'Basit, şeffaf fiyatlandırma',
-    subtitle: 'Gizli ücret yok. İşletmenizin büyüklüğüne uygun paketi seçin.',
+    subtitle: 'Lansmana özel fiyatlar. Gizli ücret yok — işletmenizin büyüklüğüne uygun paketi seçin.',
     monthly: 'Aylık',
     yearly: 'Yıllık',
     yearlyDiscount: '-20%',

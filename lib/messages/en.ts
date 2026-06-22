@@ -23,7 +23,7 @@ export const en: MessageTree = {
   },
   pricing: {
     title: 'Simple, transparent pricing',
-    subtitle: 'No hidden fees. Choose the plan that fits your business.',
+    subtitle: 'Launch pricing — no hidden fees. Choose the plan that fits your business.',
     monthly: 'Monthly',
     yearly: 'Yearly',
     yearlyDiscount: '-20%',

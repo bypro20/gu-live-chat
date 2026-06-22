@@ -30,9 +30,9 @@ const USE_CASE_ICONS = { support: Headphones, sales: TrendingUp, marketing: Mega
 
 const plans = [
   { id: 'FREE' as const, monthly: 0, highlighted: false },
-  { id: 'STARTER' as const, monthly: 1790, highlighted: false },
-  { id: 'PRO' as const, monthly: 3790, highlighted: true },
-  { id: 'BUSINESS' as const, monthly: 11990, highlighted: false },
+  { id: 'STARTER' as const, monthly: 790, highlighted: false },
+  { id: 'PRO' as const, monthly: 1990, highlighted: true },
+  { id: 'BUSINESS' as const, monthly: 4990, highlighted: false },
 ]
 
 function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
@@ -135,7 +135,7 @@ export function HomeHero() {
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-500 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 hover:scale-[1.02] transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 shadow-lg shadow-fuchsia-500/30 hover:shadow-fuchsia-500/45 hover:scale-[1.02] transition-all"
                 >
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -564,13 +564,18 @@ export function PricingSection() {
   const { data: session } = useSession()
   const isLoggedIn = !!session?.user
   const t = useT()
+  const { locale } = useLocale()
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-muted/30">
-      <div className="max-w-6xl mx-auto">
+    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-violet-50/80 via-fuchsia-50/40 to-orange-50/30 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-80 h-80 bg-fuchsia-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-violet-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-6xl mx-auto relative">
         <FadeIn>
           <div className="text-center mb-10">
-            <span className="section-label mb-4">{t.nav.pricing}</span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 text-white shadow-lg shadow-fuchsia-500/25">
+              🚀 {locale === 'tr' ? 'Lansmana özel fiyatlar' : 'Launch pricing'}
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">{t.pricing.title}</h2>
             <p className="mt-3 text-muted-foreground">{t.pricing.subtitle}</p>
           </div>
