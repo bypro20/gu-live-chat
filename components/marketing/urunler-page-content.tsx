@@ -6,8 +6,6 @@ import { useSession } from 'next-auth/react'
 import { ArrowRight, ShoppingCart, Package, Puzzle } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
-import { PaymentLogos } from '@/components/marketing/payment-logos'
-import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
@@ -192,11 +190,9 @@ export function UrunlerPageContent() {
         </div>
       </section>
 
-      <section className="py-12 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <PaymentLogos variant="footer" />
+      <section className="py-10 px-4 sm:px-6 border-t border-border">
+        <div className="max-w-4xl mx-auto text-center space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">{u.paymentNote}</p>
-          <IyzicoLegalBar />
           <Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
             {u.comparePricing} <ArrowRight className="w-4 h-4" />
           </Link>

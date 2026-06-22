@@ -11,7 +11,7 @@ import type { InboxMessage } from './types'
 import { formatMessageTime } from './utils'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { useLocale } from '@/components/marketing/locale-provider'
-import { inboxAgentBubbleStyle, inboxVisitorBubbleStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
+import { inboxAgentBubbleStyle, inboxBubbleRadius, inboxVisitorBubbleStyle, resolveInboxPrimary } from '@/lib/inbox-theme'
 
 type MessageBubbleProps = {
   message: InboxMessage
@@ -21,6 +21,8 @@ type MessageBubbleProps = {
   agentLang?: string
   primaryColor?: string | null
   grouped?: boolean
+  isLastInGroup?: boolean
+  animateIn?: boolean
   senderName?: string | null
   senderImage?: string | null
 }
@@ -33,6 +35,8 @@ export const MessageBubble = memo(function MessageBubble({
   agentLang = 'tr',
   primaryColor,
   grouped = false,
+  isLastInGroup = true,
+  animateIn = false,
   senderName,
   senderImage,
 }: MessageBubbleProps) {
@@ -125,12 +129,16 @@ export const MessageBubble = memo(function MessageBubble({
     : null
 
   return (
-    <div className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${grouped ? 'mt-0.5' : 'mt-2'}`}>
+    <div
+      className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${
+        grouped ? 'mt-0.5' : 'mt-3'
+      } ${animateIn ? 'inbox-message-enter' : ''}`}
+    >
       {isVisitor && !grouped && (
         <Avatar
           fallback="Z"
           size="sm"
-          className="!w-8 !h-8 shrink-0 mt-0.5 !bg-indigo-100 !text-indigo-700 text-[10px] ring-2 ring-white shadow-sm"
+          className="!w-8 !h-8 shrink-0 mt-0.5 !bg-slate-100 !text-slate-600 text-[10px] ring-1 ring-white/80"
         />
       )}
       {isVisitor && grouped && <div className="w-8 shrink-0" />}
@@ -156,11 +164,7 @@ export const MessageBubble = memo(function MessageBubble({
         )}
         {(message.content || hasAtt) && (
           <div
-            className={`px-4 py-3 text-[14px] leading-relaxed transition-shadow ${
-              isVisitor
-                ? 'rounded-[8px_22px_22px_22px]'
-                : 'rounded-[22px_8px_22px_22px]'
-            }`}
+            className={`px-3.5 py-2.5 text-[14px] leading-[1.55] transition-shadow duration-200 ${inboxBubbleRadius(isVisitor, grouped, isLastInGroup)}`}
             style={isVisitor ? inboxVisitorBubbleStyle() : inboxAgentBubbleStyle(primary)}
           >
             {!hideText && message.content && (
@@ -189,7 +193,7 @@ export const MessageBubble = memo(function MessageBubble({
         <div
           className={`flex items-center gap-1.5 mt-1 px-0.5 ${
             isVisitor ? '' : 'justify-end'
-          } ${grouped ? 'hidden' : ''}`}
+          } ${grouped && isLastInGroup ? '' : grouped ? 'hidden' : ''}`}
         >
           <span className="text-[10px] text-slate-400 tabular-nums">
             {formatMessageTime(message.createdAt, locale)}
@@ -219,7 +223,7 @@ export const MessageBubble = memo(function MessageBubble({
           src={senderImage || undefined}
           fallback={(agentLabel.charAt(0) || 'A').toUpperCase()}
           size="sm"
-          className="!w-8 !h-8 shrink-0 mt-0.5 ring-2 ring-white shadow-sm !bg-indigo-100 !text-indigo-700 text-[10px]"
+          className="!w-8 !h-8 shrink-0 mt-0.5 ring-1 ring-white/80 !bg-slate-100 !text-slate-600 text-[10px]"
         />
       )}
       {!isVisitor && grouped && <div className="w-8 shrink-0" />}

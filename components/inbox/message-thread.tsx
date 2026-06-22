@@ -39,17 +39,27 @@ export const MessageThread = memo(function MessageThread({
         if (showDateDivider) lastDateKey = dateKey
 
         const prev = messages[index - 1]
+        const next = messages[index + 1]
+        const sameSender = (a: InboxMessage, b: InboxMessage) =>
+          a.senderType === b.senderType && a.senderType !== 'SYSTEM'
+
         const isGrouped =
           !!prev &&
-          prev.senderType === msg.senderType &&
-          msg.senderType !== 'SYSTEM' &&
+          sameSender(prev, msg) &&
           new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() < 120_000
+
+        const isLastInGroup =
+          !next ||
+          !sameSender(msg, next) ||
+          new Date(next.createdAt).getTime() - new Date(msg.createdAt).getTime() >= 120_000
+
+        const isLatest = index === messages.length - 1
 
         return (
           <div key={msg.id}>
             {showDateDivider && (
-              <div className="flex justify-center py-2">
-                <span className="text-[11px] font-semibold text-slate-500 bg-white/90 backdrop-blur px-3 py-1 rounded-full border border-indigo-100 shadow-sm">
+              <div className="flex justify-center py-3">
+                <span className="text-[11px] font-medium text-slate-500 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200/80 shadow-sm">
                   {formatDateDivider(msg.createdAt, d, locale)}
                 </span>
               </div>
@@ -62,6 +72,8 @@ export const MessageThread = memo(function MessageThread({
               agentLang={agentLang}
               primaryColor={primaryColor}
               grouped={isGrouped}
+              isLastInGroup={isLastInGroup}
+              animateIn={isLatest}
               senderName={msg.senderName}
               senderImage={msg.senderImage}
             />

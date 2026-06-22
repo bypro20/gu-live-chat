@@ -43,7 +43,8 @@ export function useInboxMessageScroll(
     prevLenRef.current = messagesLength
 
     if (grew || stickToBottomRef.current) {
-      requestAnimationFrame(() => scrollToBottom('auto'))
+      const behavior: ScrollBehavior = grew && stickToBottomRef.current ? 'smooth' : 'auto'
+      requestAnimationFrame(() => scrollToBottom(behavior))
     }
   }, [messagesLength, conversationId, scrollToBottom])
 

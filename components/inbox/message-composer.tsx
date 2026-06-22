@@ -242,10 +242,10 @@ export function MessageComposer({
         <Button
           type="button"
           size="icon"
-          className="h-11 w-11 shrink-0 rounded-2xl border-0 shadow-lg text-white hover:opacity-95"
+          className="h-11 w-11 shrink-0 rounded-2xl border-0 text-white hover:opacity-95 transition-opacity duration-150"
           style={{
-            background: `linear-gradient(135deg, ${primary}, #818CF8)`,
-            boxShadow: `0 8px 24px ${primary}55`,
+            background: `linear-gradient(145deg, ${primary}, ${primary}dd)`,
+            boxShadow: `0 2px 8px ${primary}33`,
           }}
           disabled={(!value.trim() && !pendingUpload) || sending || translating || uploading || disabled}
           onClick={() => void onSend()}
