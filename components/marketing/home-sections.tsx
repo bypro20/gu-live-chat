@@ -145,7 +145,7 @@ export function HomeHero() {
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  href="/basla"
+                  href="/demo"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
                 >
                   {t.hero.demo}
