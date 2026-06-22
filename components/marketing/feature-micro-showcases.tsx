@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Check, CreditCard, Copy, MessageCircle, Sparkles, TrendingUp, Users, Zap } from 'lucide-react'
+import { Check, CreditCard, Copy, MessageCircle, Sparkles, TrendingUp, Users, Zap, LayoutDashboard, UserCircle, Eye } from 'lucide-react'
 import { useLocale } from '@/components/marketing/locale-provider'
 
 export const MICRO_DEMO_COPY = {
@@ -37,7 +37,7 @@ export const MICRO_DEMO_COPY = {
   },
 } as const
 
-function useSteps(count: number, ms = 2800) {
+export function useSteps(count: number, ms = 2800) {
   const [step, setStep] = useState(0)
   useEffect(() => {
     const id = window.setInterval(() => setStep((s) => (s + 1) % count), ms)
@@ -47,7 +47,7 @@ function useSteps(count: number, ms = 2800) {
 }
 
 /** Hero kalitesinde büyük tarayıcı mockup */
-function DemoChrome({ url, children, className = '' }: { url: string; children: ReactNode; className?: string }) {
+export function DemoChrome({ url, children, className = '' }: { url: string; children: ReactNode; className?: string }) {
   return (
     <div
       className={`relative w-full max-w-[520px] rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/10 overflow-hidden ${className}`}
