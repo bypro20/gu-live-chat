@@ -110,7 +110,9 @@ export function AdminVisitorsMonitor({
       setVisitors(
         (data.visitors || []).map((v: LiveVisitor & { pages?: LiveVisitor['pages'] }) => ({
           ...v,
-          isLive: v.isLive ?? true,
+          isLive:
+            Boolean(v.isLive) ||
+            Boolean(v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() < 5 * 60 * 1000),
           currentPage: v.currentPage || '',
         }))
       )
@@ -336,11 +338,7 @@ export function AdminVisitorsMonitor({
         setOverlayDeniedMessage(m.socketOffline)
         return
       }
-      if (!visitor?.isLive) {
-        setOverlayDeniedMessage(m.visitorNotLive)
-      } else {
-        setOverlayDeniedMessage(null)
-      }
+      setOverlayDeniedMessage(null)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')

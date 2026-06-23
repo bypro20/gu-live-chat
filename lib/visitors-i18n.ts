@@ -64,6 +64,7 @@ export type VisitorsMessages = {
     screenWatchHint: string
     watchScreen: string
     visitorOffline: string
+    socketPending: string
     justNow: string
     durationMin: (mins: number) => string
     durationHour: (hours: number, mins: number) => string
@@ -171,7 +172,8 @@ const tr: VisitorsMessages = {
     screenWatchDesc: 'Ziyaretçinin ekranını gerçek zamanlı izleyin.',
     screenWatchHint: 'Kredi kartı ve şifre gizlilik koruması • Fare ile müdahale',
     watchScreen: 'Ekranı İzle',
-    visitorOffline: 'Ziyaretçi çevrimdışı',
+    visitorOffline: 'Ziyaretçi çevrimdışı — widget yüklü sayfada olun.',
+    socketPending: 'Oturum aktif; canlı bağlantı kuruluyor. Butona basarak deneyin.',
     justNow: 'az önce',
     durationMin: (mins) => `${mins} dk`,
     durationHour: (hours, mins) => `${hours} sa ${mins} dk`,
@@ -279,7 +281,8 @@ const en: VisitorsMessages = {
     screenWatchDesc: 'Watch the visitor screen in real time.',
     screenWatchHint: 'Card & password privacy protection • Mouse intervention',
     watchScreen: 'Watch Screen',
-    visitorOffline: 'Visitor offline',
+    visitorOffline: 'Visitor offline — open a page with the widget loaded.',
+    socketPending: 'Session is active; live connection pending. Click the button to try.',
     justNow: 'just now',
     durationMin: (mins) => `${mins} min`,
     durationHour: (hours, mins) => `${hours}h ${mins}m`,

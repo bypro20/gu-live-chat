@@ -110,20 +110,23 @@ async function main() {
   )
   console.log('  ✓', Object.keys(railwayVars).join(', '))
 
-  console.log('\n2) Redeploy tetikleniyor...')
+  console.log('\n2) Redeploy tetikleniyor (GitHub master)...')
   const dep = await gql(
     token,
-    `mutation($input: ServiceInstanceDeployInput!) {
-      serviceInstanceDeploy(input: $input)
+    `mutation($serviceId: String!, $environmentId: String!, $latestCommit: Boolean) {
+      serviceInstanceDeploy(
+        serviceId: $serviceId
+        environmentId: $environmentId
+        latestCommit: $latestCommit
+      )
     }`,
     {
-      input: {
-        serviceId: SERVICE,
-        environmentId: ENV,
-      },
+      serviceId: SERVICE,
+      environmentId: ENV,
+      latestCommit: true,
     }
   )
-  console.log('  ✓ deploy:', dep.serviceInstanceDeploy?.id || 'ok')
+  console.log('  ✓ deploy:', dep.serviceInstanceDeploy || 'ok')
 
   console.log('\n3) Health bekleniyor...')
   const socket = 'https://gu-live-chat-socket-production.up.railway.app'

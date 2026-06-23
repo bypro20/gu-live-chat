@@ -14,7 +14,7 @@
  *   SOCKET_INTERNAL_SECRET=...
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'http'
-import { initSocketServer, getIO } from './lib/socket'
+import { initSocketServer, getIO, getLiveVisitors, getAllLiveVisitors } from './lib/socket'
 import { applyRemoteSocketEmit, type RemoteSocketEmit } from './lib/socket-emit-core'
 
 const port = parseInt(process.env.SOCKET_PORT || process.env.PORT || '3001', 10)
@@ -55,6 +55,20 @@ const server = createServer(async (req, res) => {
         uptimeSec: Math.floor(process.uptime()),
       })
     )
+    return
+  }
+
+  if (req.url?.startsWith('/internal/live-visitors')) {
+    if (!authOk(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' })
+      res.end(JSON.stringify({ error: 'Unauthorized' }))
+      return
+    }
+    const parsed = new URL(req.url, 'http://local')
+    const websiteId = parsed.searchParams.get('websiteId')?.trim() || ''
+    const visitors = websiteId ? getLiveVisitors(websiteId) : getAllLiveVisitors()
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify({ count: visitors.length, visitors }))
     return
   }
 

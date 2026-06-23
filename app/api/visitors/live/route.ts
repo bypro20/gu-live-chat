@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { websiteHasFeature } from '@/lib/addon-features'
-import { getLiveVisitors } from '@/lib/socket'
+import { resolveLiveVisitors } from '@/lib/socket-live-bridge'
 
 // GET /api/visitors/live?websiteId=xxx
 export async function GET(req: Request) {
@@ -97,7 +97,7 @@ export async function GET(req: Request) {
       orderBy: { lastActiveAt: 'desc' },
     })
 
-    const liveVisitors = getLiveVisitors(website.websiteId)
+    const liveVisitors = await resolveLiveVisitors(website.websiteId)
     const liveSocketIds = new Set(liveVisitors.map(v => v.visitorId))
 
     const visitors = activeSessions.map((s) => {

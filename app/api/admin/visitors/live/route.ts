@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getLiveVisitors, getAllLiveVisitors } from '@/lib/socket'
+import { resolveLiveVisitors } from '@/lib/socket-live-bridge'
 import { requireAdmin } from '@/lib/admin-auth'
 
 // GET /api/admin/visitors/live?websiteId=xxx
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
       }
 
-      const liveVisitors = getLiveVisitors(website.websiteId)
+      const liveVisitors = await resolveLiveVisitors(website.websiteId)
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
       const recentSessions = await prisma.visitorSession.findMany({
         where: {
@@ -147,7 +147,7 @@ export async function GET(req: Request) {
     })
 
     const socketByVisitor = new Map(
-      getAllLiveVisitors().map((v) => [v.visitorId, v])
+      (await resolveLiveVisitors()).map((v) => [v.visitorId, v])
     )
 
     const visitors = allActiveSessions.map((s) => {
@@ -193,7 +193,7 @@ export async function GET(req: Request) {
 
     // Socket-only visitors not yet in DB batch
     const dbVisitorIds = new Set(allActiveSessions.map((s) => s.visitorId))
-    for (const live of getAllLiveVisitors()) {
+    for (const live of await resolveLiveVisitors()) {
       if (dbVisitorIds.has(live.visitorId)) continue
       const site = allWebsites.find((w) => w.websiteId === live.websiteId)
       visitors.unshift({
