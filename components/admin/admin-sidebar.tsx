@@ -126,7 +126,7 @@ export function AdminSidebar({
                     onClick={onNavigate}
                     className={`admin-sidebar-item ${active ? 'admin-sidebar-item--active' : ''}`}
                   >
-                    <span className={`admin-sidebar-item-icon ${active ? 'text-red-200' : ''}`}>
+                    <span className={`admin-sidebar-item-icon ${active ? 'text-red-400' : ''}`}>
                       <Icon className="w-[18px] h-[18px]" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ export function AdminSidebar({
           <Link
             href="/dashboard"
             onClick={onNavigate}
-            className="admin-sidebar-item mb-2 text-red-200 hover:text-white"
+            className="admin-sidebar-item mb-2 text-red-400 hover:text-white"
           >
             <span className="admin-sidebar-item-icon">
               <ArrowLeft className="w-[18px] h-[18px]" />
@@ -176,7 +176,7 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={onSignOut}
-            className="p-1.5 rounded-lg admin-sidebar-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors hidden lg:block"
+            className="p-1.5 rounded-lg admin-sidebar-muted hover:text-red-400 hover:bg-red-500/10 transition-colors hidden lg:block"
             title="Çıkış Yap"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

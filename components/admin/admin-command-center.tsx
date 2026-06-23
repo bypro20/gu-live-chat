@@ -22,7 +22,7 @@ const ACCENT: Record<AdminModule['accent'], { border: string; bg: string; text: 
   emerald: { border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'from-emerald-500/20' },
   sky: { border: 'border-sky-500/20', bg: 'bg-sky-500/10', text: 'text-sky-400', glow: 'from-sky-500/20' },
   amber: { border: 'border-amber-500/20', bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'from-amber-500/20' },
-  rose: { border: 'border-rose-500/20', bg: 'bg-rose-500/10', text: 'text-rose-400', glow: 'from-rose-500/20' },
+  rose: { border: 'border-red-500/20', bg: 'bg-red-500/10', text: 'text-red-400', glow: 'from-red-500/20' },
   cyan: { border: 'border-cyan-500/20', bg: 'bg-cyan-500/10', text: 'text-cyan-400', glow: 'from-cyan-500/20' },
 }
 

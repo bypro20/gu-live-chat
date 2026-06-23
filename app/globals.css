@@ -458,7 +458,7 @@ body {
 
   .admin-shell .app-sidebar::before {
     background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(248, 113, 113, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(239, 68, 68, 0.06) 0%, transparent 60%),
       radial-gradient(ellipse 60% 30% at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
   }
 
@@ -485,10 +485,10 @@ body {
   .admin-shell-v2 {
     --app-sidebar-width: 300px;
     --admin-fire: #ef4444;
-    --admin-fire-bright: #ff6b4a;
+    --admin-fire-bright: #dc2626;
     --admin-fire-deep: #991b1b;
     --admin-fire-soft: rgba(239, 68, 68, 0.18);
-    --admin-fire-border: rgba(248, 113, 113, 0.32);
+    --admin-fire-border: rgba(239, 68, 68, 0.32);
     color: var(--admin-text);
   }
 
@@ -504,14 +504,14 @@ body {
     --admin-text-secondary: #e5e5e5;
     --admin-text-muted: #a3a3a3;
     --admin-text-faint: #737373;
-    --admin-accent: #f87171;
-    --admin-accent-soft: rgba(248, 113, 113, 0.12);
+    --admin-accent: #ef4444;
+    --admin-accent-soft: rgba(239, 68, 68, 0.12);
     --admin-topbar-bg: rgba(0, 0, 0, 0.94);
     --admin-input-bg: rgba(255, 255, 255, 0.04);
-    --admin-hero-gradient: linear-gradient(135deg, rgba(248, 113, 113, 0.08) 0%, rgba(18, 18, 18, 0.95) 45%, #000000 100%);
+    --admin-hero-gradient: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(18, 18, 18, 0.95) 45%, #000000 100%);
     --admin-sidebar-bg: #000000;
     --admin-sidebar-bg-end: #0a0a0a;
-    --admin-sidebar-active: #311b22;
+    --admin-sidebar-active: #140808;
     --admin-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.5);
   }
 
@@ -550,8 +550,8 @@ body {
     --admin-text-secondary: #e5e5e5;
     --admin-text-muted: #a3a3a3;
     --admin-text-faint: #737373;
-    --admin-accent: #f87171;
-    --admin-accent-soft: rgba(248, 113, 113, 0.12);
+    --admin-accent: #ef4444;
+    --admin-accent-soft: rgba(239, 68, 68, 0.12);
     --admin-input-bg: rgba(255, 255, 255, 0.04);
   }
 
@@ -592,7 +592,7 @@ body {
     --accent-foreground: #ffffff;
     --border: rgba(255, 255, 255, 0.08);
     --input: rgba(255, 255, 255, 0.04);
-    --ring: #f87171;
+    --ring: #ef4444;
   }
 
   .admin-overlay-host[data-admin-theme='light'] {
@@ -646,7 +646,7 @@ body {
   }
 
   .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-item--active {
-    background: rgba(248, 113, 113, 0.12) !important;
+    background: rgba(239, 68, 68, 0.12) !important;
   }
 
   .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-item--active {
@@ -699,7 +699,7 @@ body {
     --sidebar-fg-muted: #d4d4d4;
     --sidebar-fg-faint: #a3a3a3;
     --sidebar-surface: rgba(255, 255, 255, 0.04);
-    --sidebar-surface-hover: rgba(248, 113, 113, 0.08);
+    --sidebar-surface-hover: rgba(239, 68, 68, 0.08);
     --sidebar-border: rgba(255, 255, 255, 0.08);
     color: var(--sidebar-fg);
   }
@@ -720,8 +720,8 @@ body {
   }
 
   .admin-sidebar-filter:focus {
-    border-color: rgba(248, 113, 113, 0.45);
-    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.12);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
   }
 
   .admin-text { color: var(--admin-text); }
@@ -749,8 +749,8 @@ body {
   }
 
   .admin-input:focus {
-    border-color: rgba(248, 113, 113, 0.45);
-    --tw-ring-color: rgba(248, 113, 113, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    --tw-ring-color: rgba(239, 68, 68, 0.15);
   }
 
   .admin-theme-toggle {
@@ -763,7 +763,7 @@ body {
   .admin-theme-toggle:hover {
     background: var(--sidebar-surface-hover);
     color: var(--sidebar-fg);
-    border-color: rgba(248, 113, 113, 0.3);
+    border-color: rgba(239, 68, 68, 0.3);
   }
 
   .admin-theme-toggle--compact,
@@ -801,7 +801,7 @@ body {
 
   .admin-sidebar-search-trigger:hover {
     background: var(--sidebar-surface-hover);
-    border-color: rgba(248, 113, 113, 0.28);
+    border-color: rgba(239, 68, 68, 0.28);
     color: var(--sidebar-fg);
   }
 
@@ -821,9 +821,9 @@ body {
   }
 
   .admin-sidebar-item--active {
-    background: var(--admin-sidebar-active, #311b22);
+    background: var(--admin-sidebar-active, #140808);
     color: #ffffff;
-    box-shadow: inset 3px 0 0 #f87171;
+    box-shadow: inset 3px 0 0 #ef4444;
   }
 
   .admin-sidebar-item--active .admin-sidebar-desc {
@@ -836,7 +836,7 @@ body {
   }
 
   .admin-sidebar-item--active .admin-sidebar-item-icon {
-    color: #fca5a5;
+    color: #ef4444;
     opacity: 1;
   }
 
@@ -863,7 +863,7 @@ body {
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-command-hero {
-    background: linear-gradient(135deg, rgba(248, 113, 113, 0.08) 0%, rgba(18, 18, 18, 0.98) 52%, #000000 100%);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(18, 18, 18, 0.98) 52%, #000000 100%);
     box-shadow: var(--admin-card-shadow);
   }
 
@@ -900,7 +900,7 @@ body {
   }
 
   .admin-pulse-metric:hover {
-    border-color: rgba(248, 113, 113, 0.25);
+    border-color: rgba(239, 68, 68, 0.25);
     background: var(--admin-bg-hover);
     transform: translateY(-1px);
   }
@@ -1204,8 +1204,8 @@ body {
   .admin-form-input:focus,
   .admin-form-select:focus,
   .admin-form-textarea:focus {
-    border-color: rgba(248, 113, 113, 0.45);
-    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.12);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
   }
 
   .admin-form-input::placeholder,
@@ -1229,8 +1229,8 @@ body {
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
     --input: rgba(255, 255, 255, 0.04);
-    --ring: #f87171;
-    --primary-light: rgba(248, 113, 113, 0.1);
+    --ring: #ef4444;
+    --primary-light: rgba(239, 68, 68, 0.1);
   }
 
   .admin-shell-v2[data-admin-theme='light'] .admin-content-root {
@@ -1460,8 +1460,8 @@ body {
   }
 
   .admin-split-list-item--active {
-    background: rgba(248, 113, 113, 0.1);
-    box-shadow: inset 3px 0 0 #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    box-shadow: inset 3px 0 0 #ef4444;
   }
 
   .admin-stat-card {
@@ -1493,9 +1493,9 @@ body {
   }
 
   .admin-filter-chip--active {
-    background: var(--admin-sidebar-active, #311b22);
+    background: var(--admin-sidebar-active, #140808);
     color: #ffffff;
-    box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.3);
+    box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.3);
   }
 
   .admin-shell-v2[data-admin-theme='light'] .admin-filter-chip--active {
@@ -1576,7 +1576,7 @@ body {
   /* Admin içinde kalan mor Tailwind sınıflarını kırmızı vurguya çevir */
   .admin-shell-v2 [class*='text-violet-'],
   .admin-overlay-host [class*='text-violet-'] {
-    color: #f87171 !important;
+    color: #ef4444 !important;
   }
 
   .admin-shell-v2 [class*='bg-violet-5'],
@@ -1595,7 +1595,7 @@ body {
 
   .admin-shell-v2 [class*='border-violet-'],
   .admin-overlay-host [class*='border-violet-'] {
-    border-color: rgba(248, 113, 113, 0.28) !important;
+    border-color: rgba(239, 68, 68, 0.28) !important;
   }
 
   .admin-shell-v2 [class*='ring-violet-'],

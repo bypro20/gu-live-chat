@@ -44,10 +44,10 @@ export function AppLogo({
               isSidebar ? 'text-white' : 'text-foreground'
             )}
           >
-            Gu Live <span className={isSidebar ? 'text-red-300' : 'text-primary'}>Chat</span>
+            Gu Live <span className={isSidebar ? (isAdmin ? 'text-red-500' : 'text-red-300') : 'text-primary'}>Chat</span>
           </span>
           {isAdmin && (
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-500/20 text-red-200 border border-red-400/30">
+            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-600/20 text-white border border-red-500/40">
               Admin
             </span>
           )}

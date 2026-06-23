@@ -133,7 +133,7 @@ export default function AdminPlatformPage() {
         <Kpi label="Kullanıcı" value={s.totalUsers} sub={`${s.activeUsersMonth} aktif (30g)`} icon={Users} />
         <Kpi label="Site" value={s.totalWebsites} sub={`+${s.newSitesWeek} bu hafta`} icon={Globe} accent="bg-blue-500/10 text-blue-400" />
         <Kpi label="Widget aktif" value={s.widgetActive} sub={`${s.widgetInstalled} kurulu toplam`} icon={Code2} accent="bg-emerald-500/10 text-emerald-400" />
-        <Kpi label="Canlı oturum" value={s.liveSessions} sub="Son 5 dk" icon={Radio} accent="bg-rose-500/10 text-rose-400" />
+        <Kpi label="Canlı oturum" value={s.liveSessions} sub="Son 5 dk" icon={Radio} accent="bg-red-500/10 text-red-400" />
         <Kpi label="Sohbet" value={s.totalConversations} sub={`+${s.conversationsToday} bugün`} icon={MessageSquare} accent="bg-cyan-500/10 text-cyan-400" />
         <Kpi label="Ücretli" value={s.paidSites} sub={`${s.trialSites} deneme`} icon={TrendingUp} accent="bg-amber-500/10 text-amber-400" />
       </div>
