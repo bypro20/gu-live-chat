@@ -3,6 +3,13 @@ tools
 promedia
 mobile
 mobile-admin
+mobile-pool
 .playwright-mcp
 inspect-*.png
 sd-*.png
+app/(marketing)/pool
+components/pool
+lib/pool
+lib/pool-socket.ts
+lib/hooks/use-pool-socket.ts
+public/pool-manifest.json
