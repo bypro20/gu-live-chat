@@ -10,6 +10,7 @@ sd-*.png
 app/(marketing)/pool
 components/pool
 lib/pool
+lib/pool-engine
 lib/pool-socket.ts
 lib/hooks/use-pool-socket.ts
 public/pool-manifest.json
