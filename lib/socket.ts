@@ -109,16 +109,20 @@ async function buildVisitorOnlinePayload(
 }
 const visitorSessions = new Map<string, VisitorSessionInfo>() // socketId -> session info
 
-function isAgentAuthed(socket: { userId?: string; websiteIds?: string[] }, websiteId?: string): boolean {
-  if (!socket.userId) return false
-  if (websiteId && socket.websiteIds && !socket.websiteIds.includes(websiteId)) return false
-  return true
-}
-
 type AgentSocket = {
   userId?: string
   websiteIds?: string[]
   scope?: string
+  isPlatformAdmin?: boolean
+}
+
+function isAgentAuthed(socket: AgentSocket, websiteId?: string): boolean {
+  if (!socket.userId) return false
+  if (websiteId && socket.websiteIds && !socket.websiteIds.includes(websiteId)) {
+    if (socket.isPlatformAdmin) return true
+    return false
+  }
+  return true
 }
 
 const overlayFeatureCache = new Map<string, { allowed: boolean; expires: number }>()
@@ -251,6 +255,7 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
 
       // Platform admin: tüm siteler veya marketing sitesi
+      let isPlatformAdmin = false
       if (websiteIds.length === 0 && userId) {
         try {
           const user = await prisma.user.findUnique({
@@ -258,7 +263,8 @@ export function initSocketServer(httpServer: HTTPServer) {
             select: { role: true },
           })
           if (user?.role === 'ADMIN') {
-            if (data.scope === 'platform') {
+            isPlatformAdmin = true
+            if (scope === 'platform') {
               const allSites = await prisma.website.findMany({ select: { websiteId: true } })
               websiteIds = allSites.map((w) => w.websiteId)
             } else if (requestedWebsiteIds.length > 0) {
@@ -280,9 +286,10 @@ export function initSocketServer(httpServer: HTTPServer) {
       }
 
       // Store userId on socket for cleanup
-      ;(socket as any).userId = userId
-      ;(socket as any).websiteIds = websiteIds
-      ;(socket as any).scope = data.scope
+      ;(socket as AgentSocket).userId = userId
+      ;(socket as AgentSocket).websiteIds = websiteIds
+      ;(socket as AgentSocket).scope = scope
+      ;(socket as AgentSocket).isPlatformAdmin = isPlatformAdmin
 
       // Join website rooms
       websiteIds.forEach((websiteId) => {

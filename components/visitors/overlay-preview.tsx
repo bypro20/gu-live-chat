@@ -44,6 +44,7 @@ export function OverlayPreview({
   const [remoteClicks, setRemoteClicks] = useState<Array<{ x: number; y: number; timestamp: number }>>([])
   const [interventionMode, setInterventionMode] = useState(false)
   const lastScreenshotRef = useRef<string | null>(null)
+  const preloadRef = useRef<HTMLImageElement | null>(null)
   const frameCountRef = useRef(0)
   const lastFrameAtRef = useRef(0)
   const [liveFps, setLiveFps] = useState(0)
@@ -152,21 +153,35 @@ export function OverlayPreview({
     if (!img || !visitor.screenshotUrl) return
     if (visitor.screenshotUrl === lastScreenshotRef.current) return
 
-    lastScreenshotRef.current = visitor.screenshotUrl
-    img.src = visitor.screenshotUrl
+    const nextUrl = visitor.screenshotUrl
+    const preload = new Image()
+    preload.decoding = 'async'
+    preload.src = nextUrl
+    preloadRef.current = preload
 
-    const now = performance.now()
-    if (lastFrameAtRef.current > 0) {
-      const dt = now - lastFrameAtRef.current
-      if (dt > 0) {
-        const fps = Math.round(1000 / dt)
-        setLiveFps((prev) => Math.round(prev * 0.65 + fps * 0.35))
-      }
+    preload.onload = () => {
+      if (preloadRef.current !== preload || nextUrl !== visitor.screenshotUrl) return
+      void (preload.decode?.() ?? Promise.resolve()).then(() => {
+        const target = screenshotImgRef.current
+        if (!target || preloadRef.current !== preload || nextUrl !== visitor.screenshotUrl) return
+
+        lastScreenshotRef.current = nextUrl
+        target.src = nextUrl
+
+        const now = performance.now()
+        if (lastFrameAtRef.current > 0) {
+          const dt = now - lastFrameAtRef.current
+          if (dt > 0) {
+            const fps = Math.round(1000 / dt)
+            setLiveFps((prev) => Math.round(prev * 0.65 + fps * 0.35))
+          }
+        }
+        lastFrameAtRef.current = now
+        frameCountRef.current += 1
+
+        if (!screenshotReady) setScreenshotReady(true)
+      })
     }
-    lastFrameAtRef.current = now
-    frameCountRef.current += 1
-
-    if (!screenshotReady) setScreenshotReady(true)
   }, [visitor.screenshotUrl, screenshotReady])
 
   useEffect(() => {
@@ -176,6 +191,7 @@ export function OverlayPreview({
       lastScreenshotRef.current = null
       lastFrameAtRef.current = 0
       frameCountRef.current = 0
+      preloadRef.current = null
       const img = screenshotImgRef.current
       if (img) img.removeAttribute('src')
     }

@@ -788,11 +788,11 @@
   }
 
   // ─── Screen Monitoring (Ekran İzleme) ─────────────────────────────────
-  var SCREENSHOT_THROTTLE_MS = 90;
-  var SCREENSHOT_BURST_MS = 45;
-  var SCREENSHOT_BURST_COUNT = 4;
-  var SCREENSHOT_QUALITY = 0.52;
-  var CAPTURE_MAX_WIDTH = 1366;
+  var SCREENSHOT_THROTTLE_MS = 72;
+  var SCREENSHOT_BURST_MS = 36;
+  var SCREENSHOT_BURST_COUNT = 6;
+  var SCREENSHOT_QUALITY = 0.46;
+  var CAPTURE_MAX_WIDTH = 1280;
   var screenshotTimer = null;
   var htmlToImageLoaded = false;
   var lastScreenshotLength = 0;
@@ -803,25 +803,35 @@
   var cachedFixedElementIds = [];
   var fixedElementScanCounter = 0;
 
+  function htmlToImageReady() {
+    return typeof window.htmlToImage !== 'undefined' && typeof window.htmlToImage.toJpeg === 'function';
+  }
+
   // Dynamically load html-to-image library (same origin first, then CDN fallback)
   function loadHtmlToImage(callback) {
-    if (htmlToImageLoaded) { callback(); return; }
+    if (htmlToImageReady()) { if (callback) callback(); return; }
     var sources = [
       (typeof getWidgetBaseUrl === 'function' ? getWidgetBaseUrl() : window.location.origin) + '/vendor/html-to-image.min.js',
-      'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js',
+      'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js',
     ];
     var idx = 0;
     function tryNext() {
       if (idx >= sources.length) {
         console.warn('[Gu Live Chat] Screen monitoring: html-to-image could not load');
+        htmlToImageLoaded = false;
         if (callback) callback();
         return;
       }
       var script = document.createElement('script');
       script.src = sources[idx++];
       script.onload = function() {
-        htmlToImageLoaded = true;
-        if (callback) callback();
+        if (htmlToImageReady()) {
+          htmlToImageLoaded = true;
+          if (callback) callback();
+          return;
+        }
+        script.remove();
+        tryNext();
       };
       script.onerror = function() {
         script.remove();
@@ -871,7 +881,10 @@
   var _captureCount = 0;
   function captureScreenshot() {
     _captureCount++;
-    if (!htmlToImageLoaded || typeof window.htmlToImage === 'undefined') {
+    if (!htmlToImageReady()) {
+      loadHtmlToImage(function() {
+        if (screenCaptureActive) captureScreenshot();
+      });
       scheduleNextScreenshot();
       return;
     }
@@ -963,6 +976,7 @@
       canvasHeight: captureH,
       pixelRatio: 1,
       skipAutoScale: true,
+      skipFonts: true,
       filter: filterNode,
       onclone: oncloneCallback,
       style: {
@@ -972,7 +986,7 @@
         height: vpHeight + 'px',
       },
     }).then(function(dataUrl) {
-      if (iframe.contentWindow) {
+      if (iframe.contentWindow && dataUrl) {
         iframe.contentWindow.postMessage({
           type: 'gu:visitor:screenshot',
           screenshot: dataUrl,
