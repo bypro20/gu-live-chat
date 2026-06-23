@@ -2,11 +2,62 @@ import { Server as SocketIOServer } from 'socket.io'
 import type { Server as HTTPServer } from 'http'
 import { prisma } from './db'
 import { socketCorsOrigins } from './socket-cors'
-import { resolveAgentSocketToken, resolveVisitorToken } from './secure-tokens'
+import { resolveAgentSocketToken, resolveVisitorToken, type AgentSocketTokenPayload, type VisitorTokenPayload } from './secure-tokens'
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
 
 let io: SocketIOServer
+
+/** Railway AUTH_SECRET ≠ Vercel ise token'ı Vercel API ile doğrula */
+async function verifyTokenRemote<T>(path: string, token: string): Promise<T | null> {
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  const secret =
+    process.env.SOCKET_INTERNAL_SECRET?.trim() ||
+    process.env.CRON_SECRET?.trim()
+  if (!base || !secret) return null
+
+  try {
+    const res = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({ token }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as T
+  } catch (err) {
+    console.error('[Socket] remote token verify failed:', path, err)
+    return null
+  }
+}
+
+async function resolveAgentTokenOnSocketServer(token: string): Promise<AgentSocketTokenPayload | null> {
+  const local = resolveAgentSocketToken(token)
+  if (local) return local
+  const remote = await verifyTokenRemote<AgentSocketTokenPayload>('/api/socket/verify-agent-token', token)
+  if (!remote?.userId) return null
+  return {
+    userId: remote.userId,
+    scope: remote.scope === 'platform' ? 'platform' : undefined,
+    exp: remote.exp || 0,
+  }
+}
+
+async function resolveVisitorTokenOnSocketServer(token: string): Promise<VisitorTokenPayload | null> {
+  const local = resolveVisitorToken(token)
+  if (local) return local
+  const remote = await verifyTokenRemote<VisitorTokenPayload>('/api/socket/verify-visitor-token', token)
+  if (!remote?.visitorId || !remote?.websiteId) return null
+  return {
+    visitorId: remote.visitorId,
+    websiteId: remote.websiteId,
+    sessionId: remote.sessionId || '',
+    exp: remote.exp || 0,
+  }
+}
 
 // ─── In-Memory Tracking ──────────────────────────────────────────
 interface VisitorSessionInfo {
@@ -214,9 +265,10 @@ export function initSocketServer(httpServer: HTTPServer) {
       let scope = data.scope
 
       if (data.token) {
-        const payload = resolveAgentSocketToken(data.token)
+        const payload = await resolveAgentTokenOnSocketServer(data.token)
         if (!payload) {
           console.warn('[Socket] agent:auth denied: invalid token')
+          socket.emit('agent:auth:failed', { message: 'invalid token' })
           return
         }
         userId = payload.userId
@@ -355,15 +407,16 @@ export function initSocketServer(httpServer: HTTPServer) {
     })
 
     // ─── Visitor Authentication ────────────────────────────────
-    socket.on('visitor:auth', (data: { visitorToken?: string; visitorId?: string; websiteId?: string; conversationId?: string }) => {
+    socket.on('visitor:auth', async (data: { visitorToken?: string; visitorId?: string; websiteId?: string; conversationId?: string }) => {
       let visitorId = data.visitorId || ''
       let websiteId = data.websiteId || ''
       let sessionId = ''
 
       if (data.visitorToken) {
-        const decoded = resolveVisitorToken(data.visitorToken)
+        const decoded = await resolveVisitorTokenOnSocketServer(data.visitorToken)
         if (!decoded) {
           console.warn('[Socket] visitor:auth denied: invalid token')
+          socket.emit('visitor:auth:failed', { message: 'invalid token' })
           return
         }
         visitorId = decoded.visitorId
@@ -1046,6 +1099,28 @@ export function getLiveVisitors(websiteId: string) {
 
 export function getAllLiveVisitors() {
   return Array.from(visitorSessions.values()).map(mapVisitorSessionToLive)
+}
+
+export function emitVisitorScreenStart(visitorId: string, websiteId: string): 'ok' | 'offline' {
+  const socketIo = getIO()
+  if (!socketIo) return 'offline'
+  const entry = Array.from(visitorSessions.entries()).find(
+    ([, s]) => s.visitorId === visitorId && s.websiteId === websiteId
+  )
+  if (!entry) return 'offline'
+  socketIo.to(entry[0]).emit('visitor:screen:start')
+  console.log(`[Socket] Screen capture started for visitor ${visitorId.substring(0, 8)}...`)
+  return 'ok'
+}
+
+export function emitVisitorScreenStop(visitorId: string, websiteId: string): void {
+  const socketIo = getIO()
+  if (!socketIo) return
+  const entry = Array.from(visitorSessions.entries()).find(
+    ([, s]) => s.visitorId === visitorId && s.websiteId === websiteId
+  )
+  if (!entry) return
+  socketIo.to(entry[0]).emit('visitor:screen:stop')
 }
 
 function mapVisitorSessionToLive(v: VisitorSessionInfo) {

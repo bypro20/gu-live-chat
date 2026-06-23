@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { connectSocket, getSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
-import { emitAgentSocketAuth, waitForAgentSocketAuth } from '@/lib/socket-agent-auth'
+import { emitAgentSocketAuth, ensureAgentSocketAuth } from '@/lib/socket-agent-auth'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
@@ -46,7 +46,7 @@ export function AdminVisitorsMonitor({
 }: AdminVisitorsMonitorProps = {}) {
   const isDashboard = variant === 'dashboard'
   const agentLabel = isDashboard ? 'dashboard' : 'admin'
-  const { monitor: m, overlay: o, locale } = useVisitorsI18n()
+  const { monitor: m, locale } = useVisitorsI18n()
   const { data: session } = useSession()
   const { allowed: overlayFeature } = usePlanFeature('overlayAI')
   const {
@@ -110,7 +110,7 @@ export function AdminVisitorsMonitor({
       setVisitors(
         (data.visitors || []).map((v: LiveVisitor & { pages?: LiveVisitor['pages'] }) => ({
           ...v,
-          isLive: Boolean(v.isLive) || Boolean(v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() < 5 * 60 * 1000),
+          isLive: v.isLive ?? true,
           currentPage: v.currentPage || '',
         }))
       )
@@ -160,18 +160,18 @@ export function AdminVisitorsMonitor({
     if (isDashboard && websiteIds.length === 0 && !websiteId) return
 
     const socket = getSocket() || connectSocket()
-    const authenticate = () => {
+    const authenticate = async () => {
       if (isDashboard) {
         const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
         if (ids.length === 0) return
-        void emitAgentSocketAuth(emit, ids)
+        await emitAgentSocketAuth(emit, ids)
       } else {
-        void emitAgentSocketAuth(emit, websiteIds, 'platform')
+        await emitAgentSocketAuth(emit, websiteIds, 'platform')
       }
     }
 
-    if (socket?.connected) authenticate()
-    else socket?.on('connect', authenticate)
+    if (socket?.connected) void authenticate()
+    else socket?.on('connect', () => { void authenticate() })
 
     const handleVisitorOnline = (data: any) => {
       addVisitor({
@@ -244,7 +244,6 @@ export function AdminVisitorsMonitor({
         clearTimeout(screenCaptureTimeoutRef.current)
         screenCaptureTimeoutRef.current = null
       }
-      setOverlayDeniedMessage(null)
       updateScreenshot(
         data.visitorId as string,
         data.screenshot as string,
@@ -313,6 +312,10 @@ export function AdminVisitorsMonitor({
       setOverlayDeniedMessage(m.socketOffline)
       return
     }
+    if (active && !liveConnected) {
+      authenticateAgent()
+      setOverlayDeniedMessage(m.socketConnecting)
+    }
     if (active && isDashboard && !overlayEnabled) {
       setOverlayDeniedMessage(m.overlayDeniedPro)
       return
@@ -321,23 +324,27 @@ export function AdminVisitorsMonitor({
     const targetWebsiteId = visitor?.websiteId || websiteId || undefined
     if (!targetWebsiteId) return
     if (active) {
-      setOverlayDeniedMessage(m.socketConnecting)
+      const ids = isDashboard
+        ? (websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : [])
+        : websiteIds
+      const authed = await ensureAgentSocketAuth(
+        emit,
+        ids,
+        isDashboard ? undefined : 'platform'
+      )
+      if (!authed) {
+        setOverlayDeniedMessage(m.socketOffline)
+        return
+      }
+      if (!visitor?.isLive) {
+        setOverlayDeniedMessage(m.visitorNotLive)
+      } else {
+        setOverlayDeniedMessage(null)
+      }
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
       setPrivacyMode(false)
-
-      const ids = isDashboard
-        ? (websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : [])
-        : websiteIds
-      const authed = await waitForAgentSocketAuth(ids, isDashboard ? undefined : 'platform')
-      if (!authed) {
-        setScreenCapturingId(null)
-        setOverlayDeniedMessage(m.socketOffline)
-        return
-      }
-
-      setOverlayDeniedMessage(null)
       emit('agent:screen:start', { visitorId, websiteId: targetWebsiteId })
       if (screenCaptureTimeoutRef.current) clearTimeout(screenCaptureTimeoutRef.current)
       screenCaptureTimeoutRef.current = setTimeout(() => {
@@ -519,26 +526,7 @@ export function AdminVisitorsMonitor({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
                           <p className={`text-sm font-semibold truncate ${textPrimary}`}>{visitor.name || m.anonymous}</p>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              title={o.watchScreen}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                selectVisitor(visitor.visitorId)
-                                handleScreenCaptureToggle(visitor.visitorId, true)
-                              }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
-                                isDashboard
-                                  ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                                  : 'admin-screen-watch-btn bg-red-600/15 text-red-300 hover:bg-red-600/25 border border-red-500/20'
-                              }`}
-                            >
-                              <Eye className="w-3 h-3" />
-                              <span className="hidden sm:inline">{o.watchScreen}</span>
-                            </button>
-                            <span className={`text-[10px] ${textMuted}`}>{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
-                          </div>
+                          <span className={`text-[10px] shrink-0 ${textMuted}`}>{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
                         </div>
                         <p className="text-[11px] text-violet-300 truncate mt-0.5 flex items-center gap-1">
                           <MousePointer2 className="w-3 h-3 shrink-0" />
@@ -636,24 +624,6 @@ export function AdminVisitorsMonitor({
         <div className="flex-1 min-h-0 p-2 flex flex-col">
           {selectedVisitor ? (
             <>
-              <div className={`flex items-center justify-between gap-2 px-2 py-2 mb-2 rounded-xl border shrink-0 ${isDashboard ? 'border-white/10 bg-white/[0.03]' : 'border-[var(--admin-border)] bg-[var(--admin-bg-subtle)]'}`}>
-                <div className="min-w-0">
-                  <p className={`text-sm font-semibold truncate ${textPrimary}`}>{selectedVisitor.name || m.anonymous}</p>
-                  <p className={`text-[11px] truncate ${textMuted}`}>{selectedVisitor.currentTitle || selectedVisitor.currentPage || '—'}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleScreenCaptureToggle(selectedVisitor.visitorId, screenCapturingId !== selectedVisitor.visitorId)}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white shrink-0 ${
-                    isDashboard
-                      ? 'bg-primary hover:opacity-90'
-                      : 'admin-screen-watch-btn bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
-                  }`}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  {screenCapturingId === selectedVisitor.visitorId ? o.disconnect : o.watchScreen}
-                </button>
-              </div>
               {screenCapturingId === selectedVisitorId && (
                 <WebRTCViewer
                   visitorId={selectedVisitorId || ''}

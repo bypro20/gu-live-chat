@@ -1,7 +1,6 @@
 'use client'
 
 import { connectSocket, getSocket } from '@/lib/socket-client'
-import type { Socket } from 'socket.io-client'
 
 type AgentSocketScope = 'platform' | undefined
 
@@ -21,38 +20,6 @@ export async function fetchAgentSocketToken(scope?: AgentSocketScope): Promise<s
   }
 }
 
-function waitForSocketConnect(socket: Socket, timeoutMs = 12000): Promise<boolean> {
-  if (socket.connected) return Promise.resolve(true)
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      socket.off('connect', onConnect)
-      resolve(false)
-    }, timeoutMs)
-    const onConnect = () => {
-      clearTimeout(timer)
-      socket.off('connect', onConnect)
-      resolve(true)
-    }
-    socket.on('connect', onConnect)
-    socket.connect()
-  })
-}
-
-function waitForAgentAuthOk(socket: Socket, timeoutMs = 8000): Promise<boolean> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => {
-      socket.off('agent:auth:ok', onOk)
-      resolve(false)
-    }, timeoutMs)
-    const onOk = () => {
-      clearTimeout(timer)
-      socket.off('agent:auth:ok', onOk)
-      resolve(true)
-    }
-    socket.on('agent:auth:ok', onOk)
-  })
-}
-
 export async function emitAgentSocketAuth(
   emit: (event: string, data: unknown) => void,
   websiteIds: string[],
@@ -64,21 +31,55 @@ export async function emitAgentSocketAuth(
   return true
 }
 
-/** Socket bağlantısı + agent:auth:ok gelene kadar bekler (ekran izleme öncesi zorunlu). */
-export async function waitForAgentSocketAuth(
+/** Token gönder + agent:auth:ok bekle (Railway uzaktan doğrulama sürebilir). */
+export async function ensureAgentSocketAuth(
+  emit: (event: string, data: unknown) => void,
   websiteIds: string[],
   scope?: AgentSocketScope
 ): Promise<boolean> {
   const socket = getSocket() || connectSocket()
   if (!socket) return false
 
-  const connected = await waitForSocketConnect(socket)
-  if (!connected) return false
+  if (!socket.connected) {
+    const connected = await new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => resolve(false), 12000)
+      const onConnect = () => {
+        clearTimeout(timer)
+        socket.off('connect', onConnect)
+        resolve(true)
+      }
+      socket.on('connect', onConnect)
+      socket.connect()
+    })
+    if (!connected) return false
+  }
 
-  const authOkPromise = waitForAgentAuthOk(socket)
   const token = await fetchAgentSocketToken(scope)
   if (!token) return false
 
-  socket.emit('agent:auth', { token, websiteIds, scope })
-  return authOkPromise
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (ok: boolean) => {
+      if (done) return
+      done = true
+      cleanup()
+      resolve(ok)
+    }
+    const timer = setTimeout(() => finish(true), 6000)
+    const legacy = setTimeout(() => finish(socket.connected), 2000)
+    const onOk = () => {
+      clearTimeout(legacy)
+      finish(true)
+    }
+    const onFail = () => finish(false)
+    const cleanup = () => {
+      clearTimeout(timer)
+      clearTimeout(legacy)
+      socket.off('agent:auth:ok', onOk)
+      socket.off('agent:auth:failed', onFail)
+    }
+    socket.on('agent:auth:ok', onOk)
+    socket.on('agent:auth:failed', onFail)
+    emit('agent:auth', { token, websiteIds, scope })
+  })
 }

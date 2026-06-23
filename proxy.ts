@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
 import { isNativeCustomerUserAgent } from '@/lib/native-app'
-import { applySecurityHeaders } from '@/lib/security-headers'
+import { applyPoolEmbedSecurityHeaders, applySecurityHeaders } from '@/lib/security-headers'
 import { widgetApiCorsHeaders } from '@/lib/widget-api-cors'
 import { auth } from '@/lib/auth'
 
@@ -24,8 +24,16 @@ function withWidgetPublicApiHeaders(req: NextRequest, res: NextResponse) {
   return res
 }
 
-function withSecurityHeaders(res: NextResponse) {
-  applySecurityHeaders(res, IS_PRODUCTION)
+function isPoolEmbedPath(pathname: string) {
+  return pathname === '/pool' || pathname.startsWith('/pool/')
+}
+
+function withSecurityHeaders(res: NextResponse, pathname?: string) {
+  if (pathname && isPoolEmbedPath(pathname)) {
+    applyPoolEmbedSecurityHeaders(res, IS_PRODUCTION)
+  } else {
+    applySecurityHeaders(res, IS_PRODUCTION)
+  }
   return res
 }
 
@@ -111,6 +119,8 @@ function isPublicApiRoute(pathname: string): boolean {
   if (pathname === '/api/locale') return true
   if (pathname === '/api/status-page/subscribe') return true
   if (pathname === '/api/team/invite') return true
+  if (pathname === '/api/socket/verify-agent-token') return true
+  if (pathname === '/api/socket/verify-visitor-token') return true
   return false
 }
 
@@ -277,7 +287,7 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  const res = withSecurityHeaders(NextResponse.next())
+  const res = withSecurityHeaders(NextResponse.next(), pathname)
   if (
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/widget') &&

@@ -9,6 +9,8 @@ const SOCKET_UPSTREAM = (
 ).replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  // Socket.io /socket.io/ istekleri 308 almasın (xhr poll)
+  skipTrailingSlashRedirect: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   turbopack: {

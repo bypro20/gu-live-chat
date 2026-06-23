@@ -31,7 +31,7 @@ function isUsableDirectSocketUrl(url: string): boolean {
 }
 
 /**
- * Socket.io URL — gulivechat.com'da same-origin proxy (CORS sorunu yok), aksi halde Railway.
+ * Socket.io URL — gulivechat.com'da same-origin proxy, aksi halde Railway.
  */
 function getSocketUrl(): string | undefined {
   if (typeof window !== 'undefined' && useSocketProxy()) {
@@ -39,20 +39,13 @@ function getSocketUrl(): string | undefined {
   }
 
   const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
-  if (envUrl && isUsableDirectSocketUrl(envUrl)) {
-    return envUrl.replace(/\/$/, '')
-  }
+  if (envUrl && isUsableDirectSocketUrl(envUrl)) return envUrl
 
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     return window.location.origin
   }
 
   return undefined
-}
-
-function isProxiedSocketUrl(url: string): boolean {
-  if (typeof window === 'undefined') return false
-  return url.replace(/\/$/, '') === window.location.origin.replace(/\/$/, '')
 }
 
 export function isSocketEnabled(): boolean {
@@ -73,11 +66,10 @@ export function connectSocket(): Socket | null {
   const socketUrl = getSocketUrl()
   if (!socketUrl) return null
 
-  const proxied = isProxiedSocketUrl(socketUrl)
+  const proxied = typeof window !== 'undefined' && useSocketProxy()
 
   socket = io(socketUrl, {
     path: '/socket.io',
-    withCredentials: true,
     // Vercel rewrite websocket upgrade desteklemez — polling yeterli
     transports: proxied ? ['polling'] : ['websocket', 'polling'],
     autoConnect: true,

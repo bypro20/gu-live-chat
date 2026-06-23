@@ -5,7 +5,7 @@
  * Token: RAILWAY_TOKEN env veya ~/.railway/config.json
  * https://railway.com/account/tokens
  */
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
 
@@ -15,6 +15,29 @@ const ENV = process.env.RAILWAY_ENVIRONMENT_ID || 'a6717241-7b7b-4318-b974-41a65
 const SERVICE = process.env.RAILWAY_SERVICE_ID || '0cf7e5f3-7727-47d2-8f55-46efaf121ed4'
 const WWW = 'https://www.gulivechat.com'
 const CORS = 'https://www.gulivechat.com,https://gulivechat.com,https://guchat.org'
+const VERCEL_ENV_FILE = process.env.VERCEL_ENV_FILE || '/tmp/gu-vercel.env'
+
+function loadEnvFile(path) {
+  const out = {}
+  if (!existsSync(path)) return out
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/)
+    if (!m) continue
+    let v = m[2]
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      v = v.slice(1, -1)
+    }
+    out[m[1]] = v
+  }
+  return out
+}
+
+function applyVercelEnvFile() {
+  const file = loadEnvFile(VERCEL_ENV_FILE)
+  for (const [k, v] of Object.entries(file)) {
+    if (!process.env[k]) process.env[k] = v
+  }
+}
 
 function loadToken() {
   if (process.env.RAILWAY_TOKEN?.trim()) return process.env.RAILWAY_TOKEN.trim()
@@ -44,6 +67,7 @@ async function gql(token, query, variables = {}) {
 }
 
 async function main() {
+  applyVercelEnvFile()
   const token = loadToken()
   if (!token) {
     console.error('RAILWAY_TOKEN gerekli — https://railway.com/account/tokens')
@@ -51,6 +75,25 @@ async function main() {
   }
 
   console.log('1) Railway env güncelleniyor...')
+  const railwayVars = {
+    NEXT_PUBLIC_APP_URL: WWW,
+    SOCKET_CORS_ORIGINS: CORS,
+  }
+  const internalSecret = process.env.SOCKET_INTERNAL_SECRET?.trim() || process.env.CRON_SECRET?.trim()
+  if (internalSecret) {
+    railwayVars.SOCKET_INTERNAL_SECRET = internalSecret
+    railwayVars.CRON_SECRET = internalSecret
+  }
+  const authSecret =
+    process.env.AUTH_SECRET?.trim() ||
+    process.env.WIDGET_TOKEN_SECRET?.trim() ||
+    process.env.NEXTAUTH_SECRET?.trim()
+  if (authSecret) {
+    railwayVars.AUTH_SECRET = authSecret
+    railwayVars.WIDGET_TOKEN_SECRET = authSecret
+    railwayVars.NEXTAUTH_SECRET = authSecret
+  }
+
   await gql(
     token,
     `mutation($input: VariableCollectionUpsertInput!) {
@@ -61,14 +104,11 @@ async function main() {
         projectId: PROJECT,
         environmentId: ENV,
         serviceId: SERVICE,
-        variables: {
-          NEXT_PUBLIC_APP_URL: WWW,
-          SOCKET_CORS_ORIGINS: CORS,
-        },
+        variables: railwayVars,
       },
     }
   )
-  console.log('  ✓ NEXT_PUBLIC_APP_URL, SOCKET_CORS_ORIGINS')
+  console.log('  ✓', Object.keys(railwayVars).join(', '))
 
   console.log('\n2) Redeploy tetikleniyor...')
   const dep = await gql(
