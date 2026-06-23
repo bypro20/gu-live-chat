@@ -126,7 +126,7 @@ export function AdminSidebar({
                     onClick={onNavigate}
                     className={`admin-sidebar-item ${active ? 'admin-sidebar-item--active' : ''}`}
                   >
-                    <span className={`admin-sidebar-item-icon ${active ? 'text-violet-300' : ''}`}>
+                    <span className={`admin-sidebar-item-icon ${active ? 'text-red-200' : ''}`}>
                       <Icon className="w-[18px] h-[18px]" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ export function AdminSidebar({
           <Link
             href="/dashboard"
             onClick={onNavigate}
-            className="admin-sidebar-item mb-2 text-sky-300 hover:text-sky-200"
+            className="admin-sidebar-item mb-2 text-red-200 hover:text-white"
           >
             <span className="admin-sidebar-item-icon">
               <ArrowLeft className="w-[18px] h-[18px]" />
@@ -166,7 +166,7 @@ export function AdminSidebar({
           </Link>
         )}
         <div className="flex items-center gap-2.5 p-2 rounded-xl transition-colors group hover:bg-[var(--sidebar-surface-hover)]">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-red-500 to-orange-600 text-white">
             {userInitial}
           </div>
           <div className="flex-1 min-w-0">

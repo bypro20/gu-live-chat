@@ -458,12 +458,12 @@ body {
 
   .admin-shell .app-sidebar::before {
     background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(139, 92, 246, 0.1) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(239, 68, 68, 0.16) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(255, 107, 74, 0.08) 0%, transparent 50%);
   }
 
   .admin-shell .app-main {
-    background: var(--admin-bg, radial-gradient(ellipse 70% 50% at 0% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 55%), #0b1220);
+    background: var(--admin-bg, radial-gradient(ellipse 70% 50% at 0% 0%, rgba(239, 68, 68, 0.08) 0%, transparent 55%), #110808);
   }
 
   /* Admin gelen kutusu — müşteri paneli ile aynı açık tema */
@@ -484,85 +484,90 @@ body {
   /* ─── Admin v2 — Karanlık / Aydınlık tema ─── */
   .admin-shell-v2 {
     --app-sidebar-width: 300px;
+    --admin-fire: #ef4444;
+    --admin-fire-bright: #ff6b4a;
+    --admin-fire-deep: #991b1b;
+    --admin-fire-soft: rgba(239, 68, 68, 0.18);
+    --admin-fire-border: rgba(248, 113, 113, 0.32);
     color: var(--admin-text);
   }
 
   .admin-shell-v2[data-admin-theme='dark'] {
-    --admin-bg: #0b1220;
-    --admin-bg-subtle: #111827;
-    --admin-bg-elevated: #172033;
-    --admin-bg-card: #1a2332;
-    --admin-bg-hover: #243044;
-    --admin-border: rgba(148, 163, 184, 0.16);
-    --admin-border-strong: rgba(148, 163, 184, 0.28);
-    --admin-text: #f8fafc;
-    --admin-text-secondary: #e2e8f0;
-    --admin-text-muted: #94a3b8;
-    --admin-text-faint: #64748b;
-    --admin-accent: #8b5cf6;
-    --admin-accent-soft: rgba(139, 92, 246, 0.16);
-    --admin-topbar-bg: rgba(11, 18, 32, 0.94);
-    --admin-input-bg: rgba(15, 23, 42, 0.72);
-    --admin-hero-gradient: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(139, 92, 246, 0.08) 40%, transparent 100%);
-    --admin-sidebar-bg: #0a1020;
-    --admin-sidebar-bg-end: #151b33;
-    --admin-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 30px rgba(0, 0, 0, 0.24);
+    --admin-bg: #110808;
+    --admin-bg-subtle: #180c0c;
+    --admin-bg-elevated: #221010;
+    --admin-bg-card: #2a1212;
+    --admin-bg-hover: #3a1818;
+    --admin-border: rgba(254, 202, 202, 0.12);
+    --admin-border-strong: rgba(248, 113, 113, 0.24);
+    --admin-text: #fff5f5;
+    --admin-text-secondary: #fecaca;
+    --admin-text-muted: #fca5a5;
+    --admin-text-faint: #f87171;
+    --admin-accent: #ef4444;
+    --admin-accent-soft: rgba(239, 68, 68, 0.18);
+    --admin-topbar-bg: rgba(17, 8, 8, 0.94);
+    --admin-input-bg: rgba(42, 18, 18, 0.82);
+    --admin-hero-gradient: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(255, 107, 74, 0.08) 35%, transparent 100%);
+    --admin-sidebar-bg: #0d0505;
+    --admin-sidebar-bg-end: #2a0a0a;
+    --admin-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 32px rgba(69, 10, 10, 0.35);
   }
 
   .admin-shell-v2[data-admin-theme='light'] {
-    --admin-bg: #eef2f7;
-    --admin-bg-subtle: #e2e8f0;
+    --admin-bg: #fffafa;
+    --admin-bg-subtle: #fff1f2;
     --admin-bg-elevated: #ffffff;
     --admin-bg-card: #ffffff;
-    --admin-bg-hover: rgba(15, 23, 42, 0.05);
-    --admin-border: #dbe3ee;
-    --admin-border-strong: #c7d2e0;
-    --admin-text: #0f172a;
-    --admin-text-secondary: #334155;
-    --admin-text-muted: #64748b;
-    --admin-text-faint: #64748b;
-    --admin-accent: #7c3aed;
-    --admin-accent-soft: rgba(124, 58, 237, 0.1);
+    --admin-bg-hover: rgba(127, 29, 29, 0.05);
+    --admin-border: #fecdd3;
+    --admin-border-strong: #fda4af;
+    --admin-text: #450a0a;
+    --admin-text-secondary: #7f1d1d;
+    --admin-text-muted: #b91c1c;
+    --admin-text-faint: #dc2626;
+    --admin-accent: #dc2626;
+    --admin-accent-soft: rgba(220, 38, 38, 0.1);
     --admin-topbar-bg: rgba(255, 255, 255, 0.94);
     --admin-input-bg: #ffffff;
-    --admin-hero-gradient: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(255, 255, 255, 0.95) 55%, #f8fafc 100%);
-    --admin-sidebar-bg: #0f172a;
-    --admin-sidebar-bg-end: #1e293b;
-    --admin-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.06);
+    --admin-hero-gradient: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.98) 55%, #fffafa 100%);
+    --admin-sidebar-bg: #1a0505;
+    --admin-sidebar-bg-end: #450a0a;
+    --admin-card-shadow: 0 1px 2px rgba(127, 29, 29, 0.06), 0 10px 28px rgba(127, 29, 29, 0.08);
   }
 
   /* Portal/overlay bileşenleri shell dışında da tema alsın (Cmd+K paleti vb.) */
   .admin-overlay-host[data-admin-theme='dark'] {
-    --admin-bg: #0b1220;
-    --admin-bg-subtle: #111827;
-    --admin-bg-elevated: #172033;
-    --admin-bg-card: #1a2332;
-    --admin-bg-hover: #243044;
-    --admin-border: rgba(148, 163, 184, 0.16);
-    --admin-border-strong: rgba(148, 163, 184, 0.28);
-    --admin-text: #f8fafc;
-    --admin-text-secondary: #e2e8f0;
-    --admin-text-muted: #94a3b8;
-    --admin-text-faint: #64748b;
-    --admin-accent: #8b5cf6;
-    --admin-accent-soft: rgba(139, 92, 246, 0.16);
-    --admin-input-bg: rgba(15, 23, 42, 0.72);
+    --admin-bg: #110808;
+    --admin-bg-subtle: #180c0c;
+    --admin-bg-elevated: #221010;
+    --admin-bg-card: #2a1212;
+    --admin-bg-hover: #3a1818;
+    --admin-border: rgba(254, 202, 202, 0.12);
+    --admin-border-strong: rgba(248, 113, 113, 0.24);
+    --admin-text: #fff5f5;
+    --admin-text-secondary: #fecaca;
+    --admin-text-muted: #fca5a5;
+    --admin-text-faint: #f87171;
+    --admin-accent: #ef4444;
+    --admin-accent-soft: rgba(239, 68, 68, 0.18);
+    --admin-input-bg: rgba(42, 18, 18, 0.82);
   }
 
   .admin-overlay-host[data-admin-theme='light'] {
-    --admin-bg: #eef2f7;
-    --admin-bg-subtle: #e2e8f0;
+    --admin-bg: #fffafa;
+    --admin-bg-subtle: #fff1f2;
     --admin-bg-elevated: #ffffff;
     --admin-bg-card: #ffffff;
-    --admin-bg-hover: rgba(15, 23, 42, 0.05);
-    --admin-border: #dbe3ee;
-    --admin-border-strong: #c7d2e0;
-    --admin-text: #0f172a;
-    --admin-text-secondary: #334155;
-    --admin-text-muted: #64748b;
-    --admin-text-faint: #64748b;
-    --admin-accent: #7c3aed;
-    --admin-accent-soft: rgba(124, 58, 237, 0.1);
+    --admin-bg-hover: rgba(127, 29, 29, 0.05);
+    --admin-border: #fecdd3;
+    --admin-border-strong: #fda4af;
+    --admin-text: #450a0a;
+    --admin-text-secondary: #7f1d1d;
+    --admin-text-muted: #b91c1c;
+    --admin-text-faint: #dc2626;
+    --admin-accent: #dc2626;
+    --admin-accent-soft: rgba(220, 38, 38, 0.1);
     --admin-input-bg: #ffffff;
   }
 
@@ -574,19 +579,19 @@ body {
   /* Overlay katmanında shadcn değişkenleri (modal / bildirim) */
   .admin-overlay-host[data-admin-theme='dark'] {
     color-scheme: dark;
-    --background: #0b1220;
-    --foreground: #f8fafc;
-    --card: #1a2332;
-    --card-foreground: #f8fafc;
-    --popover: #1a2332;
-    --popover-foreground: #f8fafc;
-    --muted: #243044;
-    --muted-foreground: #94a3b8;
-    --accent: #243044;
-    --accent-foreground: #f8fafc;
-    --border: rgba(148, 163, 184, 0.16);
-    --input: rgba(15, 23, 42, 0.72);
-    --ring: #8b5cf6;
+    --background: #110808;
+    --foreground: #fff5f5;
+    --card: #2a1212;
+    --card-foreground: #fff5f5;
+    --popover: #2a1212;
+    --popover-foreground: #fff5f5;
+    --muted: #3a1818;
+    --muted-foreground: #fca5a5;
+    --accent: #3a1818;
+    --accent-foreground: #fff5f5;
+    --border: rgba(254, 202, 202, 0.12);
+    --input: rgba(42, 18, 18, 0.82);
+    --ring: #ef4444;
   }
 
   .admin-overlay-host[data-admin-theme='light'] {
@@ -603,14 +608,14 @@ body {
     --accent-foreground: #0f172a;
     --border: #e2e8f0;
     --input: #ffffff;
-    --ring: #7c3aed;
+    --ring: #dc2626;
   }
 
   /* Cmd+K paleti — değişken kaybında bile okunaklı kalsın */
   .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette {
-    background: #1a2332 !important;
-    color: #f8fafc !important;
-    border-color: rgba(148, 163, 184, 0.2) !important;
+    background: #2a1212 !important;
+    color: #fff5f5 !important;
+    border-color: rgba(248, 113, 113, 0.22) !important;
   }
 
   .admin-overlay-host[data-admin-theme='light'] .admin-command-palette {
@@ -640,11 +645,11 @@ body {
   }
 
   .admin-overlay-host[data-admin-theme='dark'] .admin-command-palette-item--active {
-    background: rgba(139, 92, 246, 0.18) !important;
+    background: rgba(239, 68, 68, 0.18) !important;
   }
 
   .admin-overlay-host[data-admin-theme='light'] .admin-command-palette-item--active {
-    background: rgba(124, 58, 237, 0.1) !important;
+    background: rgba(220, 38, 38, 0.1) !important;
   }
 
   /* Admin bildirim paneli (body portal) */
@@ -684,17 +689,17 @@ body {
 
   .admin-shell-v2 .app-sidebar {
     background: linear-gradient(180deg, var(--admin-sidebar-bg) 0%, var(--admin-sidebar-bg-end) 100%);
-    box-shadow: inset -1px 0 0 rgba(148, 163, 184, 0.08);
+    box-shadow: inset -1px 0 0 rgba(248, 113, 113, 0.1);
   }
 
-  /* Sidebar her zaman koyu — ana tema renklerinden bağımsız okunaklı metin */
+  /* Sidebar her zaman koyu kırmızı — okunaklı beyaz metin */
   .admin-shell-v2 .admin-sidebar {
-    --sidebar-fg: #f8fafc;
-    --sidebar-fg-muted: #cbd5e1;
-    --sidebar-fg-faint: #94a3b8;
+    --sidebar-fg: #fff5f5;
+    --sidebar-fg-muted: #fecaca;
+    --sidebar-fg-faint: #fca5a5;
     --sidebar-surface: rgba(255, 255, 255, 0.06);
-    --sidebar-surface-hover: rgba(255, 255, 255, 0.1);
-    --sidebar-border: rgba(148, 163, 184, 0.18);
+    --sidebar-surface-hover: rgba(239, 68, 68, 0.14);
+    --sidebar-border: rgba(248, 113, 113, 0.18);
     color: var(--sidebar-fg);
   }
 
@@ -714,8 +719,8 @@ body {
   }
 
   .admin-sidebar-filter:focus {
-    border-color: rgba(139, 92, 246, 0.45);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
   }
 
   .admin-text { color: var(--admin-text); }
@@ -742,8 +747,8 @@ body {
   }
 
   .admin-input:focus {
-    border-color: rgba(139, 92, 246, 0.4);
-    --tw-ring-color: rgba(139, 92, 246, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    --tw-ring-color: rgba(239, 68, 68, 0.2);
   }
 
   .admin-theme-toggle {
@@ -756,7 +761,7 @@ body {
   .admin-theme-toggle:hover {
     background: var(--sidebar-surface-hover);
     color: var(--sidebar-fg);
-    border-color: rgba(139, 92, 246, 0.35);
+    border-color: rgba(239, 68, 68, 0.35);
   }
 
   .admin-theme-toggle--compact,
@@ -794,13 +799,13 @@ body {
 
   .admin-sidebar-search-trigger:hover {
     background: var(--sidebar-surface-hover);
-    border-color: rgba(139, 92, 246, 0.35);
+    border-color: rgba(239, 68, 68, 0.35);
     color: var(--sidebar-fg);
   }
 
   .admin-sidebar-group-label {
     @apply text-[10px] font-bold uppercase tracking-[0.14em] px-2;
-    color: #a5b4fc;
+    color: #fca5a5;
   }
 
   .admin-sidebar-item {
@@ -814,9 +819,9 @@ body {
   }
 
   .admin-sidebar-item--active {
-    background: rgba(139, 92, 246, 0.2);
+    background: rgba(239, 68, 68, 0.2);
     color: var(--sidebar-fg);
-    box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.42);
+    box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.42);
   }
 
   .admin-sidebar-item--active .admin-sidebar-desc {
@@ -829,13 +834,13 @@ body {
   }
 
   .admin-sidebar-item--active .admin-sidebar-item-icon {
-    color: #c4b5fd;
+    color: #fecaca;
     opacity: 1;
   }
 
   .admin-sidebar-badge {
     @apply min-w-[1.1rem] h-[1.1rem] px-1 flex items-center justify-center text-[9px] font-bold rounded-full text-white;
-    background: rgba(139, 92, 246, 0.9);
+    background: rgba(239, 68, 68, 0.9);
   }
 
   .admin-sidebar-footer {
@@ -856,12 +861,12 @@ body {
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-command-hero {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(26, 35, 50, 0.98) 52%, rgba(11, 18, 32, 1) 100%);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(42, 18, 18, 0.98) 52%, rgba(17, 8, 8, 1) 100%);
     box-shadow: var(--admin-card-shadow);
   }
 
   .admin-shell-v2[data-admin-theme='light'] .admin-command-hero {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.07) 0%, #ffffff 58%, #f8fafc 100%);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, #ffffff 58%, #fffafa 100%);
     box-shadow: var(--admin-card-shadow);
   }
 
@@ -893,7 +898,7 @@ body {
   }
 
   .admin-pulse-metric:hover {
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: rgba(239, 68, 68, 0.3);
     background: var(--admin-bg-hover);
     transform: translateY(-1px);
   }
@@ -1197,8 +1202,8 @@ body {
   .admin-form-input:focus,
   .admin-form-select:focus,
   .admin-form-textarea:focus {
-    border-color: rgba(139, 92, 246, 0.45);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
   }
 
   .admin-form-input::placeholder,
@@ -1209,40 +1214,40 @@ body {
   /* Dashboard/shadcn bileşenlerini admin içeriğinde temaya bağla */
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root {
     color-scheme: dark;
-    --background: #0b1220;
-    --foreground: #f8fafc;
-    --card: #1a2332;
-    --card-foreground: #f8fafc;
-    --popover: #1a2332;
-    --popover-foreground: #f8fafc;
-    --muted: #243044;
-    --muted-foreground: #94a3b8;
-    --accent: #243044;
-    --accent-foreground: #f8fafc;
-    --border: rgba(148, 163, 184, 0.16);
-    --border-strong: rgba(148, 163, 184, 0.28);
-    --input: rgba(15, 23, 42, 0.72);
-    --ring: #8b5cf6;
-    --primary-light: rgba(139, 92, 246, 0.14);
+    --background: #110808;
+    --foreground: #fff5f5;
+    --card: #2a1212;
+    --card-foreground: #fff5f5;
+    --popover: #2a1212;
+    --popover-foreground: #fff5f5;
+    --muted: #3a1818;
+    --muted-foreground: #fca5a5;
+    --accent: #3a1818;
+    --accent-foreground: #fff5f5;
+    --border: rgba(254, 202, 202, 0.12);
+    --border-strong: rgba(248, 113, 113, 0.24);
+    --input: rgba(42, 18, 18, 0.82);
+    --ring: #ef4444;
+    --primary-light: rgba(239, 68, 68, 0.14);
   }
 
   .admin-shell-v2[data-admin-theme='light'] .admin-content-root {
     color-scheme: light;
-    --background: #f1f5f9;
-    --foreground: #0f172a;
+    --background: #fffafa;
+    --foreground: #450a0a;
     --card: #ffffff;
-    --card-foreground: #0f172a;
+    --card-foreground: #450a0a;
     --popover: #ffffff;
-    --popover-foreground: #0f172a;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
+    --popover-foreground: #450a0a;
+    --muted: #fff1f2;
+    --muted-foreground: #b91c1c;
+    --accent: #fff1f2;
+    --accent-foreground: #450a0a;
+    --border: #fecdd3;
+    --border-strong: #fda4af;
     --input: #ffffff;
-    --ring: #7c3aed;
-    --primary-light: rgba(124, 58, 237, 0.08);
+    --ring: #dc2626;
+    --primary-light: rgba(220, 38, 38, 0.08);
   }
 
   .admin-content-root .app-panel,
@@ -1453,8 +1458,8 @@ body {
   }
 
   .admin-split-list-item--active {
-    background: rgba(139, 92, 246, 0.12);
-    box-shadow: inset 2px 0 0 #8b5cf6;
+    background: rgba(239, 68, 68, 0.12);
+    box-shadow: inset 2px 0 0 #ef4444;
   }
 
   .admin-stat-card {
@@ -1486,15 +1491,15 @@ body {
   }
 
   .admin-filter-chip--active {
-    background: rgba(139, 92, 246, 0.2);
-    color: #c4b5fd;
-    box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.35);
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
+    box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.35);
   }
 
   .admin-shell-v2[data-admin-theme='light'] .admin-filter-chip--active {
-    background: rgba(124, 58, 237, 0.1);
-    color: #6d28d9;
-    box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.25);
+    background: rgba(220, 38, 38, 0.1);
+    color: #b91c1c;
+    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.25);
   }
 
   .admin-monitor-panel {
@@ -1564,6 +1569,53 @@ body {
     border-color: var(--admin-border);
     background-color: var(--admin-input-bg);
     color: var(--admin-text);
+  }
+
+  /* Admin içinde kalan mor/indigo Tailwind sınıflarını ateş kırmızısına çevir */
+  .admin-shell-v2 [class*='text-violet-'],
+  .admin-overlay-host [class*='text-violet-'] {
+    color: #fca5a5 !important;
+  }
+
+  .admin-shell-v2 [class*='bg-violet-5'],
+  .admin-shell-v2 [class*='bg-violet-6'],
+  .admin-overlay-host [class*='bg-violet-5'],
+  .admin-overlay-host [class*='bg-violet-6'] {
+    background-color: #dc2626 !important;
+  }
+
+  .admin-shell-v2 [class*='bg-violet-500/'],
+  .admin-shell-v2 [class*='bg-violet-600/'],
+  .admin-overlay-host [class*='bg-violet-500/'],
+  .admin-overlay-host [class*='bg-violet-600/'] {
+    background-color: rgba(239, 68, 68, 0.18) !important;
+  }
+
+  .admin-shell-v2 [class*='border-violet-'],
+  .admin-overlay-host [class*='border-violet-'] {
+    border-color: rgba(248, 113, 113, 0.28) !important;
+  }
+
+  .admin-shell-v2 [class*='ring-violet-'],
+  .admin-overlay-host [class*='ring-violet-'] {
+    --tw-ring-color: rgba(239, 68, 68, 0.35) !important;
+  }
+
+  .admin-shell-v2 [class*='from-violet-'],
+  .admin-overlay-host [class*='from-violet-'] {
+    --tw-gradient-from: #ef4444 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(239 68 68 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .admin-shell-v2 [class*='to-indigo-'],
+  .admin-overlay-host [class*='to-indigo-'] {
+    --tw-gradient-to: #ea580c var(--tw-gradient-to-position) !important;
+  }
+
+  .admin-shell-v2 [class*='border-indigo-'],
+  .admin-overlay-host [class*='border-indigo-'] {
+    border-color: #fecdd3 !important;
   }
 }
 

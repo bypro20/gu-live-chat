@@ -18,7 +18,7 @@ const MODULE_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 }
 
 const ACCENT: Record<AdminModule['accent'], { border: string; bg: string; text: string; glow: string }> = {
-  violet: { border: 'border-violet-500/20', bg: 'bg-violet-500/10', text: 'text-violet-400', glow: 'from-violet-500/20' },
+  violet: { border: 'border-red-500/20', bg: 'bg-red-500/10', text: 'text-red-400', glow: 'from-red-500/20' },
   emerald: { border: 'border-emerald-500/20', bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'from-emerald-500/20' },
   sky: { border: 'border-sky-500/20', bg: 'bg-sky-500/10', text: 'text-sky-400', glow: 'from-sky-500/20' },
   amber: { border: 'border-amber-500/20', bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'from-amber-500/20' },
@@ -110,7 +110,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
           </div>
           <Link
             href="/admin/platform"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition-colors shrink-0"
           >
             <BarChart3 className="w-4 h-4" />
             Platform Merkezi (A-Z)
@@ -129,7 +129,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
             href="/admin/inbox"
             label="Okunmamış Mesaj"
             value={stats.inboxUnread}
-            accent="text-violet-400"
+            accent="text-red-400"
             alert={stats.inboxUnread > 0}
           />
           <PulseMetric
@@ -205,7 +205,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
                             <span className="admin-module-link-desc block text-[10px] admin-text-faint truncate">{link.description}</span>
                           )}
                         </span>
-                        <ArrowRight className="w-3.5 h-3.5 admin-text-faint group-hover:text-violet-400 shrink-0 transition-colors" />
+                        <ArrowRight className="w-3.5 h-3.5 admin-text-faint group-hover:text-red-400 shrink-0 transition-colors" />
                       </Link>
                     </li>
                   ))}
@@ -253,7 +253,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
         <aside className="space-y-6">
           <div className="admin-panel-card">
             <h3 className="text-sm font-bold admin-text flex items-center gap-2 mb-4">
-              <Target className="w-4 h-4 text-violet-400" />
+              <Target className="w-4 h-4 text-red-400" />
               Deneme Hunisi
             </h3>
             <p className="text-[11px] admin-text-muted mb-4">{TRIAL_DAYS} gün PRO deneme · widget & sohbet bonusları</p>
@@ -285,7 +285,7 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
                     </div>
                     <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--admin-bg-hover)' }}>
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500"
                         style={{
                           width: `${Math.max(8, (p.count / Math.max(stats.totalWebsites, 1)) * 100)}%`,
                         }}
@@ -332,7 +332,7 @@ function MetricRow({
     <div className="flex items-center justify-between text-sm">
       <span className="admin-text-muted">{label}</span>
       <span className={`font-bold tabular-nums ${
-        highlight ? 'text-violet-400' : warn ? 'text-amber-400' : 'admin-text'
+        highlight ? 'text-red-400' : warn ? 'text-amber-400' : 'admin-text'
       }`}>
         {value}
       </span>
