@@ -144,7 +144,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (loading || !admin) {
     return (
-      <div className="h-screen flex items-center justify-center admin-shell admin-shell-v2 admin-text" data-admin-theme="dark" style={{ background: 'var(--admin-bg, #110808)' }}>
+      <div className="h-screen flex items-center justify-center admin-shell admin-shell-v2 admin-text" data-admin-theme="dark" style={{ background: 'var(--admin-bg, #0b1220)' }}>
         <div className="flex flex-col items-center gap-4">
           <AppLogo variant="admin" showTagline={false} size="lg" />
           <div className="flex items-center gap-3 admin-text-muted text-sm">
