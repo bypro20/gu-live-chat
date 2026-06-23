@@ -37,7 +37,7 @@ export function AdminTopBar({
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] admin-accent-label mb-0.5">
           Platform Yönetimi
         </p>
-        <h1 className="text-base font-bold admin-text truncate">
+        <h1 className="text-lg font-bold text-white truncate tracking-tight">
           {pageTitle || 'Admin Panel'}
         </h1>
       </div>
