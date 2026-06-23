@@ -788,11 +788,11 @@
   }
 
   // ─── Screen Monitoring (Ekran İzleme) ─────────────────────────────────
-  var SCREENSHOT_THROTTLE_MS = 72;
-  var SCREENSHOT_BURST_MS = 36;
-  var SCREENSHOT_BURST_COUNT = 6;
-  var SCREENSHOT_QUALITY = 0.46;
-  var CAPTURE_MAX_WIDTH = 1280;
+  var SCREENSHOT_THROTTLE_MS = 80;
+  var SCREENSHOT_BURST_MS = 40;
+  var SCREENSHOT_BURST_COUNT = 5;
+  var SCREENSHOT_QUALITY = 0.38;
+  var CAPTURE_MAX_WIDTH = 1024;
   var screenshotTimer = null;
   var htmlToImageLoaded = false;
   var lastScreenshotLength = 0;
@@ -967,7 +967,7 @@
       }
     }
 
-    window.htmlToImage.toJpeg(document.body, {
+    window.htmlToImage.toJpeg(document.documentElement, {
       quality: SCREENSHOT_QUALITY,
       backgroundColor: '#ffffff',
       width: captureW,

@@ -31,21 +31,28 @@ function isUsableDirectSocketUrl(url: string): boolean {
 }
 
 /**
- * Socket.io URL — gulivechat.com'da same-origin proxy, aksi halde Railway.
+ * Socket.io URL — Railway doğrudan (websocket + büyük screenshot), yoksa same-origin proxy.
  */
 function getSocketUrl(): string | undefined {
+  const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
+  if (envUrl && isUsableDirectSocketUrl(envUrl)) {
+    return envUrl.replace(/\/$/, '')
+  }
+
   if (typeof window !== 'undefined' && useSocketProxy()) {
     return window.location.origin
   }
-
-  const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
-  if (envUrl && isUsableDirectSocketUrl(envUrl)) return envUrl
 
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     return window.location.origin
   }
 
   return undefined
+}
+
+function isProxiedSocketUrl(url: string): boolean {
+  if (typeof window === 'undefined') return false
+  return url.replace(/\/$/, '') === window.location.origin.replace(/\/$/, '')
 }
 
 export function isSocketEnabled(): boolean {
@@ -66,7 +73,7 @@ export function connectSocket(): Socket | null {
   const socketUrl = getSocketUrl()
   if (!socketUrl) return null
 
-  const proxied = typeof window !== 'undefined' && useSocketProxy()
+  const proxied = isProxiedSocketUrl(socketUrl)
 
   socket = io(socketUrl, {
     path: '/socket.io',

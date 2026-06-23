@@ -244,6 +244,7 @@ export function AdminVisitorsMonitor({
         clearTimeout(screenCaptureTimeoutRef.current)
         screenCaptureTimeoutRef.current = null
       }
+      setOverlayDeniedMessage(null)
       updateScreenshot(
         data.visitorId as string,
         data.screenshot as string,
