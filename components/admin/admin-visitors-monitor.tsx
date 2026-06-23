@@ -110,7 +110,7 @@ export function AdminVisitorsMonitor({
       setVisitors(
         (data.visitors || []).map((v: LiveVisitor & { pages?: LiveVisitor['pages'] }) => ({
           ...v,
-          isLive: v.isLive ?? Boolean(v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() < 5 * 60 * 1000),
+          isLive: Boolean(v.isLive) || Boolean(v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() < 5 * 60 * 1000),
           currentPage: v.currentPage || '',
         }))
       )
@@ -325,11 +325,7 @@ export function AdminVisitorsMonitor({
     if (!targetWebsiteId) return
     if (active) {
       authenticateAgent()
-      if (!visitor?.isLive) {
-        setOverlayDeniedMessage(m.visitorNotLive)
-      } else {
-        setOverlayDeniedMessage(null)
-      }
+      setOverlayDeniedMessage(null)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
