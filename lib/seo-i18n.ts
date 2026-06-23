@@ -3,7 +3,7 @@ import { SITE_DOMAIN, SITE_NAME } from './site-config'
 import { PAGE_SEO, type PageMeta } from './seo'
 import { trialSeoHome, trialSeoPricing } from './trial-config'
 
-export type PageSeoKey = keyof typeof PAGE_SEO | 'help' | 'apps' | 'hakkimizda' | 'gizlilik' | 'teslimatIade' | 'mesafeliSatis' | 'odemeGuvenligi' | 'kvkk' | 'cerez' | 'kullanimSartlari' | 'basla'
+export type PageSeoKey = keyof typeof PAGE_SEO
 
 const EN_SEO: Partial<Record<PageSeoKey, PageMeta>> = {
   home: {
@@ -168,13 +168,19 @@ const EN_SEO: Partial<Record<PageSeoKey, PageMeta>> = {
     keywordFirst: true,
     locale: 'en',
   },
+  demo: {
+    title: 'Live Demo — Panel Tour',
+    description:
+      'All Gu Live Chat panel menus with animated transitions — Inbox, Widget, Analytics, and more.',
+    path: '/demo',
+    keywords: ['gu live chat demo', 'live chat panel demo'],
+    locale: 'en',
+  },
 }
 
 export function getPageSeo(locale: SiteLocale, key: PageSeoKey): PageMeta {
   if (locale === 'en' && EN_SEO[key]) return EN_SEO[key]!
-  if (key in PAGE_SEO) return PAGE_SEO[key as keyof typeof PAGE_SEO]
-  if (key === 'basla') return PAGE_SEO.basla
-  return PAGE_SEO.home
+  return PAGE_SEO[key]
 }
 
 export async function buildLocaleMetadata(locale: SiteLocale, key: PageSeoKey) {

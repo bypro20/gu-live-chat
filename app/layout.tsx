@@ -3,13 +3,14 @@ import Script from 'next/script'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
-import { buildMetadata, PAGE_SEO } from '@/lib/seo'
+import { getSiteVerificationMetadata } from '@/lib/seo'
+import { SITE_LEGAL } from '@/lib/site-legal'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import { NativeAppBootstrap } from '@/components/app/native-app-bootstrap'
 import { AttributionBootstrap } from '@/components/marketing/attribution-bootstrap'
 import { NATIVE_SHELL_SCRIPT } from '@/lib/native-shell-script'
 import { getServerLocaleContext } from '@/lib/locale-server'
-import { getSiteUrl } from '@/lib/site-config'
+import { getSiteUrl, SITE_NAME } from '@/lib/site-config'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -20,9 +21,14 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  ...buildMetadata(PAGE_SEO.home),
   metadataBase: new URL(getSiteUrl()),
-  applicationName: 'Gu Live Chat',
+  title: {
+    default: `${SITE_NAME} — ${SITE_LEGAL.tagline}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_LEGAL.metaDescription,
+  ...getSiteVerificationMetadata(),
+  applicationName: SITE_NAME,
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },

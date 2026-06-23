@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { JsonLd } from '@/components/marketing/json-ld'
-import { breadcrumbJsonLd, faqJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
+import { breadcrumbJsonLd, faqJsonLd, softwareApplicationJsonLd, webPageJsonLd } from '@/lib/seo'
 import { trialShortLabel } from '@/lib/trial-config'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useLocale, useT } from '@/components/marketing/locale-provider'
@@ -17,12 +17,19 @@ export function SeoLandingPageClient({ page }: { page: SeoLandingKey }) {
   const t = useT()
   const config = seoLandings[page]
   const meta = getPageSeo(locale, page)
+  const contentLocale = locale === 'en' ? 'en' : 'tr'
 
   return (
     <MarketingPageShell>
       <JsonLd
         data={[
-          softwareApplicationJsonLd(),
+          softwareApplicationJsonLd(contentLocale),
+          webPageJsonLd({
+            name: meta.title,
+            description: meta.description,
+            path: meta.path,
+            locale: contentLocale,
+          }),
           breadcrumbJsonLd([
             { name: seoChrome.homeCrumb, path: '/' },
             { name: meta.title.split('—')[0].trim(), path: meta.path },

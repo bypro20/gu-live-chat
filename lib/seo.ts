@@ -35,6 +35,19 @@ export type PageMeta = {
   /** Sayfa başlığında marka öne alınsın (landing SEO sayfaları) */
   keywordFirst?: boolean
   locale?: 'tr' | 'en'
+  robots?: Metadata['robots']
+}
+
+function twitterSiteHandle(): string | undefined {
+  const raw = process.env.NEXT_PUBLIC_SOCIAL_X?.trim()
+  if (!raw) return undefined
+  try {
+    const path = new URL(raw.startsWith('http') ? raw : `https://${raw}`).pathname.replace(/^\//, '')
+    const handle = path.split('/')[0]
+    return handle ? `@${handle.replace(/^@/, '')}` : undefined
+  } catch {
+    return raw.startsWith('@') ? raw : `@${raw.replace(/^@/, '')}`
+  }
 }
 
 export function buildMetadata({
@@ -45,6 +58,7 @@ export function buildMetadata({
   ogImage,
   keywordFirst = false,
   locale = 'tr',
+  robots,
 }: PageMeta): Metadata {
   const url = `${SITE_URL}${path}`
   const brand = SITE_NAME
@@ -59,6 +73,7 @@ export function buildMetadata({
   const allKeywords = mergePageKeywords(locale, keywords)
   const resolvedOg = ogImage ?? DEFAULT_OG_IMAGE
   const ogImageUrl = resolvedOg.startsWith('http') ? resolvedOg : `${SITE_URL}${resolvedOg}`
+  const twitterSite = twitterSiteHandle()
 
   return {
     title: path === '' ? { default: fullTitle, template: `%s | ${brand}` } : fullTitle,
@@ -67,7 +82,7 @@ export function buildMetadata({
     applicationName: brand,
     alternates: {
       canonical: url,
-      types: { 'application/rss+xml': `${SITE_URL}/blog` },
+      types: { 'application/rss+xml': `${SITE_URL}/blog/feed.xml` },
     },
     ...getSiteVerificationMetadata(),
     openGraph: {
@@ -85,8 +100,9 @@ export function buildMetadata({
       title: fullTitle,
       description,
       images: [ogImageUrl],
+      ...(twitterSite ? { site: twitterSite, creator: twitterSite } : {}),
     },
-    robots: {
+    robots: robots ?? {
       index: true,
       follow: true,
       googleBot: {
@@ -202,6 +218,71 @@ export const PAGE_SEO = {
     keywords: ['ücretsiz canlı destek', 'gu live chat kayıt', 'gulivechat ücretsiz'],
     keywordFirst: true,
   },
+  help: {
+    title: 'Yardım Merkezi — Kurulum, Widget & SSS',
+    description:
+      `${SITE_NAME} yardım merkezi — widget kurulumu, chatbot, birleşik inbox, faturalandırma ve sık sorulan sorular.`,
+    path: '/help',
+    keywords: ['gu live chat yardım', 'canlı destek kurulum', 'widget kurulum rehberi'],
+  },
+  apps: {
+    title: 'Uygulamalar & Eklentiler',
+    description:
+      `${SITE_NAME} eklenti mağazası — WhatsApp kanalı, AI Pro, white-label ve daha fazlası. iyzico ile güvenli abonelik.`,
+    path: '/apps',
+    keywords: ['canlı destek eklentileri', 'whatsapp kanalı', 'gu live chat uygulamalar'],
+  },
+  hakkimizda: {
+    title: 'Hakkımızda',
+    description:
+      `${SITE_NAME} — Türkiye'de geliştirilen canlı destek, chatbot ve birleşik müşteri hizmetleri platformu. ${SITE_DOMAIN}`,
+    path: '/hakkimizda',
+    keywords: ['gu live chat hakkında', 'türk canlı destek yazılımı'],
+  },
+  gizlilik: {
+    title: 'Gizlilik Politikası',
+    description: `${SITE_NAME} gizlilik politikası ve kişisel verilerin korunması.`,
+    path: '/gizlilik',
+    keywords: ['gizlilik politikası', 'kvkk gizlilik'],
+  },
+  teslimatIade: {
+    title: 'Teslimat & İade',
+    description: `${SITE_NAME} dijital hizmet teslimat koşulları ve iade politikası.`,
+    path: '/teslimat-iade',
+  },
+  mesafeliSatis: {
+    title: 'Mesafeli Satış Sözleşmesi',
+    description: `${SITE_NAME} mesafeli satış sözleşmesi ve tüketici hakları.`,
+    path: '/mesafeli-satis',
+  },
+  odemeGuvenligi: {
+    title: 'Ödeme Güvenliği',
+    description: `${SITE_NAME} SSL ve iyzico güvenli ödeme altyapısı.`,
+    path: '/odeme-guvenligi',
+  },
+  kvkk: {
+    title: 'KVKK Aydınlatma Metni',
+    description: '6698 sayılı KVKK kapsamında kişisel verilerin işlenmesine ilişkin aydınlatma metni.',
+    path: '/kvkk',
+    keywords: ['kvkk aydınlatma', 'kişisel verilerin korunması'],
+  },
+  cerez: {
+    title: 'Çerez Politikası',
+    description: `${SITE_NAME} çerez politikası ve tercih yönetimi.`,
+    path: '/cerez-politikasi',
+  },
+  kullanimSartlari: {
+    title: 'Kullanım Şartları',
+    description: `${SITE_NAME} kullanım şartları ve hizmet sözleşmesi.`,
+    path: '/kullanim-sartlari',
+  },
+  demo: {
+    title: 'Canlı Demo — Panel Turu',
+    description:
+      `${SITE_NAME} panelindeki tüm menüler animasyonlu geçişlerle — Gelen Kutusu, Widget, Analitik ve daha fazlası.`,
+    path: '/demo',
+    keywords: ['gu live chat demo', 'canlı destek panel demo'],
+  },
 } as const
 
 function socialSameAs(): string[] {
@@ -256,7 +337,7 @@ export function organizationJsonLd() {
 }
 
 /** SoftwareApplication JSON-LD — ana ürün */
-export function softwareApplicationJsonLd() {
+export function softwareApplicationJsonLd(locale: 'tr' | 'en' = 'tr') {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -277,16 +358,26 @@ export function softwareApplicationJsonLd() {
     description: SITE_LEGAL.metaDescription,
     url: SITE_URL,
     image: `${SITE_URL}/og-image.png`,
-    inLanguage: 'tr-TR',
+    inLanguage: locale === 'en' ? 'en-US' : 'tr-TR',
     publisher: { '@id': `${SITE_URL}/#organization` },
-    featureList: [
-      'Canlı sohbet widget',
-      'AI chatbot',
-      'WhatsApp entegrasyonu',
-      'Birleşik inbox',
-      'Ziyaretçi takibi',
-      'KVKK uyumu',
-    ],
+    featureList:
+      locale === 'en'
+        ? [
+            'Live chat widget',
+            'AI chatbot',
+            'WhatsApp integration',
+            'Unified inbox',
+            'Visitor tracking',
+            'GDPR-ready',
+          ]
+        : [
+            'Canlı sohbet widget',
+            'AI chatbot',
+            'WhatsApp entegrasyonu',
+            'Birleşik inbox',
+            'Ziyaretçi takibi',
+            'KVKK uyumu',
+          ],
   }
 }
 
@@ -307,13 +398,22 @@ export function articleJsonLd(article: {
   description: string
   path: string
   datePublished: string
+  dateModified?: string
+  locale?: 'tr' | 'en'
+  image?: string
 }) {
+  const imageUrl = article.image?.startsWith('http')
+    ? article.image
+    : `${SITE_URL}${article.image ?? DEFAULT_OG_IMAGE}`
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: article.title,
     description: article.description,
     datePublished: article.datePublished,
+    dateModified: article.dateModified ?? article.datePublished,
+    image: [imageUrl],
     author: { '@type': 'Organization', name: SITE_LEGAL.name, url: SITE_URL },
     publisher: {
       '@type': 'Organization',
@@ -321,8 +421,9 @@ export function articleJsonLd(article: {
       url: SITE_URL,
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon.png` },
     },
-    mainEntityOfPage: `${SITE_URL}${article.path}`,
-    inLanguage: 'tr-TR',
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}${article.path}` },
+    url: `${SITE_URL}${article.path}`,
+    inLanguage: article.locale === 'en' ? 'en-US' : 'tr-TR',
   }
 }
 
@@ -340,7 +441,12 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
 }
 
 /** Landing sayfaları — WebPage + breadcrumb */
-export function webPageJsonLd(page: { name: string; description: string; path: string }) {
+export function webPageJsonLd(page: {
+  name: string
+  description: string
+  path: string
+  locale?: 'tr' | 'en'
+}) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -350,6 +456,6 @@ export function webPageJsonLd(page: { name: string; description: string; path: s
     description: page.description,
     isPartOf: { '@id': `${SITE_URL}/#website` },
     about: { '@id': `${SITE_URL}/#software` },
-    inLanguage: 'tr-TR',
+    inLanguage: page.locale === 'en' ? 'en-US' : 'tr-TR',
   }
 }

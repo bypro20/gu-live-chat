@@ -133,8 +133,9 @@ async function main() {
   const bing = await fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemap)}`)
   console.log('  Bing:', bing.status)
   const urls = [
-    BASE, `${BASE}/basla`, `${BASE}/canli-destek`, `${BASE}/chatbot`,
+    BASE, `${BASE}/canli-destek`, `${BASE}/chatbot`,
     `${BASE}/whatsapp-destek`, `${BASE}/pricing`, `${BASE}/urunler`, `${BASE}/register`,
+    `${BASE}/demo`, `${BASE}/help`, `${BASE}/contact`, `${BASE}/blog`, `${BASE}/blog/feed.xml`,
   ]
   const idx = await fetch('https://api.indexnow.org/indexnow', {
     method: 'POST',

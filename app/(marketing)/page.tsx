@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
@@ -7,16 +8,23 @@ import {
   UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
 } from '@/components/marketing/home-sections'
 import { WidgetInstallStrip, AnalyticsStrip, PaymentFlowStrip } from '@/components/marketing/feature-micro-showcases'
-import { HOME_FAQS } from '@/lib/home-faqs'
-import { buildMetadata, faqJsonLd, softwareApplicationJsonLd, PAGE_SEO } from '@/lib/seo'
-import type { Metadata } from 'next'
+import { getHomeFaqs } from '@/lib/home-faqs'
+import { getServerLocaleContext } from '@/lib/locale-server'
+import { marketingMetadata } from '@/lib/marketing-pages/metadata'
+import { faqJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
 
-export const metadata: Metadata = buildMetadata(PAGE_SEO.home)
+export async function generateMetadata(): Promise<Metadata> {
+  return marketingMetadata('home')
+}
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { locale } = await getServerLocaleContext()
+  const contentLocale = locale === 'en' ? 'en' : 'tr'
+  const faqs = getHomeFaqs(locale)
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <JsonLd data={[softwareApplicationJsonLd(), faqJsonLd(HOME_FAQS)]} />
+      <JsonLd data={[softwareApplicationJsonLd(contentLocale), faqJsonLd(faqs)]} />
       <MarketingNav />
       <HomeHero />
       <TrustStrip />

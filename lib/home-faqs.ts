@@ -1,6 +1,13 @@
 /** Ana sayfa SSS — SEO schema ve FAQ bölümü için paylaşımlı */
+import type { SiteLocale } from '@/lib/regional-config'
+import { getMessages } from '@/lib/messages'
 import { trialFreeTierFaqLine } from '@/lib/trial-config'
 
+export function getHomeFaqs(locale: SiteLocale) {
+  return getMessages(locale).home.faq.items
+}
+
+/** @deprecated getHomeFaqs(locale) kullanın */
 export const HOME_FAQS = [
   { q: 'Gu Live Chat\'i siteme eklemek ne kadar sürer?', a: 'Tek satır kodu sitenize ekleyin — 30 saniyede çalışmaya başlar. Teknik bilgi gerekmez. WordPress, Shopify ve tüm web siteleri desteklenir.' },
   { q: 'Canlı destek yazılımı ücretsiz mi?', a: `Evet, ücretsiz paket ile 2 temsilci, ayda 300 sohbet, temel widget ve e-posta bildirimleri sunulur. ${trialFreeTierFaqLine()}` },

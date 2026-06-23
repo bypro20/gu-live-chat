@@ -27,6 +27,7 @@ export async function generateMetadata({
     description: post.excerpt,
     path: `/blog/${slug}`,
     keywords: post.keywords,
+    locale: locale === 'en' ? 'en' : 'tr',
   })
 }
 
@@ -46,6 +47,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             description: post.excerpt,
             path: `/blog/${slug}`,
             datePublished: post.dateIso,
+            locale: locale === 'en' ? 'en' : 'tr',
           }),
           breadcrumbJsonLd([
             { name: blog.homeCrumb, path: '/' },

@@ -747,7 +747,7 @@ export const marketingTr: MarketingPages = {
       relatedLinks: [
         { label: 'Canlı Destek', href: '/canlı-destek' },
         { label: 'Entegrasyonlar', href: '/integrations' },
-        { label: 'Blog: WhatsApp Desteği', href: '/blog/whatsapp-ile-müşteri-desteği' },
+        { label: 'Blog: WhatsApp Desteği', href: '/blog/whatsapp-ile-musteri-destegi' },
         { label: 'Fiyatlandırma', href: '/pricing' },
       ],
     },

@@ -47,8 +47,9 @@ async function main() {
 
   console.log('\n4) IndexNow...')
   const urls = [
-    BASE, `${BASE}/basla`, `${BASE}/canli-destek`, `${BASE}/chatbot`,
+    BASE, `${BASE}/canli-destek`, `${BASE}/chatbot`,
     `${BASE}/whatsapp-destek`, `${BASE}/pricing`, `${BASE}/urunler`, `${BASE}/register`,
+    `${BASE}/demo`, `${BASE}/help`, `${BASE}/contact`, `${BASE}/blog`, `${BASE}/blog/feed.xml`,
   ]
   const idx = await fetch('https://api.indexnow.org/indexnow', {
     method: 'POST',

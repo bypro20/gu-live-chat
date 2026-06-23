@@ -4,5 +4,9 @@ import { getPageSeo, type PageSeoKey } from '@/lib/seo-i18n'
 
 export async function marketingMetadata(key: PageSeoKey) {
   const { locale } = await getServerLocaleContext()
-  return buildMetadata(getPageSeo(locale, key))
+  const meta = getPageSeo(locale, key)
+  return buildMetadata({
+    ...meta,
+    locale: locale === 'en' ? 'en' : 'tr',
+  })
 }

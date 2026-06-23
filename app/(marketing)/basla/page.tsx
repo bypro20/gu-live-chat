@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { locale } = await getServerLocaleContext()
   return {
     ...buildMetadata(getPageSeo(locale, 'basla')),
-    robots: { index: false, follow: false },
+    robots: { index: false, follow: true },
   }
 }
 

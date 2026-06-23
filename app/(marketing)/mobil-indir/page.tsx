@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: m.metaDescription,
     path: '/mobil-indir',
     keywords: ['gu live chat apk', 'gulivechat apk', 'canlı destek uygulaması', 'android indir'],
-    ogImage: '/app-icon.png',
+    locale: locale === 'en' ? 'en' : 'tr',
   })
 }
 
