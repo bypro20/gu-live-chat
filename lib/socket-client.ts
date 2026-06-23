@@ -31,16 +31,16 @@ function isUsableDirectSocketUrl(url: string): boolean {
 }
 
 /**
- * Socket.io URL — Railway doğrudan (websocket + büyük screenshot), yoksa same-origin proxy.
+ * Socket.io URL — gulivechat.com'da same-origin proxy (CORS sorunu yok), aksi halde Railway.
  */
 function getSocketUrl(): string | undefined {
+  if (typeof window !== 'undefined' && useSocketProxy()) {
+    return window.location.origin
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL?.trim()
   if (envUrl && isUsableDirectSocketUrl(envUrl)) {
     return envUrl.replace(/\/$/, '')
-  }
-
-  if (typeof window !== 'undefined' && useSocketProxy()) {
-    return window.location.origin
   }
 
   if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
@@ -77,6 +77,7 @@ export function connectSocket(): Socket | null {
 
   socket = io(socketUrl, {
     path: '/socket.io',
+    withCredentials: true,
     // Vercel rewrite websocket upgrade desteklemez — polling yeterli
     transports: proxied ? ['polling'] : ['websocket', 'polling'],
     autoConnect: true,

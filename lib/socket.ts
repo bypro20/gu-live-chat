@@ -188,7 +188,18 @@ export function initSocketServer(httpServer: HTTPServer) {
     pingTimeout: 60000,
     pingInterval: 25000,
     cors: {
-      origin: socketCorsOrigins(),
+      origin: (origin, callback) => {
+        const allowed = socketCorsOrigins()
+        if (!origin) {
+          callback(null, true)
+          return
+        }
+        if (allowed === '*' || (Array.isArray(allowed) && allowed.includes(origin))) {
+          callback(null, origin)
+          return
+        }
+        callback(new Error(`Socket CORS blocked: ${origin}`))
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -731,7 +742,15 @@ export function initSocketServer(httpServer: HTTPServer) {
     // ─── Agent requests screen capture start/stop ──────────────────
     socket.on('agent:screen:start', async (data: { visitorId: string; websiteId: string }) => {
       const agentSocket = socket as AgentSocket
-      if (!isAgentAuthed(agentSocket, data.websiteId)) return
+      if (!isAgentAuthed(agentSocket, data.websiteId)) {
+        socket.emit('agent:screen:error', {
+          visitorId: data.visitorId,
+          websiteId: data.websiteId,
+          code: 'agent_unauthorized',
+          message: 'Canlı oturum doğrulanamadı. Sayfayı yenileyip tekrar deneyin.',
+        })
+        return
+      }
       if (!(await agentCanUseOverlay(agentSocket, data.websiteId))) {
         socket.emit('agent:overlay:denied', {
           websiteId: data.websiteId,

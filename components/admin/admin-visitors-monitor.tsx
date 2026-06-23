@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { connectSocket, getSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
-import { emitAgentSocketAuth } from '@/lib/socket-agent-auth'
+import { emitAgentSocketAuth, waitForAgentSocketAuth } from '@/lib/socket-agent-auth'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
@@ -308,14 +308,10 @@ export function AdminVisitorsMonitor({
     }
   }, [session, websiteIds, websiteId, isDashboard, emit])
 
-  const handleScreenCaptureToggle = useCallback((visitorId: string, active: boolean) => {
+  const handleScreenCaptureToggle = useCallback(async (visitorId: string, active: boolean) => {
     if (active && !isSocketEnabled()) {
       setOverlayDeniedMessage(m.socketOffline)
       return
-    }
-    if (active && !liveConnected) {
-      authenticateAgent()
-      setOverlayDeniedMessage(m.socketConnecting)
     }
     if (active && isDashboard && !overlayEnabled) {
       setOverlayDeniedMessage(m.overlayDeniedPro)
@@ -325,12 +321,23 @@ export function AdminVisitorsMonitor({
     const targetWebsiteId = visitor?.websiteId || websiteId || undefined
     if (!targetWebsiteId) return
     if (active) {
-      authenticateAgent()
-      setOverlayDeniedMessage(null)
+      setOverlayDeniedMessage(m.socketConnecting)
       setScreenCapturingId(visitorId)
       setWebrtcStream(null)
       setWebrtcState('idle')
       setPrivacyMode(false)
+
+      const ids = isDashboard
+        ? (websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : [])
+        : websiteIds
+      const authed = await waitForAgentSocketAuth(ids, isDashboard ? undefined : 'platform')
+      if (!authed) {
+        setScreenCapturingId(null)
+        setOverlayDeniedMessage(m.socketOffline)
+        return
+      }
+
+      setOverlayDeniedMessage(null)
       emit('agent:screen:start', { visitorId, websiteId: targetWebsiteId })
       if (screenCaptureTimeoutRef.current) clearTimeout(screenCaptureTimeoutRef.current)
       screenCaptureTimeoutRef.current = setTimeout(() => {
