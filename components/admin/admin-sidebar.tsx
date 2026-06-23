@@ -166,7 +166,7 @@ export function AdminSidebar({
           </Link>
         )}
         <div className="flex items-center gap-2.5 p-2 rounded-xl transition-colors group hover:bg-[var(--sidebar-surface-hover)]">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-red-500 to-orange-600 text-white">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-red-600 text-white">
             {userInitial}
           </div>
           <div className="flex-1 min-w-0">

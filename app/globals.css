@@ -501,9 +501,9 @@ body {
     --admin-border: rgba(255, 255, 255, 0.08);
     --admin-border-strong: rgba(255, 255, 255, 0.14);
     --admin-text: #ffffff;
-    --admin-text-secondary: #e5e5e5;
-    --admin-text-muted: #a3a3a3;
-    --admin-text-faint: #737373;
+    --admin-text-secondary: rgba(255, 255, 255, 0.85);
+    --admin-text-muted: rgba(255, 255, 255, 0.55);
+    --admin-text-faint: rgba(255, 255, 255, 0.35);
     --admin-accent: #ef4444;
     --admin-accent-soft: rgba(239, 68, 68, 0.12);
     --admin-topbar-bg: rgba(0, 0, 0, 0.94);
@@ -547,9 +547,9 @@ body {
     --admin-border: rgba(255, 255, 255, 0.08);
     --admin-border-strong: rgba(255, 255, 255, 0.14);
     --admin-text: #ffffff;
-    --admin-text-secondary: #e5e5e5;
-    --admin-text-muted: #a3a3a3;
-    --admin-text-faint: #737373;
+    --admin-text-secondary: rgba(255, 255, 255, 0.85);
+    --admin-text-muted: rgba(255, 255, 255, 0.55);
+    --admin-text-faint: rgba(255, 255, 255, 0.35);
     --admin-accent: #ef4444;
     --admin-accent-soft: rgba(239, 68, 68, 0.12);
     --admin-input-bg: rgba(255, 255, 255, 0.04);
@@ -696,11 +696,11 @@ body {
   /* Sidebar — siyah zemin, beyaz başlık, somon etiket vurgusu */
   .admin-shell-v2 .admin-sidebar {
     --sidebar-fg: #ffffff;
-    --sidebar-fg-muted: #d4d4d4;
-    --sidebar-fg-faint: #a3a3a3;
+    --sidebar-fg-muted: rgba(255, 255, 255, 0.7);
+    --sidebar-fg-faint: rgba(255, 255, 255, 0.45);
     --sidebar-surface: rgba(255, 255, 255, 0.04);
-    --sidebar-surface-hover: rgba(239, 68, 68, 0.08);
-    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-surface-hover: rgba(239, 68, 68, 0.1);
+    --sidebar-border: rgba(255, 255, 255, 0.1);
     color: var(--sidebar-fg);
   }
 
@@ -807,7 +807,7 @@ body {
 
   .admin-sidebar-group-label {
     @apply text-[10px] font-bold uppercase tracking-[0.14em] px-2;
-    color: #737373;
+    color: rgba(255, 255, 255, 0.4);
   }
 
   .admin-sidebar-item {
@@ -874,18 +874,18 @@ body {
 
   .admin-live-pill {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider;
-    background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    color: rgb(52, 211, 153);
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ffffff;
   }
 
   .admin-live-dot {
-    @apply relative flex h-2 w-2 rounded-full bg-emerald-500;
+    @apply relative flex h-2 w-2 rounded-full bg-red-500;
   }
 
   .admin-live-dot::before {
     content: '';
-    @apply absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75;
+    @apply absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75;
   }
 
   .admin-pulse-strip {
@@ -906,8 +906,8 @@ body {
   }
 
   .admin-pulse-metric--alert {
-    border-color: rgba(16, 185, 129, 0.25);
-    background: rgba(16, 185, 129, 0.05);
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.08);
   }
 
   .admin-module-card {
@@ -1377,15 +1377,15 @@ body {
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-text-faint {
-    color: #737373;
+    color: rgba(255, 255, 255, 0.35);
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-text-muted {
-    color: #a3a3a3;
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .admin-shell-v2[data-admin-theme='dark'] .admin-content-root .admin-text-secondary {
-    color: #e5e5e5;
+    color: rgba(255, 255, 255, 0.85);
   }
 
   /* Aydınlık mod — temiz beyaz kartlar, koyu metin */
@@ -1573,51 +1573,124 @@ body {
     color: var(--admin-text);
   }
 
-  /* Admin içinde kalan mor Tailwind sınıflarını kırmızı vurguya çevir */
+  /* Admin — yalnızca siyah, kırmızı, beyaz */
+  .admin-shell-v2 [class*='text-emerald-'],
+  .admin-shell-v2 [class*='text-green-'],
+  .admin-shell-v2 [class*='text-teal-'],
+  .admin-overlay-host [class*='text-emerald-'],
+  .admin-overlay-host [class*='text-green-'],
+  .admin-overlay-host [class*='text-teal-'] {
+    color: #ffffff !important;
+  }
+
+  .admin-shell-v2 [class*='text-amber-'],
+  .admin-shell-v2 [class*='text-orange-'],
   .admin-shell-v2 [class*='text-violet-'],
-  .admin-overlay-host [class*='text-violet-'] {
+  .admin-shell-v2 [class*='text-sky-'],
+  .admin-shell-v2 [class*='text-cyan-'],
+  .admin-shell-v2 [class*='text-blue-'],
+  .admin-shell-v2 [class*='text-indigo-'],
+  .admin-overlay-host [class*='text-amber-'],
+  .admin-overlay-host [class*='text-orange-'],
+  .admin-overlay-host [class*='text-violet-'],
+  .admin-overlay-host [class*='text-sky-'],
+  .admin-overlay-host [class*='text-cyan-'],
+  .admin-overlay-host [class*='text-blue-'],
+  .admin-overlay-host [class*='text-indigo-'] {
     color: #ef4444 !important;
   }
 
-  .admin-shell-v2 [class*='bg-violet-5'],
-  .admin-shell-v2 [class*='bg-violet-6'],
-  .admin-overlay-host [class*='bg-violet-5'],
-  .admin-overlay-host [class*='bg-violet-6'] {
-    background-color: rgba(239, 68, 68, 0.14) !important;
+  .admin-shell-v2 [class*='text-gray-'],
+  .admin-overlay-host [class*='text-gray-'],
+  .admin-shell-v2 [class*='text-slate-'],
+  .admin-overlay-host [class*='text-slate-'] {
+    color: rgba(255, 255, 255, 0.55) !important;
   }
 
-  .admin-shell-v2 [class*='bg-violet-500/'],
-  .admin-shell-v2 [class*='bg-violet-600/'],
-  .admin-overlay-host [class*='bg-violet-500/'],
-  .admin-overlay-host [class*='bg-violet-600/'] {
-    background-color: rgba(239, 68, 68, 0.18) !important;
+  .admin-shell-v2 [class*='bg-emerald-'],
+  .admin-shell-v2 [class*='bg-green-'],
+  .admin-shell-v2 [class*='bg-teal-'],
+  .admin-shell-v2 [class*='bg-amber-'],
+  .admin-shell-v2 [class*='bg-orange-'],
+  .admin-shell-v2 [class*='bg-violet-'],
+  .admin-shell-v2 [class*='bg-sky-'],
+  .admin-shell-v2 [class*='bg-cyan-'],
+  .admin-shell-v2 [class*='bg-blue-'],
+  .admin-shell-v2 [class*='bg-indigo-'],
+  .admin-overlay-host [class*='bg-emerald-'],
+  .admin-overlay-host [class*='bg-green-'],
+  .admin-overlay-host [class*='bg-teal-'],
+  .admin-overlay-host [class*='bg-amber-'],
+  .admin-overlay-host [class*='bg-orange-'],
+  .admin-overlay-host [class*='bg-violet-'],
+  .admin-overlay-host [class*='bg-sky-'],
+  .admin-overlay-host [class*='bg-cyan-'],
+  .admin-overlay-host [class*='bg-blue-'],
+  .admin-overlay-host [class*='bg-indigo-'] {
+    background-color: rgba(239, 68, 68, 0.12) !important;
   }
 
+  .admin-shell-v2 [class*='border-emerald-'],
+  .admin-shell-v2 [class*='border-green-'],
+  .admin-shell-v2 [class*='border-teal-'],
+  .admin-shell-v2 [class*='border-amber-'],
+  .admin-shell-v2 [class*='border-orange-'],
   .admin-shell-v2 [class*='border-violet-'],
-  .admin-overlay-host [class*='border-violet-'] {
+  .admin-shell-v2 [class*='border-sky-'],
+  .admin-shell-v2 [class*='border-cyan-'],
+  .admin-shell-v2 [class*='border-blue-'],
+  .admin-shell-v2 [class*='border-indigo-'],
+  .admin-overlay-host [class*='border-emerald-'],
+  .admin-overlay-host [class*='border-green-'],
+  .admin-overlay-host [class*='border-teal-'],
+  .admin-overlay-host [class*='border-amber-'],
+  .admin-overlay-host [class*='border-orange-'],
+  .admin-overlay-host [class*='border-violet-'],
+  .admin-overlay-host [class*='border-sky-'],
+  .admin-overlay-host [class*='border-cyan-'],
+  .admin-overlay-host [class*='border-blue-'],
+  .admin-overlay-host [class*='border-indigo-'] {
     border-color: rgba(239, 68, 68, 0.28) !important;
   }
 
+  .admin-shell-v2 [class*='ring-emerald-'],
   .admin-shell-v2 [class*='ring-violet-'],
-  .admin-overlay-host [class*='ring-violet-'] {
+  .admin-shell-v2 [class*='ring-indigo-'],
+  .admin-overlay-host [class*='ring-emerald-'],
+  .admin-overlay-host [class*='ring-violet-'],
+  .admin-overlay-host [class*='ring-indigo-'] {
     --tw-ring-color: rgba(239, 68, 68, 0.35) !important;
   }
 
+  .admin-shell-v2 [class*='from-emerald-'],
   .admin-shell-v2 [class*='from-violet-'],
-  .admin-overlay-host [class*='from-violet-'] {
+  .admin-shell-v2 [class*='from-indigo-'],
+  .admin-shell-v2 [class*='from-red-'],
+  .admin-overlay-host [class*='from-emerald-'],
+  .admin-overlay-host [class*='from-violet-'],
+  .admin-overlay-host [class*='from-indigo-'],
+  .admin-overlay-host [class*='from-red-'] {
     --tw-gradient-from: #ef4444 var(--tw-gradient-from-position) !important;
     --tw-gradient-to: rgb(239 68 68 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
+  .admin-shell-v2 [class*='to-teal-'],
+  .admin-shell-v2 [class*='to-orange-'],
   .admin-shell-v2 [class*='to-indigo-'],
-  .admin-overlay-host [class*='to-indigo-'] {
-    --tw-gradient-to: #ea580c var(--tw-gradient-to-position) !important;
+  .admin-shell-v2 [class*='to-violet-'],
+  .admin-overlay-host [class*='to-teal-'],
+  .admin-overlay-host [class*='to-orange-'],
+  .admin-overlay-host [class*='to-indigo-'],
+  .admin-overlay-host [class*='to-violet-'] {
+    --tw-gradient-to: #dc2626 var(--tw-gradient-to-position) !important;
   }
 
-  .admin-shell-v2 [class*='border-indigo-'],
-  .admin-overlay-host [class*='border-indigo-'] {
-    border-color: #fecdd3 !important;
+  .admin-shell-v2 [class*='bg-gray-'],
+  .admin-shell-v2 [class*='bg-slate-'],
+  .admin-overlay-host [class*='bg-gray-'],
+  .admin-overlay-host [class*='bg-slate-'] {
+    background-color: #141414 !important;
   }
 }
 

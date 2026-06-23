@@ -43,15 +43,15 @@ export function AdminTopBar({
       </div>
 
       <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border admin-health-pill text-[11px]">
-        <span className={`flex items-center gap-1 ${health.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.ok ? 'text-white' : 'text-red-400'}`}>
           <Wifi className="w-3 h-3" /> API
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.db ? 'text-emerald-400' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.db ? 'text-white' : 'text-red-400'}`}>
           <Database className="w-3 h-3" /> DB
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.socket ? 'text-emerald-400' : 'text-amber-400'}`}>
+        <span className={`flex items-center gap-1 ${health.socket ? 'text-white' : 'text-red-400'}`}>
           <Radio className="w-3 h-3" /> Canlı
         </span>
         {lastUpdated && (
@@ -93,7 +93,7 @@ export function AdminTopBar({
         >
           <Eye className="w-4 h-4" />
           {liveVisitorCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold bg-emerald-500 text-white rounded-full">
+            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full">
               {liveVisitorCount > 99 ? '99+' : liveVisitorCount}
             </span>
           )}

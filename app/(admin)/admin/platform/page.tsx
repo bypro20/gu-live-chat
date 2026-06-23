@@ -57,9 +57,9 @@ type Intel = {
 }
 
 const widgetBadge: Record<string, string> = {
-  ACTIVE: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-  INSTALLED: 'bg-sky-500/15 text-sky-400 border-sky-500/25',
-  INACTIVE: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+  ACTIVE: 'bg-red-500/15 text-white border-red-500/30',
+  INSTALLED: 'bg-red-500/10 text-red-400 border-red-500/20',
+  INACTIVE: 'bg-white/5 text-white/70 border-white/10',
   NEVER: 'admin-badge-muted border',
 }
 
