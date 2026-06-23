@@ -34,7 +34,7 @@ export function AdminTopBar({
   return (
     <header className="admin-top-bar hidden lg:flex shrink-0 items-center gap-4 px-6 h-14 border-b sticky top-0 z-20">
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-400/80 mb-0.5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] admin-accent-label mb-0.5">
           Platform Yönetimi
         </p>
         <h1 className="text-base font-bold admin-text truncate">
@@ -46,17 +46,17 @@ export function AdminTopBar({
         <span className={`flex items-center gap-1 ${health.ok ? 'text-emerald-400' : 'text-red-400'}`}>
           <Wifi className="w-3 h-3" /> API
         </span>
-        <span className="admin-text-faint">|</span>
+        <span className="admin-health-sep">|</span>
         <span className={`flex items-center gap-1 ${health.db ? 'text-emerald-400' : 'text-red-400'}`}>
           <Database className="w-3 h-3" /> DB
         </span>
-        <span className="admin-text-faint">|</span>
+        <span className="admin-health-sep">|</span>
         <span className={`flex items-center gap-1 ${health.socket ? 'text-emerald-400' : 'text-amber-400'}`}>
           <Radio className="w-3 h-3" /> Canlı
         </span>
         {lastUpdated && (
           <>
-            <span className="admin-text-faint">|</span>
+            <span className="admin-health-sep">|</span>
             <span className="admin-text-muted tabular-nums">
               {lastUpdated.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
             </span>

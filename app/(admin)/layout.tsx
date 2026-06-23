@@ -144,10 +144,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (loading || !admin) {
     return (
-      <div className="h-screen flex items-center justify-center admin-shell admin-shell-v2" data-admin-theme="dark" style={{ background: '#000' }}>
+      <div className="h-screen flex items-center justify-center admin-shell admin-shell-v2 admin-text" data-admin-theme="dark" style={{ background: 'var(--admin-bg, #0b1220)' }}>
         <div className="flex flex-col items-center gap-4">
           <AppLogo variant="admin" showTagline={false} size="lg" />
-          <div className="flex items-center gap-3 text-white/50 text-sm">
+          <div className="flex items-center gap-3 admin-text-muted text-sm">
             <svg className="animate-spin h-5 w-5 text-violet-400" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -230,7 +230,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               </svg>
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-400/80 truncate">
+              <p className="text-[10px] font-semibold uppercase tracking-wider admin-accent-label truncate">
                 Admin
               </p>
               <p className="text-sm font-bold admin-text truncate">{pageTitle || 'Panel'}</p>

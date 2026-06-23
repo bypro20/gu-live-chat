@@ -63,7 +63,7 @@ export function AppLogo({
             className={cn(
               s.tag,
               'mt-1 tracking-wide truncate',
-              isSidebar ? 'text-white/45' : 'text-muted-foreground'
+              isSidebar ? 'text-slate-300' : 'text-muted-foreground'
             )}
           >
             {isAdmin ? 'Platform Yönetimi' : 'Canlı Destek Platformu'}

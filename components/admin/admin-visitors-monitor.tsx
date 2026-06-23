@@ -529,7 +529,7 @@ export function AdminVisitorsMonitor({
                           {visitor.browser && (
                             <span>{getBrowserLabel(visitor.browser, locale)}</span>
                           )}
-                          {visitor.websiteName && <span className="text-violet-400/80">{visitor.websiteName}</span>}
+                          {visitor.websiteName && <span className="text-violet-300">{visitor.websiteName}</span>}
                           {(visitor.city || visitor.country) && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-3 h-3" />
