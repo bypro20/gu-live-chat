@@ -1511,6 +1511,18 @@ body {
     color: var(--admin-text);
   }
 
+  .admin-shell-v2 .admin-screen-watch-btn,
+  .admin-overlay-host .admin-screen-watch-btn {
+    background: linear-gradient(to right, #dc2626, #ef4444) !important;
+    color: #ffffff !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+  }
+
+  .admin-shell-v2 .admin-screen-watch-btn:hover,
+  .admin-overlay-host .admin-screen-watch-btn:hover {
+    background: linear-gradient(to right, #ef4444, #f87171) !important;
+  }
+
   .admin-shell-v2 .admin-sidebar .admin-sidebar-title,
   .admin-shell-v2 .admin-sidebar .admin-sidebar-desc,
   .admin-shell-v2 .admin-sidebar .admin-sidebar-muted,

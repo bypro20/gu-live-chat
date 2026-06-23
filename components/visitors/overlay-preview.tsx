@@ -259,6 +259,8 @@ export function OverlayPreview({
   }
 
   const showScreenshot = !!isScreenCapturing && !hasWebRTC && screenshotReady
+  const canStartScreenWatch = Boolean(onScreenCaptureToggle)
+  const screenWatchReady = visitor.isLive !== false
 
   // Remote click handler — admin clicks on the screen, we send click to visitor
   const handleRemoteClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -630,13 +632,24 @@ export function OverlayPreview({
               <span className="text-white/30">{o.screenWatchHint}</span>
             </p>
           </div>
-          {visitor.isLive ? (
-            <button onClick={handleStart} className="mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#1972F5] to-[#2563EB] shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 hover:scale-[1.02] active:scale-95 transition-all">
+          {canStartScreenWatch ? (
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={!screenWatchReady}
+              title={screenWatchReady ? o.watchScreen : o.visitorOffline}
+              className={`mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                theme === 'admin'
+                  ? accent.button
+                  : 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40 hover:scale-[1.02] active:scale-95'
+              } ${screenWatchReady ? 'hover:scale-[1.02] active:scale-95' : ''}`}
+            >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
               {o.watchScreen}
             </button>
-          ) : (
-            <span className="text-xs text-white/20">{o.visitorOffline}</span>
+          ) : null}
+          {!screenWatchReady && (
+            <span className="text-xs text-white/40">{o.visitorOffline}</span>
           )}
         </div>
       </div>
