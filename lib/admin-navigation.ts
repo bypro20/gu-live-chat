@@ -1,4 +1,4 @@
-export type AdminBadgeKey = 'inbox' | 'visitors'
+export type AdminBadgeKey = 'inbox' | 'visitors' | 'mail'
 
 export interface AdminNavItem {
   href: string
@@ -56,6 +56,15 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: 'live',
     label: 'Canlı Operasyon',
     items: [
+      {
+        href: '/admin/mail',
+        label: 'E-posta Merkezi',
+        description: 'İletişim formu ve sistem mailleri',
+        icon: 'mail',
+        badge: 'mail',
+        keywords: ['mail', 'e-posta', 'iletişim', 'contact'],
+        match: (p) => p.startsWith('/admin/mail'),
+      },
       {
         href: '/admin/inbox',
         label: 'Gelen Kutusu',
@@ -132,7 +141,15 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         description: 'Landing, kampanya, içerik',
         icon: 'marketing',
         keywords: ['marketing', 'landing', 'blog'],
-        match: (p) => p.startsWith('/admin/marketing') && !p.startsWith('/admin/marketing/organic'),
+        match: (p) => p.startsWith('/admin/marketing') && !p.startsWith('/admin/marketing/organic') && !p.startsWith('/admin/marketing/paid'),
+      },
+      {
+        href: '/admin/marketing/paid',
+        label: 'Reklam Otomasyonu',
+        description: 'Google/Meta/LinkedIn kampanyaları',
+        icon: 'marketing',
+        keywords: ['paid', 'google ads', 'meta', 'reklam', 'kampanya'],
+        match: (p) => p.startsWith('/admin/marketing/paid'),
       },
       {
         href: '/admin/marketing/organic',
@@ -176,6 +193,7 @@ export const ADMIN_MODULES: AdminModule[] = [
     accent: 'emerald',
     icon: 'activity',
     links: [
+      { href: '/admin/mail', label: 'E-posta Merkezi', description: 'İletişim ve pazarlama mailleri' },
       { href: '/admin/inbox', label: 'Gelen Kutusu', description: 'Okunmamış widget mesajları' },
       { href: '/admin/visitors', label: 'Ziyaretçi Takibi', description: 'Konum, tarayıcı, ekran' },
       { href: '/admin/conversations', label: 'Tüm Sohbetler', description: 'Arşiv ve filtreleme' },

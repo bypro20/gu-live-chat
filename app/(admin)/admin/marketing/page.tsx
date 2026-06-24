@@ -64,6 +64,24 @@ export default function AdminMarketingPage() {
       </div>
 
       <Link
+        href="/admin/marketing/paid"
+        className="block rounded-2xl border border-blue-600/40 bg-gradient-to-br from-blue-950/50 to-slate-900/60 p-6 hover:border-blue-500/60 transition-colors"
+      >
+        <div className="flex items-start gap-4">
+          <div className="p-3 rounded-xl bg-blue-600/20">
+            <Megaphone className="w-6 h-6 text-blue-300" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-white">Ücretli Reklam Otomasyonu</h2>
+            <p className="text-sm text-slate-400">
+              Google Ads, Meta ve LinkedIn kampanya metinleri, anahtar kelimeler ve günlük e-posta özeti.
+            </p>
+            <span className="inline-block text-xs text-blue-300 font-medium mt-2">Aç → /admin/marketing/paid</span>
+          </div>
+        </div>
+      </Link>
+
+      <Link
         href="/admin/marketing/organic"
         className="block rounded-2xl border border-violet-600/40 bg-gradient-to-br from-violet-950/50 to-slate-900/60 p-6 hover:border-violet-500/60 transition-colors"
       >
