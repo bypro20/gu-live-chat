@@ -1,4 +1,5 @@
 import { sendEmail, isEmailConfigured } from '@/lib/email'
+import { getMailNotifyTo } from '@/lib/site-config'
 import type { ContentTask } from './types'
 
 export type SocialDispatchResult = {
@@ -80,6 +81,16 @@ export async function dispatchSocialContent(
   }
 
   if (notifyEmail && isEmailConfigured()) {
+    const notifyTo = getMailNotifyTo() || (notifyEmail.includes('@gulivechat.com') ? null : notifyEmail)
+    if (!notifyTo) {
+      return {
+        channel: task.channel,
+        taskId: task.id,
+        ok: true,
+        via: 'skipped',
+        error: 'destek@gulivechat.com MX yok — admin panelde (/admin/mail)',
+      }
+    }
     const subject = `[Gu Live Chat] ${task.channel.toUpperCase()} içeriği — ${task.date}`
     const html = `
       <h2>${task.title}</h2>
@@ -91,7 +102,7 @@ export async function dispatchSocialContent(
       <pre style="white-space:pre-wrap">${formatPostText(task)}</pre>
     `
     const result = await sendEmail({
-      to: notifyEmail,
+      to: notifyTo,
       subject,
       html,
       text: formatPostText(task),

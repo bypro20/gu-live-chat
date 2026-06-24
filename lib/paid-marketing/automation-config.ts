@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import { getSupportEmail } from '@/lib/site-config'
+import { getMailNotifyTo, getSupportEmail } from '@/lib/site-config'
 
 export type PaidAutomationConfig = {
   enabled: boolean
@@ -17,7 +17,7 @@ const DEFAULTS: PaidAutomationConfig = {
   enabled: true,
   dailyEmailDigest: true,
   rotateChannels: true,
-  notifyEmail: process.env.PAID_MARKETING_NOTIFY_EMAIL?.trim() || getSupportEmail(),
+  notifyEmail: process.env.PAID_MARKETING_NOTIFY_EMAIL?.trim() || getMailNotifyTo() || getSupportEmail(),
   lastRunAt: null,
   lastRunSummary: null,
   runCount: 0,

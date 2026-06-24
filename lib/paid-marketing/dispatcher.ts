@@ -1,4 +1,5 @@
 import { sendEmail, isEmailConfigured } from '@/lib/email'
+import { getMailNotifyTo } from '@/lib/site-config'
 import { formatAdTaskForCopy } from './format'
 import type { AdCampaignTask } from './types'
 
@@ -39,8 +40,10 @@ export async function sendPaidMarketingDigest(
   notifyEmail: string
 ): Promise<{ ok: boolean; error?: string }> {
   if (!tasks.length) return { ok: true }
-  if (!notifyEmail || !isEmailConfigured()) {
-    return { ok: false, error: 'E-posta yapılandırılmamış' }
+  const notifyTo =
+    getMailNotifyTo() || (notifyEmail.includes('@gulivechat.com') ? null : notifyEmail)
+  if (!notifyTo || !isEmailConfigured()) {
+    return { ok: false, error: 'E-posta yapılandırılmamış veya @gulivechat.com MX yok' }
   }
 
   const date = tasks[0]?.date ?? new Date().toISOString().slice(0, 10)
@@ -52,7 +55,7 @@ export async function sendPaidMarketingDigest(
     ${tasks.map(formatTaskHtml).join('')}
   `
 
-  const result = await sendEmail({ to: notifyEmail, subject, html, text })
+  const result = await sendEmail({ to: notifyTo, subject, html, text })
   return { ok: result.success, error: result.error }
 }
 

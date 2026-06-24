@@ -4,9 +4,9 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { getAdminMailMessage, updateAdminMailMessage } from '@/lib/admin-mail-inbox'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { escapeHtml } from '@/lib/html-escape'
-import { getSupportEmail } from '@/lib/site-config'
+import { getSupportEmail, getTransactionalFrom } from '@/lib/site-config'
 
-const SUPPORT_FROM = `Gu Live Chat <${getSupportEmail()}>`
+const SUPPORT_FROM = getTransactionalFrom()
 
 const replySchema = z.object({
   body: z.string().min(1).max(10000),
@@ -41,6 +41,7 @@ export async function POST(
     const result = await sendEmail({
       to: message.fromEmail,
       from: SUPPORT_FROM,
+      replyTo: getSupportEmail(),
       subject: `Re: ${message.subject}`,
       text: body,
       html: `<p>${escapeHtml(body).replace(/\n/g, '<br>')}</p><hr><p style="color:#888;font-size:12px">Gu Live Chat destek yanıtı</p>`,

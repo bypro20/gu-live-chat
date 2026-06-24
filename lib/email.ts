@@ -22,6 +22,7 @@ interface EmailOptions {
   html: string
   text?: string
   from?: string
+  replyTo?: string
 }
 
 // ─── Get Provider ──────────────────────────────────────────────────
@@ -42,10 +43,9 @@ function getProvider(): EmailProvider {
   return 'console'
 }
 
-const DEFAULT_FROM =
-  process.env.EMAIL_FROM ||
-  process.env.SMTP_FROM ||
-  'Gu Live Chat <destek@gulivechat.com>'
+import { getTransactionalFrom } from '@/lib/site-config'
+
+const DEFAULT_FROM = getTransactionalFrom()
 
 // ─── Send Email ────────────────────────────────────────────────────
 
@@ -68,7 +68,9 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
 
 // ─── Resend Provider ──────────────────────────────────────────────
 
-async function sendWithResend(options: Required<Omit<EmailOptions, 'text'>> & { to: string[]; text?: string }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+async function sendWithResend(
+  options: EmailOptions & { from: string; to: string[] }
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
     return { success: false, error: 'RESEND_API_KEY not configured' }
@@ -87,6 +89,7 @@ async function sendWithResend(options: Required<Omit<EmailOptions, 'text'>> & { 
         subject: options.subject,
         html: options.html,
         text: options.text,
+        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
       }),
     })
 
@@ -106,7 +109,9 @@ async function sendWithResend(options: Required<Omit<EmailOptions, 'text'>> & { 
 
 // ─── SMTP Provider ─────────────────────────────────────────────────
 
-async function sendWithSMTP(options: Required<Omit<EmailOptions, 'text'>> & { to: string[]; text?: string }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+async function sendWithSMTP(
+  options: EmailOptions & { from: string; to: string[] }
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
   // SMTP requires nodemailer — dynamic import to avoid bundling when not needed
   try {
     const nodemailer = await import('nodemailer')
@@ -138,7 +143,9 @@ async function sendWithSMTP(options: Required<Omit<EmailOptions, 'text'>> & { to
 
 // ─── Console Provider (Development) ────────────────────────────────
 
-async function sendWithConsole(options: Required<Omit<EmailOptions, 'text'>> & { to: string[]; text?: string }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+async function sendWithConsole(
+  options: EmailOptions & { from: string; to: string[] }
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('📧 EMAIL SENT')
   console.log(`   From: ${options.from}`)

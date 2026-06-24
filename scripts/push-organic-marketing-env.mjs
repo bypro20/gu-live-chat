@@ -10,12 +10,17 @@ const ROOT = resolve(import.meta.dirname, '..')
 const SITE = process.env.SITE_DOMAIN || 'gulivechat.com'
 
 const VARS = {
-  SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || 'destek@gulivechat.com',
-  CONTACT_EMAIL: process.env.CONTACT_EMAIL || 'destek@gulivechat.com',
-  ORGANIC_MARKETING_NOTIFY_EMAIL: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL || 'destek@gulivechat.com',
+  EMAIL_FROM: 'Gu Live Chat <noreply@gulivechat.com>',
+  SUPPORT_EMAIL: 'destek@gulivechat.com',
+  CONTACT_EMAIL: 'destek@gulivechat.com',
+  ORGANIC_MARKETING_NOTIFY_EMAIL: '',
   ORGANIC_MARKETING_WEBHOOK_URL:
     process.env.ORGANIC_MARKETING_WEBHOOK_URL ||
     `https://www.${SITE}/api/internal/organic-marketing-dispatch`,
+}
+
+if (process.env.MAIL_NOTIFY_TO?.trim()) {
+  VARS.MAIL_NOTIFY_TO = process.env.MAIL_NOTIFY_TO.trim()
 }
 
 function pushEnv(key, value) {

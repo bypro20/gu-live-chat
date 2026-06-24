@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyCronRequest } from '@/lib/cron-auth'
 import { createAdminMailMessage } from '@/lib/admin-mail-inbox'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
-import { getSupportEmail, SUPPORT_EMAIL_ADDRESS } from '@/lib/site-config'
+import { getMailNotifyTo } from '@/lib/site-config'
 
 type DispatchPayload = {
   channel?: string
@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  const to = process.env.ORGANIC_MARKETING_NOTIFY_EMAIL?.trim() || getSupportEmail()
+  const notifyTo = getMailNotifyTo()
   let emailed = false
-  if (isEmailConfigured() && to) {
+  if (isEmailConfigured() && notifyTo) {
     const result = await sendEmail({
-      to,
+      to: notifyTo,
       subject,
       text,
       html: `
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         ${payload.cta ? `<p><strong>${payload.cta}</strong></p>` : ''}
         ${payload.landingUrl ? `<p><a href="${payload.landingUrl}">${payload.landingUrl}</a></p>` : ''}
         <hr><pre style="white-space:pre-wrap">${text}</pre>
-        <p style="color:#888;font-size:12px">Admin panel → E-posta Merkezi</p>
+        <p style="color:#888;font-size:12px">Admin panel → E-posta Merkezi (/admin/mail)</p>
       `,
     })
     emailed = result.success

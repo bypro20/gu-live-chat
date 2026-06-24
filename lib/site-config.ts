@@ -33,19 +33,55 @@ export function getAuthUrl(): string {
   return `https://www.${SITE_DOMAIN}`
 }
 
-/** Resmi destek / iletişim e-postası */
+/** Resmi destek / iletişim e-postası (sitede gösterilir) */
 export const SUPPORT_EMAIL_ADDRESS = 'destek@gulivechat.com'
+
+/** Resend ile gönderim — domain doğrulaması olan adres */
+export const NOREPLY_EMAIL_ADDRESS = 'noreply@gulivechat.com'
 
 export function getSupportEmail(): string {
   return process.env.SUPPORT_EMAIL?.trim() || SUPPORT_EMAIL_ADDRESS
 }
 
+/** İletişim formu hedefi (görünen adres) */
 export function getContactEmail(): string {
   return process.env.CONTACT_EMAIL?.trim() || getSupportEmail()
 }
 
+/** Resend/SMTP gönderici — relay hatası olmaması için noreply@ */
+export function getTransactionalFrom(): string {
+  const raw = process.env.EMAIL_FROM?.trim() || process.env.SMTP_FROM?.trim()
+  if (raw) return raw.includes('<') ? raw : `Gu Live Chat <${raw}>`
+  return `Gu Live Chat <${NOREPLY_EMAIL_ADDRESS}>`
+}
+
+/**
+ * Gerçek e-posta bildirimi alacak adres (Gmail vb.).
+ * @gulivechat.com adreslerine gönderim MX olmadan bounce verir — atlanır.
+ */
+export function getMailNotifyTo(): string | null {
+  if (process.env.MAIL_DELIVER_TO_OWN_DOMAIN === 'true') {
+    const own = process.env.MAIL_NOTIFY_TO?.trim() || process.env.ADMIN_EMAIL?.trim() || getSupportEmail()
+    return own || null
+  }
+
+  const candidates = [
+    process.env.MAIL_NOTIFY_TO?.trim(),
+    process.env.ADMIN_EMAIL?.trim(),
+  ].filter(Boolean) as string[]
+
+  for (const email of candidates) {
+    const domain = email.split('@')[1]?.toLowerCase()
+    if (domain === SITE_DOMAIN.toLowerCase() || domain === `www.${SITE_DOMAIN}`.toLowerCase()) {
+      continue
+    }
+    return email
+  }
+  return null
+}
+
 export function getNoreplyEmail(): string {
-  return process.env.SMTP_FROM?.trim() || process.env.EMAIL_FROM?.trim() || `noreply@${SITE_DOMAIN}`
+  return process.env.SMTP_FROM?.trim() || process.env.EMAIL_FROM?.trim() || NOREPLY_EMAIL_ADDRESS
 }
 
 export function marketingDomainVariants(): string[] {

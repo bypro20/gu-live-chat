@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
-import { getContactEmail, SUPPORT_EMAIL_ADDRESS } from '@/lib/site-config'
+import { getMailNotifyTo } from '@/lib/site-config'
 import { notifyAdminsOfContact } from '@/lib/contact-inbox'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/html-escape'
@@ -25,10 +25,12 @@ export async function POST(req: Request) {
     }
 
     const { name, email, subject, message } = parsed.data
-    const to = getContactEmail()
+
+    await notifyAdminsOfContact({ name, email, subject, message })
 
     let emailDelivered = false
-    if (isEmailConfigured()) {
+    const notifyTo = getMailNotifyTo()
+    if (isEmailConfigured() && notifyTo) {
       const html = `
         <h2>Gu Live Chat — İletişim Formu</h2>
         <p><strong>Ad:</strong> ${escapeHtml(name)}</p>
@@ -36,17 +38,17 @@ export async function POST(req: Request) {
         <p><strong>Konu:</strong> ${escapeHtml(subject)}</p>
         <p><strong>Mesaj:</strong></p>
         <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
+        <p style="color:#888;font-size:12px">Admin panel → E-posta Merkezi</p>
       `
       const result = await sendEmail({
-        to,
+        to: notifyTo,
+        replyTo: email,
         subject: `[İletişim] ${subject} — ${name}`,
         html,
         text: `${name} <${email}>\n${subject}\n\n${message}`,
       })
       emailDelivered = result.success
     }
-
-    await notifyAdminsOfContact({ name, email, subject, message })
 
     return NextResponse.json({
       success: true,

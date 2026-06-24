@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import { getSupportEmail } from '@/lib/site-config'
+import { getMailNotifyTo, getSupportEmail } from '@/lib/site-config'
 
 export type OrganicAutomationConfig = {
   enabled: boolean
@@ -22,7 +22,7 @@ const DEFAULTS: OrganicAutomationConfig = {
   blogIntervalDays: 2,
   autoDispatchSocial: true,
   webhookUrl: process.env.ORGANIC_MARKETING_WEBHOOK_URL?.trim() || '',
-  notifyEmail: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL?.trim() || getSupportEmail(),
+  notifyEmail: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL?.trim() || getMailNotifyTo() || getSupportEmail(),
   lastBlogPublishedAt: null,
   lastRunAt: null,
   lastRunSummary: null,
