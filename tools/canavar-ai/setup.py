@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -85,6 +86,14 @@ def main() -> None:
 
     CONFIG_PATH.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"\n✓ Ayarlar kaydedildi: {CONFIG_PATH}")
+
+    if api_key and model:
+        print("\nBağlantı test ediliyor...")
+        test = subprocess.run([sys.executable, str(ROOT / "test-connection.py")], cwd=str(ROOT))
+        if test.returncode != 0:
+            print("\n⚠ Test başarısız — yine de ayarlar kaydedildi. test-connection.py ile tekrar deneyin.")
+        sys.exit(test.returncode)
+
     print("  Çift tık: «Canavar AI.command» veya: python3 agent.py\n")
 
 

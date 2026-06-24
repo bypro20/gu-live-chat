@@ -234,8 +234,19 @@ def chat_llm(cfg: dict[str, Any], messages: list[dict[str, str]]) -> str:
             with urllib.request.urlopen(req, timeout=180) as res:
                 data = json.loads(res.read().decode())
         except urllib.error.HTTPError as e:
-            body = e.read().decode(errors="replace")[:300]
-            last_err = f"{url} → HTTP {e.code}: {body}"
+            body = e.read().decode(errors="replace")[:500]
+            if e.code == 401:
+                raise RuntimeError(
+                    "401 Kimlik doğrulama hatası — API anahtarı gerekli.\n"
+                    "   gulivechat.online → Settings → Account → API Keys\n"
+                    "   python3 setup.py veya canavar.config.json → api_key"
+                ) from e
+            if e.code == 404 and "model" in body.lower():
+                raise RuntimeError(
+                    f"404 Model bulunamadı: {model}\n"
+                    "   python3 test-connection.py ile mevcut modelleri görün"
+                ) from e
+            last_err = f"{url} → HTTP {e.code}: {body[:200]}"
             continue
         except Exception as e:
             last_err = f"{url} → {e}"
@@ -261,11 +272,31 @@ def main() -> None:
     print(textwrap.dedent(f"""
     ╔══════════════════════════════════════╗
     ║  🐉 Canavar AI                       ║
+    ║  Sunucu: {cfg.get("base_url", "?")[:28]:<28} ║
     ║  Model: {model[:28]:<28} ║
     ║  Klasör: {str(workspace)[:27]:<27} ║
     ║  Çıkış: quit / exit                  ║
     ╚══════════════════════════════════════╝
     """))
+
+    if not cfg.get("api_key", "").strip():
+        print("❌ API anahtarı yok — cevap vermez!")
+        print("   python3 setup.py  veya  python3 test-connection.py\n")
+        sys.exit(1)
+
+    print("Bağlantı kontrol ediliyor...")
+    test = subprocess.run(
+        [sys.executable, str(ROOT / "test-connection.py")],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
+    if test.returncode != 0:
+        print(test.stdout or "")
+        print(test.stderr or "")
+        sys.exit(1)
+    if test.stdout:
+        print(test.stdout)
 
     system = SYSTEM_PROMPT.format(workspace=workspace)
     history: list[dict[str, str]] = [{"role": "system", "content": system}]
