@@ -30,5 +30,19 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "social-grow", "tools", "promedia", "mobile", "mobile-admin"]
+  "exclude": [
+    "node_modules",
+    "social-grow",
+    "tools",
+    "promedia",
+    "mobile",
+    "mobile-admin",
+    "lib/pool",
+    "lib/pool-engine",
+    "lib/pool-socket.ts",
+    "lib/hooks/use-pool-socket.ts",
+    "app/(marketing)/pool",
+    "components/pool",
+    "mobile-pool"
+  ]
 }

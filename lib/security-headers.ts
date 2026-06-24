@@ -1,5 +1,17 @@
 import type { NextResponse } from 'next/server'
 
+const MINICLIP_FRAME_SRC =
+  "frame-src 'self' https://prod-web-pool.miniclip.com https://*.miniclip.com https://*.miniclippt.com https://8ballpool.com"
+
+/** /pool — Miniclip 8 Ball Pool iframe embed */
+export function applyPoolEmbedSecurityHeaders(res: NextResponse, isProduction: boolean) {
+  applySecurityHeaders(res, isProduction)
+  const csp = res.headers.get('Content-Security-Policy')
+  if (csp) {
+    res.headers.set('Content-Security-Policy', `${csp}; ${MINICLIP_FRAME_SRC}`)
+  }
+}
+
 export function applySecurityHeaders(res: NextResponse, isProduction: boolean) {
   res.headers.set('X-Content-Type-Options', 'nosniff')
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
