@@ -38,6 +38,9 @@ export type PricingPageUi = {
   featureCol: string
   faqTitle: string
   bestValue: string
+  footerCtaTitle: string
+  footerCtaSubtitle: string
+  contactUs: string
 }
 
 export function getPricingPageUi(locale: SiteLocale): PricingPageUi {
@@ -62,6 +65,9 @@ export function getPricingPageUi(locale: SiteLocale): PricingPageUi {
       featureCol: 'Feature',
       faqTitle: 'Pricing FAQ',
       bestValue: 'Best value',
+      footerCtaTitle: 'Ready to improve customer experience?',
+      footerCtaSubtitle: `Try free for ${TRIAL_DAYS} days. No commitment, no credit card required.`,
+      contactUs: 'Contact Us',
     }
   }
   return {
@@ -84,6 +90,9 @@ export function getPricingPageUi(locale: SiteLocale): PricingPageUi {
     featureCol: 'Özellik',
     faqTitle: 'Fiyatlandırma SSS',
     bestValue: 'En İyi Değer',
+    footerCtaTitle: 'Müşteri deneyiminizi iyileştirmeye hazır mısınız?',
+    footerCtaSubtitle: `${TRIAL_DAYS} gün ücretsiz deneyin. Taahhütsüz — kredi kartı gerekmez.`,
+    contactUs: 'İletişime Geç',
   }
 }
 

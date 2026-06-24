@@ -7,8 +7,6 @@ import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
 import { SocialLinksBar } from '@/components/marketing/social-links-bar'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { useT } from '@/components/marketing/locale-provider'
-import { SITE_LEGAL } from '@/lib/site-legal'
-
 export function MarketingFooter() {
   const footer = useT().footerExtended
 
@@ -18,8 +16,8 @@ export function MarketingFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-1">
             <Logo boyut="sm" linkOlsun animasyonlu={false} className="mb-4" />
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[220px]">
-              {SITE_LEGAL.tagline}. {footer.taglineExtra}
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px]">
+              {footer.taglineExtra}
             </p>
           </div>
           {footer.columns.map((col) => (

@@ -210,12 +210,13 @@ export const homeTr: HomeMessages = {
 }
 
 export const footerTr = {
-  taglineExtra: 'Canlı sohbet, AI asistan ve birleşik inbox — Türk yapımı.',
+  taglineExtra:
+    'Canlı destek, AI chatbot ve birleşik gelen kutusu platformu. WhatsApp, web sohbet ve e-posta tek panelde — Türk yapımı, KVKK uyumlu.',
   columns: [
     {
       title: 'Ürün',
       links: [
-        { label: 'Ürünler & Satın Al', href: '/urunler' },
+        { label: 'Ürünler ve Satın Al', href: '/urunler' },
         { label: 'Mobil Uygulama', href: '/mobil-indir' },
         { label: 'Canlı Destek', href: '/canli-destek' },
         { label: 'Chatbot', href: '/chatbot' },
@@ -223,7 +224,7 @@ export const footerTr = {
         { label: 'Özellikler', href: '/features' },
         { label: 'Entegrasyonlar', href: '/integrations' },
         { label: 'Fiyatlandırma', href: '/pricing' },
-        { label: 'Apps & Eklentiler', href: '/apps' },
+        { label: 'Uygulamalar ve Eklentiler', href: '/apps' },
         { label: 'Yapay Zeka', href: '/ai' },
       ],
     },
@@ -260,9 +261,9 @@ export const footerTr = {
   ],
   badges: {
     ssl: '256-bit SSL',
-    privacy: 'KVKK Uyumlu',
-    madeIn: "Türkiye'de Üretildi",
-    uptime: '99.9% Uptime',
+    privacy: 'KVKK uyumlu',
+    madeIn: "Türkiye'de üretildi",
+    uptime: '%99,9 çalışma süresi',
   },
   iyzicoLinks: [
     { href: '/hakkimizda', label: 'Hakkımızda' },

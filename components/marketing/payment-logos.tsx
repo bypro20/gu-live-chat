@@ -28,7 +28,7 @@ export function PaymentLogos({ variant = 'footer' }: { variant?: 'footer' | 'che
               <span aria-hidden>🔒</span> 256-bit SSL
             </span>
             {' · '}
-            Ödemeler iyzico güvenli ödeme altyapısı üzerinden işlenir. Kredi kartı bilgileriniz
+            Ödemeler, iyzico güvenli ödeme altyapısı üzerinden işlenir. Kredi kartı bilgileriniz
             tarafımızca saklanmaz.
           </>
         ) : (

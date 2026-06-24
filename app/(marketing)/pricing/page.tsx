@@ -406,19 +406,17 @@ export default function PricingPage() {
           <section className="py-20 px-4 sm:px-6 text-center">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                {locale === 'en' ? 'Ready to improve customer experience?' : 'Müşteri deneyiminizi geliştirmeye hazır mısınız?'}
+                {ui.footerCtaTitle}
               </h2>
               <p className="text-slate-500 mb-8">
-                {locale === 'en'
-                  ? `Try free for ${TRIAL_DAYS} days. No commitment, no credit card required.`
-                  : `${TRIAL_DAYS} gün ücretsiz deneyin. Taahhüt yok, kredi kartı gerekmez.`}
+                {ui.footerCtaSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors text-sm">
                   {ui.startFree} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/contact" className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-200 transition-colors text-sm">
-                  {locale === 'en' ? 'Contact Us' : 'İletişime Geç'}
+                  {ui.contactUs}
                 </Link>
               </div>
             </div>
