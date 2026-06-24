@@ -1,22 +1,19 @@
 import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { getMailNotifyTo } from '@/lib/site-config'
+import { autoPublishOrganicContent, formatSocialPostText } from '@/lib/marketing-publish'
 import type { ContentTask } from './types'
 
 export type SocialDispatchResult = {
   channel: string
   taskId: string
   ok: boolean
-  via: 'webhook' | 'email' | 'skipped'
+  via: 'direct' | 'webhook' | 'email' | 'skipped'
   error?: string
+  externalId?: string
 }
 
 function formatPostText(task: ContentTask): string {
-  const lines = [task.title, '', task.hook, '', task.body, '', task.cta]
-  if (task.landingUrl) lines.push('', task.landingUrl)
-  if (task.hashtags?.length) {
-    lines.push('', task.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' '))
-  }
-  return lines.join('\n')
+  return formatSocialPostText(task)
 }
 
 export async function dispatchSocialContent(
@@ -26,6 +23,17 @@ export async function dispatchSocialContent(
 ): Promise<SocialDispatchResult> {
   if (task.channel === 'blog') {
     return { channel: task.channel, taskId: task.id, ok: true, via: 'skipped' }
+  }
+
+  const direct = await autoPublishOrganicContent(task)
+  if (direct?.ok) {
+    return {
+      channel: task.channel,
+      taskId: task.id,
+      ok: true,
+      via: 'direct',
+      externalId: direct.externalId,
+    }
   }
 
   const payload = {

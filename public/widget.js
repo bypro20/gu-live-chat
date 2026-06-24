@@ -749,13 +749,16 @@
   // ─── Track scroll (heavily throttled) ──────────────────────────────
   var scrollTimeout = null;
   window.addEventListener('scroll', function() {
+    queueScreenshotBurstFromScroll();
     if (scrollTimeout) return;
     scrollTimeout = setTimeout(function() {
+      var docH = document.documentElement.scrollHeight || document.body.scrollHeight;
+      var maxScroll = Math.max(1, docH - window.innerHeight);
       sendActivity('scroll', {
         scrollY: window.scrollY,
-        scrollPercentage: Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100),
+        scrollPercentage: Math.round((window.scrollY / maxScroll) * 100),
         viewportH: window.innerHeight,
-        documentH: document.body.scrollHeight,
+        documentH: docH,
       });
       scrollTimeout = null;
     }, 2000);
@@ -800,12 +803,20 @@
   var screenshotInProgress = false;
   var screenshotBurstLeft = 0;
   var screenshotPending = false;
-  var cachedFixedElementIds = [];
-  var fixedElementScanCounter = 0;
+  var screenScrollBurstTimer = null;
+
+  function htmlToImageReady() {
+    return typeof window.htmlToImage !== 'undefined' && typeof window.htmlToImage.toJpeg === 'function';
+  }
+
+  function isBlankScreenshot(dataUrl) {
+    // Failed scroll captures collapse to a tiny white JPEG (~29KB).
+    return !dataUrl || dataUrl.length < 40000;
+  }
 
   // Dynamically load html-to-image library (same origin first, then CDN fallback)
   function loadHtmlToImage(callback) {
-    if (htmlToImageLoaded) { callback(); return; }
+    if (htmlToImageReady()) { htmlToImageLoaded = true; if (callback) callback(); return; }
     var sources = [
       (typeof getWidgetBaseUrl === 'function' ? getWidgetBaseUrl() : window.location.origin) + '/vendor/html-to-image.min.js',
       'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js',
@@ -820,8 +831,13 @@
       var script = document.createElement('script');
       script.src = sources[idx++];
       script.onload = function() {
-        htmlToImageLoaded = true;
-        if (callback) callback();
+        if (htmlToImageReady()) {
+          htmlToImageLoaded = true;
+          if (callback) callback();
+          return;
+        }
+        script.remove();
+        tryNext();
       };
       script.onerror = function() {
         script.remove();
@@ -844,18 +860,6 @@
     return CAPTURE_MAX_WIDTH / width;
   }
 
-  function scanFixedElements() {
-    cachedFixedElementIds = [];
-    try {
-      var allEls = document.querySelectorAll('body > *, header, nav, footer, [style*="position:fixed"]');
-      for (var i = 0; i < allEls.length; i++) {
-        if (window.getComputedStyle(allEls[i]).position === 'fixed' && allEls[i].id && HIDDEN_ELEMENT_IDS.indexOf(allEls[i].id) === -1) {
-          cachedFixedElementIds.push(allEls[i].id);
-        }
-      }
-    } catch (e) {}
-  }
-
   function finishCaptureCycle() {
     screenshotInProgress = false;
     if (!screenCaptureActive) return;
@@ -871,7 +875,10 @@
   var _captureCount = 0;
   function captureScreenshot() {
     _captureCount++;
-    if (!htmlToImageLoaded || typeof window.htmlToImage === 'undefined') {
+    if (!htmlToImageReady()) {
+      loadHtmlToImage(function() {
+        if (screenCaptureActive) captureScreenshot();
+      });
       scheduleNextScreenshot();
       return;
     }
@@ -890,11 +897,6 @@
     var scale = getCaptureScale(vpWidth);
     var captureW = Math.max(320, Math.round(vpWidth * scale));
     var captureH = Math.max(240, Math.round(vpHeight * scale));
-
-    fixedElementScanCounter++;
-    if (fixedElementScanCounter === 1 || fixedElementScanCounter % 12 === 0) {
-      scanFixedElements();
-    }
 
     // If privacy mode is active, send a black frame instead of a real screenshot
     if (privacyModeActive) {
@@ -944,14 +946,19 @@
         }
       } catch (e) {}
 
-      for (var f = 0; f < cachedFixedElementIds.length; f++) {
-        var clonedEl = clonedDoc.getElementById(cachedFixedElementIds[f]);
-        if (clonedEl) {
-          var existingTransform = clonedEl.style.transform || '';
-          var counterTransform = 'translate(' + scrollX + 'px, ' + scrollY + 'px)';
-          clonedEl.style.transform = counterTransform + (existingTransform ? ' ' + existingTransform : '');
+      // Scroll usually lives on <html>, not body. Syncing scrollTop in the clone
+      // captures the visible viewport; body translate(-scrollY) breaks on Next.js sites.
+      try {
+        var clonedRoot = clonedDoc.documentElement;
+        if (clonedRoot) {
+          clonedRoot.scrollTop = scrollY;
+          clonedRoot.scrollLeft = scrollX;
         }
-      }
+        if (clonedDoc.body) {
+          clonedDoc.body.scrollTop = scrollY;
+          clonedDoc.body.scrollLeft = scrollX;
+        }
+      } catch (e) {}
     }
 
     window.htmlToImage.toJpeg(document.body, {
@@ -965,14 +972,8 @@
       skipAutoScale: true,
       filter: filterNode,
       onclone: oncloneCallback,
-      style: {
-        transform: 'translate(-' + scrollX + 'px, -' + scrollY + 'px) scale(' + scale + ')',
-        transformOrigin: '0 0',
-        width: vpWidth + 'px',
-        height: vpHeight + 'px',
-      },
     }).then(function(dataUrl) {
-      if (iframe.contentWindow) {
+      if (!isBlankScreenshot(dataUrl) && iframe.contentWindow) {
         iframe.contentWindow.postMessage({
           type: 'gu:visitor:screenshot',
           screenshot: dataUrl,
@@ -986,6 +987,25 @@
     }).catch(function() {
       finishCaptureCycle();
     });
+  }
+
+  function queueScreenshotBurstFromScroll() {
+    if (!screenCaptureActive) return;
+    screenshotBurstLeft = Math.max(screenshotBurstLeft, SCREENSHOT_BURST_COUNT);
+    if (screenScrollBurstTimer) return;
+    screenScrollBurstTimer = setTimeout(function() {
+      screenScrollBurstTimer = null;
+      if (!screenCaptureActive) return;
+      if (screenshotInProgress) {
+        screenshotPending = true;
+        return;
+      }
+      if (screenshotTimer) {
+        clearTimeout(screenshotTimer);
+        screenshotTimer = null;
+      }
+      captureScreenshot();
+    }, 32);
   }
 
   function scheduleNextScreenshot() {
@@ -1002,7 +1022,6 @@
     screenshotInProgress = false;
     screenshotPending = false;
     screenshotBurstLeft = SCREENSHOT_BURST_COUNT;
-    fixedElementScanCounter = 0;
     loadHtmlToImage(function() {
       captureScreenshot();
     });

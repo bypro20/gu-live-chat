@@ -161,7 +161,7 @@ export function AdminSidebar({
           <Link
             href="/dashboard"
             onClick={onNavigate}
-            className="admin-sidebar-item mb-2 text-red-400 hover:text-white"
+            className="admin-sidebar-item mb-2 text-red-600 hover:text-red-700"
           >
             <span className="admin-sidebar-item-icon">
               <ArrowLeft className="w-[18px] h-[18px]" />

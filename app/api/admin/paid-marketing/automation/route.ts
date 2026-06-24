@@ -27,6 +27,7 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.enabled === 'boolean') patch.enabled = body.enabled
     if (typeof body.dailyEmailDigest === 'boolean') patch.dailyEmailDigest = body.dailyEmailDigest
     if (typeof body.rotateChannels === 'boolean') patch.rotateChannels = body.rotateChannels
+    if (typeof body.autoLaunchAds === 'boolean') patch.autoLaunchAds = body.autoLaunchAds
     if (typeof body.notifyEmail === 'string') patch.notifyEmail = body.notifyEmail.trim()
 
     const config = await savePaidAutomationConfig(patch)

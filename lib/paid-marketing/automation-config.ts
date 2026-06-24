@@ -5,6 +5,7 @@ export type PaidAutomationConfig = {
   enabled: boolean
   dailyEmailDigest: boolean
   rotateChannels: boolean
+  autoLaunchAds: boolean
   notifyEmail: string
   lastRunAt: string | null
   lastRunSummary: string | null
@@ -17,6 +18,7 @@ const DEFAULTS: PaidAutomationConfig = {
   enabled: true,
   dailyEmailDigest: true,
   rotateChannels: true,
+  autoLaunchAds: true,
   notifyEmail: process.env.PAID_MARKETING_NOTIFY_EMAIL?.trim() || getMailNotifyTo() || getSupportEmail(),
   lastRunAt: null,
   lastRunSummary: null,

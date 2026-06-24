@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { PaidMarketingHealthPanel } from '@/components/admin/marketing-health-panel'
 import { useToast } from '@/lib/toast'
 import { formatAdTaskForCopy } from '@/lib/paid-marketing/format'
 import type { AdCampaignTask, AdTaskStatus, PaidMarketingPlan } from '@/lib/paid-marketing/types'
@@ -23,6 +24,7 @@ type AutomationConfig = {
   enabled: boolean
   dailyEmailDigest: boolean
   rotateChannels: boolean
+  autoLaunchAds: boolean
   notifyEmail: string
   lastRunAt: string | null
   lastRunSummary: string | null
@@ -279,7 +281,7 @@ export default function AdminPaidMarketingPage() {
           <h2 className="text-lg font-semibold admin-text">Günlük otomasyon</h2>
         </div>
         <p className="text-sm admin-text-muted">
-          Cron günde 4 kez çalışır: bugünkü kampanyayı hazırlar, AI ile metin yeniler ve e-posta gönderir.
+          Tam otomatik: cron günde 4 kez çalışır, AI metin üretir, Meta reklamlarını oluşturur ve e-posta özeti gönderir.
           {aiAvailable ? ' AI aktif.' : ' AI yok — hazır şablonlar kullanılır.'}
         </p>
 
@@ -289,6 +291,7 @@ export default function AdminPaidMarketingPage() {
               { key: 'enabled' as const, label: 'Otomasyon açık' },
               { key: 'dailyEmailDigest' as const, label: 'Günlük e-posta özeti' },
               { key: 'rotateChannels' as const, label: 'AI ile günlük metin yenile' },
+              { key: 'autoLaunchAds' as const, label: 'Meta reklamlarını otomatik oluştur' },
             ].map(({ key, label }) => (
               <label key={key} className="admin-marketing-subcard flex items-center gap-3 cursor-pointer">
                 <input
@@ -324,6 +327,8 @@ export default function AdminPaidMarketingPage() {
           {runningBot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
           Şimdi çalıştır
         </button>
+
+        <PaidMarketingHealthPanel />
       </section>
 
       <section className="admin-form-section space-y-4">

@@ -13,6 +13,7 @@ export async function runPaidMarketingBot(): Promise<PaidAutoRunnerReport> {
       tasksToday: 0,
       emailSent: false,
       copyRefreshed: false,
+      adsLaunched: 0,
       summary: e instanceof Error ? e.message : 'Bot hatası',
     }
   }

@@ -36,7 +36,7 @@ export const marketingTr: MarketingPages = {
   },
   features: {
     badge: 'Özellikler',
-    title: 'Müşteri hizmetleri ıçin tek çözüm',
+    title: 'Müşteri hizmetleri için tek çözüm',
     subtitle: 'Çok kanallı destek, AI Agent ve birleşik inbox - Gu Live Chat ile hepsi tek platformda.',
     ctaTitle: '{trial} — hemen başlayın',
     ctaNote: 'Kredi kartı gerekmez - Kurulum 30 saniye',
@@ -92,7 +92,7 @@ export const marketingTr: MarketingPages = {
       },
       {
         title: 'Bilgi Bankası',
-        desc: 'SSS ve makaleler - AI Agent ve chatbot ıçin bağlam kaynağı.',
+        desc: 'SSS ve makaleler - AI Agent ve chatbot için bağlam kaynağı.',
       },
       {
         title: 'Workflow Otomasyonu',
@@ -255,9 +255,9 @@ export const marketingTr: MarketingPages = {
   contact: {
     badge: 'Iletişim',
     title: 'Bize ulaşın',
-    subtitle: 'Sorularınız, demo talepleri veya kurumsal çözümler ıçin ekibimizle iletişime geçin.',
+    subtitle: 'Sorularınız, demo talepleri veya kurumsal çözümler için ekibimizle iletişime geçin.',
     email: 'E-posta',
-    emailNote: '24 saat ıçinde yanıt',
+    emailNote: '24 saat içinde yanıt',
     liveChat: 'Canlı Destek',
     liveChatNote: 'Site üzerinden',
     liveChatAction: 'Sohbeti aç',
@@ -267,7 +267,7 @@ export const marketingTr: MarketingPages = {
     corporateInfo: 'Kurumsal bilgiler',
     helpCenter: 'Yardım merkezi',
     formTitle: 'Mesaj gönderin',
-    formSubtitle: 'Demo, kurumsal teklif veya teknik destek ıçin formu doldurun.',
+    formSubtitle: 'Demo, kurumsal teklif veya teknik destek için formu doldurun.',
     nameLabel: 'Ad Soyad',
     namePlaceholder: 'Adınız Soyadınız',
     emailLabel: 'E-posta',
@@ -463,7 +463,7 @@ export const marketingTr: MarketingPages = {
       {
         title: 'Şirket Profili',
         paragraphs: [
-          '{company} ({name}), dijital müşteri deneyimini geliştirmek ıçin yerel ihtiyaclara uygun canlı destek ve otomasyon urunleri gelistirir.',
+          '{company} ({name}), dijital müşteri deneyimini geliştirmek için yerel ihtiyaclara uygun canlı destek ve otomasyon urunleri gelistirir.',
           'Iletişim bilgilerimiz: {email} - {phone}. Merkez adresimiz: {address}. Resmi web adresimiz: {url}.',
         ],
       },
@@ -572,7 +572,7 @@ export const marketingTr: MarketingPages = {
         {
           title: 'Kimler canlı destek kullanmalı?',
           paragraphs: [
-            'E-ticaret siteleri, SaaS şirketleri, ajanslar, eğitim kurumları ve hizmet sektöründeki tüm ışletmeler canlı destekten faydalanır. Özellikle yüksek değerli ürün satan veya karmaşık hizmet sunan firmalar ıçin vazgeçilmezdir.',
+            'E-ticaret siteleri, SaaS şirketleri, ajanslar, eğitim kurumları ve hizmet sektöründeki tüm ışletmeler canlı destekten faydalanır. Özellikle yüksek değerli ürün satan veya karmaşık hizmet sunan firmalar için vazgeçilmezdir.',
             'Küçük ekipler ücretsiz paket ile başlayabilir, büyüdükçe Profesyonel veya Kurumsal pakete geçebilir. 2 temsilciden sınırsız temsilciye kadar ölçeklenir.',
           ],
         },
@@ -611,7 +611,7 @@ export const marketingTr: MarketingPages = {
       benefits: [
         {
           title: 'Görsel akış editörü',
-          desc: 'Kod yazmadan chatbot akışları oluşturun. Sürükle-bırak arayüz ile dakikalar ıçinde yayına alın.',
+          desc: 'Kod yazmadan chatbot akışları oluşturun. Sürükle-bırak arayüz ile dakikalar içinde yayına alın.',
         },
         {
           title: 'AI destekli yanıt',
@@ -653,7 +653,7 @@ export const marketingTr: MarketingPages = {
       ],
       faqs: [
         {
-          q: 'Chatbot kurmak ıçin kod bilgisi gerekir mı?',
+          q: 'Chatbot kurmak için kod bilgisi gerekir mı?',
           a: 'Hayır. Gu Live Chat görsel chatbot editörü ile sürükle-bırak arayüzde akışlar oluşturursunuz.',
         },
         {
@@ -729,7 +729,7 @@ export const marketingTr: MarketingPages = {
       faqs: [
         {
           q: 'WhatsApp Business hesabı gerekir mı?',
-          a: 'Evet, WhatsApp Business API entegrasyonu ıçin doğrulanmış WhatsApp Business hesabı gereklidir.',
+          a: 'Evet, WhatsApp Business API entegrasyonu için doğrulanmış WhatsApp Business hesabı gereklidir.',
         },
         {
           q: "WhatsApp mesajları inbox'ta görünür mü?",
@@ -767,7 +767,7 @@ export const marketingTr: MarketingPages = {
         {
           title: '2. Toplanan Veriler',
           paragraphs: [
-            'Hizmetlerimizi sunabilmek ıçin ad, soyad, e-posta, telefon, fatura bilgileri, IP adresi, tarayıcı ve cihaz bilgileri, sohbet kayıtları ve site kullanım verileri ışlenebilir.',
+            'Hizmetlerimizi sunabilmek için ad, soyad, e-posta, telefon, fatura bilgileri, IP adresi, tarayıcı ve cihaz bilgileri, sohbet kayıtları ve site kullanım verileri ışlenebilir.',
           ],
         },
         {
@@ -792,13 +792,13 @@ export const marketingTr: MarketingPages = {
         {
           title: '6. Saklama Süresi',
           paragraphs: [
-            'Veriler hizmet ilişkişi süresince saklanır. Hesap silme talebinde veriler yasal saklama süreleri hariç 30 gün ıçinde silinir.',
+            'Veriler hizmet ilişkişi süresince saklanır. Hesap silme talebinde veriler yasal saklama süreleri hariç 30 gün içinde silinir.',
           ],
         },
         {
           title: '7. Haklarınız',
           paragraphs: [
-            'KVKK kapsamında erişim, düzeltme, silme, ışlemeyi kısıtlama ve itiraz haklarına sahipsiniz. Talepleriniz ıçin {email} adresi üzerinden bizimle iletişime gecebilirsiniz.',
+            'KVKK kapsamında erişim, düzeltme, silme, ışlemeyi kısıtlama ve itiraz haklarına sahipsiniz. Talepleriniz için {email} adresi üzerinden bizimle iletişime gecebilirsiniz.',
           ],
         },
         {
@@ -821,7 +821,7 @@ export const marketingTr: MarketingPages = {
         {
           title: '1. Teslimat',
           paragraphs: [
-            "{name} üzerinden satın alınan abonelik ve dijital hizmetler, ödeme onayından sonra elektronik ortamda hesabınıza tanımlanır. Erişim genellikle birkaç dakika ıçinde aktif hale gelir.",
+            "{name} üzerinden satın alınan abonelik ve dijital hizmetler, ödeme onayından sonra elektronik ortamda hesabınıza tanımlanır. Erişim genellikle birkaç dakika içinde aktif hale gelir.",
             'Hizmet durumunuzu kontrol panelinizden ve e-posta bildirimlerinden takip edebilirsiniz.',
           ],
         },
@@ -835,7 +835,7 @@ export const marketingTr: MarketingPages = {
         {
           title: '3. Abonelik Iptali',
           paragraphs: [
-            'Aylık veya yıllık aboneliklerinizi panel üzerinden dönem sonuna kadar iptal edebilirsiniz. Kullanılmayan süre ıçin kısmi iade politikası paket koşullarında belirtilir.',
+            'Aylık veya yıllık aboneliklerinizi panel üzerinden dönem sonuna kadar iptal edebilirsiniz. Kullanılmayan süre için kısmi iade politikası paket koşullarında belirtilir.',
           ],
         },
         {
@@ -891,7 +891,7 @@ export const marketingTr: MarketingPages = {
         {
           title: '7. Uyuşmazlık',
           paragraphs: [
-            'Uyuşmazlıklarda Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri yetkilidir. Şikayet ve itirazlar ıçin {email} adresine başvurabilirsiniz.',
+            'Uyuşmazlıklarda Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri yetkilidir. Şikayet ve itirazlar için {email} adresine başvurabilirsiniz.',
           ],
         },
       ],
@@ -915,7 +915,7 @@ export const marketingTr: MarketingPages = {
         },
         {
           title: 'Iletişim',
-          paragraphs: ['Ödeme güvenliği hakkında sorularınız ıçin: {email} - {phone}'],
+          paragraphs: ['Ödeme güvenliği hakkında sorularınız için: {email} - {phone}'],
         },
       ],
     },
@@ -945,7 +945,7 @@ export const marketingTr: MarketingPages = {
           title: 'Haklarınız',
           paragraphs: [
             'KVKK madde 11 kapsamında; veri ışlenip ışlenmediğini öğrenme, bilgi talep etme, amaç ve uygun kullanımını öğrenme, yurt ıçı/yurt dışı aktarımını bilme, düzeltme, silme, itiraz ve zararın giderilmesini talep etme haklarına sahipsiniz.',
-            'Başvuru ıçin: {email}',
+            'Başvuru için: {email}',
           ],
         },
       ],
@@ -953,28 +953,28 @@ export const marketingTr: MarketingPages = {
     cerez: {
       badge: 'Yasal',
       title: 'Çerez Politikası',
-      subtitle: 'Bu site, size daha iyi bir kullanıcı deneyimi sunmak ıçin çerezler kullanmaktadır.',
+      subtitle: 'Bu site, size daha iyi bir kullanıcı deneyimi sunmak için çerezler kullanmaktadır.',
       sections: [
         {
           title: 'Çerez Nedir?',
           paragraphs: [
-            'Çerezler, web sitelerinin tarayıcınıza kaydettiğı küçük metin dosyalarıdır. Tercihlerinizi hatırlamak ve siteyi iyileştirmek ıçin kullanılır.',
+            'Çerezler, web sitelerinin tarayıcınıza kaydettiğı küçük metin dosyalarıdır. Tercihlerinizi hatırlamak ve siteyi iyileştirmek için kullanılır.',
           ],
         },
         {
           title: 'Kullandığımız Çerez Türleri',
           paragraphs: [
-            'Zorunlu Çerezler: Sitenin düzgün çalışması ıçin gereklidir. Oturum ve güvenlik çerezleri.',
+            'Zorunlu Çerezler: Sitenin düzgün çalışması için gereklidir. Oturum ve güvenlik çerezleri.',
             'Performans Çerezleri: Site kullanım istatistiklerini toplar.',
             'İşlevsel Çerezler: Dil ve tema tercihlerinizi hatırlar.',
-            'Hedefleme Çerezleri: Size özel ıçerik ve reklam gösterimi ıçin kullanılır.',
+            'Hedefleme Çerezleri: Size özel ıçerik ve reklam gösterimi için kullanılır.',
           ],
         },
         {
           title: 'Çerez Yönetimi',
           paragraphs: [
             'Tarayıcı ayarlarınızdan çerezleri yönetebilir veya silebilirsiniz. Ancak bazı çerezleri devre dışı bırakmanız site ışlevselliğini etkileyebilir.',
-            'Detaylı bilgi ıçin: {email}',
+            'Detaylı bilgi için: {email}',
           ],
         },
       ],
@@ -986,7 +986,7 @@ export const marketingTr: MarketingPages = {
       sections: [
         {
           title: '1. Hizmet Kullanımı',
-          paragraphs: ['{name} hizmetlerini kullanarak bu şartları kabul etmiş olursunuz. Hizmeti yalnızca yasal amaçlar ıçin kullanabilirsiniz.'],
+          paragraphs: ['{name} hizmetlerini kullanarak bu şartları kabul etmiş olursunuz. Hizmeti yalnızca yasal amaçlar için kullanabilirsiniz.'],
         },
         {
           title: '2. Hesap Güvenliği',

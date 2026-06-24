@@ -216,6 +216,7 @@ export function AdminVisitorsMonitor({
         ...(pages ? { pages } : {}),
         ...(data.viewportH != null ? { viewportH: data.viewportH as number } : {}),
         ...(data.documentH != null ? { documentH: data.documentH as number } : {}),
+        ...(data.scrollY != null ? { scrollY: data.scrollY as number } : {}),
       })
       addActivity({
         visitorId: data.visitorId as string,

@@ -19,6 +19,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { OrganicMarketingHealthPanel } from '@/components/admin/marketing-health-panel'
 import { useToast } from '@/lib/toast'
 import type {
   ContentTask,
@@ -250,7 +251,7 @@ export default function AdminOrganicMarketingPage() {
           Otomatik Bot (7/24)
         </h2>
         <p className="text-sm text-slate-400">
-          Cron günde 4 kez çalışır (07:00, 13:00, 19:00, 01:00 TR). Blog otomatik yayınlanır, sosyal içerik webhook/e-posta ile gider.
+          Tam otomatik: cron günde 4 kez (07:00, 13:00, 19:00, 01:00 TR). Blog yayınlanır; Instagram, LinkedIn ve Facebook’a doğrudan post atılır.
         </p>
 
         {automation && (
@@ -349,6 +350,8 @@ export default function AdminOrganicMarketingPage() {
           <code className="text-violet-300">ORGANIC_MARKETING_NOTIFY_EMAIL</code>,{' '}
           <code className="text-violet-300">GEMINI_API_KEY</code>
         </p>
+
+        <OrganicMarketingHealthPanel />
       </section>
 
       <section className="rounded-2xl border border-violet-700/40 bg-violet-950/20 p-6 space-y-4">

@@ -43,15 +43,15 @@ export function AdminTopBar({
       </div>
 
       <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border admin-health-pill text-[11px]">
-        <span className={`flex items-center gap-1 ${health.ok ? 'admin-text-secondary' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.ok ? 'admin-text-secondary' : 'admin-text-accent'}`}>
           <Wifi className="w-3 h-3" /> API
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.db ? 'admin-text-secondary' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.db ? 'admin-text-secondary' : 'admin-text-accent'}`}>
           <Database className="w-3 h-3" /> DB
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.socket ? 'admin-text-secondary' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.socket ? 'admin-text-secondary' : 'admin-text-accent'}`}>
           <Radio className="w-3 h-3" /> Canlı
         </span>
         {lastUpdated && (
