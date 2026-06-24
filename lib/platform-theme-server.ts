@@ -1,26 +1,44 @@
 import { prisma } from '@/lib/db'
 import {
-  DEFAULT_PLATFORM_THEME,
-  normalizePlatformTheme,
+  DEFAULT_PLATFORM_THEMES,
+  normalizePanelTheme,
+  normalizePlatformThemes,
   PLATFORM_THEME_KEY,
-  type PlatformTheme,
+  type PanelTheme,
+  type PlatformThemes,
 } from '@/lib/platform-theme'
 
-export async function getPlatformTheme(): Promise<PlatformTheme> {
+export async function getPlatformTheme(): Promise<PlatformThemes> {
   try {
     const row = await prisma.platformSetting.findUnique({
       where: { key: PLATFORM_THEME_KEY },
     })
-    if (!row?.value) return DEFAULT_PLATFORM_THEME
-    return normalizePlatformTheme(JSON.parse(row.value) as Partial<PlatformTheme>)
+    if (!row?.value) return { ...DEFAULT_PLATFORM_THEMES }
+    return normalizePlatformThemes(JSON.parse(row.value))
   } catch {
-    return DEFAULT_PLATFORM_THEME
+    return { ...DEFAULT_PLATFORM_THEMES }
   }
 }
 
-export async function updatePlatformTheme(input: Partial<PlatformTheme>): Promise<PlatformTheme> {
+export type PlatformThemeUpdate = {
+  admin?: Partial<PanelTheme>
+  customer?: Partial<PanelTheme>
+  customerDark?: Partial<PanelTheme>
+}
+
+export async function updatePlatformTheme(input: PlatformThemeUpdate): Promise<PlatformThemes> {
   const current = await getPlatformTheme()
-  const next = normalizePlatformTheme({ ...current, ...input })
+  const next: PlatformThemes = {
+    admin: input.admin
+      ? normalizePanelTheme({ ...current.admin, ...input.admin }, current.admin)
+      : current.admin,
+    customer: input.customer
+      ? normalizePanelTheme({ ...current.customer, ...input.customer }, current.customer)
+      : current.customer,
+    customerDark: input.customerDark
+      ? normalizePanelTheme({ ...current.customerDark, ...input.customerDark }, current.customerDark)
+      : current.customerDark,
+  }
 
   await prisma.platformSetting.upsert({
     where: { key: PLATFORM_THEME_KEY },
@@ -31,7 +49,7 @@ export async function updatePlatformTheme(input: Partial<PlatformTheme>): Promis
   return next
 }
 
-export async function resetPlatformTheme(): Promise<PlatformTheme> {
+export async function resetPlatformTheme(): Promise<PlatformThemes> {
   await prisma.platformSetting.deleteMany({ where: { key: PLATFORM_THEME_KEY } })
-  return DEFAULT_PLATFORM_THEME
+  return { ...DEFAULT_PLATFORM_THEMES }
 }

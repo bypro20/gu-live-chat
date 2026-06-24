@@ -4,9 +4,9 @@ import { getPlatformTheme } from '@/lib/platform-theme-server'
 
 export async function GET() {
   try {
-    const theme = await getPlatformTheme()
+    const themes = await getPlatformTheme()
     return NextResponse.json(
-      { theme, css: buildPlatformThemeCss(theme) },
+      { themes, css: buildPlatformThemeCss(themes) },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',

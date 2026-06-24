@@ -1,6 +1,7 @@
 export const PLATFORM_THEME_KEY = 'platform_theme'
 
-export type PlatformTheme = {
+/** Tek panel renk paleti */
+export type PanelTheme = {
   background: string
   foreground: string
   card: string
@@ -12,7 +13,18 @@ export type PlatformTheme = {
   accentForeground: string
 }
 
-export const DEFAULT_PLATFORM_THEME: PlatformTheme = {
+/** @deprecated PanelTheme ile aynı — geriye uyumluluk */
+export type PlatformTheme = PanelTheme
+
+export type PlatformThemes = {
+  admin: PanelTheme
+  /** Müşteri paneli — açık tema (:root) */
+  customer: PanelTheme
+  /** Müşteri paneli — koyu tema (.dark); kullanıcı geçişi isteğe bağlı */
+  customerDark: PanelTheme
+}
+
+export const DEFAULT_ADMIN_THEME: PanelTheme = {
   background: '#ffffff',
   foreground: '#000000',
   card: '#ffffff',
@@ -24,24 +36,64 @@ export const DEFAULT_PLATFORM_THEME: PlatformTheme = {
   accentForeground: '#ffffff',
 }
 
-export const PLATFORM_THEME_PRESETS: Record<string, { label: string; theme: PlatformTheme }> = {
+export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
+  background: '#f8fafc',
+  foreground: '#111827',
+  card: '#ffffff',
+  cardForeground: '#111827',
+  muted: '#f9fafb',
+  mutedForeground: '#6b7280',
+  border: '#e5e7eb',
+  accent: '#9333ea',
+  accentForeground: '#ffffff',
+}
+
+export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = {
+  background: '#000000',
+  foreground: '#f5f5f5',
+  card: '#0a0a0a',
+  cardForeground: '#f5f5f5',
+  muted: '#171717',
+  mutedForeground: '#a3a3a3',
+  border: '#262626',
+  accent: '#a855f7',
+  accentForeground: '#ffffff',
+}
+
+export const DEFAULT_PLATFORM_THEMES: PlatformThemes = {
+  admin: DEFAULT_ADMIN_THEME,
+  customer: DEFAULT_CUSTOMER_THEME,
+  customerDark: DEFAULT_CUSTOMER_DARK_THEME,
+}
+
+/** @deprecated */
+export const DEFAULT_PLATFORM_THEME = DEFAULT_ADMIN_THEME
+
+export const ADMIN_THEME_PRESETS: Record<string, { label: string; theme: PanelTheme }> = {
   classic: {
     label: 'Beyaz · Siyah · Kırmızı',
-    theme: DEFAULT_PLATFORM_THEME,
+    theme: DEFAULT_ADMIN_THEME,
   },
-  purple: {
-    label: 'Mor (varsayılan marka)',
+  dark: {
+    label: 'Siyah · Kırmızı',
     theme: {
-      background: '#f8fafc',
-      foreground: '#111827',
-      card: '#ffffff',
-      cardForeground: '#111827',
-      muted: '#f9fafb',
-      mutedForeground: '#6b7280',
-      border: '#e5e7eb',
-      accent: '#9333ea',
+      background: '#000000',
+      foreground: '#ffffff',
+      card: '#0a0a0a',
+      cardForeground: '#ffffff',
+      muted: '#171717',
+      mutedForeground: '#a3a3a3',
+      border: '#262626',
+      accent: '#dc2626',
       accentForeground: '#ffffff',
     },
+  },
+}
+
+export const CUSTOMER_THEME_PRESETS: Record<string, { label: string; theme: PanelTheme }> = {
+  purple: {
+    label: 'Mor marka',
+    theme: DEFAULT_CUSTOMER_THEME,
   },
   ocean: {
     label: 'Mavi',
@@ -57,7 +109,45 @@ export const PLATFORM_THEME_PRESETS: Record<string, { label: string; theme: Plat
       accentForeground: '#ffffff',
     },
   },
+  emerald: {
+    label: 'Yeşil',
+    theme: {
+      background: '#f8fafc',
+      foreground: '#14532d',
+      card: '#ffffff',
+      cardForeground: '#14532d',
+      muted: '#f0fdf4',
+      mutedForeground: '#4b5563',
+      border: '#d1fae5',
+      accent: '#059669',
+      accentForeground: '#ffffff',
+    },
+  },
 }
+
+export const CUSTOMER_DARK_THEME_PRESETS: Record<string, { label: string; theme: PanelTheme }> = {
+  black: {
+    label: 'Siyah · Mor',
+    theme: DEFAULT_CUSTOMER_DARK_THEME,
+  },
+  slate: {
+    label: 'Koyu gri',
+    theme: {
+      background: '#0f172a',
+      foreground: '#f1f5f9',
+      card: '#1e293b',
+      cardForeground: '#f1f5f9',
+      muted: '#1e293b',
+      mutedForeground: '#94a3b8',
+      border: '#334155',
+      accent: '#9333ea',
+      accentForeground: '#ffffff',
+    },
+  },
+}
+
+/** @deprecated */
+export const PLATFORM_THEME_PRESETS = ADMIN_THEME_PRESETS
 
 const HEX_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/
 
@@ -73,11 +163,30 @@ function expandHex(hex: string): string {
   return h
 }
 
-export function normalizePlatformTheme(input: Partial<PlatformTheme> | null | undefined): PlatformTheme {
-  const base = { ...DEFAULT_PLATFORM_THEME }
+/** Arka plan rengine göre koyu tema mı */
+export function isDarkPanelTheme(theme: PanelTheme): boolean {
+  const h = expandHex(theme.background).slice(1)
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance < 0.45
+}
+
+/** Tek bir hex rengin koyu olup olmadığı */
+export function isDarkHexColor(hex: string): boolean {
+  if (!isValidHexColor(hex)) return false
+  return isDarkPanelTheme({ ...DEFAULT_ADMIN_THEME, background: expandHex(hex) })
+}
+
+export function normalizePanelTheme(
+  input: Partial<PanelTheme> | null | undefined,
+  fallback: PanelTheme = DEFAULT_ADMIN_THEME,
+): PanelTheme {
+  const base = { ...fallback }
   if (!input || typeof input !== 'object') return base
 
-  for (const key of Object.keys(base) as Array<keyof PlatformTheme>) {
+  for (const key of Object.keys(base) as Array<keyof PanelTheme>) {
     const value = input[key]
     if (typeof value === 'string' && isValidHexColor(value)) {
       base[key] = expandHex(value)
@@ -86,16 +195,48 @@ export function normalizePlatformTheme(input: Partial<PlatformTheme> | null | un
   return base
 }
 
-/** Tüm panellere uygulanacak CSS değişkenleri */
-export function buildPlatformThemeCss(theme: PlatformTheme): string {
+/** Eski tek-palet kayıtlarını admin + müşteri olarak okur */
+export function normalizePlatformThemes(input: unknown): PlatformThemes {
+  if (!input || typeof input !== 'object') return { ...DEFAULT_PLATFORM_THEMES }
+
+  const obj = input as Record<string, unknown>
+
+  if (obj.admin || obj.customer || obj.customerDark) {
+    const customer = normalizePanelTheme(obj.customer as Partial<PanelTheme>, DEFAULT_CUSTOMER_THEME)
+    return {
+      admin: normalizePanelTheme(obj.admin as Partial<PanelTheme>, DEFAULT_ADMIN_THEME),
+      customer,
+      customerDark: normalizePanelTheme(
+        obj.customerDark as Partial<PanelTheme>,
+        DEFAULT_CUSTOMER_DARK_THEME,
+      ),
+    }
+  }
+
+  const legacy = normalizePanelTheme(obj as Partial<PanelTheme>, DEFAULT_ADMIN_THEME)
+  return { admin: legacy, customer: { ...legacy }, customerDark: { ...DEFAULT_CUSTOMER_DARK_THEME } }
+}
+
+function panelCssVars(theme: PanelTheme) {
   const accentHover = `color-mix(in srgb, ${theme.accent} 82%, #000000 18%)`
   const accentSoft = `color-mix(in srgb, ${theme.accent} 12%, ${theme.background} 88%)`
   const sidebarActive = `color-mix(in srgb, ${theme.accent} 10%, ${theme.background} 90%)`
   const primaryLight = `color-mix(in srgb, ${theme.accent} 14%, ${theme.background} 86%)`
-  const ring = theme.accent
+
+  return {
+    accentHover,
+    accentSoft,
+    sidebarActive,
+    primaryLight,
+    ring: theme.accent,
+  }
+}
+
+function customerPanelCssBlock(selector: string, theme: PanelTheme): string {
+  const v = panelCssVars(theme)
 
   return `
-:root, .dark {
+${selector} {
   --background: ${theme.background};
   --foreground: ${theme.foreground};
   --card: ${theme.card};
@@ -104,9 +245,9 @@ export function buildPlatformThemeCss(theme: PlatformTheme): string {
   --popover-foreground: ${theme.cardForeground};
   --primary: ${theme.accent};
   --primary-foreground: ${theme.accentForeground};
-  --primary-hover: ${accentHover};
-  --primary-active: ${accentHover};
-  --primary-light: ${primaryLight};
+  --primary-hover: ${v.accentHover};
+  --primary-active: ${v.accentHover};
+  --primary-light: ${v.primaryLight};
   --primary-glow: color-mix(in srgb, ${theme.accent} 22%, transparent);
   --muted: ${theme.muted};
   --muted-foreground: ${theme.mutedForeground};
@@ -115,7 +256,7 @@ export function buildPlatformThemeCss(theme: PlatformTheme): string {
   --border: ${theme.border};
   --border-strong: color-mix(in srgb, ${theme.border} 70%, ${theme.foreground} 30%);
   --input: ${theme.border};
-  --ring: ${ring};
+  --ring: ${v.ring};
   --destructive: ${theme.accent};
   --destructive-foreground: ${theme.accentForeground};
   --sidebar-bg: ${theme.background};
@@ -123,16 +264,30 @@ export function buildPlatformThemeCss(theme: PlatformTheme): string {
   --sidebar-foreground: ${theme.mutedForeground};
   --sidebar-foreground-active: ${theme.foreground};
   --sidebar-title: ${theme.foreground};
-  --sidebar-active: ${sidebarActive};
+  --sidebar-active: ${v.sidebarActive};
   --sidebar-active-border: ${theme.accent};
   --sidebar-border: ${theme.border};
-  --sidebar-hover: ${accentSoft};
+  --sidebar-hover: ${v.accentSoft};
   --sidebar-surface: ${theme.muted};
   --sidebar-group-label: ${theme.mutedForeground};
+  color-scheme: ${isDarkPanelTheme(theme) ? 'dark' : 'light'};
+}
+`.trim()
 }
 
+export function buildCustomerPanelCss(light: PanelTheme, dark: PanelTheme): string {
+  return `${customerPanelCssBlock(':root', light)}\n\n${customerPanelCssBlock('.dark', dark)}`
+}
+
+export function buildAdminPanelCss(theme: PanelTheme): string {
+  const v = panelCssVars(theme)
+  const colorScheme = isDarkPanelTheme(theme) ? 'dark' : 'light'
+
+  return `
 .admin-shell-v2,
-.admin-overlay-host {
+.admin-overlay-host,
+.dark .admin-shell-v2,
+.dark .admin-overlay-host {
   --admin-bg: ${theme.background};
   --admin-bg-subtle: ${theme.muted};
   --admin-bg-elevated: ${theme.muted};
@@ -145,24 +300,49 @@ export function buildPlatformThemeCss(theme: PlatformTheme): string {
   --admin-text-muted: ${theme.mutedForeground};
   --admin-text-faint: color-mix(in srgb, ${theme.mutedForeground} 75%, ${theme.background} 25%);
   --admin-accent: ${theme.accent};
-  --admin-accent-hover: ${accentHover};
-  --admin-accent-soft: ${accentSoft};
+  --admin-accent-hover: ${v.accentHover};
+  --admin-accent-soft: ${v.accentSoft};
   --admin-accent-fg: ${theme.accentForeground};
   --admin-topbar-bg: ${theme.background};
   --admin-input-bg: ${theme.card};
   --admin-sidebar-bg: ${theme.background};
   --admin-sidebar-bg-end: ${theme.background};
-  --admin-sidebar-active: ${sidebarActive};
-  color-scheme: light;
+  --admin-sidebar-active: ${v.sidebarActive};
+  color-scheme: ${colorScheme};
+}
+
+.admin-shell-v2 .admin-content-root,
+.admin-overlay-host,
+.dark .admin-shell-v2 .admin-content-root,
+.dark .admin-overlay-host {
+  --background: ${theme.background};
+  --foreground: ${theme.foreground};
+  --card: ${theme.card};
+  --card-foreground: ${theme.cardForeground};
+  --popover: ${theme.card};
+  --popover-foreground: ${theme.cardForeground};
+  --muted: ${theme.muted};
+  --muted-foreground: ${theme.mutedForeground};
+  --accent: ${theme.muted};
+  --accent-foreground: ${theme.foreground};
+  --border: ${theme.border};
+  --border-strong: color-mix(in srgb, ${theme.border} 70%, ${theme.foreground} 30%);
+  --input: ${theme.card};
+  --ring: ${v.ring};
+  --primary-light: ${v.primaryLight};
 }
 `.trim()
 }
 
+export function buildPlatformThemeCss(themes: PlatformThemes): string {
+  return `${buildCustomerPanelCss(themes.customer, themes.customerDark)}\n\n${buildAdminPanelCss(themes.admin)}`
+}
+
 export const PLATFORM_THEME_STYLE_ID = 'platform-theme-vars'
 
-export function applyPlatformThemeToDocument(theme: PlatformTheme) {
+export function applyPlatformThemeToDocument(themes: PlatformThemes) {
   if (typeof document === 'undefined') return
-  const css = buildPlatformThemeCss(theme)
+  const css = buildPlatformThemeCss(themes)
   let el = document.getElementById(PLATFORM_THEME_STYLE_ID) as HTMLStyleElement | null
   if (!el) {
     el = document.createElement('style')

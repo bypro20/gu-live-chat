@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import {
-  DEFAULT_PLATFORM_THEME,
+  DEFAULT_PLATFORM_THEMES,
   isValidHexColor,
-  type PlatformTheme,
+  type PanelTheme,
 } from '@/lib/platform-theme'
 import {
   getPlatformTheme,
@@ -17,8 +17,8 @@ export async function GET() {
     const check = await requireAdmin()
     if ('error' in check) return check.error
 
-    const theme = await getPlatformTheme()
-    return NextResponse.json({ theme, defaults: DEFAULT_PLATFORM_THEME })
+    const themes = await getPlatformTheme()
+    return NextResponse.json({ themes, defaults: DEFAULT_PLATFORM_THEMES })
   } catch (error) {
     console.error('[Admin Theme] GET error:', error)
     return NextResponse.json({ error: 'Tema yüklenemedi' }, { status: 500 })
@@ -27,7 +27,7 @@ export async function GET() {
 
 const colorField = z.string().refine(isValidHexColor, 'Geçersiz renk kodu')
 
-const themeSchema = z.object({
+const panelSchema = z.object({
   background: colorField.optional(),
   foreground: colorField.optional(),
   card: colorField.optional(),
@@ -39,19 +39,27 @@ const themeSchema = z.object({
   accentForeground: colorField.optional(),
 })
 
+const patchSchema = z.object({
+  admin: panelSchema.optional(),
+  customer: panelSchema.optional(),
+  customerDark: panelSchema.optional(),
+})
+
 export async function PATCH(req: Request) {
   try {
     const check = await requireAdmin()
     if ('error' in check) return check.error
 
     const body = await req.json()
-    const parsed = themeSchema.safeParse(body)
+    const parsed = patchSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: 'Geçersiz renk değerleri' }, { status: 400 })
     }
 
-    const theme = await updatePlatformTheme(parsed.data as Partial<PlatformTheme>)
-    return NextResponse.json({ theme })
+    const themes = await updatePlatformTheme(
+      parsed.data as { admin?: Partial<PanelTheme>; customer?: Partial<PanelTheme>; customerDark?: Partial<PanelTheme> },
+    )
+    return NextResponse.json({ themes })
   } catch (error) {
     console.error('[Admin Theme] PATCH error:', error)
     return NextResponse.json({ error: 'Tema kaydedilemedi' }, { status: 500 })
@@ -63,8 +71,8 @@ export async function DELETE() {
     const check = await requireAdmin()
     if ('error' in check) return check.error
 
-    const theme = await resetPlatformTheme()
-    return NextResponse.json({ theme })
+    const themes = await resetPlatformTheme()
+    return NextResponse.json({ themes })
   } catch (error) {
     console.error('[Admin Theme] DELETE error:', error)
     return NextResponse.json({ error: 'Tema sıfırlanamadı' }, { status: 500 })

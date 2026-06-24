@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import {
   applyPlatformThemeToDocument,
   PLATFORM_THEME_UPDATED_EVENT,
-  type PlatformTheme,
+  type PlatformThemes,
 } from '@/lib/platform-theme'
 
 /** İstemci gezinmesinde tema CSS'ini güncel tutar */
@@ -14,8 +14,8 @@ export function PlatformThemeBridge() {
       try {
         const res = await fetch('/api/platform/theme', { cache: 'no-store' })
         if (!res.ok) return
-        const data = (await res.json()) as { theme: PlatformTheme }
-        if (data.theme) applyPlatformThemeToDocument(data.theme)
+        const data = (await res.json()) as { themes: PlatformThemes }
+        if (data.themes) applyPlatformThemeToDocument(data.themes)
       } catch {
         /* varsayılan CSS kalır */
       }
@@ -24,7 +24,7 @@ export function PlatformThemeBridge() {
     void sync()
 
     const onUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<PlatformTheme>).detail
+      const detail = (event as CustomEvent<PlatformThemes>).detail
       if (detail) applyPlatformThemeToDocument(detail)
       else void sync()
     }

@@ -59,6 +59,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   })
   const { theme: adminTheme } = useAdminTheme()
 
+  // Müşteri paneli koyu modu admin'i etkilemesin
+  useEffect(() => {
+    const root = document.documentElement
+    const hadDark = root.classList.contains('dark')
+    root.classList.remove('dark')
+    return () => {
+      if (hadDark) root.classList.add('dark')
+    }
+  }, [])
+
   const handleSignOut = async () => {
     await signOut({ redirect: false })
     clearNativeAppMark()

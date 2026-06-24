@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { isDarkHexColor, PLATFORM_THEME_UPDATED_EVENT } from '@/lib/platform-theme'
 
 const STORAGE_KEY = 'gu-admin-theme'
 
@@ -15,34 +16,50 @@ interface AdminThemeContextValue {
 
 const AdminThemeContext = createContext<AdminThemeContextValue | null>(null)
 
+function syncAdminThemeDom(mode: AdminTheme) {
+  document.querySelectorAll('.admin-shell-v2, .admin-overlay-host').forEach((el) => {
+    el.setAttribute('data-admin-theme', mode)
+  })
+}
+
+function inferAdminThemeFromDom(): AdminTheme {
+  const shell = document.querySelector('.admin-shell-v2')
+  if (!shell) return 'light'
+  const bg = getComputedStyle(shell).getPropertyValue('--admin-bg').trim()
+  if (!bg) return 'light'
+  return isDarkHexColor(bg) ? 'dark' : 'light'
+}
+
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<AdminTheme>('light')
   const [mounted, setMounted] = useState(false)
 
-  const syncThemeDom = useCallback((next: AdminTheme) => {
-    document.querySelectorAll('.admin-shell-v2, .admin-overlay-host').forEach((el) => {
-      el.setAttribute('data-admin-theme', next)
-    })
+  const syncFromPlatform = useCallback(() => {
+    const mode = inferAdminThemeFromDom()
+    setThemeState(mode)
+    syncAdminThemeDom(mode)
+    localStorage.setItem(STORAGE_KEY, mode)
   }, [])
 
   useEffect(() => {
-    setThemeState('light')
-    syncThemeDom('light')
-    localStorage.setItem(STORAGE_KEY, 'light')
+    syncFromPlatform()
     setMounted(true)
-  }, [syncThemeDom])
+
+    const onThemeUpdated = () => {
+      requestAnimationFrame(syncFromPlatform)
+    }
+
+    window.addEventListener(PLATFORM_THEME_UPDATED_EVENT, onThemeUpdated)
+    return () => window.removeEventListener(PLATFORM_THEME_UPDATED_EVENT, onThemeUpdated)
+  }, [syncFromPlatform])
 
   const setTheme = useCallback((_next: AdminTheme) => {
-    setThemeState('light')
-    localStorage.setItem(STORAGE_KEY, 'light')
-    syncThemeDom('light')
-  }, [syncThemeDom])
+    syncFromPlatform()
+  }, [syncFromPlatform])
 
   const toggleTheme = useCallback(() => {
-    setThemeState('light')
-    localStorage.setItem(STORAGE_KEY, 'light')
-    syncThemeDom('light')
-  }, [syncThemeDom])
+    syncFromPlatform()
+  }, [syncFromPlatform])
 
   return (
     <AdminThemeContext.Provider value={{ theme, setTheme, toggleTheme, mounted }}>
@@ -61,6 +78,7 @@ interface AdminThemeToggleProps {
   variant?: 'sidebar' | 'compact' | 'toolbar'
 }
 
+/** Admin renkleri ayarlardan gelir; geçiş düğmesi yok */
 export function AdminThemeToggle(_props: AdminThemeToggleProps) {
   return null
 }
