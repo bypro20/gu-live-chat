@@ -422,7 +422,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         )}
-        <div className={`flex-1 min-h-0 min-w-0 ${isInboxRoute ? 'overflow-hidden' : 'app-content-scroll'} ${isNativeCustomerApp ? 'native-app-content' : ''}`}>
+        <div
+          className={`flex-1 min-h-0 min-w-0 ${isInboxRoute ? 'overflow-hidden' : 'app-content-scroll'} ${isNativeCustomerApp ? 'native-app-content' : ''}`}
+          key={pathname || ''}
+          style={{ animation: 'dashboard-page-in 0.18s ease-out both' }}
+        >
           {children}
         </div>
         {isNativeCustomerApp && <NativeBottomNav />}

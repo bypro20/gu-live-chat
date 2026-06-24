@@ -480,6 +480,7 @@ export function OverlayPreview({
             transform: zoom > 1 ? `scale(${zoom})` : undefined,
             transformOrigin: 'center center',
             imageRendering: 'auto',
+            transition: 'opacity 0.12s ease',
           }}
           draggable={false}
         />
@@ -494,6 +495,7 @@ export function OverlayPreview({
             top: `${((cursorY || 0) / viewportH) * 100}%`,
             transform: zoom > 1 ? `scale(${zoom})` : undefined,
             transformOrigin: 'center center',
+            transition: 'left 0.08s linear, top 0.08s linear',
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>

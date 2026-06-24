@@ -140,17 +140,16 @@ export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
 
   updateCursor: (visitorId, x, y, viewportW, viewportH) =>
     set((state) => {
+      const existing = state.visitors.get(visitorId)
+      if (!existing) return state
       const newMap = new Map(state.visitors)
-      const existing = newMap.get(visitorId)
-      if (existing) {
-        newMap.set(visitorId, {
-          ...existing,
-          cursorX: x,
-          cursorY: y,
-          ...(viewportW !== undefined ? { viewportW } : {}),
-          ...(viewportH !== undefined ? { viewportH } : {}),
-        })
-      }
+      newMap.set(visitorId, {
+        ...existing,
+        cursorX: x,
+        cursorY: y,
+        ...(viewportW !== undefined ? { viewportW } : {}),
+        ...(viewportH !== undefined ? { viewportH } : {}),
+      })
       return { visitors: newMap }
     }),
 
