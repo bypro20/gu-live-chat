@@ -1,5 +1,6 @@
 #!/bin/bash
-# 🐉 Canavar AI — yerel Open WebUI sunucusunu başlat (masaüstü çift tık)
+# 🐉 Canavar AI — isteğe bağlı YEREL sunucu (8080)
+# Ana sunucu: https://gulivechat.online — çoğu kullanımda Canavar-AI-Baslat gerekmez.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"

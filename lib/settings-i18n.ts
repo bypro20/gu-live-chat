@@ -1317,7 +1317,7 @@ const tr: SettingsMessages = {
     noKey: 'Anahtar yok',
     aiModeActive: '✓ Gerçek yapay zeka modu aktif — ziyaretçilerle akıllı sohbet edebilirsiniz.',
     freeTierHint:
-      'Ücretsiz açık kaynak için: OPENROUTER_API_KEY (openrouter.ai) veya GEMINI_API_KEY. Kendi sunucu: OLLAMA_BASE_URL. Anahtar olmadan sadece basit SSS yanıtları verilir.',
+      'Ücretsiz açık kaynak için: OPENROUTER_API_KEY veya GEMINI_API_KEY. Kendi sunucu: OLLAMA_BASE_URL=https://gulivechat.online/ollama. Anahtar olmadan sadece basit SSS yanıtları verilir.',
     enableAssistant: 'AI asistanı etkinleştir',
     enableAssistantHint: 'Widget, WhatsApp ve tüm kanallarda AI açılır.',
     autoReply: 'Otomatik sohbet yanıtı',
@@ -1349,7 +1349,7 @@ const tr: SettingsMessages = {
       'Tüm sağlayıcılar platform Gemini anahtarı ile çalışır. Kendi OpenAI/Groq anahtarınızı eklerseniz doğrudan o sağlayıcı kullanılır.',
     ollamaModelsFound: (count) => `✓ Sunucunuzdan ${count} Ollama modeli yüklendi (7B/14B vb.).`,
     ollamaModelsMissing:
-      'Ollama yapılandırıldı ama model listesi boş. Vercel\'de OLLAMA_BASE_URL, OLLAMA_API_KEY (Open WebUI API anahtarı) ve gerekirse OLLAMA_MODELS ayarlayın.',
+      'Ollama yapılandırıldı ama model listesi boş. OLLAMA_BASE_URL=https://gulivechat.online/ollama, OLLAMA_API_KEY (Open WebUI API anahtarı) ve gerekirse OLLAMA_MODELS ayarlayın.',
     ollamaModelsError: (error) => `Ollama bağlantı hatası: ${error}`,
     providers: {
       OPENAI: 'OpenAI (GPT)',
@@ -2137,7 +2137,7 @@ const en: SettingsMessages = {
     noKey: 'No key',
     aiModeActive: '✓ Real AI mode active — you can have smart conversations with visitors.',
     freeTierHint:
-      'For free open source: OPENROUTER_API_KEY (openrouter.ai) or GEMINI_API_KEY. Self-hosted: OLLAMA_BASE_URL. Without a key, only simple FAQ replies are provided.',
+      'For free open source: OPENROUTER_API_KEY or GEMINI_API_KEY. Self-hosted: OLLAMA_BASE_URL=https://gulivechat.online/ollama. Without a key, only simple FAQ replies are provided.',
     enableAssistant: 'Enable AI assistant',
     enableAssistantHint: 'Enables AI on widget, WhatsApp, and all channels.',
     autoReply: 'Automatic chat reply',
@@ -2169,7 +2169,7 @@ const en: SettingsMessages = {
       'All providers run via the platform Gemini key. Add your own OpenAI/Groq keys to use those providers directly.',
     ollamaModelsFound: (count) => `✓ Loaded ${count} Ollama model(s) from your server (7B/14B etc.).`,
     ollamaModelsMissing:
-      'Ollama is configured but the model list is empty. Set OLLAMA_BASE_URL, OLLAMA_API_KEY (Open WebUI API key), and OLLAMA_MODELS on Vercel if needed.',
+      'Ollama is configured but the model list is empty. Set OLLAMA_BASE_URL=https://gulivechat.online/ollama, OLLAMA_API_KEY (Open WebUI API key), and OLLAMA_MODELS if needed.',
     ollamaModelsError: (error) => `Ollama connection error: ${error}`,
     providers: {
       OPENAI: 'OpenAI (GPT)',

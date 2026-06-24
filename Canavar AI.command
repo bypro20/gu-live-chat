@@ -12,7 +12,7 @@ fi
 cd "$CANAVAR"
 
 if [[ ! -f canavar.config.json ]]; then
-  osascript -e 'display notification "İlk kurulum başlıyor..." with title "🐉 Canavar AI"'
+  osascript -e 'display notification "İlk kurulum — sunucu: gulivechat.online" with title "🐉 Canavar AI"'
   python3 setup.py
 fi
 
