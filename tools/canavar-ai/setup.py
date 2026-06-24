@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 import urllib.error
@@ -11,8 +10,9 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-CONFIG_PATH = ROOT / "canavar.config.json"
 EXAMPLE_PATH = ROOT / "canavar.config.example.json"
+LOCAL_CONFIG = ROOT / "canavar.config.json"
+HOME_CONFIG = Path.home() / ".canavar-ai" / "canavar.config.json"
 
 
 def prompt(label: str, default: str = "") -> str:
@@ -42,6 +42,16 @@ def fetch_models(base_url: str, api_key: str) -> list[str]:
     return []
 
 
+def save_config(cfg: dict) -> None:
+    text = json.dumps(cfg, ensure_ascii=False, indent=2) + "\n"
+    LOCAL_CONFIG.write_text(text, encoding="utf-8")
+    HOME_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    HOME_CONFIG.write_text(text, encoding="utf-8")
+    print(f"\n✓ Ayarlar kaydedildi:")
+    print(f"    {HOME_CONFIG}")
+    print(f"    {LOCAL_CONFIG}")
+
+
 def main() -> None:
     print("\n🐉 Canavar AI — Kurulum\n")
     example = {}
@@ -69,7 +79,7 @@ def main() -> None:
             print("  ⚠ Model listesi alınamadı — API anahtarını kontrol edin.")
 
     default_model = models[0] if models else example.get("model", "")
-    model = prompt("Kullanılacak model", default_model)
+    model = prompt("Kullanılacak model (Ollama tam adı, örn. qwen2.5:14b)", default_model)
 
     cfg = {
         "name": "Canavar AI",
@@ -78,20 +88,20 @@ def main() -> None:
         "api_key": api_key,
         "model": model,
         "workspace": workspace,
+        "mode": "chat",
         "allow_web": True,
         "allow_shell": True,
         "max_tool_rounds": 12,
         "language": "tr",
     }
 
-    CONFIG_PATH.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"\n✓ Ayarlar kaydedildi: {CONFIG_PATH}")
+    save_config(cfg)
 
     if api_key and model:
         print("\nBağlantı test ediliyor...")
         test = subprocess.run([sys.executable, str(ROOT / "test-connection.py")], cwd=str(ROOT))
         if test.returncode != 0:
-            print("\n⚠ Test başarısız — yine de ayarlar kaydedildi. test-connection.py ile tekrar deneyin.")
+            print("\n⚠ Test başarısız — test-connection.py çıktısına bakın.")
         sys.exit(test.returncode)
 
     print("  Çift tık: «Canavar AI.command» veya: python3 agent.py\n")

@@ -19,7 +19,26 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent
-CONFIG_PATH = ROOT / "canavar.config.json"
+CONFIG_PATHS = [
+    ROOT / "canavar.config.json",
+    Path.home() / ".canavar-ai" / "canavar.config.json",
+]
+
+
+def config_path() -> Path:
+    for p in CONFIG_PATHS:
+        if p.exists():
+            return p
+    return CONFIG_PATHS[0]
+
+
+def save_config_path() -> Path:
+    home_cfg = CONFIG_PATHS[1]
+    home_cfg.parent.mkdir(parents=True, exist_ok=True)
+    return home_cfg
+
+SYSTEM_PROMPT_CHAT = """Sen Canavar AI'sın — Türkçe konuşan akıllı asistan.
+Kullanıcıya net, doğrudan cevap ver. Kod, web ve teknik konularda yardımcı ol."""
 
 SYSTEM_PROMPT = """Sen Canavar AI'sın — akıllı masaüstü asistanısın.
 Görevleri adım adım yap: web'de ara, sayfa oku, dosya yaz, kod çalıştır.
@@ -44,10 +63,12 @@ Kurallar:
 
 
 def load_config() -> dict[str, Any]:
-    if not CONFIG_PATH.exists():
+    path = config_path()
+    if not path.exists():
         print("⚠ Ayar dosyası yok. Kurulum başlatılıyor...")
         subprocess.run([sys.executable, str(ROOT / "setup.py")], check=True)
-    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        path = config_path()
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def expand_path(raw: str, workspace: Path) -> Path:
@@ -263,6 +284,35 @@ def chat_llm(cfg: dict[str, Any], messages: list[dict[str, str]]) -> str:
     raise RuntimeError(last_err or "LLM yanıt vermedi — base_url ve api_key kontrol edin.")
 
 
+def run_chat_mode(cfg: dict[str, Any]) -> None:
+    """7B/14B modeller için doğrudan sohbet — JSON araç formatı gerekmez."""
+    history: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT_CHAT}]
+    print("💬 Sohbet modu (7B/14B için önerilir). Ajan modu: canavar.config.json → \"mode\": \"agent\"\n")
+
+    while True:
+        try:
+            user = input("\n🧑 Sen: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGörüşürüz!")
+            break
+        if not user:
+            continue
+        if user.lower() in {"quit", "exit", "q", "çık", "cik"}:
+            print("Görüşürüz!")
+            break
+
+        history.append({"role": "user", "content": user})
+        try:
+            print("\n🐉 Canavar: ", end="", flush=True)
+            reply = chat_llm(cfg, history)
+            print(reply or "(boş yanıt — modeli veya API key'i kontrol edin)")
+        except RuntimeError as e:
+            print(f"\n❌ {e}")
+            history.pop()
+            continue
+        history.append({"role": "assistant", "content": reply})
+
+
 def main() -> None:
     cfg = load_config()
     workspace = expand_path(cfg.get("workspace", "~/Desktop"), Path.home())
@@ -297,6 +347,11 @@ def main() -> None:
         sys.exit(1)
     if test.stdout:
         print(test.stdout)
+
+    mode = (cfg.get("mode") or "chat").lower()
+    if mode == "chat":
+        run_chat_mode(cfg)
+        return
 
     system = SYSTEM_PROMPT.format(workspace=workspace)
     history: list[dict[str, str]] = [{"role": "system", "content": system}]

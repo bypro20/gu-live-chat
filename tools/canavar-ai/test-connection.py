@@ -9,12 +9,16 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-CONFIG = ROOT / "canavar.config.json"
+CONFIG_CANDIDATES = [
+    ROOT / "canavar.config.json",
+    Path.home() / ".canavar-ai" / "canavar.config.json",
+]
 
 
 def load_cfg() -> dict:
-    if CONFIG.exists():
-        return json.loads(CONFIG.read_text(encoding="utf-8"))
+    for path in CONFIG_CANDIDATES:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
     return {
         "base_url": "https://gulivechat.online",
         "api_key": "",
