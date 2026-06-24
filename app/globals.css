@@ -1242,6 +1242,31 @@ body {
     color: var(--admin-text);
   }
 
+  .admin-marketing-subcard {
+    @apply rounded-xl border p-4;
+    border-color: var(--admin-border);
+    background: var(--admin-bg-subtle);
+    color: var(--admin-text);
+  }
+
+  .admin-marketing-channel {
+    @apply text-xs font-bold px-2 py-0.5 rounded-full;
+    background: var(--admin-accent-soft);
+    color: var(--admin-accent);
+  }
+
+  .admin-marketing-btn-secondary {
+    @apply px-4 py-2 rounded-xl border text-sm font-medium transition-colors;
+    border-color: var(--admin-border);
+    color: var(--admin-text-secondary);
+    background: var(--admin-bg-card);
+  }
+
+  .admin-marketing-btn-secondary:hover {
+    background: var(--admin-bg-hover);
+    color: var(--admin-text);
+  }
+
   .admin-form-input,
   .admin-form-select,
   .admin-form-textarea {
@@ -1635,123 +1660,123 @@ body {
     color: var(--admin-text);
   }
 
-  /* Admin — yalnızca siyah, kırmızı, beyaz */
-  .admin-shell-v2 [class*='text-emerald-'],
-  .admin-shell-v2 [class*='text-green-'],
-  .admin-shell-v2 [class*='text-teal-'],
-  .admin-overlay-host [class*='text-emerald-'],
-  .admin-overlay-host [class*='text-green-'],
-  .admin-overlay-host [class*='text-teal-'] {
+  /* Admin karanlık mod — marka paleti (siyah / kırmızı / beyaz) */
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-emerald-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-green-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-teal-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-emerald-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-green-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-teal-'] {
     color: #ffffff !important;
   }
 
-  .admin-shell-v2 [class*='text-amber-'],
-  .admin-shell-v2 [class*='text-orange-'],
-  .admin-shell-v2 [class*='text-violet-'],
-  .admin-shell-v2 [class*='text-sky-'],
-  .admin-shell-v2 [class*='text-cyan-'],
-  .admin-shell-v2 [class*='text-blue-'],
-  .admin-shell-v2 [class*='text-indigo-'],
-  .admin-overlay-host [class*='text-amber-'],
-  .admin-overlay-host [class*='text-orange-'],
-  .admin-overlay-host [class*='text-violet-'],
-  .admin-overlay-host [class*='text-sky-'],
-  .admin-overlay-host [class*='text-cyan-'],
-  .admin-overlay-host [class*='text-blue-'],
-  .admin-overlay-host [class*='text-indigo-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-amber-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-orange-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-violet-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-sky-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-cyan-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-blue-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-amber-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-orange-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-sky-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-cyan-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-blue-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-indigo-'] {
     color: #ef4444 !important;
   }
 
-  .admin-shell-v2 [class*='text-gray-'],
-  .admin-overlay-host [class*='text-gray-'],
-  .admin-shell-v2 [class*='text-slate-'],
-  .admin-overlay-host [class*='text-slate-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-gray-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-gray-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='text-slate-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='text-slate-'] {
     color: rgba(255, 255, 255, 0.55) !important;
   }
 
-  .admin-shell-v2 [class*='bg-emerald-'],
-  .admin-shell-v2 [class*='bg-green-'],
-  .admin-shell-v2 [class*='bg-teal-'],
-  .admin-shell-v2 [class*='bg-amber-'],
-  .admin-shell-v2 [class*='bg-orange-'],
-  .admin-shell-v2 [class*='bg-violet-'],
-  .admin-shell-v2 [class*='bg-sky-'],
-  .admin-shell-v2 [class*='bg-cyan-'],
-  .admin-shell-v2 [class*='bg-blue-'],
-  .admin-shell-v2 [class*='bg-indigo-'],
-  .admin-overlay-host [class*='bg-emerald-'],
-  .admin-overlay-host [class*='bg-green-'],
-  .admin-overlay-host [class*='bg-teal-'],
-  .admin-overlay-host [class*='bg-amber-'],
-  .admin-overlay-host [class*='bg-orange-'],
-  .admin-overlay-host [class*='bg-violet-'],
-  .admin-overlay-host [class*='bg-sky-'],
-  .admin-overlay-host [class*='bg-cyan-'],
-  .admin-overlay-host [class*='bg-blue-'],
-  .admin-overlay-host [class*='bg-indigo-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-emerald-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-green-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-teal-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-amber-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-orange-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-violet-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-sky-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-cyan-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-blue-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-emerald-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-green-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-teal-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-amber-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-orange-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-sky-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-cyan-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-blue-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-indigo-'] {
     background-color: rgba(239, 68, 68, 0.12) !important;
   }
 
-  .admin-shell-v2 [class*='border-emerald-'],
-  .admin-shell-v2 [class*='border-green-'],
-  .admin-shell-v2 [class*='border-teal-'],
-  .admin-shell-v2 [class*='border-amber-'],
-  .admin-shell-v2 [class*='border-orange-'],
-  .admin-shell-v2 [class*='border-violet-'],
-  .admin-shell-v2 [class*='border-sky-'],
-  .admin-shell-v2 [class*='border-cyan-'],
-  .admin-shell-v2 [class*='border-blue-'],
-  .admin-shell-v2 [class*='border-indigo-'],
-  .admin-overlay-host [class*='border-emerald-'],
-  .admin-overlay-host [class*='border-green-'],
-  .admin-overlay-host [class*='border-teal-'],
-  .admin-overlay-host [class*='border-amber-'],
-  .admin-overlay-host [class*='border-orange-'],
-  .admin-overlay-host [class*='border-violet-'],
-  .admin-overlay-host [class*='border-sky-'],
-  .admin-overlay-host [class*='border-cyan-'],
-  .admin-overlay-host [class*='border-blue-'],
-  .admin-overlay-host [class*='border-indigo-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-emerald-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-green-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-teal-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-amber-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-orange-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-violet-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-sky-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-cyan-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-blue-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='border-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-emerald-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-green-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-teal-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-amber-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-orange-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-sky-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-cyan-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-blue-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='border-indigo-'] {
     border-color: rgba(239, 68, 68, 0.28) !important;
   }
 
-  .admin-shell-v2 [class*='ring-emerald-'],
-  .admin-shell-v2 [class*='ring-violet-'],
-  .admin-shell-v2 [class*='ring-indigo-'],
-  .admin-overlay-host [class*='ring-emerald-'],
-  .admin-overlay-host [class*='ring-violet-'],
-  .admin-overlay-host [class*='ring-indigo-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-emerald-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-violet-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-emerald-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-indigo-'] {
     --tw-ring-color: rgba(239, 68, 68, 0.35) !important;
   }
 
-  .admin-shell-v2 [class*='from-emerald-'],
-  .admin-shell-v2 [class*='from-violet-'],
-  .admin-shell-v2 [class*='from-indigo-'],
-  .admin-shell-v2 [class*='from-red-'],
-  .admin-overlay-host [class*='from-emerald-'],
-  .admin-overlay-host [class*='from-violet-'],
-  .admin-overlay-host [class*='from-indigo-'],
-  .admin-overlay-host [class*='from-red-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='from-emerald-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='from-violet-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='from-indigo-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='from-red-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='from-emerald-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='from-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='from-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='from-red-'] {
     --tw-gradient-from: #ef4444 var(--tw-gradient-from-position) !important;
     --tw-gradient-to: rgb(239 68 68 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
-  .admin-shell-v2 [class*='to-teal-'],
-  .admin-shell-v2 [class*='to-orange-'],
-  .admin-shell-v2 [class*='to-indigo-'],
-  .admin-shell-v2 [class*='to-violet-'],
-  .admin-overlay-host [class*='to-teal-'],
-  .admin-overlay-host [class*='to-orange-'],
-  .admin-overlay-host [class*='to-indigo-'],
-  .admin-overlay-host [class*='to-violet-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='to-teal-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='to-orange-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='to-indigo-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='to-violet-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='to-teal-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='to-orange-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='to-indigo-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='to-violet-'] {
     --tw-gradient-to: #dc2626 var(--tw-gradient-to-position) !important;
   }
 
-  .admin-shell-v2 [class*='bg-gray-'],
-  .admin-shell-v2 [class*='bg-slate-'],
-  .admin-overlay-host [class*='bg-gray-'],
-  .admin-overlay-host [class*='bg-slate-'] {
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-gray-'],
+  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-slate-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-gray-'],
+  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-slate-'] {
     background-color: #141414 !important;
   }
 }
