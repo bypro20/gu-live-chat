@@ -631,15 +631,10 @@ body {
     box-shadow: inset -1px 0 0 var(--admin-border);
   }
 
-  /* Sidebar — tema uyumlu */
+  /* Sidebar — tema değişkenleri .admin-shell-v2 üzerinden gelir */
   .admin-shell-v2 .admin-sidebar {
-    --sidebar-fg: #000000;
-    --sidebar-fg-muted: #404040;
-    --sidebar-fg-faint: #737373;
-    --sidebar-surface: #f5f5f5;
     --sidebar-surface-hover: var(--admin-sidebar-hover, #f5f5f5);
-    --sidebar-border: #e5e5e5;
-    color: var(--sidebar-fg);
+    color: var(--sidebar-fg, var(--admin-text));
   }
 
   .admin-sidebar-title { color: var(--sidebar-fg); }
@@ -762,7 +757,7 @@ body {
 
   .admin-sidebar-group-label {
     @apply text-[10px] font-bold uppercase tracking-[0.14em] px-2;
-    color: #737373;
+    color: var(--sidebar-group-label);
   }
 
   .admin-sidebar-item {
@@ -777,12 +772,12 @@ body {
 
   .admin-shell-v2 .admin-sidebar-item--active {
     background: var(--admin-sidebar-active);
-    color: #000000;
+    color: var(--sidebar-active-fg);
     box-shadow: inset 3px 0 0 var(--admin-accent);
   }
 
   .admin-shell-v2 .admin-sidebar-item--active .admin-sidebar-desc {
-    color: #404040;
+    color: var(--sidebar-active-desc);
   }
 
   .admin-shell-v2 .admin-sidebar-item--active .admin-sidebar-item-icon {

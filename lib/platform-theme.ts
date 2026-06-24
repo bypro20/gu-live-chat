@@ -261,6 +261,33 @@ export function normalizePlatformThemes(input: unknown): PlatformThemes {
   }
 }
 
+function adminSidebarColors(theme: PanelTheme) {
+  if (isDarkPanelTheme(theme)) {
+    const white = theme.foreground
+    return { fg: white, muted: white, faint: white, groupLabel: white, activeFg: white, activeDesc: white }
+  }
+  return {
+    fg: theme.foreground,
+    muted: theme.mutedForeground,
+    faint: `color-mix(in srgb, ${theme.mutedForeground} 75%, ${theme.background} 25%)`,
+    groupLabel: theme.mutedForeground,
+    activeFg: theme.foreground,
+    activeDesc: theme.mutedForeground,
+  }
+}
+
+function customerSidebarColors(theme: PanelTheme) {
+  if (isDarkPanelTheme(theme)) {
+    const white = theme.foreground
+    return { fg: white, active: white, title: white, groupLabel: white }
+  }
+  return {
+    fg: theme.mutedForeground,
+    active: theme.foreground,
+    title: theme.foreground,
+    groupLabel: theme.mutedForeground,
+  }
+}
 function panelCssVars(theme: PanelTheme) {
   const accentHover = `color-mix(in srgb, ${theme.accent} 82%, #000000 18%)`
   const accentSoft = `color-mix(in srgb, ${theme.accent} 12%, ${theme.background} 88%)`
@@ -278,6 +305,7 @@ function panelCssVars(theme: PanelTheme) {
 
 function customerPanelCssBlock(selector: string, theme: PanelTheme): string {
   const v = panelCssVars(theme)
+  const sidebar = customerSidebarColors(theme)
 
   return `
 ${selector} {
@@ -305,15 +333,15 @@ ${selector} {
   --destructive-foreground: ${theme.accentForeground};
   --sidebar-bg: ${theme.background};
   --sidebar-bg-end: ${theme.muted};
-  --sidebar-foreground: ${theme.mutedForeground};
-  --sidebar-foreground-active: ${theme.foreground};
-  --sidebar-title: ${theme.foreground};
+  --sidebar-foreground: ${sidebar.fg};
+  --sidebar-foreground-active: ${sidebar.active};
+  --sidebar-title: ${sidebar.title};
   --sidebar-active: ${v.sidebarActive};
   --sidebar-active-border: ${theme.accent};
   --sidebar-border: ${theme.border};
   --sidebar-hover: ${theme.hover};
   --sidebar-surface: ${theme.muted};
-  --sidebar-group-label: ${theme.mutedForeground};
+  --sidebar-group-label: ${sidebar.groupLabel};
   color-scheme: ${isDarkPanelTheme(theme) ? 'dark' : 'light'};
 }
 `.trim()
@@ -339,6 +367,7 @@ export function buildAdminPanelCss(light: PanelTheme, dark: PanelTheme): string 
 
 function adminPanelCssBlock(shellSelector: string, contentSelector: string, theme: PanelTheme): string {
   const v = panelCssVars(theme)
+  const sidebar = adminSidebarColors(theme)
   const colorScheme = isDarkPanelTheme(theme) ? 'dark' : 'light'
 
   return `
@@ -364,6 +393,14 @@ ${shellSelector} {
   --admin-sidebar-bg-end: ${theme.background};
   --admin-sidebar-active: ${v.sidebarActive};
   --admin-sidebar-hover: ${theme.hover};
+  --sidebar-fg: ${sidebar.fg};
+  --sidebar-fg-muted: ${sidebar.muted};
+  --sidebar-fg-faint: ${sidebar.faint};
+  --sidebar-group-label: ${sidebar.groupLabel};
+  --sidebar-active-fg: ${sidebar.activeFg};
+  --sidebar-active-desc: ${sidebar.activeDesc};
+  --sidebar-surface: ${theme.muted};
+  --sidebar-border: ${theme.border};
   color-scheme: ${colorScheme};
 }
 
