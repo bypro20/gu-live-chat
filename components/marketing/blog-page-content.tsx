@@ -2,14 +2,11 @@
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { getBlogPosts } from '@/lib/blog-posts'
+import type { BlogPost } from '@/lib/blog-posts'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
-import { useLocale } from '@/components/marketing/locale-provider'
 
-export function BlogPageContent() {
+export function BlogPageContent({ posts }: { posts: BlogPost[] }) {
   const { blog } = useMarketingPages()
-  const { locale } = useLocale()
-  const posts = getBlogPosts(locale)
 
   return (
     <>

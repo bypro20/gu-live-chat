@@ -1318,6 +1318,26 @@ model IpBan {
   @@map("ip_bans")
 }
 
+// ─── ORGANIC MARKETING (auto blog) ──────────────────────────────
+
+model MarketingBlogPost {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  excerpt     String
+  content     String
+  keywords    String   @default("[]")
+  locale      String   @default("tr")
+  publishedAt DateTime @default(now())
+  source      String   @default("auto")
+  taskId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
+  @@map("marketing_blog_posts")
+}
+
 // ─── PLATFORM CONFIG (admin) ────────────────────────────────────
 
 model PlatformSetting {

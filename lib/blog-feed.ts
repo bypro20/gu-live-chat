@@ -1,4 +1,5 @@
 import { BLOG_POSTS } from '@/lib/blog-posts'
+import { listMarketingBlogPosts } from '@/lib/marketing-blog'
 import { SITE_NAME } from '@/lib/site-config'
 import { SITE_URL } from '@/lib/seo'
 
@@ -11,8 +12,15 @@ function escapeXml(value: string) {
     .replace(/'/g, '&apos;')
 }
 
-export function buildBlogRssFeed() {
-  const items = [...BLOG_POSTS]
+export async function buildBlogRssFeed() {
+  const dynamicPosts = await listMarketingBlogPosts('tr')
+  const slugs = new Set<string>()
+  const items = [...dynamicPosts, ...BLOG_POSTS]
+    .filter((post) => {
+      if (slugs.has(post.slug)) return false
+      slugs.add(post.slug)
+      return true
+    })
     .sort((a, b) => b.dateIso.localeCompare(a.dateIso))
     .map((post) => {
       const url = `${SITE_URL}/blog/${post.slug}`

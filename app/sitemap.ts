@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { BLOG_POSTS } from '@/lib/blog-posts'
+import { listMarketingBlogPosts } from '@/lib/marketing-blog'
 import { SITE_URL } from '@/lib/seo'
 
 const STATIC_ROUTES: Array<{
@@ -34,13 +35,16 @@ const STATIC_ROUTES: Array<{
   { path: '/cerez-politikasi', priority: 0.35, changeFrequency: 'yearly' },
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const blogRoutes = BLOG_POSTS.map((post) => ({
-    path: `/blog/${post.slug}`,
-    priority: 0.72,
-    changeFrequency: 'monthly' as const,
-    lastModified: `${post.dateIso}T00:00:00.000Z`,
-  }))
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const dynamicPosts = await listMarketingBlogPosts('tr')
+  const blogRoutes = [...dynamicPosts, ...BLOG_POSTS]
+    .filter((post, i, arr) => arr.findIndex((p) => p.slug === post.slug) === i)
+    .map((post) => ({
+      path: `/blog/${post.slug}`,
+      priority: 0.72,
+      changeFrequency: 'monthly' as const,
+      lastModified: `${post.dateIso}T00:00:00.000Z`,
+    }))
 
   const fallbackModified = new Date().toISOString()
 

@@ -3,13 +3,20 @@ import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { BlogPostContent } from '@/components/marketing/blog-post-content'
 import { notFound } from 'next/navigation'
-import { BLOG_POSTS, getBlogPost } from '@/lib/blog-posts'
+import { BLOG_POSTS } from '@/lib/blog-posts'
+import { getAllMarketingBlogSlugs, getMergedBlogPost } from '@/lib/marketing-blog'
 import { articleJsonLd, buildMetadata, breadcrumbJsonLd } from '@/lib/seo'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { getMarketingPages } from '@/lib/marketing-pages'
 
+export const dynamicParams = true
+export const revalidate = 3600
+
 export async function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }))
+  const dynamicSlugs = await getAllMarketingBlogSlugs()
+  const staticSlugs = BLOG_POSTS.map((post) => post.slug)
+  const slugs = [...new Set([...staticSlugs, ...dynamicSlugs])]
+  return slugs.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({
@@ -19,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const { locale } = await getServerLocaleContext()
-  const post = getBlogPost(slug, locale)
+  const post = await getMergedBlogPost(slug, locale)
   const { blog } = getMarketingPages(locale)
   if (!post) return { title: blog.notFound }
   return buildMetadata({
@@ -34,7 +41,7 @@ export async function generateMetadata({
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const { locale } = await getServerLocaleContext()
-  const post = getBlogPost(slug, locale)
+  const post = await getMergedBlogPost(slug, locale)
   const { blog } = getMarketingPages(locale)
   if (!post) notFound()
 

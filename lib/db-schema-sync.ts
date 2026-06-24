@@ -193,6 +193,25 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'campaigns.variantBOpenCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBOpenCount" INTEGER NOT NULL DEFAULT 0` },
     { label: 'campaigns.variantAClickCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantAClickCount" INTEGER NOT NULL DEFAULT 0` },
     { label: 'campaigns.variantBClickCount', sql: `ALTER TABLE "campaigns" ADD COLUMN "variantBClickCount" INTEGER NOT NULL DEFAULT 0` },
+    {
+      label: 'marketing_blog_posts',
+      sql: `CREATE TABLE IF NOT EXISTS "marketing_blog_posts" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "slug" TEXT NOT NULL,
+        "title" TEXT NOT NULL,
+        "excerpt" TEXT NOT NULL,
+        "content" TEXT NOT NULL,
+        "keywords" TEXT NOT NULL DEFAULT '[]',
+        "locale" TEXT NOT NULL DEFAULT 'tr',
+        "publishedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "source" TEXT NOT NULL DEFAULT 'auto',
+        "taskId" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    { label: 'marketing_blog_posts.slug_unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "marketing_blog_posts_slug_key" ON "marketing_blog_posts"("slug")` },
+    { label: 'marketing_blog_posts.publishedAt_idx', sql: `CREATE INDEX IF NOT EXISTS "marketing_blog_posts_publishedAt_idx" ON "marketing_blog_posts"("publishedAt")` },
   ]
 
   for (const { label, sql } of statements) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Check, ExternalLink, Megaphone } from 'lucide-react'
+import { ArrowLeft, Copy, Check, ExternalLink, Megaphone, Sparkles } from 'lucide-react'
 import { MARKETING_CAMPAIGN_LINKS, MARKETING_SETUP_STEPS } from '@/lib/marketing-campaigns'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 
@@ -62,6 +62,24 @@ export default function AdminMarketingPage() {
           description="Pixel kurulumu, hazır kampanya linkleri ve sosyal medya reklam rehberi"
         />
       </div>
+
+      <Link
+        href="/admin/marketing/organic"
+        className="block rounded-2xl border border-violet-600/40 bg-gradient-to-br from-violet-950/50 to-slate-900/60 p-6 hover:border-violet-500/60 transition-colors"
+      >
+        <div className="flex items-start gap-4">
+          <div className="p-3 rounded-xl bg-violet-600/20">
+            <Sparkles className="w-6 h-6 text-violet-300" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-white">Organik Pazarlama Otomasyonu</h2>
+            <p className="text-sm text-slate-400">
+              gulivechat.com için AI hedef kitle, organik strateji ve günlük blog/sosyal içerik takvimi.
+            </p>
+            <span className="inline-block text-xs text-violet-300 font-medium mt-2">Aç → /admin/marketing/organic</span>
+          </div>
+        </div>
+      </Link>
 
       <section className="rounded-2xl border border-slate-700/80 bg-slate-900/60 p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">1. Takip kodları (Vercel env)</h2>
