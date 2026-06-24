@@ -7,7 +7,11 @@ import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import { Button } from '@/components/ui/button'
-import { DEFAULT_MODEL, MODEL_PRESETS, type ModelPreset } from '@/lib/ai/models'
+import {
+  getDefaultModelForProvider,
+  getProviderPresets,
+  type ModelPreset,
+} from '@/lib/ai/models'
 import type { AiProvider } from '@/lib/ai/provider'
 import type { PlanType } from '@/lib/constants'
 
@@ -113,7 +117,7 @@ export default function AiBotSettings() {
   const modelOptions = useMemo(() => {
     const allowed = allowedModelsByProvider[config.provider]
     if (allowed && allowed.length > 0) return allowed
-    return MODEL_PRESETS[config.provider] ?? []
+    return getProviderPresets(config.provider)
   }, [allowedModelsByProvider, config.provider])
 
   const planLabel = planAiAccess
@@ -123,8 +127,8 @@ export default function AiBotSettings() {
     : ''
 
   const handleProviderChange = (provider: AiProvider) => {
-    const models = allowedModelsByProvider[provider] ?? MODEL_PRESETS[provider]
-    const firstAllowed = models[0]?.value ?? DEFAULT_MODEL[provider]
+    const models = allowedModelsByProvider[provider] ?? getProviderPresets(provider)
+    const firstAllowed = models[0]?.value ?? getDefaultModelForProvider(provider)
     setConfig((c) => ({
       ...c,
       provider,

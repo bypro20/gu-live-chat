@@ -1,8 +1,8 @@
 import type { PlanType } from '@/lib/constants'
 import type { Plan } from '@/app/generated/prisma/client'
 import {
-  DEFAULT_MODEL,
-  MODEL_PRESETS,
+  getDefaultModelForProvider,
+  getProviderPresets,
   findModelPreset,
   modelTierRank,
   type AiModelTier,
@@ -86,9 +86,9 @@ export function isModelAllowedForPlan(
 export function getAllowedModelsForPlan(plan: PlanType | Plan): ModelPreset[] {
   const { maxTier } = getPlanAiAccess(plan)
   const out: ModelPreset[] = []
-  for (const provider of Object.keys(MODEL_PRESETS) as AiProvider[]) {
+  for (const provider of (['OPENAI', 'ANTHROPIC', 'GEMINI', 'GROQ', 'OPENROUTER', 'OLLAMA'] as AiProvider[])) {
     if (!isProviderAllowedForPlan(plan, provider)) continue
-    for (const preset of MODEL_PRESETS[provider]) {
+    for (const preset of getProviderPresets(provider)) {
       if (tierAllowed(maxTier, preset.tier)) {
         out.push({ ...preset, label: `[${provider}] ${preset.label}` })
       }
@@ -103,7 +103,7 @@ export function getAllowedPresetsForProvider(
 ): ModelPreset[] {
   if (!isProviderAllowedForPlan(plan, provider)) return []
   const { maxTier } = getPlanAiAccess(plan)
-  return MODEL_PRESETS[provider].filter((p) => tierAllowed(maxTier, p.tier))
+  return getProviderPresets(provider).filter((p) => tierAllowed(maxTier, p.tier))
 }
 
 export function getDefaultProviderForPlan(plan: PlanType | Plan): AiProvider {
@@ -116,7 +116,7 @@ export function getDefaultModelForPlan(plan: PlanType | Plan, provider?: AiProvi
   const p = provider ?? getDefaultProviderForPlan(plan)
   const allowed = getAllowedPresetsForProvider(plan, p)
   if (allowed.length > 0) return allowed[0].value
-  return DEFAULT_MODEL[p]
+  return getDefaultModelForProvider(p)
 }
 
 /** Seçili model pakete uygun değilse en iyi izinli modele düşür. */
@@ -133,11 +133,11 @@ export function clampModelToPlan(
     return { provider: p, model }
   }
   const allowed = getAllowedPresetsForProvider(plan, p)
-  return { provider: p, model: allowed[0]?.value ?? DEFAULT_MODEL[p] }
+  return { provider: p, model: allowed[0]?.value ?? getDefaultModelForProvider(p) }
 }
 
 export function getAllowedProvidersForPlan(plan: PlanType | Plan): AiProvider[] {
-  return (Object.keys(MODEL_PRESETS) as AiProvider[]).filter((p) =>
+  return (['OPENAI', 'ANTHROPIC', 'GEMINI', 'GROQ', 'OPENROUTER', 'OLLAMA'] as AiProvider[]).filter((p) =>
     isProviderAllowedForPlan(plan, p)
   )
 }

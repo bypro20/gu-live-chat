@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PlanType } from '@/lib/constants'
-import { DEFAULT_MODEL } from './models'
+import { getDefaultModelForProvider } from './models'
 import { clampModelToPlan } from './plan-models'
 import {
   buildGeminiFallbackRuntime,
@@ -128,7 +128,7 @@ function runtimeForProvider(provider: AiProvider, db: DbAiConfig | null | undefi
     return {
       provider: 'OLLAMA',
       apiKey: ENV_KEYS.OLLAMA?.trim() || 'ollama',
-      model: db?.model || DEFAULT_MODEL.OLLAMA,
+      model: db?.model || getDefaultModelForProvider('OLLAMA'),
       temperature,
       source: 'env',
       baseURL,
@@ -141,7 +141,7 @@ function runtimeForProvider(provider: AiProvider, db: DbAiConfig | null | undefi
   const cfg: AiRuntimeConfig = {
     provider,
     apiKey: key,
-    model: db?.model || DEFAULT_MODEL[provider],
+    model: db?.model || getDefaultModelForProvider(provider),
     temperature,
     source: 'env',
   }
@@ -164,7 +164,7 @@ function runtimeWithPlatformFallback(
   temperature: number,
   plan?: PlanType
 ): AiRuntimeConfig | null {
-  const requestedModel = db?.model || DEFAULT_MODEL[provider]
+  const requestedModel = db?.model || getDefaultModelForProvider(provider)
   const clamped = plan
     ? clampRequestedForPlan(plan, provider, requestedModel)
     : { provider, model: requestedModel }
@@ -228,7 +228,7 @@ export function resolveAiConfig(
     const raw: AiRuntimeConfig = {
       provider,
       apiKey: db.apiKey.trim(),
-      model: db.model || DEFAULT_MODEL[provider],
+      model: db.model || getDefaultModelForProvider(provider),
       temperature,
       source: 'db',
     }
