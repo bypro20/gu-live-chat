@@ -13,8 +13,8 @@ export function IyzicoLegalBar() {
     >
       {links.map((link, i) => (
         <span key={link.href} className="flex items-center gap-4">
-          {i > 0 && <span className="hidden sm:inline text-border">|</span>}
-          <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+          {i > 0 && <span className="hidden sm:inline text-slate-300">|</span>}
+          <Link href={link.href} className="text-slate-600 hover:text-slate-900 transition-colors">
             {link.label}
           </Link>
         </span>

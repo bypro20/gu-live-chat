@@ -19,7 +19,7 @@ export function SocialLinksBar() {
           href={item.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
         >
           {item.label}
         </Link>

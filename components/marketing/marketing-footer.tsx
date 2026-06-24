@@ -11,21 +11,21 @@ export function MarketingFooter() {
   const footer = useT().footerExtended
 
   return (
-    <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-border bg-muted/30">
+    <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-200 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-1">
             <Logo boyut="sm" linkOlsun animasyonlu={false} className="mb-4" />
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px]">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-[240px]">
               {footer.taglineExtra}
             </p>
           </div>
           {footer.columns.map((col) => (
             <div key={col.title}>
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">{col.title}</h4>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{col.title}</h4>
               <div className="space-y-2.5">
                 {col.links.map((link) => (
-                  <Link key={link.href} href={link.href} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <Link key={link.href} href={link.href} className="block text-sm text-slate-600 hover:text-slate-900 transition-colors">
                     {link.label}
                   </Link>
                 ))}
@@ -34,18 +34,18 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="pt-8 border-t border-border space-y-8">
+        <div className="pt-8 border-t border-slate-200 space-y-8">
           <IyzicoLegalBar />
           <SocialLinksBar />
           <div className="flex justify-center">
             <PaymentLogos variant="footer" />
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
               <Copyright className="w-3.5 h-3.5" />
               <span>Gu Live Chat © 2026</span>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-slate-600">
               <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" />{footer.badges.ssl}</span>
               <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" />{footer.badges.privacy}</span>
               <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" />{footer.badges.madeIn}</span>

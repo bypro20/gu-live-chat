@@ -21,10 +21,10 @@ export function PaymentLogos({ variant = 'footer' }: { variant?: 'footer' | 'che
         }
         loading="lazy"
       />
-      <p className="text-center text-xs text-muted-foreground max-w-md">
+      <p className="text-center text-xs text-slate-600 max-w-md">
         {variant === 'footer' ? (
           <>
-            <span className="inline-flex items-center gap-1 font-medium text-foreground">
+            <span className="inline-flex items-center gap-1 font-medium text-slate-800">
               <span aria-hidden>🔒</span> 256-bit SSL
             </span>
             {' · '}
