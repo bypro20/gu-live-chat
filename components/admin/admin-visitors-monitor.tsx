@@ -231,13 +231,17 @@ export function AdminVisitorsMonitor({
     }
 
     const handleVisitorCursor = (data: any) => {
-      updateCursor(
-        data.visitorId as string,
-        data.x as number,
-        data.y as number,
-        data.viewportW as number | undefined,
-        data.viewportH as number | undefined
-      )
+      // Only update store for the selected visitor — every mouse move triggers this
+      // and a full Map re-create re-renders the entire visitor list needlessly.
+      if (data.visitorId === selectedVisitorIdRef.current) {
+        updateCursor(
+          data.visitorId as string,
+          data.x as number,
+          data.y as number,
+          data.viewportW as number | undefined,
+          data.viewportH as number | undefined
+        )
+      }
     }
 
     const handleVisitorScreenshot = (data: any) => {
