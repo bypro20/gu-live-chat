@@ -3,11 +3,11 @@
   "backend": "openwebui",
   "base_url": "https://gulivechat.online",
   "api_key": "",
-  "model": "",
-  "mode": "chat",
+  "model": "canavar-ai:latest",
+  "mode": "full",
   "workspace": "~/Desktop",
   "allow_web": true,
   "allow_shell": true,
-  "max_tool_rounds": 12,
+  "max_tool_rounds": 16,
   "language": "tr"
 }

@@ -78,8 +78,8 @@ def main() -> None:
         else:
             print("  ⚠ Model listesi alınamadı — API anahtarını kontrol edin.")
 
-    default_model = models[0] if models else example.get("model", "")
-    model = prompt("Kullanılacak model (Ollama tam adı, örn. qwen2.5:14b)", default_model)
+    default_model = models[0] if models else example.get("model", "canavar-ai:latest")
+    model = prompt("Kullanılacak model (Canavar tam yetenek)", default_model)
 
     cfg = {
         "name": "Canavar AI",
@@ -88,7 +88,7 @@ def main() -> None:
         "api_key": api_key,
         "model": model,
         "workspace": workspace,
-        "mode": "chat",
+        "mode": "full",
         "allow_web": True,
         "allow_shell": True,
         "max_tool_rounds": 12,

@@ -37,28 +37,30 @@ def save_config_path() -> Path:
     home_cfg.parent.mkdir(parents=True, exist_ok=True)
     return home_cfg
 
-SYSTEM_PROMPT_CHAT = """Sen Canavar AI'sın — Türkçe konuşan akıllı asistan.
-Kullanıcıya net, doğrudan cevap ver. Kod, web ve teknik konularda yardımcı ol."""
+SYSTEM_PROMPT_CHAT = """Sen Canavar AI'sın — Türkçe konuşan tam yetenekli asistan (Cursor benzeri).
+Kod yaz, hata düzelt, adım adım anlat. Mac Mini M4 üzerinde çalışıyorsun."""
 
-SYSTEM_PROMPT = """Sen Canavar AI'sın — akıllı masaüstü asistanısın.
-Görevleri adım adım yap: web'de ara, sayfa oku, dosya yaz, kod çalıştır.
+SYSTEM_PROMPT = """Sen Canavar AI'sın — akıllı masaüstü ajanısın (Cursor gibi).
+Görevleri adım adım yap: web'de ara, sayfa oku, dosya yaz/düzenle, kod çalıştır.
 
-Araç kullanırken YALNIZCA tek satır JSON yaz (başka metin ekleme):
+Araç kullanırken YALNIZCA tek satır JSON yaz:
 {{"tool":"web_search","args":{{"query":"..."}}}}
 {{"tool":"web_fetch","args":{{"url":"https://..."}}}}
 {{"tool":"read_file","args":{{"path":"..."}}}}
 {{"tool":"write_file","args":{{"path":"...","content":"..."}}}}
-{{"tool":"list_dir","args":{{"path":"..."}}}}
+{{"tool":"append_file","args":{{"path":"...","content":"..."}}}}
+{{"tool":"search_files","args":{{"pattern":"def main","glob":"*.py"}}}}
+{{"tool":"list_dir","args":{{"path":"."}}}}
 {{"tool":"run_cmd","args":{{"command":"..."}}}}
+{{"tool":"open_url","args":{{"url":"https://..."}}}}
 
-İş bitince:
-{{"answer":"kullanıcıya Türkçe cevap"}}
+Bitince: {{"answer":"Türkçe özet ve sonuç"}}
 
 Kurallar:
 - Çalışma alanı: {workspace}
-- Yollar bu klasör içinde olmalı (güvenlik)
-- Tehlikeli komutlardan kaçın (rm -rf, format, vb.)
-- Önce planla, sonra araç kullan, en son answer ver
+- Yollar bu klasör içinde
+- Tehlikeli komut yok (rm -rf, mkfs, dd)
+- Önce düşün, araç kullan, sonra answer
 """
 
 
@@ -144,6 +146,49 @@ def tool_write_file(path: Path, content: str, workspace: Path) -> str:
     return f"Yazıldı: {path} ({len(content)} karakter)"
 
 
+def tool_append_file(path: Path, content: str, workspace: Path) -> str:
+    if not in_workspace(path, workspace):
+        return "Hata: dosya çalışma alanı dışında."
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(content)
+    return f"Eklendi: {path} (+{len(content)} karakter)"
+
+
+def tool_search_files(pattern: str, workspace: Path, glob_pat: str = "**/*") -> str:
+    if not pattern.strip():
+        return "Hata: pattern boş."
+    hits: list[str] = []
+    try:
+        rx = re.compile(pattern, re.IGNORECASE)
+    except re.error as e:
+        return f"Hata: geçersiz regex: {e}"
+    for fp in workspace.glob(glob_pat):
+        if not fp.is_file() or fp.stat().st_size > 300_000:
+            continue
+        try:
+            text = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            if rx.search(line):
+                hits.append(f"{fp.relative_to(workspace)}:{i}: {line.strip()[:120]}")
+                if len(hits) >= 40:
+                    break
+        if len(hits) >= 40:
+            break
+    return "\n".join(hits) if hits else "Eşleşme yok."
+
+
+def tool_open_url(url: str) -> str:
+    if not url.startswith(("http://", "https://")):
+        return "Hata: geçersiz URL."
+    if sys.platform == "darwin":
+        subprocess.run(["open", url], check=False)
+        return f"Tarayıcıda açıldı: {url}"
+    return f"URL (manuel aç): {url}"
+
+
 def tool_list_dir(path: Path, workspace: Path) -> str:
     if not in_workspace(path, workspace):
         return "Hata: klasör çalışma alanı dışında."
@@ -199,6 +244,22 @@ def run_tool(name: str, args: dict[str, Any], cfg: dict[str, Any], workspace: Pa
             str(args.get("content", "")),
             workspace,
         )
+    if name == "append_file":
+        return tool_append_file(
+            expand_path(str(args.get("path", "")), workspace),
+            str(args.get("content", "")),
+            workspace,
+        )
+    if name == "search_files":
+        return tool_search_files(
+            str(args.get("pattern", "")),
+            workspace,
+            str(args.get("glob", "**/*")),
+        )
+    if name == "open_url":
+        if not cfg.get("allow_web", True):
+            return "Hata: web kapalı."
+        return tool_open_url(str(args.get("url", "")))
     if name == "list_dir":
         return tool_list_dir(expand_path(str(args.get("path", ".")), workspace), workspace)
     if name == "run_cmd":
@@ -285,9 +346,9 @@ def chat_llm(cfg: dict[str, Any], messages: list[dict[str, str]]) -> str:
 
 
 def run_chat_mode(cfg: dict[str, Any]) -> None:
-    """7B/14B modeller için doğrudan sohbet — JSON araç formatı gerekmez."""
+    """Doğrudan sohbet — model JSON araç formatı kullanmaz."""
     history: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT_CHAT}]
-    print("💬 Sohbet modu (7B/14B için önerilir). Ajan modu: canavar.config.json → \"mode\": \"agent\"\n")
+    print("💬 Sohbet modu. Tam ajan (web+dosya+terminal): mode → \"full\" veya \"agent\"\n")
 
     while True:
         try:
@@ -311,6 +372,57 @@ def run_chat_mode(cfg: dict[str, Any]) -> None:
             history.pop()
             continue
         history.append({"role": "assistant", "content": reply})
+
+
+def run_full_agent(cfg: dict[str, Any], workspace: Path) -> None:
+    """Tam yetenek: web + kod + dosya + terminal (Cursor benzeri)."""
+    system = SYSTEM_PROMPT.format(workspace=workspace)
+    history: list[dict[str, str]] = [{"role": "system", "content": system}]
+    max_rounds = int(cfg.get("max_tool_rounds", 16))
+    print("🐉 Tam ajan modu — web, kod, dosya, terminal aktif\n")
+
+    while True:
+        try:
+            user = input("\n🧑 Sen: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGörüşürüz!")
+            break
+        if not user:
+            continue
+        if user.lower() in {"quit", "exit", "q", "çık", "cik"}:
+            print("Görüşürüz!")
+            break
+
+        history.append({"role": "user", "content": user})
+        rounds = 0
+        while rounds < max_rounds:
+            rounds += 1
+            try:
+                reply = chat_llm(cfg, history)
+            except RuntimeError as e:
+                print(f"\n❌ {e}")
+                break
+
+            action = parse_action(reply)
+            if action and "answer" in action:
+                print(f"\n🐉 Canavar: {action['answer']}")
+                history.append({"role": "assistant", "content": str(action["answer"])})
+                break
+            if action and "tool" in action:
+                tool = str(action["tool"])
+                args = action.get("args") or {}
+                print(f"\n⚙️  {tool}: {args}")
+                result = run_tool(tool, args, cfg, workspace)
+                preview = result if len(result) < 800 else result[:800] + "…"
+                print(f"   → {preview}")
+                history.append({"role": "assistant", "content": reply})
+                history.append({"role": "user", "content": f"Araç ({tool}) sonucu:\n{result}\n\nDevam et veya answer ile bitir."})
+                continue
+
+            if reply.strip():
+                print(f"\n🐉 Canavar: {reply}")
+                history.append({"role": "assistant", "content": reply})
+            break
 
 
 def main() -> None:
@@ -348,65 +460,13 @@ def main() -> None:
     if test.stdout:
         print(test.stdout)
 
-    mode = (cfg.get("mode") or "chat").lower()
+    mode = (cfg.get("mode") or "full").lower()
     if mode == "chat":
         run_chat_mode(cfg)
         return
-
-    system = SYSTEM_PROMPT.format(workspace=workspace)
-    history: list[dict[str, str]] = [{"role": "system", "content": system}]
-    max_rounds = int(cfg.get("max_tool_rounds", 12))
-
-    while True:
-        try:
-            user = input("\n🧑 Sen: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nGörüşürüz!")
-            break
-        if not user:
-            continue
-        if user.lower() in {"quit", "exit", "q", "çık", "cik"}:
-            print("Görüşürüz!")
-            break
-
-        history.append({"role": "user", "content": user})
-        rounds = 0
-
-        while rounds < max_rounds:
-            rounds += 1
-            try:
-                reply = chat_llm(cfg, history)
-            except RuntimeError as e:
-                print(f"\n❌ {e}")
-                print("   Ayarları güncelle: python3 setup.py")
-                break
-
-            action = parse_action(reply)
-            if action and "answer" in action:
-                answer = str(action["answer"]).strip()
-                print(f"\n🐉 Canavar: {answer}")
-                history.append({"role": "assistant", "content": answer})
-                break
-
-            if action and "tool" in action:
-                tool = str(action["tool"])
-                args = action.get("args") or {}
-                print(f"\n⚙️  Araç: {tool} {args}")
-                result = run_tool(tool, args, cfg, workspace)
-                preview = result if len(result) < 600 else result[:600] + "…"
-                print(f"   → {preview}")
-                history.append({"role": "assistant", "content": reply})
-                history.append(
-                    {
-                        "role": "user",
-                        "content": f"Araç sonucu ({tool}):\n{result}\n\nDevam et veya answer ile bitir.",
-                    }
-                )
-                continue
-
-            print(f"\n🐉 Canavar: {reply}")
-            history.append({"role": "assistant", "content": reply})
-            break
+    if mode in {"full", "agent"}:
+        run_full_agent(cfg, workspace)
+        return
 
 
 if __name__ == "__main__":

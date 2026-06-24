@@ -47,8 +47,12 @@ export const MODEL_PRESETS: Record<AiProvider, ModelPreset[]> = {
     { label: 'Claude Sonnet (OpenRouter)', value: 'anthropic/claude-sonnet-4', tier: 'premium' },
     { label: 'GPT-4o (OpenRouter)', value: 'openai/gpt-4o', tier: 'premium' },
   ],
-  /** OLLAMA_BASE_URL veya OLLAMA_MODELS yoksa yedek; aksi halde sunucudan gelir. */
-  OLLAMA: [],
+  /** Canavar AI + coder modelleri (gulivechat.online / OLLAMA_MODELS ile birleşir) */
+  OLLAMA: [
+    { label: 'Canavar AI 14B (tam yetenek · önerilen)', value: 'canavar-ai:latest', tier: 'standard', note: 'Modelfile.canavar' },
+    { label: 'Qwen2.5 Coder 14B', value: 'qwen2.5-coder:14b', tier: 'standard' },
+    { label: 'Qwen2.5 Coder 7B (hızlı)', value: 'qwen2.5-coder:7b', tier: 'economy' },
+  ],
 }
 
 export const DEFAULT_MODEL: Record<AiProvider, string> = {
