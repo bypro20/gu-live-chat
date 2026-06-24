@@ -9,7 +9,7 @@ type BlogRow = {
   excerpt: string
   content: string
   keywords: string
-  publishedAt: string
+  publishedAt: string | Date
 }
 
 function slugify(title: string): string {
@@ -45,7 +45,11 @@ function rowToBlogPost(row: BlogRow): BlogPost {
   } catch {
     keywords = []
   }
-  const dateIso = row.publishedAt.slice(0, 10)
+  const publishedAt =
+    row.publishedAt instanceof Date
+      ? row.publishedAt.toISOString()
+      : String(row.publishedAt ?? new Date().toISOString())
+  const dateIso = publishedAt.slice(0, 10)
   return {
     slug: row.slug,
     title: row.title,
