@@ -18,6 +18,7 @@ import {
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { useToast } from '@/lib/toast'
 import { ADMIN_MAIL_SOURCE_LABELS, type AdminMailMessage, type AdminMailSource } from '@/lib/admin-mail-types'
+import { cn } from '@/lib/utils'
 
 type FilterStatus = 'all' | 'unread' | 'read' | 'archived'
 type FilterSource = 'all' | AdminMailSource
@@ -101,7 +102,7 @@ export default function AdminMailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Güncellenemedi')
-      setMessages((prev) => prev.map((m) => (m.id === id ? data.message : m)))
+      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...data.message } : m)))
     } catch (e) {
       toast({ title: e instanceof Error ? e.message : 'Hata', variant: 'error' })
     } finally {
@@ -148,17 +149,17 @@ export default function AdminMailPage() {
         />
       </div>
 
-      <div className="flex-1 min-h-0 grid lg:grid-cols-[320px_1fr] gap-4 rounded-2xl border border-slate-700/80 bg-slate-900/40 overflow-hidden">
+      <div className="admin-mail-shell">
         {/* Liste */}
-        <div className="flex flex-col min-h-0 border-b lg:border-b-0 lg:border-r border-slate-800">
-          <div className="p-3 space-y-2 border-b border-slate-800 shrink-0">
+        <div className="admin-mail-list-pane">
+          <div className="p-3 space-y-2 border-b shrink-0" style={{ borderColor: 'var(--admin-border)' }}>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 admin-text-muted pointer-events-none" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Ara..."
-                className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white"
+                className="admin-input w-full pl-9 pr-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-[var(--admin-accent)]/25"
               />
             </div>
             <div className="flex flex-wrap gap-1">
@@ -167,7 +168,7 @@ export default function AdminMailPage() {
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`text-xs px-2 py-1 rounded-md ${statusFilter === s ? 'bg-violet-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                  className={cn('admin-filter-chip', statusFilter === s && 'admin-filter-chip--active')}
                 >
                   {s === 'all' ? 'Tümü' : s === 'unread' ? `Okunmamış${unreadCount ? ` (${unreadCount})` : ''}` : s === 'read' ? 'Okundu' : 'Arşiv'}
                 </button>
@@ -179,7 +180,7 @@ export default function AdminMailPage() {
                   key={s}
                   type="button"
                   onClick={() => setSourceFilter(s)}
-                  className={`text-xs px-2 py-1 rounded-md ${sourceFilter === s ? 'bg-emerald-700 text-white' : 'bg-slate-800 text-slate-400'}`}
+                  className={cn('admin-filter-chip', sourceFilter === s && 'admin-filter-chip--active')}
                 >
                   {s === 'all' ? 'Tüm kaynaklar' : ADMIN_MAIL_SOURCE_LABELS[s]}
                 </button>
@@ -188,7 +189,7 @@ export default function AdminMailPage() {
             <button
               type="button"
               onClick={() => load()}
-              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+              className="inline-flex items-center gap-1 text-xs admin-text-muted hover:admin-text transition-colors"
             >
               <RefreshCw className="w-3 h-3" /> Yenile
             </button>
@@ -197,10 +198,10 @@ export default function AdminMailPage() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--admin-accent)' }} />
               </div>
             ) : messages.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
+              <div className="p-6 text-center text-sm admin-text-muted">
                 <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 Henüz mail yok
               </div>
@@ -210,24 +211,24 @@ export default function AdminMailPage() {
                   key={msg.id}
                   type="button"
                   onClick={() => openMessage(msg.id)}
-                  className={`w-full text-left p-3 border-b border-slate-800/80 hover:bg-slate-800/40 transition-colors ${
-                    selectedId === msg.id ? 'bg-violet-950/50 border-l-2 border-l-violet-500' : ''
-                  } ${msg.status === 'unread' ? 'bg-slate-950/80' : ''}`}
+                  className={cn(
+                    'admin-mail-row',
+                    selectedId === msg.id && 'admin-mail-row--selected',
+                    msg.status === 'unread' && selectedId !== msg.id && 'admin-mail-row--unread'
+                  )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className={`text-sm truncate ${msg.status === 'unread' ? 'font-semibold text-white' : 'text-slate-300'}`}>
+                    <span className={cn('text-sm truncate', msg.status === 'unread' && 'font-semibold admin-text')}>
                       {msg.fromName || msg.fromEmail || 'Sistem'}
                     </span>
-                    {msg.starred && <Star className="w-3 h-3 text-amber-400 shrink-0 fill-amber-400" />}
+                    {msg.starred && <Star className="w-3 h-3 text-amber-500 shrink-0 fill-amber-500" />}
                   </div>
-                  <p className={`text-xs truncate mt-0.5 ${msg.status === 'unread' ? 'text-slate-200' : 'text-slate-400'}`}>
-                    {msg.subject}
-                  </p>
+                  <p className={cn('text-xs truncate mt-0.5 admin-text-secondary')}>{msg.subject}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500">
+                    <span className="admin-badge-muted text-[10px] px-1.5 py-0.5 rounded border">
                       {ADMIN_MAIL_SOURCE_LABELS[msg.source]}
                     </span>
-                    <span className="text-[10px] text-slate-600">{formatDate(msg.createdAt)}</span>
+                    <span className="text-[10px] admin-text-faint">{formatDate(msg.createdAt)}</span>
                   </div>
                 </button>
               ))
@@ -236,36 +237,36 @@ export default function AdminMailPage() {
         </div>
 
         {/* Detay */}
-        <div className="flex flex-col min-h-0 min-h-[320px] lg:min-h-0">
+        <div className="admin-mail-detail-pane min-h-[320px] lg:min-h-0">
           {!selected ? (
-            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+            <div className="flex-1 flex items-center justify-center admin-text-muted text-sm">
               <Mail className="w-10 h-10 mb-2 opacity-30" />
               <span className="ml-2">Okumak için bir mail seçin</span>
             </div>
           ) : (
             <>
-              <div className="p-4 border-b border-slate-800 shrink-0 space-y-2">
+              <div className="p-4 border-b shrink-0 space-y-2" style={{ borderColor: 'var(--admin-border)' }}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <h2 className="text-lg font-semibold admin-text">{selected.subject}</h2>
+                    <p className="text-sm admin-text-muted mt-1">
                       {selected.fromName && <span>{selected.fromName} · </span>}
                       {selected.fromEmail ? (
-                        <a href={`mailto:${selected.fromEmail}`} className="text-violet-400 hover:underline">
+                        <a href={`mailto:${selected.fromEmail}`} className="admin-text-link">
                           {selected.fromEmail}
                         </a>
                       ) : (
                         <span>Sistem mesajı</span>
                       )}
                     </p>
-                    <p className="text-xs text-slate-600 mt-1">{formatDate(selected.createdAt)}</p>
+                    <p className="text-xs admin-text-faint mt-1">{formatDate(selected.createdAt)}</p>
                   </div>
                   <div className="flex gap-1">
                     <button
                       type="button"
                       disabled={updating}
                       onClick={() => patchMessage(selected.id, { starred: !selected.starred })}
-                      className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-amber-400"
+                      className="admin-btn-icon"
                       title="Yıldızla"
                     >
                       {selected.starred ? <StarOff className="w-4 h-4" /> : <Star className="w-4 h-4" />}
@@ -275,7 +276,7 @@ export default function AdminMailPage() {
                         type="button"
                         disabled={updating}
                         onClick={() => patchMessage(selected.id, { status: 'archived' })}
-                        className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white"
+                        className="admin-btn-icon"
                         title="Arşivle"
                       >
                         <Archive className="w-4 h-4" />
@@ -285,7 +286,7 @@ export default function AdminMailPage() {
                         type="button"
                         disabled={updating}
                         onClick={() => patchMessage(selected.id, { status: 'read' })}
-                        className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white"
+                        className="admin-btn-icon"
                         title="Arşivden çıkar"
                       >
                         <MailOpen className="w-4 h-4" />
@@ -296,7 +297,7 @@ export default function AdminMailPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                <pre className="text-sm text-slate-300 whitespace-pre-wrap font-sans leading-relaxed">
+                <pre className="text-sm admin-text-secondary whitespace-pre-wrap font-sans leading-relaxed">
                   {selected.body}
                 </pre>
                 {typeof selected.metadata?.landingUrl === 'string' && (
@@ -304,22 +305,24 @@ export default function AdminMailPage() {
                     href={selected.metadata.landingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-4 text-sm text-violet-400 hover:underline"
+                    className="inline-block mt-4 text-sm admin-text-link"
                   >
                     {selected.metadata.landingUrl}
                   </a>
                 )}
                 {selected.replyBody && (
-                  <div className="mt-6 p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/40">
-                    <p className="text-xs text-emerald-400 mb-1">Gönderilen yanıt · {selected.repliedAt ? formatDate(selected.repliedAt) : ''}</p>
-                    <pre className="text-sm text-slate-300 whitespace-pre-wrap font-sans">{selected.replyBody}</pre>
+                  <div className="admin-mail-reply-box">
+                    <p className="text-xs admin-accent-label mb-1">
+                      Gönderilen yanıt · {selected.repliedAt ? formatDate(selected.repliedAt) : ''}
+                    </p>
+                    <pre className="text-sm admin-text-secondary whitespace-pre-wrap font-sans">{selected.replyBody}</pre>
                   </div>
                 )}
               </div>
 
               {selected.fromEmail && (
-                <div className="p-4 border-t border-slate-800 shrink-0 space-y-2">
-                  <label className="text-xs text-slate-500 flex items-center gap-1">
+                <div className="p-4 border-t shrink-0 space-y-2" style={{ borderColor: 'var(--admin-border)' }}>
+                  <label className="text-xs admin-text-muted flex items-center gap-1">
                     <Reply className="w-3 h-3" /> Yanıt ({selected.fromEmail})
                   </label>
                   <textarea
@@ -327,13 +330,13 @@ export default function AdminMailPage() {
                     onChange={(e) => setReplyText(e.target.value)}
                     rows={4}
                     placeholder="Yanıtınızı yazın..."
-                    className="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-sm text-white resize-none"
+                    className="admin-input admin-form-textarea w-full rounded-xl border p-3 text-sm resize-none outline-none focus:ring-2 focus:ring-[var(--admin-accent)]/25"
                   />
                   <button
                     type="button"
                     disabled={replying || !replyText.trim()}
                     onClick={handleReply}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-500 disabled:opacity-50"
+                    className="admin-btn-primary"
                   >
                     {replying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Reply className="w-4 h-4" />}
                     Yanıt gönder
