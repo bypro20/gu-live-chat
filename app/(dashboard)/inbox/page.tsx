@@ -699,7 +699,7 @@ function InboxPageContent() {
                   ))}
                 </div>
               ) : mappedMessages.length === 0 ? (
-                <p className="text-center text-sm text-slate-500 mt-8">{i.noMessages}</p>
+                <p className="text-center text-sm text-muted-foreground mt-8">{i.noMessages}</p>
               ) : (
                 <MessageThread
                   messages={mappedMessages}

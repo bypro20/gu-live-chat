@@ -2175,16 +2175,38 @@ html.native-app .native-hub-row:last-child {
 .inbox-shell {
   background: var(--background);
   color: var(--foreground);
+  color-scheme: light;
+}
+
+.dark .inbox-shell {
+  color-scheme: dark;
+  --inbox-list-bg: var(--card);
+  --inbox-chat-bg: color-mix(in srgb, var(--background) 88%, #000 12%);
+  --inbox-message-bg: color-mix(in srgb, var(--background) 92%, var(--muted) 8%);
+  --inbox-message-dots: rgba(255, 255, 255, 0.04);
+}
+
+:root:not(.dark) .inbox-shell {
+  --inbox-list-bg: var(--card);
+  --inbox-chat-bg: color-mix(in srgb, var(--background) 82%, var(--muted) 18%);
+  --inbox-message-bg: color-mix(in srgb, var(--background) 90%, var(--muted) 10%);
+  --inbox-message-dots: rgba(15, 23, 42, 0.04);
 }
 
 .inbox-shell-list {
-  background: var(--card);
+  background: var(--inbox-list-bg, var(--card));
   border-color: var(--border);
   box-shadow: var(--shadow-sm);
 }
 
 .inbox-shell-chat {
-  background: color-mix(in srgb, var(--background) 82%, var(--muted) 18%);
+  background: var(--inbox-chat-bg, var(--background));
+}
+
+.inbox-message-area {
+  background-color: var(--inbox-message-bg, var(--background));
+  background-image: radial-gradient(var(--inbox-message-dots) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 .inbox-conversation-item {
@@ -2233,8 +2255,24 @@ html.native-app .native-hub-row:last-child {
 
 .dark .inbox-shell .bg-white,
 .dark .inbox-shell .bg-white\/80,
-.dark .inbox-shell .bg-white\/95 {
+.dark .inbox-shell .bg-white\/95,
+.dark .inbox-shell .bg-slate-100 {
   background-color: color-mix(in srgb, var(--card) 92%, transparent) !important;
+}
+
+.dark .inbox-shell .text-slate-400,
+.dark .inbox-shell .text-slate-500,
+.dark .inbox-shell .text-slate-600 {
+  color: var(--muted-foreground) !important;
+}
+
+.dark .inbox-shell .border-slate-200,
+.dark .inbox-shell .border-indigo-100 {
+  border-color: var(--border) !important;
+}
+
+.dark .inbox-shell .hover\:text-indigo-600:hover {
+  color: var(--primary) !important;
 }
 
 .dark .inbox-shell .ring-white\/80 {

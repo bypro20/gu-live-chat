@@ -59,7 +59,7 @@ export const MessageThread = memo(function MessageThread({
           <div key={msg.id}>
             {showDateDivider && (
               <div className="flex justify-center py-3">
-                <span className="text-[11px] font-medium text-slate-500 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200/80 shadow-sm">
+                <span className="text-[11px] font-medium text-muted-foreground bg-card/95 backdrop-blur-sm px-3 py-1 rounded-full border border-border shadow-sm">
                   {formatDateDivider(msg.createdAt, d, locale)}
                 </span>
               </div>

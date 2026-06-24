@@ -27,10 +27,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   useEffect(() => {
-    if (!localStorage.getItem('gu-admin-theme-v2')) {
-      localStorage.setItem('gu-admin-theme-v2', '1')
-      localStorage.setItem(STORAGE_KEY, 'light')
-    }
     const next = localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
     setThemeState(next)
     syncThemeDom(next)

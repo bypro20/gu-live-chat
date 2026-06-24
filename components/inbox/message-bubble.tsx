@@ -107,7 +107,7 @@ export const MessageBubble = memo(function MessageBubble({
   if (isSystem) {
     return (
       <div className="flex justify-center py-1">
-        <span className="text-xs text-slate-500 bg-white/80 backdrop-blur px-3 py-1 rounded-full border border-indigo-100 shadow-sm">
+        <span className="text-xs text-muted-foreground bg-card/80 backdrop-blur px-3 py-1 rounded-full border border-border shadow-sm">
           {message.content}
         </span>
       </div>
@@ -138,20 +138,20 @@ export const MessageBubble = memo(function MessageBubble({
         <Avatar
           fallback="Z"
           size="sm"
-          className="!w-8 !h-8 shrink-0 mt-0.5 !bg-slate-100 !text-slate-600 text-[10px] ring-1 ring-white/80"
+          className="!w-8 !h-8 shrink-0 mt-0.5 !bg-muted !text-muted-foreground text-[10px] ring-1 ring-border"
         />
       )}
       {isVisitor && grouped && <div className="w-8 shrink-0" />}
 
       <div className={`max-w-[min(78%,520px)] ${isVisitor ? '' : 'items-end flex flex-col'}`}>
         {!grouped && !isVisitor && (
-          <span className="flex items-center gap-1 text-[10px] text-slate-500 mb-1 mr-1 justify-end font-medium">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1 mr-1 justify-end font-medium">
             {isBot && <Bot className="w-3 h-3" />}
             {agentLabel}
           </span>
         )}
         {isBot && grouped && (
-          <span className="flex items-center gap-1 text-[10px] text-slate-500 mb-1 justify-end font-medium">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1 justify-end font-medium">
             <Bot className="w-3 h-3" />
             Bot
           </span>
@@ -180,7 +180,7 @@ export const MessageBubble = memo(function MessageBubble({
               <p
                 className={`text-xs mt-2 pt-2 border-t italic ${
                   isVisitor
-                    ? 'text-slate-500 border-slate-200'
+                    ? 'text-muted-foreground border-border'
                     : 'text-white/85 border-white/25'
                 }`}
               >
@@ -195,7 +195,7 @@ export const MessageBubble = memo(function MessageBubble({
             isVisitor ? '' : 'justify-end'
           } ${grouped && isLastInGroup ? '' : grouped ? 'hidden' : ''}`}
         >
-          <span className="text-[10px] text-slate-400 tabular-nums">
+          <span className="text-[10px] text-muted-foreground tabular-nums">
             {formatMessageTime(message.createdAt, locale)}
           </span>
           {isIncoming && canTranslate && message.content && (
@@ -203,7 +203,7 @@ export const MessageBubble = memo(function MessageBubble({
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="h-6 w-6 text-slate-400 hover:text-indigo-600"
+              className="h-6 w-6 text-muted-foreground hover:text-primary"
               onClick={() => void runTranslate()}
               disabled={translating}
               title={hasTranslation ? inbox.showOriginal : inbox.translateMessage}
@@ -223,7 +223,7 @@ export const MessageBubble = memo(function MessageBubble({
           src={senderImage || undefined}
           fallback={(agentLabel.charAt(0) || 'A').toUpperCase()}
           size="sm"
-          className="!w-8 !h-8 shrink-0 mt-0.5 ring-1 ring-white/80 !bg-slate-100 !text-slate-600 text-[10px]"
+          className="!w-8 !h-8 shrink-0 mt-0.5 ring-1 ring-border !bg-muted !text-muted-foreground text-[10px]"
         />
       )}
       {!isVisitor && grouped && <div className="w-8 shrink-0" />}

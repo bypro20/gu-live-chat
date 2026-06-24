@@ -66,13 +66,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (localStorage.getItem('gu-theme-v2')) return
-    localStorage.setItem('gu-theme-v2', '1')
-    setTheme('light')
-  }, [setTheme])
-
-  useEffect(() => {
     if (status === 'unauthenticated') {
       const callback = encodeURIComponent(pathname || '/dashboard')
       router.replace(`/login?callbackUrl=${callback}`)
