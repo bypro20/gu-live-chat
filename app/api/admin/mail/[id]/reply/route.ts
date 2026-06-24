@@ -6,7 +6,7 @@ import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { escapeHtml } from '@/lib/html-escape'
 import { getSupportEmail } from '@/lib/site-config'
 
-const SUPPORT_FROM = `Gu Live Chat <${SUPPORT_EMAIL_ADDRESS}>`
+const SUPPORT_FROM = `Gu Live Chat <${getSupportEmail()}>`
 
 const replySchema = z.object({
   body: z.string().min(1).max(10000),
