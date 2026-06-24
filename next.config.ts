@@ -39,12 +39,23 @@ const nextConfig: NextConfig = {
     ]
   },
   async rewrites() {
-    return [
-      {
-        source: "/socket.io/:path*",
-        destination: `${SOCKET_UPSTREAM}/socket.io/:path*`,
-      },
-    ];
+    // beforeFiles: trailing-slash 308'den önce Railway'e proxy (socket.io xhr poll)
+    return {
+      beforeFiles: [
+        {
+          source: "/socket.io",
+          destination: `${SOCKET_UPSTREAM}/socket.io`,
+        },
+        {
+          source: "/socket.io/",
+          destination: `${SOCKET_UPSTREAM}/socket.io/`,
+        },
+        {
+          source: "/socket.io/:path*",
+          destination: `${SOCKET_UPSTREAM}/socket.io/:path*`,
+        },
+      ],
+    };
   },
   async headers() {
     const baseSecurity = [
