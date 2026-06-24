@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle2, LayoutDashboard, Loader2, Palette, RotateCcw, Shield } from 'lucide-react'
 import { useToast } from '@/lib/toast'
 import {
+  ADMIN_DARK_THEME_PRESETS,
   ADMIN_THEME_PRESETS,
   applyPlatformThemeToDocument,
   CUSTOMER_DARK_THEME_PRESETS,
@@ -15,7 +16,7 @@ import {
 } from '@/lib/platform-theme'
 
 type PanelKey = keyof PlatformThemes
-type CustomerMode = 'light' | 'dark'
+type ThemeMode = 'light' | 'dark'
 
 type ThemeField = {
   key: keyof PanelTheme
@@ -33,12 +34,13 @@ const FIELDS: ThemeField[] = [
   { key: 'border', label: 'Kenarlık', hint: 'Çizgiler ve ayraçlar' },
   { key: 'accent', label: 'Vurgu / buton', hint: 'Ana butonlar ve linkler' },
   { key: 'accentForeground', label: 'Buton yazısı', hint: 'Vurgulu buton metni' },
+  { key: 'hover', label: 'Hover rengi', hint: 'Menü üzerine gelince arka plan' },
 ]
 
 const PANEL_META: Record<'admin' | 'customer', { label: string; description: string; previewTitle: string; previewTag: string }> = {
   admin: {
     label: 'Admin Paneli',
-    description: 'Platform yönetimi, gelen kutusu, kullanıcılar vb.',
+    description: 'Platform yönetimi. Kullanıcılar sidebar’daki düğmeyle açık/koyu mod arasında geçiş yapar.',
     previewTitle: 'Komuta Merkezi',
     previewTag: 'Platform Yönetimi',
   },
@@ -121,7 +123,7 @@ export function PlatformThemeEditor() {
   const { toast } = useToast()
   const [themes, setThemes] = useState<PlatformThemes>(DEFAULT_PLATFORM_THEMES)
   const [activePanel, setActivePanel] = useState<'admin' | 'customer'>('admin')
-  const [customerMode, setCustomerMode] = useState<CustomerMode>('light')
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -146,12 +148,20 @@ export function PlatformThemeEditor() {
   }, [preview, toast])
 
   const activeThemeKey: PanelKey =
-    activePanel === 'admin' ? 'admin' : customerMode === 'dark' ? 'customerDark' : 'customer'
+    activePanel === 'admin'
+      ? themeMode === 'dark'
+        ? 'adminDark'
+        : 'admin'
+      : themeMode === 'dark'
+        ? 'customerDark'
+        : 'customer'
   const activeTheme = themes[activeThemeKey]
   const presets =
     activePanel === 'admin'
-      ? ADMIN_THEME_PRESETS
-      : customerMode === 'dark'
+      ? themeMode === 'dark'
+        ? ADMIN_DARK_THEME_PRESETS
+        : ADMIN_THEME_PRESETS
+      : themeMode === 'dark'
         ? CUSTOMER_DARK_THEME_PRESETS
         : CUSTOMER_THEME_PRESETS
 
@@ -232,8 +242,8 @@ export function PlatformThemeEditor() {
           Panel Renkleri
         </h2>
         <p className="text-xs admin-text-muted mt-1 max-w-xl">
-          Admin paneli ve müşteri paneli için ayrı renk paletleri tanımlayın. Müşteri panelinde koyu tema,
-          kullanıcıların kendi geçiş düğmesiyle isteğe bağlıdır.
+          Admin ve müşteri panelleri için ayrı açık/koyu paletler tanımlayın. Kullanıcılar kendi panellerinde
+          tema geçişini isteğe bağlı yapabilir.
         </p>
       </div>
 
@@ -245,7 +255,10 @@ export function PlatformThemeEditor() {
             <button
               key={panel}
               type="button"
-              onClick={() => setActivePanel(panel)}
+              onClick={() => {
+                setActivePanel(panel)
+                setThemeMode('light')
+              }}
               className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 selected ? 'admin-btn-primary' : 'admin-text-muted hover:admin-text'
               }`}
@@ -260,25 +273,23 @@ export function PlatformThemeEditor() {
 
       <p className="text-xs admin-text-muted">{PANEL_META[activePanel].description}</p>
 
-      {activePanel === 'customer' && (
-        <div className="flex flex-wrap gap-2">
-          {(['light', 'dark'] as CustomerMode[]).map((mode) => {
-            const selected = customerMode === mode
-            return (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setCustomerMode(mode)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                  selected ? 'admin-btn-primary border-transparent' : 'admin-filter-chip'
-                }`}
-              >
-                {mode === 'light' ? 'Açık tema' : 'Koyu tema'}
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {(['light', 'dark'] as ThemeMode[]).map((mode) => {
+          const selected = themeMode === mode
+          return (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setThemeMode(mode)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                selected ? 'admin-btn-primary border-transparent' : 'admin-filter-chip'
+              }`}
+            >
+              {mode === 'light' ? 'Açık tema' : 'Koyu tema'}
+            </button>
+          )
+        })}
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {Object.entries(presets).map(([key, preset]) => (
@@ -301,8 +312,7 @@ export function PlatformThemeEditor() {
         </div>
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wider admin-text-muted">
-            {PANEL_META[activePanel].label}
-            {activePanel === 'customer' ? (customerMode === 'dark' ? ' · koyu' : ' · açık') : ''} önizleme
+            {PANEL_META[activePanel].label} · {themeMode === 'dark' ? 'koyu' : 'açık'} önizleme
           </p>
           <ThemePreview theme={activeTheme} panel={activePanel} />
         </div>

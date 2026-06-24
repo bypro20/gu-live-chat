@@ -37,10 +37,12 @@ const panelSchema = z.object({
   border: colorField.optional(),
   accent: colorField.optional(),
   accentForeground: colorField.optional(),
+  hover: colorField.optional(),
 })
 
 const patchSchema = z.object({
   admin: panelSchema.optional(),
+  adminDark: panelSchema.optional(),
   customer: panelSchema.optional(),
   customerDark: panelSchema.optional(),
 })
@@ -57,7 +59,12 @@ export async function PATCH(req: Request) {
     }
 
     const themes = await updatePlatformTheme(
-      parsed.data as { admin?: Partial<PanelTheme>; customer?: Partial<PanelTheme>; customerDark?: Partial<PanelTheme> },
+      parsed.data as {
+        admin?: Partial<PanelTheme>
+        adminDark?: Partial<PanelTheme>
+        customer?: Partial<PanelTheme>
+        customerDark?: Partial<PanelTheme>
+      },
     )
     return NextResponse.json({ themes })
   } catch (error) {

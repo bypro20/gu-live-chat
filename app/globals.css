@@ -637,7 +637,7 @@ body {
     --sidebar-fg-muted: #404040;
     --sidebar-fg-faint: #737373;
     --sidebar-surface: #f5f5f5;
-    --sidebar-surface-hover: #fef2f2;
+    --sidebar-surface-hover: var(--admin-sidebar-hover, #f5f5f5);
     --sidebar-border: #e5e5e5;
     color: var(--sidebar-fg);
   }

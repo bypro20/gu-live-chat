@@ -11,13 +11,18 @@ export type PanelTheme = {
   border: string
   accent: string
   accentForeground: string
+  /** Menü ve liste öğeleri üzerine gelince */
+  hover: string
 }
 
 /** @deprecated PanelTheme ile aynı — geriye uyumluluk */
 export type PlatformTheme = PanelTheme
 
 export type PlatformThemes = {
+  /** Admin paneli — açık tema */
   admin: PanelTheme
+  /** Admin paneli — koyu tema (geçiş düğmesi ile) */
+  adminDark: PanelTheme
   /** Müşteri paneli — açık tema (:root) */
   customer: PanelTheme
   /** Müşteri paneli — koyu tema (.dark); kullanıcı geçişi isteğe bağlı */
@@ -34,6 +39,20 @@ export const DEFAULT_ADMIN_THEME: PanelTheme = {
   border: '#e5e5e5',
   accent: '#dc2626',
   accentForeground: '#ffffff',
+  hover: '#f5f5f5',
+}
+
+export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = {
+  background: '#000000',
+  foreground: '#ffffff',
+  card: '#0a0a0a',
+  cardForeground: '#ffffff',
+  muted: '#171717',
+  mutedForeground: '#a3a3a3',
+  border: '#262626',
+  accent: '#dc2626',
+  accentForeground: '#ffffff',
+  hover: '#1f1f1f',
 }
 
 export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
@@ -46,6 +65,7 @@ export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
   border: '#e5e7eb',
   accent: '#9333ea',
   accentForeground: '#ffffff',
+  hover: '#f3e8ff',
 }
 
 export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = {
@@ -58,10 +78,12 @@ export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = {
   border: '#262626',
   accent: '#a855f7',
   accentForeground: '#ffffff',
+  hover: '#1f1f1f',
 }
 
 export const DEFAULT_PLATFORM_THEMES: PlatformThemes = {
   admin: DEFAULT_ADMIN_THEME,
+  adminDark: DEFAULT_ADMIN_DARK_THEME,
   customer: DEFAULT_CUSTOMER_THEME,
   customerDark: DEFAULT_CUSTOMER_DARK_THEME,
 }
@@ -74,19 +96,12 @@ export const ADMIN_THEME_PRESETS: Record<string, { label: string; theme: PanelTh
     label: 'Beyaz · Siyah · Kırmızı',
     theme: DEFAULT_ADMIN_THEME,
   },
-  dark: {
+}
+
+export const ADMIN_DARK_THEME_PRESETS: Record<string, { label: string; theme: PanelTheme }> = {
+  black: {
     label: 'Siyah · Kırmızı',
-    theme: {
-      background: '#000000',
-      foreground: '#ffffff',
-      card: '#0a0a0a',
-      cardForeground: '#ffffff',
-      muted: '#171717',
-      mutedForeground: '#a3a3a3',
-      border: '#262626',
-      accent: '#dc2626',
-      accentForeground: '#ffffff',
-    },
+    theme: DEFAULT_ADMIN_DARK_THEME,
   },
 }
 
@@ -107,6 +122,7 @@ export const CUSTOMER_THEME_PRESETS: Record<string, { label: string; theme: Pane
       border: '#e2e8f0',
       accent: '#2563eb',
       accentForeground: '#ffffff',
+      hover: '#eff6ff',
     },
   },
   emerald: {
@@ -121,6 +137,7 @@ export const CUSTOMER_THEME_PRESETS: Record<string, { label: string; theme: Pane
       border: '#d1fae5',
       accent: '#059669',
       accentForeground: '#ffffff',
+      hover: '#ecfdf5',
     },
   },
 }
@@ -142,6 +159,7 @@ export const CUSTOMER_DARK_THEME_PRESETS: Record<string, { label: string; theme:
       border: '#334155',
       accent: '#9333ea',
       accentForeground: '#ffffff',
+      hover: '#1e293b',
     },
   },
 }
@@ -192,6 +210,12 @@ export function normalizePanelTheme(
       base[key] = expandHex(value)
     }
   }
+
+  if (!input?.hover && !isValidHexColor(base.hover)) {
+    const v = panelCssVars(base)
+    base.hover = v.accentSoft
+  }
+
   return base
 }
 
@@ -201,10 +225,24 @@ export function normalizePlatformThemes(input: unknown): PlatformThemes {
 
   const obj = input as Record<string, unknown>
 
-  if (obj.admin || obj.customer || obj.customerDark) {
+  if (obj.admin || obj.customer || obj.customerDark || obj.adminDark) {
+    const admin = normalizePanelTheme(obj.admin as Partial<PanelTheme>, DEFAULT_ADMIN_THEME)
     const customer = normalizePanelTheme(obj.customer as Partial<PanelTheme>, DEFAULT_CUSTOMER_THEME)
+
+    let adminDark = obj.adminDark
+      ? normalizePanelTheme(obj.adminDark as Partial<PanelTheme>, DEFAULT_ADMIN_DARK_THEME)
+      : isDarkPanelTheme(admin)
+        ? admin
+        : DEFAULT_ADMIN_DARK_THEME
+
+    let adminLight = admin
+    if (!obj.adminDark && isDarkPanelTheme(admin)) {
+      adminLight = DEFAULT_ADMIN_THEME
+    }
+
     return {
-      admin: normalizePanelTheme(obj.admin as Partial<PanelTheme>, DEFAULT_ADMIN_THEME),
+      admin: adminLight,
+      adminDark,
       customer,
       customerDark: normalizePanelTheme(
         obj.customerDark as Partial<PanelTheme>,
@@ -214,7 +252,13 @@ export function normalizePlatformThemes(input: unknown): PlatformThemes {
   }
 
   const legacy = normalizePanelTheme(obj as Partial<PanelTheme>, DEFAULT_ADMIN_THEME)
-  return { admin: legacy, customer: { ...legacy }, customerDark: { ...DEFAULT_CUSTOMER_DARK_THEME } }
+  const legacyIsDark = isDarkPanelTheme(legacy)
+  return {
+    admin: legacyIsDark ? DEFAULT_ADMIN_THEME : legacy,
+    adminDark: legacyIsDark ? legacy : DEFAULT_ADMIN_DARK_THEME,
+    customer: { ...legacy },
+    customerDark: { ...DEFAULT_CUSTOMER_DARK_THEME },
+  }
 }
 
 function panelCssVars(theme: PanelTheme) {
@@ -267,7 +311,7 @@ ${selector} {
   --sidebar-active: ${v.sidebarActive};
   --sidebar-active-border: ${theme.accent};
   --sidebar-border: ${theme.border};
-  --sidebar-hover: ${v.accentSoft};
+  --sidebar-hover: ${theme.hover};
   --sidebar-surface: ${theme.muted};
   --sidebar-group-label: ${theme.mutedForeground};
   color-scheme: ${isDarkPanelTheme(theme) ? 'dark' : 'light'};
@@ -279,15 +323,26 @@ export function buildCustomerPanelCss(light: PanelTheme, dark: PanelTheme): stri
   return `${customerPanelCssBlock(':root', light)}\n\n${customerPanelCssBlock('.dark', dark)}`
 }
 
-export function buildAdminPanelCss(theme: PanelTheme): string {
+export function buildAdminPanelCss(light: PanelTheme, dark: PanelTheme): string {
+  const lightBlock = adminPanelCssBlock(
+    '.admin-shell-v2, .admin-overlay-host',
+    '.admin-shell-v2 .admin-content-root, .admin-overlay-host',
+    light,
+  )
+  const darkBlock = adminPanelCssBlock(
+    '.admin-shell-v2[data-admin-theme="dark"], .admin-overlay-host[data-admin-theme="dark"]',
+    '.admin-shell-v2[data-admin-theme="dark"] .admin-content-root, .admin-overlay-host[data-admin-theme="dark"]',
+    dark,
+  )
+  return `${lightBlock}\n\n${darkBlock}`
+}
+
+function adminPanelCssBlock(shellSelector: string, contentSelector: string, theme: PanelTheme): string {
   const v = panelCssVars(theme)
   const colorScheme = isDarkPanelTheme(theme) ? 'dark' : 'light'
 
   return `
-.admin-shell-v2,
-.admin-overlay-host,
-.dark .admin-shell-v2,
-.dark .admin-overlay-host {
+${shellSelector} {
   --admin-bg: ${theme.background};
   --admin-bg-subtle: ${theme.muted};
   --admin-bg-elevated: ${theme.muted};
@@ -308,13 +363,11 @@ export function buildAdminPanelCss(theme: PanelTheme): string {
   --admin-sidebar-bg: ${theme.background};
   --admin-sidebar-bg-end: ${theme.background};
   --admin-sidebar-active: ${v.sidebarActive};
+  --admin-sidebar-hover: ${theme.hover};
   color-scheme: ${colorScheme};
 }
 
-.admin-shell-v2 .admin-content-root,
-.admin-overlay-host,
-.dark .admin-shell-v2 .admin-content-root,
-.dark .admin-overlay-host {
+${contentSelector} {
   --background: ${theme.background};
   --foreground: ${theme.foreground};
   --card: ${theme.card};
@@ -335,7 +388,7 @@ export function buildAdminPanelCss(theme: PanelTheme): string {
 }
 
 export function buildPlatformThemeCss(themes: PlatformThemes): string {
-  return `${buildCustomerPanelCss(themes.customer, themes.customerDark)}\n\n${buildAdminPanelCss(themes.admin)}`
+  return `${buildCustomerPanelCss(themes.customer, themes.customerDark)}\n\n${buildAdminPanelCss(themes.admin, themes.adminDark)}`
 }
 
 export const PLATFORM_THEME_STYLE_ID = 'platform-theme-vars'

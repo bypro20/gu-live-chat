@@ -22,6 +22,7 @@ export async function getPlatformTheme(): Promise<PlatformThemes> {
 
 export type PlatformThemeUpdate = {
   admin?: Partial<PanelTheme>
+  adminDark?: Partial<PanelTheme>
   customer?: Partial<PanelTheme>
   customerDark?: Partial<PanelTheme>
 }
@@ -32,6 +33,9 @@ export async function updatePlatformTheme(input: PlatformThemeUpdate): Promise<P
     admin: input.admin
       ? normalizePanelTheme({ ...current.admin, ...input.admin }, current.admin)
       : current.admin,
+    adminDark: input.adminDark
+      ? normalizePanelTheme({ ...current.adminDark, ...input.adminDark }, current.adminDark)
+      : current.adminDark,
     customer: input.customer
       ? normalizePanelTheme({ ...current.customer, ...input.customer }, current.customer)
       : current.customer,
