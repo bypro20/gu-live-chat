@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { useToast } from '@/lib/toast'
-import { ADMIN_MAIL_SOURCE_LABELS, type AdminMailMessage, type AdminMailSource } from '@/lib/admin-mail-inbox'
+import { ADMIN_MAIL_SOURCE_LABELS, type AdminMailMessage, type AdminMailSource } from '@/lib/admin-mail-types'
 
 type FilterStatus = 'all' | 'unread' | 'read' | 'archived'
 type FilterSource = 'all' | AdminMailSource
