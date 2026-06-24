@@ -43,6 +43,12 @@ interface PlanAiAccess {
   labelEn: string
 }
 
+interface OllamaMeta {
+  configured?: boolean
+  count?: number
+  lastError?: string | null
+}
+
 const DEFAULT_CONFIG: AiConfig = {
   id: null,
   isActive: false,
@@ -76,6 +82,7 @@ export default function AiBotSettings() {
   const [testReply, setTestReply] = useState<string | null>(null)
   const [testMode, setTestMode] = useState<string | null>(null)
   const [testing, setTesting] = useState(false)
+  const [ollamaMeta, setOllamaMeta] = useState<OllamaMeta | null>(null)
 
   useEffect(() => {
     if (!websiteId) return
@@ -95,6 +102,7 @@ export default function AiBotSettings() {
         if (data.planAiAccess) setPlanAiAccess(data.planAiAccess)
         if (data.allowedProviders) setAllowedProviders(data.allowedProviders)
         if (data.allowedModelsByProvider) setAllowedModelsByProvider(data.allowedModelsByProvider)
+        if (data.ollamaMeta) setOllamaMeta(data.ollamaMeta)
       })
       .catch(() => {})
       .finally(() => {
@@ -272,6 +280,24 @@ export default function AiBotSettings() {
               </p>
             )}
           </div>
+
+          {ollamaMeta?.configured && (
+            <div
+              className={`rounded-xl border p-4 text-sm ${
+                (ollamaMeta.count ?? 0) > 0
+                  ? 'border-success/30 bg-success/5 text-success'
+                  : 'border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200'
+              }`}
+            >
+              {(ollamaMeta.count ?? 0) > 0 ? (
+                <p>{ai.ollamaModelsFound(ollamaMeta.count ?? 0)}</p>
+              ) : ollamaMeta.lastError ? (
+                <p>{ai.ollamaModelsError(ollamaMeta.lastError)}</p>
+              ) : (
+                <p>{ai.ollamaModelsMissing}</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">

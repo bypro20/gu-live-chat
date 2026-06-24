@@ -596,6 +596,9 @@ export type SettingsMessages = {
     planModelsHint: (label: string) => string
     modelLocked: string
     platformFallbackHint: string
+    ollamaModelsFound: (count: number) => string
+    ollamaModelsMissing: string
+    ollamaModelsError: (error: string) => string
     providers: Record<AiProvider, string>
   }
   channels: {
@@ -1344,6 +1347,10 @@ const tr: SettingsMessages = {
     modelLocked: ' — üst paket gerekli',
     platformFallbackHint:
       'Tüm sağlayıcılar platform Gemini anahtarı ile çalışır. Kendi OpenAI/Groq anahtarınızı eklerseniz doğrudan o sağlayıcı kullanılır.',
+    ollamaModelsFound: (count) => `✓ Sunucunuzdan ${count} Ollama modeli yüklendi (7B/14B vb.).`,
+    ollamaModelsMissing:
+      'Ollama yapılandırıldı ama model listesi boş. Vercel\'de OLLAMA_BASE_URL, OLLAMA_API_KEY (Open WebUI API anahtarı) ve gerekirse OLLAMA_MODELS ayarlayın.',
+    ollamaModelsError: (error) => `Ollama bağlantı hatası: ${error}`,
     providers: {
       OPENAI: 'OpenAI (GPT)',
       ANTHROPIC: 'Anthropic (Claude)',
@@ -2160,6 +2167,10 @@ const en: SettingsMessages = {
     modelLocked: ' — upgrade required',
     platformFallbackHint:
       'All providers run via the platform Gemini key. Add your own OpenAI/Groq keys to use those providers directly.',
+    ollamaModelsFound: (count) => `✓ Loaded ${count} Ollama model(s) from your server (7B/14B etc.).`,
+    ollamaModelsMissing:
+      'Ollama is configured but the model list is empty. Set OLLAMA_BASE_URL, OLLAMA_API_KEY (Open WebUI API key), and OLLAMA_MODELS on Vercel if needed.',
+    ollamaModelsError: (error) => `Ollama connection error: ${error}`,
     providers: {
       OPENAI: 'OpenAI (GPT)',
       ANTHROPIC: 'Anthropic (Claude)',
