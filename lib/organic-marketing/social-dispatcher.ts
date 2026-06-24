@@ -46,9 +46,15 @@ export async function dispatchSocialContent(
   const url = webhookUrl.trim()
   if (url) {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      const cronSecret = process.env.CRON_SECRET?.trim()
+      if (cronSecret) {
+        headers.Authorization = `Bearer ${cronSecret}`
+      }
+
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(15000),
       })

@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+/**
+ * Organik pazarlama env'lerini Vercel Production'a ekler.
+ * Kullanım: node scripts/push-organic-marketing-env.mjs
+ */
+import { spawnSync } from 'node:child_process'
+import { resolve } from 'node:path'
+
+const ROOT = resolve(import.meta.dirname, '..')
+const SITE = process.env.SITE_DOMAIN || 'gulivechat.com'
+
+const VARS = {
+  ORGANIC_MARKETING_NOTIFY_EMAIL: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL || `destek@${SITE}`,
+  ORGANIC_MARKETING_WEBHOOK_URL:
+    process.env.ORGANIC_MARKETING_WEBHOOK_URL ||
+    `https://www.${SITE}/api/internal/organic-marketing-dispatch`,
+}
+
+function pushEnv(key, value) {
+  const res = spawnSync('npx', ['vercel', 'env', 'add', key, 'production', '--force'], {
+    cwd: ROOT,
+    input: value,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+  if (res.status === 0) {
+    console.log(`✓  ${key}`)
+    return true
+  }
+  console.error(`✗  ${key} — ${(res.stderr || res.stdout || '').trim()}`)
+  return false
+}
+
+let ok = 0
+for (const [key, value] of Object.entries(VARS)) {
+  if (pushEnv(key, value)) ok++
+}
+
+console.log(`\n${ok}/${Object.keys(VARS).length} değişken Vercel Production'a eklendi.`)
+if (ok > 0) {
+  console.log('Deploy: npx vercel --prod')
+}
