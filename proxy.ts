@@ -8,6 +8,40 @@ import { auth } from '@/lib/auth'
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
+function getSocketUpstream(): string {
+  return (
+    process.env.SOCKET_SERVER_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SOCKET_URL?.trim() ||
+    'https://gu-live-chat-socket-production.up.railway.app'
+  ).replace(/\/$/, '')
+}
+
+/** Vercel trailing-slash 308'ini atla — socket.io xhr poll doğrudan Railway'e */
+async function proxySocketIo(req: NextRequest): Promise<NextResponse | null> {
+  const { pathname, search } = req.nextUrl
+  if (!pathname.startsWith('/socket.io')) return null
+
+  const target = `${getSocketUpstream()}${pathname}${search}`
+  const headers = new Headers()
+  for (const name of ['content-type', 'origin', 'cookie', 'authorization']) {
+    const value = req.headers.get(name)
+    if (value) headers.set(name, value)
+  }
+
+  const init: RequestInit = {
+    method: req.method,
+    headers,
+    redirect: 'manual',
+  }
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    init.body = await req.arrayBuffer()
+  }
+
+  const upstream = await fetch(target, init)
+  const out = new Headers(upstream.headers)
+  return new NextResponse(upstream.body, { status: upstream.status, headers: out })
+}
+
 function isWidgetPublicApi(pathname: string) {
   return pathname.startsWith('/api/widget') || pathname.startsWith('/api/privacy/consent')
 }
@@ -155,6 +189,14 @@ async function checkIpBan(req: NextRequest): Promise<NextResponse | null> {
 }
 
 export async function proxy(req: NextRequest) {
+  try {
+    const socketRes = await proxySocketIo(req)
+    if (socketRes) return socketRes
+  } catch (err) {
+    console.error('[proxy] socket.io upstream error:', err)
+    return new NextResponse('Socket upstream error', { status: 502 })
+  }
+
   if (
     IS_PRODUCTION &&
     req.headers.get('x-forwarded-proto') === 'http' &&
@@ -301,5 +343,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|widget\\.js|socket\\.io).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|widget\\.js).*)'],
 }
