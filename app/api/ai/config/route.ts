@@ -1,3 +1,4 @@
+import { refreshOllamaPresets, getOllamaPresetsMeta } from '@/lib/ai/ollama-models'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
@@ -57,7 +58,9 @@ export async function GET(req: NextRequest) {
     }
 
     const plan = website.plan as PlanType
+    await refreshOllamaPresets()
     const planAi = buildPlanAiPayload(plan)
+    const ollamaMeta = getOllamaPresetsMeta()
     const aiConfig = await prisma.aIConfig.findUnique({
       where: { websiteId: website.id },
     })
@@ -74,6 +77,7 @@ export async function GET(req: NextRequest) {
         envDetail: envRaw,
         platformReady,
         platformFallback: envRaw.platformFallback,
+        ollamaMeta,
         ...planAi,
         aiConfig: {
           id: null,
@@ -98,6 +102,7 @@ export async function GET(req: NextRequest) {
       envDetail: envRaw,
       platformReady,
       platformFallback: envRaw.platformFallback,
+      ollamaMeta,
       ...planAi,
       aiConfig: {
         ...aiConfig,
@@ -150,6 +155,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const plan = website.plan as PlanType
+
+    await refreshOllamaPresets()
 
     const enablingAi = isActive === true || autoReply === true || autoSuggest === true
     if (enablingAi) {

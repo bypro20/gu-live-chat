@@ -1,0 +1,13 @@
+{
+  "name": "Canavar AI",
+  "backend": "openwebui",
+  "base_url": "https://gulivechat.online",
+  "api_key": "",
+  "model": "qwen2.5-coder:14b",
+  "mode": "smart",
+  "workspace": "~/Desktop",
+  "allow_web": true,
+  "allow_shell": true,
+  "max_tool_rounds": 16,
+  "language": "tr"
+}

@@ -1,4 +1,5 @@
 import type { AiProvider } from './provider'
+import { inferTierFromModelName, resolveOllamaPresets } from './ollama-models'
 
 /** Model maliyet / yetenek katmanı — paket fiyatına göre erişim kontrolü. */
 export type AiModelTier = 'economy' | 'standard' | 'premium'
@@ -46,12 +47,11 @@ export const MODEL_PRESETS: Record<AiProvider, ModelPreset[]> = {
     { label: 'Claude Sonnet (OpenRouter)', value: 'anthropic/claude-sonnet-4', tier: 'premium' },
     { label: 'GPT-4o (OpenRouter)', value: 'openai/gpt-4o', tier: 'premium' },
   ],
+  /** Canavar AI + coder modelleri (gulivechat.online / OLLAMA_MODELS ile birleşir) */
   OLLAMA: [
-    { label: 'Llama 3.2 (yerel)', value: 'llama3.2', tier: 'economy' },
-    { label: 'Gemma 2 (yerel)', value: 'gemma2', tier: 'economy' },
-    { label: 'Mistral (yerel)', value: 'mistral', tier: 'economy' },
-    { label: 'Qwen 2.5 (yerel)', value: 'qwen2.5', tier: 'standard' },
-    { label: 'DeepSeek R1 (yerel)', value: 'deepseek-r1', tier: 'premium' },
+    { label: 'Qwen2.5 Coder 14B (Canavar · önerilen)', value: 'qwen2.5-coder:14b', tier: 'standard', note: 'Mac M4 24GB' },
+    { label: 'Canavar AI (Modelfile)', value: 'canavar:latest', tier: 'standard' },
+    { label: 'Qwen2.5 Coder 7B (hızlı)', value: 'qwen2.5-coder:7b', tier: 'economy' },
   ],
 }
 
@@ -61,11 +61,33 @@ export const DEFAULT_MODEL: Record<AiProvider, string> = {
   GEMINI: 'gemini-2.5-flash',
   GROQ: 'llama-3.3-70b-versatile',
   OPENROUTER: 'google/gemma-2-9b-it:free',
-  OLLAMA: 'llama3.2',
+  OLLAMA: '',
+}
+
+export function getProviderPresets(provider: AiProvider): ModelPreset[] {
+  if (provider === 'OLLAMA') {
+    return resolveOllamaPresets(MODEL_PRESETS.OLLAMA)
+  }
+  return MODEL_PRESETS[provider]
+}
+
+export function getDefaultModelForProvider(provider: AiProvider): string {
+  if (provider === 'OLLAMA') {
+    const presets = getProviderPresets('OLLAMA')
+    if (presets.length > 0) return presets[0].value
+    return DEFAULT_MODEL.OLLAMA || 'llama3.2'
+  }
+  return DEFAULT_MODEL[provider]
 }
 
 export function findModelPreset(provider: AiProvider, model: string): ModelPreset | undefined {
-  return MODEL_PRESETS[provider].find((m) => m.value === model)
+  const direct = getProviderPresets(provider).find((m) => m.value === model)
+  if (direct) return direct
+  if (provider === 'OLLAMA' && model) {
+    const tier = inferTierFromModelName(model)
+    return { value: model, label: model, tier }
+  }
+  return undefined
 }
 
 export function modelTierRank(tier: AiModelTier): number {

@@ -7,7 +7,11 @@ import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import { Button } from '@/components/ui/button'
-import { DEFAULT_MODEL, MODEL_PRESETS, type ModelPreset } from '@/lib/ai/models'
+import {
+  getDefaultModelForProvider,
+  getProviderPresets,
+  type ModelPreset,
+} from '@/lib/ai/models'
 import type { AiProvider } from '@/lib/ai/provider'
 import type { PlanType } from '@/lib/constants'
 
@@ -37,6 +41,12 @@ interface PlanAiAccess {
   maxTier: string
   labelTr: string
   labelEn: string
+}
+
+interface OllamaMeta {
+  configured?: boolean
+  count?: number
+  lastError?: string | null
 }
 
 const DEFAULT_CONFIG: AiConfig = {
@@ -72,6 +82,7 @@ export default function AiBotSettings() {
   const [testReply, setTestReply] = useState<string | null>(null)
   const [testMode, setTestMode] = useState<string | null>(null)
   const [testing, setTesting] = useState(false)
+  const [ollamaMeta, setOllamaMeta] = useState<OllamaMeta | null>(null)
 
   useEffect(() => {
     if (!websiteId) return
@@ -91,6 +102,7 @@ export default function AiBotSettings() {
         if (data.planAiAccess) setPlanAiAccess(data.planAiAccess)
         if (data.allowedProviders) setAllowedProviders(data.allowedProviders)
         if (data.allowedModelsByProvider) setAllowedModelsByProvider(data.allowedModelsByProvider)
+        if (data.ollamaMeta) setOllamaMeta(data.ollamaMeta)
       })
       .catch(() => {})
       .finally(() => {
@@ -113,7 +125,7 @@ export default function AiBotSettings() {
   const modelOptions = useMemo(() => {
     const allowed = allowedModelsByProvider[config.provider]
     if (allowed && allowed.length > 0) return allowed
-    return MODEL_PRESETS[config.provider] ?? []
+    return getProviderPresets(config.provider)
   }, [allowedModelsByProvider, config.provider])
 
   const planLabel = planAiAccess
@@ -123,8 +135,8 @@ export default function AiBotSettings() {
     : ''
 
   const handleProviderChange = (provider: AiProvider) => {
-    const models = allowedModelsByProvider[provider] ?? MODEL_PRESETS[provider]
-    const firstAllowed = models[0]?.value ?? DEFAULT_MODEL[provider]
+    const models = allowedModelsByProvider[provider] ?? getProviderPresets(provider)
+    const firstAllowed = models[0]?.value ?? getDefaultModelForProvider(provider)
     setConfig((c) => ({
       ...c,
       provider,
@@ -268,6 +280,24 @@ export default function AiBotSettings() {
               </p>
             )}
           </div>
+
+          {ollamaMeta?.configured && (
+            <div
+              className={`rounded-xl border p-4 text-sm ${
+                (ollamaMeta.count ?? 0) > 0
+                  ? 'border-success/30 bg-success/5 text-success'
+                  : 'border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200'
+              }`}
+            >
+              {(ollamaMeta.count ?? 0) > 0 ? (
+                <p>{ai.ollamaModelsFound(ollamaMeta.count ?? 0)}</p>
+              ) : ollamaMeta.lastError ? (
+                <p>{ai.ollamaModelsError(ollamaMeta.lastError)}</p>
+              ) : (
+                <p>{ai.ollamaModelsMissing}</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">

@@ -1,4 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+/tools/canavar-ai/canavar.config.json
+/tools/canavar-ai/webui.local.env
 
 # dependencies
 /node_modules

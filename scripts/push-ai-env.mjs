@@ -19,6 +19,7 @@ const AI_KEYS = [
   'OPENROUTER_API_KEY',
   'OLLAMA_BASE_URL',
   'OLLAMA_API_KEY',
+  'OLLAMA_MODELS',
 ]
 
 function parseEnvFile(path) {
