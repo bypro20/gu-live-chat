@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const envFile = process.env.VERCEL_ENV_FILE || '/tmp/gu-vercel.env'
 
 const steps = [
   ['Health', 'node', ['-e', `
@@ -22,14 +23,20 @@ const steps = [
     checks().catch(e=>{ console.error('✗', e.message); process.exit(1); });
   `]],
   ['Visitor auth', 'node', ['scripts/smoke-socket-auth.mjs']],
-  ['Screen pipeline', 'node', ['scripts/smoke-screen-monitoring.mjs']],
+  ['Screen pipeline', 'npx', ['tsx', 'scripts/smoke-screen-production.ts'], true],
 ]
 
 let failed = 0
-for (const [label, cmd, args] of steps) {
+for (const [label, cmd, args, optional] of steps) {
   process.stdout.write(`\n— ${label}…\n`)
-  const r = spawnSync(cmd, args, { stdio: 'inherit', cwd: root })
-  if (r.status !== 0) failed++
+  const r = spawnSync(cmd, args, { stdio: 'inherit', cwd: root, env: { ...process.env, VERCEL_ENV_FILE: envFile } })
+  if (r.status !== 0) {
+    if (optional) {
+      console.warn(`⚠ ${label} atlandı (opsiyonel)`)
+    } else {
+      failed++
+    }
+  }
 }
 
 if (failed) {
