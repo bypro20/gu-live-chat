@@ -29,19 +29,24 @@ interface PlanCardFeature {
   included: boolean
 }
 
-function PlanFeatureList({ planId, locale }: { planId: PlanType; locale: SiteLocale }) {
+function PlanFeatureList({ planId, locale, highlighted }: { planId: PlanType; locale: SiteLocale; highlighted?: boolean }) {
   const features = buildPlanCardFeatures(planId, locale)
   return (
-    <ul className="mt-5 mb-5 flex-1 space-y-2 border-t border-slate-100 pt-5">
+    <ul className="mt-5 mb-5 flex-1 space-y-2 pt-5"
+      style={{ borderTop: highlighted ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E2E8F0' }}>
       {features.map((f) => (
         <li
           key={f.label}
-          className={`flex items-start gap-2 text-xs leading-relaxed ${f.included ? 'text-slate-700' : 'text-slate-400'}`}
+          className={`flex items-start gap-2 text-xs leading-relaxed ${
+            highlighted
+              ? f.included ? 'text-blue-50' : 'text-blue-300/50'
+              : f.included ? 'text-slate-700' : 'text-slate-400'
+          }`}
         >
           {f.included ? (
-            <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <Check className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlighted ? 'text-blue-200' : 'text-emerald-500'}`} />
           ) : (
-            <X className="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-0.5" />
+            <X className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlighted ? 'text-blue-400/40' : 'text-slate-300'}`} />
           )}
           <span className={f.included ? '' : 'line-through decoration-slate-300/60'}>{f.label}</span>
         </li>
@@ -134,23 +139,27 @@ export default function PricingPage() {
   return (
     <>
       <MarketingNav />
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen" style={{ background: '#F8FAFC' }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section className="pt-32 pb-16 px-4 sm:px-6 text-center bg-gradient-to-b from-slate-50 to-white">
+        <section
+          className="pt-32 pb-20 px-4 sm:px-6 text-center"
+          style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e2d4e 55%, #0f1f3d 100%)' }}
+        >
           <FadeIn>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 mb-6">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6"
+              style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(186,230,253,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}>
               <Sparkles className="w-3 h-3" />
               {trialBadge}
             </span>
           </FadeIn>
           <FadeIn delay={0.05}>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight" style={{ color: '#F1F5F9' }}>
               {ui.heroTitle}
             </h1>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <p className="mt-4 text-lg text-slate-500 max-w-xl mx-auto">
+            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: 'rgba(148,163,184,0.9)' }}>
               {ui.heroSubtitle}
             </p>
           </FadeIn>
@@ -158,19 +167,19 @@ export default function PricingPage() {
           {/* Billing toggle */}
           <FadeIn delay={0.15}>
             <div className="flex items-center justify-center gap-4 mt-10">
-              <span className={`text-sm font-medium transition-colors ${billing === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>
+              <span className={`text-sm font-medium transition-colors ${billing === 'monthly' ? 'text-white' : 'text-slate-500'}`}>
                 {ui.monthly}
               </span>
               <button
                 onClick={() => setBilling(b => b === 'monthly' ? 'yearly' : 'monthly')}
-                className={`relative w-12 h-6 rounded-full transition-colors ${billing === 'yearly' ? 'bg-blue-600' : 'bg-slate-200'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${billing === 'yearly' ? 'bg-blue-500' : 'bg-slate-600'}`}
                 aria-label={ui.monthly}
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`} />
               </button>
-              <span className={`text-sm font-medium transition-colors ${billing === 'yearly' ? 'text-slate-900' : 'text-slate-400'}`}>
+              <span className={`text-sm font-medium transition-colors ${billing === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
                 {ui.yearly}
-                <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
+                <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: '#34D399', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)' }}>
                   {ui.yearlyDiscount}
                 </span>
               </span>
@@ -179,7 +188,7 @@ export default function PricingPage() {
         </section>
 
         {/* ── Plan cards ───────────────────────────────────────────────────── */}
-        <section className="py-12 px-4 sm:px-6">
+        <section className="py-14 px-4 sm:px-6" style={{ marginTop: '-2px' }}>
           <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
             {PRICING_PLAN_META.map((plan, i) => {
               const entry = catalog[plan.id]
@@ -188,35 +197,42 @@ export default function PricingPage() {
               const badgeLabel = plan.badge === 'bestValue' ? ui.bestValue : null
               return (
                 <FadeIn key={plan.id} delay={i * 0.06}>
-                  <div className={`relative h-full rounded-2xl border p-6 flex flex-col transition-all ${
-                    plan.highlighted
-                      ? 'border-blue-500 ring-1 ring-blue-500/20'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}>
+                  <div
+                    className="relative h-full rounded-2xl p-6 flex flex-col transition-all"
+                    style={plan.highlighted ? {
+                      background: '#1D4ED8',
+                      boxShadow: '0 20px 60px -10px rgba(29,78,216,0.45), 0 0 0 1px rgba(29,78,216,0.5)',
+                    } : {
+                      background: '#ffffff',
+                      border: '1px solid #E2E8F0',
+                      boxShadow: '0 2px 12px rgba(15,23,42,0.05)',
+                    }}
+                  >
                     {badgeLabel && (
                       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                        <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap"
+                          style={{ background: '#0F172A' }}>
                           {badgeLabel}
                         </span>
                       </div>
                     )}
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">{entry.name}</h3>
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">{entry.description}</p>
+                      <h3 className={`text-base font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{entry.name}</h3>
+                      <p className={`mt-1 text-xs leading-relaxed ${plan.highlighted ? 'text-blue-200' : 'text-slate-500'}`}>{entry.description}</p>
                     </div>
                     <div className="mt-6 mb-5">
                       {priceInfo.amount === 0 ? (
                         <div>
-                          <span className="text-3xl font-bold text-slate-900">{ui.free}</span>
-                          <p className="text-xs text-slate-400 mt-1">{ui.forever}</p>
+                          <span className={`text-3xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{ui.free}</span>
+                          <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{ui.forever}</p>
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold text-slate-900">{priceInfo.formatted}</span>
-                            <span className="text-sm text-slate-400">{ui.perMonth}</span>
+                            <span className={`text-3xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{priceInfo.formatted}</span>
+                            <span className={`text-sm ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{ui.perMonth}</span>
                           </div>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>
                             {yearly
                               ? ui.yearlyNote(
                                   new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
@@ -230,19 +246,23 @@ export default function PricingPage() {
                         </div>
                       )}
                     </div>
-                    <PlanFeatureList planId={plan.id as PlanType} locale={locale} />
+                    <PlanFeatureList planId={plan.id as PlanType} locale={locale} highlighted={plan.highlighted} />
                     <Link
                       href={planCta(plan.id as PlanId).href}
-                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all ${
-                        plan.highlighted
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
-                      }`}
+                      className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all"
+                      style={plan.highlighted ? {
+                        background: '#ffffff',
+                        color: '#1D4ED8',
+                      } : {
+                        background: '#EFF6FF',
+                        color: '#1D4ED8',
+                        border: '1px solid #BFDBFE',
+                      }}
                     >
                       {planCta(plan.id as PlanId).label}
                     </Link>
                     {priceInfo.amount > 0 && (
-                      <p className="text-[10px] text-slate-400 text-center mt-2">
+                      <p className={`text-[10px] text-center mt-2 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>
                         {ui.noCard}
                       </p>
                     )}
@@ -258,14 +278,16 @@ export default function PricingPage() {
         {/* ── Flat pricing callout ─────────────────────────────────────────── */}
         <FadeIn>
           <section className="py-10 px-4 sm:px-6">
-            <div className="max-w-3xl mx-auto bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col md:flex-row items-center gap-6">
+            <div className="max-w-3xl mx-auto rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6"
+              style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-slate-900">{ui.flatTitle}</h3>
-                <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                   {ui.flatDesc}
                 </p>
               </div>
-              <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-3 rounded-xl hover:bg-blue-700 transition-colors">
+              <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors"
+                style={{ background: '#1D4ED8' }}>
                 {ui.startFree} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -353,25 +375,27 @@ export default function PricingPage() {
         {/* ── Enterprise callout ───────────────────────────────────────────── */}
         <FadeIn>
           <section className="py-10 px-4 sm:px-6">
-            <div className="max-w-4xl mx-auto rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-8 sm:p-10">
+            <div className="max-w-4xl mx-auto rounded-2xl p-8 sm:p-10"
+              style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', border: '1px solid rgba(139,92,246,0.3)' }}>
               <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                 <div className="flex-1">
-                  <span className="text-xs font-bold text-violet-600 uppercase tracking-wider">Kurumsal</span>
-                  <h3 className="mt-2 text-xl font-bold text-slate-900">Daha özel bir şeye mi ihtiyacınız var?</h3>
-                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#A78BFA' }}>Kurumsal</span>
+                  <h3 className="mt-2 text-xl font-bold text-white">Daha özel bir şeye mi ihtiyacınız var?</h3>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: '#94A3B8' }}>
                     Özel entegrasyon, white-label, kişiselleştirilmiş SLA ve ekip eğitimi için kurumsal paketimizi keşfedin.
                   </p>
                   <ul className="mt-4 space-y-1.5">
                     {['Özel onboarding programı', 'Kişiselleştirilmiş SLA', 'Özel özellik geliştirme', 'Benzersiz fiyatlandırma', 'Ekip eğitimi & danışmanlık'].map(f => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
-                        <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> {f}
+                      <li key={f} className="flex items-center gap-2 text-sm" style={{ color: '#CBD5E1' }}>
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#A78BFA' }} /> {f}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <Link
                   href="/contact"
-                  className="flex-shrink-0 inline-flex items-center gap-2 bg-violet-600 text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-violet-700 transition-colors"
+                  className="flex-shrink-0 inline-flex items-center gap-2 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors"
+                  style={{ background: '#7C3AED' }}
                 >
                   İletişime Geç <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -381,10 +405,10 @@ export default function PricingPage() {
         </FadeIn>
 
         {/* ── FAQ ─────────────────────────────────────────────────────────── */}
-        <section className="py-16 px-4 sm:px-6 bg-slate-50">
+        <section className="py-16 px-4 sm:px-6" style={{ background: '#F8FAFC' }}>
           <div className="max-w-2xl mx-auto">
             <FadeIn>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10">{ui.faqTitle}</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10" style={{ color: '#0F172A' }}>{ui.faqTitle}</h2>
             </FadeIn>
             <div className="space-y-2">
               {faqs.map((faq, i) => (
@@ -403,21 +427,26 @@ export default function PricingPage() {
 
         {/* ── Final CTA ────────────────────────────────────────────────────── */}
         <FadeIn>
-          <section className="py-20 px-4 sm:px-6 text-center">
+          <section className="py-20 px-4 sm:px-6 text-center"
+            style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e2d4e 100%)' }}>
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#F1F5F9' }}>
                 {locale === 'en' ? 'Ready to improve customer experience?' : 'Müşteri deneyiminizi geliştirmeye hazır mısınız?'}
               </h2>
-              <p className="text-slate-500 mb-8">
+              <p className="mb-8" style={{ color: '#94A3B8' }}>
                 {locale === 'en'
                   ? `Try free for ${TRIAL_DAYS} days. No commitment, no credit card required.`
                   : `${TRIAL_DAYS} gün ücretsiz deneyin. Taahhüt yok, kredi kartı gerekmez.`}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/register" className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-blue-700 transition-colors text-sm">
+                <Link href="/register"
+                  className="inline-flex items-center gap-2 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
+                  style={{ background: '#1D4ED8' }}>
                   {ui.startFree} <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href="/contact" className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-slate-200 transition-colors text-sm">
+                <Link href="/contact"
+                  className="inline-flex items-center gap-2 font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)', color: '#E2E8F0', border: '1px solid rgba(255,255,255,0.2)' }}>
                   {locale === 'en' ? 'Contact Us' : 'İletişime Geç'}
                 </Link>
               </div>
@@ -425,7 +454,7 @@ export default function PricingPage() {
           </section>
         </FadeIn>
 
-        <section className="py-12 px-4 border-t border-slate-200 bg-slate-50">
+        <section className="py-12 px-4" style={{ borderTop: '1px solid #E2E8F0', background: '#ffffff' }}>
           <div className="max-w-xl mx-auto">
             <PaymentLogos variant="checkout" />
           </div>
