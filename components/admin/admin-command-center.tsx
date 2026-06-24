@@ -39,6 +39,7 @@ export interface CommandCenterStats {
   bannedUsers: number
   totalIpBans: number
   inboxUnread: number
+  mailUnread: number
   trialFunnel: {
     activeTrials: number
     conversionRate: number
@@ -131,6 +132,13 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
             value={stats.inboxUnread}
             accent="text-red-400"
             alert={stats.inboxUnread > 0}
+          />
+          <PulseMetric
+            href="/admin/mail"
+            label="E-posta Merkezi"
+            value={stats.mailUnread}
+            accent="text-violet-400"
+            alert={stats.mailUnread > 0}
           />
           <PulseMetric
             href="/admin/users"

@@ -24,6 +24,7 @@ export default function AdminDashboardPage() {
     bannedUsers: 0,
     totalIpBans: 0,
     inboxUnread: 0,
+    mailUnread: 0,
     trialFunnel: emptyTrialFunnel,
     recentUsers: [],
     recentWebsites: [],
@@ -83,6 +84,16 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         const data = await res.json()
         next.inboxUnread = Number(data.unreadCount) || 0
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const res = await fetch('/api/admin/mail/unread-count')
+      if (res.ok) {
+        const data = await res.json()
+        next.mailUnread = Number(data.unreadCount) || 0
       }
     } catch {
       // ignore
