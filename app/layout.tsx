@@ -8,6 +8,8 @@ import { SITE_LEGAL } from '@/lib/site-legal'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import { NativeAppBootstrap } from '@/components/app/native-app-bootstrap'
 import { AttributionBootstrap } from '@/components/marketing/attribution-bootstrap'
+import { PlatformThemeStyle } from '@/components/platform/platform-theme-style'
+import { PlatformThemeBridge } from '@/components/platform/platform-theme-bridge'
 import { NATIVE_SHELL_SCRIPT } from '@/lib/native-shell-script'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { getSiteUrl, SITE_NAME } from '@/lib/site-config'
@@ -65,11 +67,13 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} ${jakarta.variable} font-[family-name:var(--font-jakarta)] min-h-full bg-background text-foreground antialiased`}>
+        <PlatformThemeStyle />
         <Script id="native-shell" strategy="beforeInteractive">
           {NATIVE_SHELL_SCRIPT}
         </Script>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <ToastProvider>
+            <PlatformThemeBridge />
             <NativeAppBootstrap />
             <AttributionBootstrap />
             {children}

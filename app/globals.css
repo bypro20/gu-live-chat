@@ -495,9 +495,7 @@ body {
   }
 
   /* ─── Admin v2 — tek palet (beyaz / siyah / kırmızı), her iki modda aynı ─── */
-  .admin-shell-v2,
-  .admin-shell-v2[data-admin-theme='dark'],
-  .admin-shell-v2[data-admin-theme='light'] {
+  .admin-shell-v2 {
     --app-sidebar-width: 300px;
     --admin-fire: #ef4444;
     --admin-fire-bright: #dc2626;
@@ -531,9 +529,7 @@ body {
   }
 
   /* Portal/overlay — shell ile aynı palet */
-  .admin-overlay-host,
-  .admin-overlay-host[data-admin-theme='dark'],
-  .admin-overlay-host[data-admin-theme='light'] {
+  .admin-overlay-host {
     --admin-bg: #ffffff;
     --admin-bg-subtle: #fafafa;
     --admin-bg-elevated: #fafafa;
@@ -559,9 +555,7 @@ body {
   .admin-overlay-host .admin-text-faint { color: var(--admin-text-faint); }
 
   /* Overlay katmanında shadcn değişkenleri (modal / bildirim) */
-  .admin-overlay-host,
-  .admin-overlay-host[data-admin-theme='dark'],
-  .admin-overlay-host[data-admin-theme='light'] {
+  .admin-overlay-host {
     --background: #ffffff;
     --foreground: #000000;
     --card: #ffffff;
@@ -899,15 +893,15 @@ body {
     opacity: 0.85;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] .admin-top-bar button,
-  .admin-shell-v2[data-admin-theme='light'] .admin-top-bar a {
+  .admin-shell-v2 .admin-top-bar button,
+  .admin-shell-v2 .admin-top-bar a {
     border-color: var(--admin-border);
     background: var(--admin-bg-elevated);
     color: var(--admin-text-muted);
   }
 
-  .admin-shell-v2[data-admin-theme='light'] .admin-top-bar button:hover,
-  .admin-shell-v2[data-admin-theme='light'] .admin-top-bar a:hover {
+  .admin-shell-v2 .admin-top-bar button:hover,
+  .admin-shell-v2 .admin-top-bar a:hover {
     color: var(--admin-text);
     background: var(--admin-bg-hover);
   }
@@ -1023,7 +1017,7 @@ body {
     color: var(--admin-text);
   }
 
-  .admin-shell-v2[data-admin-theme='light'] .admin-content-root
+  .admin-shell-v2 .admin-content-root
     :is(
       [class*='bg-red-'],
       [class*='bg-emerald-6'],
@@ -1518,13 +1512,8 @@ body {
   /* Admin içindeki modal / drawer katmanları */
   .admin-shell-v2 .admin-modal-backdrop,
   .admin-overlay-host .admin-modal-backdrop {
-    background: rgba(0, 0, 0, 0.75) !important;
-    backdrop-filter: blur(4px);
-  }
-
-  .admin-shell-v2[data-admin-theme='light'] .admin-modal-backdrop,
-  .admin-overlay-host[data-admin-theme='light'] .admin-modal-backdrop {
     background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(4px);
   }
 
   .admin-shell-v2 .admin-modal-panel,
@@ -1561,283 +1550,163 @@ body {
     color: var(--admin-text);
   }
 
-  /* Admin karanlık mod — marka paleti (siyah / kırmızı / beyaz) */
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-emerald-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-green-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-teal-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-emerald-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-green-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-teal-'] {
-    color: #ffffff !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-amber-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-orange-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-violet-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-sky-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-cyan-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-blue-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-amber-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-orange-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-sky-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-cyan-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-blue-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-indigo-'] {
-    color: #ef4444 !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-gray-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-gray-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='text-slate-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='text-slate-'] {
-    color: rgba(255, 255, 255, 0.55) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-emerald-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-green-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-teal-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-amber-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-orange-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-violet-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-sky-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-cyan-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-blue-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-emerald-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-green-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-teal-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-amber-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-orange-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-sky-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-cyan-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-blue-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-indigo-'] {
-    background-color: rgba(239, 68, 68, 0.12) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-emerald-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-green-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-teal-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-amber-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-orange-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-violet-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-sky-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-cyan-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-blue-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='border-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-emerald-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-green-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-teal-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-amber-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-orange-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-sky-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-cyan-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-blue-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='border-indigo-'] {
-    border-color: rgba(239, 68, 68, 0.28) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-emerald-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-violet-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='ring-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-emerald-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='ring-indigo-'] {
-    --tw-ring-color: rgba(239, 68, 68, 0.35) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='from-emerald-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='from-violet-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='from-indigo-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='from-red-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='from-emerald-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='from-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='from-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='from-red-'] {
-    --tw-gradient-from: #ef4444 var(--tw-gradient-from-position) !important;
-    --tw-gradient-to: rgb(239 68 68 / 0) var(--tw-gradient-to-position) !important;
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='to-teal-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='to-orange-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='to-indigo-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='to-violet-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='to-teal-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='to-orange-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='to-indigo-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='to-violet-'] {
-    --tw-gradient-to: #dc2626 var(--tw-gradient-to-position) !important;
-  }
-
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-gray-'],
-  .admin-shell-v2[data-admin-theme='dark'] [class*='bg-slate-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-gray-'],
-  .admin-overlay-host[data-admin-theme='dark'] [class*='bg-slate-'] {
-    background-color: #141414 !important;
-  }
-
-  /* Aydınlık mod — tek palet: siyah metin, gri ikincil, kırmızı vurgu (Komuta Merkezi) */
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-emerald-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-green-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-teal-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-orange-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-violet-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-sky-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-cyan-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-blue-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-indigo-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-emerald-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-green-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-teal-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-orange-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-violet-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-sky-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-cyan-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-blue-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-indigo-'] {
+  /* Admin — tek palet: siyah metin, gri ikincil, kırmızı vurgu */
+  .admin-shell-v2 [class*='text-emerald-'],
+  .admin-shell-v2 [class*='text-green-'],
+  .admin-shell-v2 [class*='text-teal-'],
+  .admin-shell-v2 [class*='text-amber-'],
+  .admin-shell-v2 [class*='text-orange-'],
+  .admin-shell-v2 [class*='text-violet-'],
+  .admin-shell-v2 [class*='text-sky-'],
+  .admin-shell-v2 [class*='text-cyan-'],
+  .admin-shell-v2 [class*='text-blue-'],
+  .admin-shell-v2 [class*='text-indigo-'],
+  .admin-overlay-host [class*='text-emerald-'],
+  .admin-overlay-host [class*='text-green-'],
+  .admin-overlay-host [class*='text-teal-'],
+  .admin-overlay-host [class*='text-amber-'],
+  .admin-overlay-host [class*='text-orange-'],
+  .admin-overlay-host [class*='text-violet-'],
+  .admin-overlay-host [class*='text-sky-'],
+  .admin-overlay-host [class*='text-cyan-'],
+  .admin-overlay-host [class*='text-blue-'],
+  .admin-overlay-host [class*='text-indigo-'] {
     color: var(--admin-text) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='text-red-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='text-red-'] {
+  .admin-shell-v2 [class*='text-red-'],
+  .admin-overlay-host [class*='text-red-'] {
     color: var(--admin-accent) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-emerald-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-green-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-teal-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-orange-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-violet-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-sky-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-cyan-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-blue-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-indigo-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-emerald-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-green-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-teal-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-orange-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-violet-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-sky-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-cyan-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-blue-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-indigo-'] {
+  .admin-shell-v2 [class*='bg-emerald-'],
+  .admin-shell-v2 [class*='bg-green-'],
+  .admin-shell-v2 [class*='bg-teal-'],
+  .admin-shell-v2 [class*='bg-amber-'],
+  .admin-shell-v2 [class*='bg-orange-'],
+  .admin-shell-v2 [class*='bg-violet-'],
+  .admin-shell-v2 [class*='bg-sky-'],
+  .admin-shell-v2 [class*='bg-cyan-'],
+  .admin-shell-v2 [class*='bg-blue-'],
+  .admin-shell-v2 [class*='bg-indigo-'],
+  .admin-overlay-host [class*='bg-emerald-'],
+  .admin-overlay-host [class*='bg-green-'],
+  .admin-overlay-host [class*='bg-teal-'],
+  .admin-overlay-host [class*='bg-amber-'],
+  .admin-overlay-host [class*='bg-orange-'],
+  .admin-overlay-host [class*='bg-violet-'],
+  .admin-overlay-host [class*='bg-sky-'],
+  .admin-overlay-host [class*='bg-cyan-'],
+  .admin-overlay-host [class*='bg-blue-'],
+  .admin-overlay-host [class*='bg-indigo-'] {
     background-color: var(--admin-bg-hover) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-red-'][class*='/'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-red-'][class*='/'] {
+  .admin-shell-v2 [class*='bg-red-'][class*='/'],
+  .admin-overlay-host [class*='bg-red-'][class*='/'] {
     background-color: var(--admin-accent-soft) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-red-5']:not([class*='/']),
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-red-6'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-violet-6'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-emerald-6'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-blue-6'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='bg-sky-6'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-red-5']:not([class*='/']),
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-red-6'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-violet-6'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-emerald-6'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-blue-6'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='bg-sky-6'] {
+  .admin-shell-v2 [class*='bg-red-5']:not([class*='/']),
+  .admin-shell-v2 [class*='bg-red-6'],
+  .admin-shell-v2 [class*='bg-violet-6'],
+  .admin-shell-v2 [class*='bg-emerald-6'],
+  .admin-shell-v2 [class*='bg-blue-6'],
+  .admin-shell-v2 [class*='bg-sky-6'],
+  .admin-overlay-host [class*='bg-red-5']:not([class*='/']),
+  .admin-overlay-host [class*='bg-red-6'],
+  .admin-overlay-host [class*='bg-violet-6'],
+  .admin-overlay-host [class*='bg-emerald-6'],
+  .admin-overlay-host [class*='bg-blue-6'],
+  .admin-overlay-host [class*='bg-sky-6'] {
     background-color: var(--admin-accent) !important;
     color: #ffffff !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-emerald-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-green-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-teal-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-orange-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-violet-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-sky-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-cyan-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-blue-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-indigo-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-emerald-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-green-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-teal-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-orange-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-violet-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-sky-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-cyan-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-blue-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-indigo-'] {
+  .admin-shell-v2 [class*='border-emerald-'],
+  .admin-shell-v2 [class*='border-green-'],
+  .admin-shell-v2 [class*='border-teal-'],
+  .admin-shell-v2 [class*='border-amber-'],
+  .admin-shell-v2 [class*='border-orange-'],
+  .admin-shell-v2 [class*='border-violet-'],
+  .admin-shell-v2 [class*='border-sky-'],
+  .admin-shell-v2 [class*='border-cyan-'],
+  .admin-shell-v2 [class*='border-blue-'],
+  .admin-shell-v2 [class*='border-indigo-'],
+  .admin-overlay-host [class*='border-emerald-'],
+  .admin-overlay-host [class*='border-green-'],
+  .admin-overlay-host [class*='border-teal-'],
+  .admin-overlay-host [class*='border-amber-'],
+  .admin-overlay-host [class*='border-orange-'],
+  .admin-overlay-host [class*='border-violet-'],
+  .admin-overlay-host [class*='border-sky-'],
+  .admin-overlay-host [class*='border-cyan-'],
+  .admin-overlay-host [class*='border-blue-'],
+  .admin-overlay-host [class*='border-indigo-'] {
     border-color: var(--admin-border) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='border-red-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='border-red-'] {
+  .admin-shell-v2 [class*='border-red-'],
+  .admin-overlay-host [class*='border-red-'] {
     border-color: color-mix(in srgb, var(--admin-accent) 35%, var(--admin-border) 65%) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-emerald-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-violet-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-indigo-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-blue-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-sky-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-cyan-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-orange-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-teal-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-green-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-emerald-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-violet-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-indigo-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-blue-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-sky-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-cyan-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-orange-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-teal-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-green-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='from-red-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='from-red-'] {
+  .admin-shell-v2 [class*='from-emerald-'],
+  .admin-shell-v2 [class*='from-violet-'],
+  .admin-shell-v2 [class*='from-indigo-'],
+  .admin-shell-v2 [class*='from-blue-'],
+  .admin-shell-v2 [class*='from-sky-'],
+  .admin-shell-v2 [class*='from-cyan-'],
+  .admin-shell-v2 [class*='from-amber-'],
+  .admin-shell-v2 [class*='from-orange-'],
+  .admin-shell-v2 [class*='from-teal-'],
+  .admin-shell-v2 [class*='from-green-'],
+  .admin-overlay-host [class*='from-emerald-'],
+  .admin-overlay-host [class*='from-violet-'],
+  .admin-overlay-host [class*='from-indigo-'],
+  .admin-overlay-host [class*='from-blue-'],
+  .admin-overlay-host [class*='from-sky-'],
+  .admin-overlay-host [class*='from-cyan-'],
+  .admin-overlay-host [class*='from-amber-'],
+  .admin-overlay-host [class*='from-orange-'],
+  .admin-overlay-host [class*='from-teal-'],
+  .admin-overlay-host [class*='from-green-'],
+  .admin-shell-v2 [class*='from-red-'],
+  .admin-overlay-host [class*='from-red-'] {
     --tw-gradient-from: var(--admin-accent) var(--tw-gradient-from-position) !important;
     --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-teal-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-orange-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-indigo-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-violet-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-blue-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-sky-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-cyan-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-emerald-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-green-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-teal-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-orange-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-indigo-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-violet-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-blue-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-sky-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-cyan-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-emerald-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-green-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='to-red-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='to-red-'] {
+  .admin-shell-v2 [class*='to-teal-'],
+  .admin-shell-v2 [class*='to-orange-'],
+  .admin-shell-v2 [class*='to-indigo-'],
+  .admin-shell-v2 [class*='to-violet-'],
+  .admin-shell-v2 [class*='to-blue-'],
+  .admin-shell-v2 [class*='to-sky-'],
+  .admin-shell-v2 [class*='to-cyan-'],
+  .admin-shell-v2 [class*='to-amber-'],
+  .admin-shell-v2 [class*='to-emerald-'],
+  .admin-shell-v2 [class*='to-green-'],
+  .admin-overlay-host [class*='to-teal-'],
+  .admin-overlay-host [class*='to-orange-'],
+  .admin-overlay-host [class*='to-indigo-'],
+  .admin-overlay-host [class*='to-violet-'],
+  .admin-overlay-host [class*='to-blue-'],
+  .admin-overlay-host [class*='to-sky-'],
+  .admin-overlay-host [class*='to-cyan-'],
+  .admin-overlay-host [class*='to-amber-'],
+  .admin-overlay-host [class*='to-emerald-'],
+  .admin-overlay-host [class*='to-green-'],
+  .admin-shell-v2 [class*='to-red-'],
+  .admin-overlay-host [class*='to-red-'] {
     --tw-gradient-to: color-mix(in srgb, var(--admin-accent) 75%, #000 25%) var(--tw-gradient-to-position) !important;
   }
 
-  .admin-shell-v2[data-admin-theme='light'] [class*='fill-amber-'],
-  .admin-shell-v2[data-admin-theme='light'] [class*='fill-yellow-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='fill-amber-'],
-  .admin-overlay-host[data-admin-theme='light'] [class*='fill-yellow-'] {
+  .admin-shell-v2 [class*='fill-amber-'],
+  .admin-shell-v2 [class*='fill-yellow-'],
+  .admin-overlay-host [class*='fill-amber-'],
+  .admin-overlay-host [class*='fill-yellow-'] {
     fill: var(--admin-accent) !important;
   }
 }

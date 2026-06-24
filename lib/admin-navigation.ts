@@ -243,7 +243,7 @@ export const ADMIN_MODULES: AdminModule[] = [
     icon: 'shield',
     links: [
       { href: '/admin/ip-bans', label: 'IP Engelleme', description: 'Kara liste yönetimi' },
-      { href: '/admin/settings', label: 'Platform Ayarları', description: 'Sistem konfigürasyonu' },
+      { href: '/admin/settings', label: 'Platform Ayarları', description: 'Renkler, isim ve sistem ayarları' },
       { href: '/api/health', label: 'Sistem Sağlığı', description: 'API durumu (JSON)' },
     ],
   },

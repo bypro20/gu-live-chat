@@ -8,6 +8,7 @@ import {
 import { signOut } from 'next-auth/react'
 import { useToast } from '@/lib/toast'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { PlatformThemeEditor } from '@/components/admin/platform-theme-editor'
 
 function passwordStrength(password: string) {
   const checks = [
@@ -212,37 +213,39 @@ export default function AdminSettingsPage() {
     <div className="admin-page max-w-[1100px]">
       <AdminPageHeader
         title="Admin Ayarları"
-        description="Platform genel ayarlarını yönetin"
+        description="Platform renkleri, isim ve güvenlik ayarları"
       />
 
       <div className="space-y-5 lg:space-y-6">
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 sm:p-6">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 mb-5">
-            <Building2 className="w-4 h-4 text-primary" />
+        <PlatformThemeEditor />
+
+        <div className="admin-form-section">
+          <h2 className="text-base font-semibold admin-text flex items-center gap-2 mb-5">
+            <Building2 className="w-4 h-4 admin-text-accent" />
             Genel Ayarlar
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Platform Adı</label>
+              <label className="admin-form-label">Platform Adı</label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-text-faint" />
                 <input
                   type="text"
                   value={platformName}
                   onChange={(e) => setPlatformName(e.target.value)}
-                  className="w-full h-11 rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
+                  className="admin-form-input h-11 pl-10"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Destek E-posta</label>
+              <label className="admin-form-label">Destek E-posta</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-text-faint" />
                 <input
                   type="email"
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
-                  className="w-full h-11 rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
+                  className="admin-form-input h-11 pl-10"
                 />
               </div>
             </div>
@@ -252,7 +255,7 @@ export default function AdminSettingsPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-white text-sm font-semibold transition-all shadow-brand"
+              className="admin-btn-primary h-10 px-5"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               Değişiklikleri Kaydet

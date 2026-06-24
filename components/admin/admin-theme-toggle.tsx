@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Moon, Sun } from 'lucide-react'
 
 const STORAGE_KEY = 'gu-admin-theme'
 
@@ -27,25 +26,22 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   useEffect(() => {
-    const next = localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
-    setThemeState(next)
-    syncThemeDom(next)
+    setThemeState('light')
+    syncThemeDom('light')
+    localStorage.setItem(STORAGE_KEY, 'light')
     setMounted(true)
   }, [syncThemeDom])
 
-  const setTheme = useCallback((next: AdminTheme) => {
-    setThemeState(next)
-    localStorage.setItem(STORAGE_KEY, next)
-    syncThemeDom(next)
+  const setTheme = useCallback((_next: AdminTheme) => {
+    setThemeState('light')
+    localStorage.setItem(STORAGE_KEY, 'light')
+    syncThemeDom('light')
   }, [syncThemeDom])
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark'
-      localStorage.setItem(STORAGE_KEY, next)
-      syncThemeDom(next)
-      return next
-    })
+    setThemeState('light')
+    localStorage.setItem(STORAGE_KEY, 'light')
+    syncThemeDom('light')
   }, [syncThemeDom])
 
   return (
@@ -65,57 +61,6 @@ interface AdminThemeToggleProps {
   variant?: 'sidebar' | 'compact' | 'toolbar'
 }
 
-export function AdminThemeToggle({ variant = 'sidebar' }: AdminThemeToggleProps) {
-  const { theme, toggleTheme, mounted } = useAdminTheme()
-
-  if (!mounted) {
-    return (
-      <div
-        className={
-          variant === 'compact' || variant === 'toolbar'
-            ? 'w-9 h-9 rounded-xl animate-pulse'
-            : 'h-10 rounded-xl animate-pulse'
-        }
-        style={{ background: 'var(--admin-bg-hover)' }}
-      />
-    )
-  }
-
-  const isDark = theme === 'dark'
-  const label = isDark ? 'Aydınlık mod' : 'Karanlık mod'
-
-  if (variant === 'compact' || variant === 'toolbar') {
-    return (
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="admin-theme-toggle admin-theme-toggle--compact"
-        title={label}
-        aria-label={label}
-      >
-        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="admin-theme-toggle admin-theme-toggle--sidebar w-full"
-      aria-label={label}
-    >
-      <span className="admin-theme-toggle-icon">
-        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </span>
-      <span className="flex-1 text-left">
-        <span className="block text-[13px] font-semibold admin-sidebar-title">
-          {isDark ? 'Karanlık mod' : 'Aydınlık mod'}
-        </span>
-        <span className="block text-[10px] admin-sidebar-desc">
-          {isDark ? 'Koyu sidebar ve arka plan' : 'Açık sidebar ve arka plan'}
-        </span>
-      </span>
-    </button>
-  )
+export function AdminThemeToggle(_props: AdminThemeToggleProps) {
+  return null
 }
