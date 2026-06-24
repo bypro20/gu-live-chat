@@ -212,6 +212,27 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     },
     { label: 'marketing_blog_posts.slug_unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "marketing_blog_posts_slug_key" ON "marketing_blog_posts"("slug")` },
     { label: 'marketing_blog_posts.publishedAt_idx', sql: `CREATE INDEX IF NOT EXISTS "marketing_blog_posts_publishedAt_idx" ON "marketing_blog_posts"("publishedAt")` },
+    {
+      label: 'admin_mail_messages',
+      sql: `CREATE TABLE IF NOT EXISTS "admin_mail_messages" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "source" TEXT NOT NULL DEFAULT 'contact-form',
+        "fromName" TEXT,
+        "fromEmail" TEXT,
+        "subject" TEXT NOT NULL,
+        "body" TEXT NOT NULL,
+        "htmlBody" TEXT,
+        "status" TEXT NOT NULL DEFAULT 'unread',
+        "starred" BOOLEAN NOT NULL DEFAULT 0,
+        "metadata" TEXT,
+        "repliedAt" DATETIME,
+        "replyBody" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    { label: 'admin_mail_messages.status_idx', sql: `CREATE INDEX IF NOT EXISTS "admin_mail_messages_status_createdAt_idx" ON "admin_mail_messages"("status", "createdAt")` },
+    { label: 'admin_mail_messages.source_idx', sql: `CREATE INDEX IF NOT EXISTS "admin_mail_messages_source_createdAt_idx" ON "admin_mail_messages"("source", "createdAt")` },
   ]
 
   for (const { label, sql } of statements) {

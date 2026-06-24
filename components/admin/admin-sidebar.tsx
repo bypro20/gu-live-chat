@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, Inbox, Eye, MessageSquare, Users, Globe,
-  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft,
+  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft, Mail as MailIcon,
 } from 'lucide-react'
 import { AppLogo } from '@/components/brand/app-logo'
 import NotificationBell from '@/components/dashboard/notification-bell'
@@ -28,6 +28,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   websites: Globe,
   widget: Monitor,
   marketing: Megaphone,
+  mail: MailIcon,
   ipbans: ShieldBan,
   settings: Settings,
 }
@@ -35,6 +36,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 interface AdminSidebarProps {
   admin: { name: string | null; email: string }
   inboxUnread: number
+  mailUnread: number
   liveVisitorCount: number
   onSearchOpen: () => void
   onNavigate?: () => void
@@ -54,6 +56,7 @@ function getBadge(
 export function AdminSidebar({
   admin,
   inboxUnread,
+  mailUnread,
   liveVisitorCount,
   onSearchOpen,
   onNavigate,
@@ -65,6 +68,7 @@ export function AdminSidebar({
 
   const badges: Record<AdminBadgeKey, number> = {
     inbox: inboxUnread,
+    mail: mailUnread,
     visitors: liveVisitorCount,
   }
 

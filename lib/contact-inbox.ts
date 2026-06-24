@@ -1,13 +1,23 @@
 import { prisma } from './db'
+import { createAdminMailMessage } from './admin-mail-inbox'
 import { resolveOrBootstrapMarketingWebsiteId } from './marketing-website'
 
-/** İletişim formu — e-posta yoksa admin bildirimine düşer. */
+/** İletişim formu — admin mail kutusuna + bildirim. */
 export async function notifyAdminsOfContact(data: {
   name: string
   email: string
   subject: string
   message: string
 }) {
+  await createAdminMailMessage({
+    source: 'contact-form',
+    fromName: data.name,
+    fromEmail: data.email,
+    subject: data.subject,
+    body: data.message,
+    metadata: { source: 'contact-form' },
+  })
+
   const marketingWebsiteId = await resolveOrBootstrapMarketingWebsiteId()
   if (!marketingWebsiteId) return
 

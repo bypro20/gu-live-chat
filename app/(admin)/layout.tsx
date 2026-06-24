@@ -44,6 +44,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inboxUnread, setInboxUnread] = useState(0)
+  const [mailUnread, setMailUnread] = useState(0)
   const [health, setHealth] = useState({ ok: true, db: true, socket: false })
   const [lastHealthCheck, setLastHealthCheck] = useState<Date>(new Date())
   const prevInboxUnreadRef = useRef(0)
@@ -105,6 +106,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         const data = await res.json()
         const count = Number(data.unreadCount) || 0
         setInboxUnread(count)
+
+        const mailRes = await fetch('/api/admin/mail/unread-count')
+        if (mailRes.ok) {
+          const mailData = await mailRes.json()
+          setMailUnread(Number(mailData.unreadCount) || 0)
+        }
 
         if (!inboxUnreadInitRef.current) {
           inboxUnreadInitRef.current = true
@@ -189,6 +196,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           <AdminSidebar
             admin={{ name: admin.name, email: admin.email }}
             inboxUnread={inboxUnread}
+            mailUnread={mailUnread}
             liveVisitorCount={liveVisitorCount}
             onSearchOpen={() => {
               setSidebarOpen(false)
