@@ -466,10 +466,10 @@ function InboxPageContent() {
   )
 
   return (
-    <div className="h-full min-h-0 w-full max-w-full flex overflow-hidden bg-slate-50">
+    <div className="inbox-shell h-full min-h-0 w-full max-w-full flex overflow-hidden">
       {/* Sidebar */}
       <div
-        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex flex-col min-h-0 bg-white shrink-0 shadow-sm ${
+        className={`inbox-shell-list w-full lg:w-[340px] xl:w-[380px] border-r flex flex-col min-h-0 shrink-0 ${
           selectedConversation ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
         }`}
       >
@@ -639,7 +639,7 @@ function InboxPageContent() {
 
       {/* Chat panel */}
       <div
-        className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-100/80 ${
+        className={`inbox-shell-chat flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden ${
           selectedConversation ? INBOX_CHAT_PANEL_MOBILE : 'hidden lg:flex'
         }`}
       >

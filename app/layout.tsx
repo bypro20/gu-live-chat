@@ -68,7 +68,7 @@ export default async function RootLayout({
         <Script id="native-shell" strategy="beforeInteractive">
           {NATIVE_SHELL_SCRIPT}
         </Script>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <ToastProvider>
             <NativeAppBootstrap />
             <AttributionBootstrap />

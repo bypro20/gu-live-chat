@@ -38,13 +38,16 @@ export function AppLogo({
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span
-            className={cn(
-              s.title,
-              'font-bold tracking-tight leading-none',
-              isSidebar ? 'text-white' : 'text-foreground'
-            )}
+            className={cn(s.title, 'font-bold tracking-tight leading-none')}
+            style={isSidebar ? { color: 'var(--sidebar-title)' } : undefined}
           >
-            Gu Live <span className={isSidebar ? (isAdmin ? 'text-red-500' : 'text-red-300') : 'text-primary'}>Chat</span>
+            Gu Live{' '}
+            <span
+              className={!isSidebar ? 'text-primary' : isAdmin ? 'text-red-500' : undefined}
+              style={isSidebar && !isAdmin ? { color: 'var(--primary)' } : undefined}
+            >
+              Chat
+            </span>
           </span>
           {isAdmin && (
             <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-600/20 text-white border border-red-500/40">
@@ -60,11 +63,8 @@ export function AppLogo({
         </div>
         {showTagline && (
           <p
-            className={cn(
-              s.tag,
-              'mt-1 tracking-wide truncate',
-              isSidebar ? 'text-slate-300' : 'text-muted-foreground'
-            )}
+            className={cn(s.tag, 'mt-1 tracking-wide truncate', !isSidebar && 'text-muted-foreground')}
+            style={isSidebar ? { color: 'var(--sidebar-foreground)' } : undefined}
           >
             {isAdmin ? 'Platform Yönetimi' : 'Canlı Destek Platformu'}
           </p>

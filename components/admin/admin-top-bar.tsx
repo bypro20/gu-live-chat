@@ -37,21 +37,21 @@ export function AdminTopBar({
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] admin-accent-label mb-0.5">
           Platform Yönetimi
         </p>
-        <h1 className="text-lg font-bold text-white truncate tracking-tight">
+        <h1 className="text-lg font-bold admin-text truncate tracking-tight">
           {pageTitle || 'Admin Panel'}
         </h1>
       </div>
 
       <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border admin-health-pill text-[11px]">
-        <span className={`flex items-center gap-1 ${health.ok ? 'text-white' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.ok ? 'admin-text-secondary' : 'text-red-400'}`}>
           <Wifi className="w-3 h-3" /> API
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.db ? 'text-white' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.db ? 'admin-text-secondary' : 'text-red-400'}`}>
           <Database className="w-3 h-3" /> DB
         </span>
         <span className="admin-health-sep">|</span>
-        <span className={`flex items-center gap-1 ${health.socket ? 'text-white' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-1 ${health.socket ? 'admin-text-secondary' : 'text-red-400'}`}>
           <Radio className="w-3 h-3" /> Canlı
         </span>
         {lastUpdated && (

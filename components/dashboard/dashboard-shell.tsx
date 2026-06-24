@@ -66,6 +66,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (localStorage.getItem('gu-theme-v2')) return
+    localStorage.setItem('gu-theme-v2', '1')
+    setTheme('light')
+  }, [setTheme])
+
+  useEffect(() => {
     if (status === 'unauthenticated') {
       const callback = encodeURIComponent(pathname || '/dashboard')
       router.replace(`/login?callbackUrl=${callback}`)
@@ -197,15 +204,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="px-3 pt-3 pb-2.5 border-b border-[var(--sidebar-border)] shrink-0" ref={dropdownRef}>
             <button
               onClick={() => setWebsiteDropdownOpen(!websiteDropdownOpen)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 group" style={{ background: 'rgba(255,255,255,0.035)', ['--hover-bg' as string]: 'rgba(255,255,255,0.06)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.035)' }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 group border border-transparent hover:border-[var(--sidebar-border)]"
+              style={{ background: 'var(--sidebar-surface)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--sidebar-hover)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--sidebar-surface)' }}
             >
-              <div className="w-7 h-7 rounded-md flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-sm bg-primary/90">
+              <div className="w-7 h-7 rounded-md flex items-center justify-center text-primary-foreground text-[11px] font-bold shrink-0 shadow-sm bg-primary/90">
                 {activeWebsite.name?.charAt(0)?.toUpperCase() || 'W'}
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-[12px] font-semibold text-white truncate">{activeWebsite.name}</p>
+                <p className="text-[12px] font-semibold truncate" style={{ color: 'var(--sidebar-title)' }}>{activeWebsite.name}</p>
                 <p className="text-[9px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{activeWebsite.domain || s.noDomain}</p>
               </div>
               <svg className={`w-3 h-3 transition-all duration-200 shrink-0 ${websiteDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--sidebar-foreground)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -213,7 +221,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </svg>
             </button>
             {websiteDropdownOpen && websites.length > 1 && (
-              <div className="mt-1.5 border rounded-xl shadow-2xl overflow-hidden z-50 animate-in-scale origin-top" style={{ background: '#13112A', borderColor: 'rgba(255,255,255,0.08)' }}>
+              <div className="mt-1.5 border rounded-xl shadow-lg overflow-hidden z-50 animate-in-scale origin-top" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                 <div className="max-h-52 overflow-y-auto py-1">
                   {websites.map((w) => (
                     <button
@@ -224,14 +232,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2.5 transition-all text-left`}
                       style={w.websiteId === activeWebsite.websiteId ? { background: 'var(--sidebar-active)' } : undefined}
-                      onMouseEnter={(e) => { if (w.websiteId !== activeWebsite.websiteId) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => { if (w.websiteId !== activeWebsite.websiteId) e.currentTarget.style.background = 'var(--sidebar-hover)' }}
                       onMouseLeave={(e) => { if (w.websiteId !== activeWebsite.websiteId) e.currentTarget.style.background = '' }}
                     >
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0 bg-primary/70">
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-primary-foreground text-[10px] font-bold shrink-0 bg-primary/70">
                         {w.name?.charAt(0)?.toUpperCase() || 'W'}
                       </div>
                       <div className="flex-1 min-w-0 text-left">
-                        <p className="text-[12px] font-medium text-white truncate">{w.name}</p>
+                        <p className="text-[12px] font-medium truncate" style={{ color: 'var(--sidebar-title)' }}>{w.name}</p>
                         <p className="text-[9px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{w.domain || s.noDomain}</p>
                       </div>
                       {w.websiteId === activeWebsite.websiteId && (
@@ -307,29 +315,29 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200 cursor-pointer"
                 style={{ color: 'var(--sidebar-foreground)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#E4E3ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground-active)'; e.currentTarget.style.background = 'var(--sidebar-hover)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sidebar-foreground)'; e.currentTarget.style.background = '' }}
               >
                 {theme === 'dark' ? (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 ) : (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 )}
-                {theme === 'dark' ? s.lightTheme : s.darkTheme}
+                {theme === 'dark' ? s.darkTheme : s.lightTheme}
               </button>
             </div>
           )}
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.035)' }}>
+          <div className="p-2 rounded-xl" style={{ background: 'var(--sidebar-surface)' }}>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold shrink-0 bg-gradient-to-br from-primary to-primary-hover">
                 {userInitial}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-white truncate leading-tight">{session?.user?.name || s.user}</p>
+                <p className="text-[13px] font-semibold truncate leading-tight" style={{ color: 'var(--sidebar-title)' }}>{session?.user?.name || s.user}</p>
                 <p className="text-[10px] truncate" style={{ color: 'var(--sidebar-foreground)' }}>{session?.user?.email}</p>
               </div>
               {!isNativeApp && (
@@ -359,8 +367,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setNativeWebsitePickerOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-semibold text-white border border-white/15 active:scale-[0.98] transition-transform"
-                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-semibold border active:scale-[0.98] transition-transform"
+                  style={{ color: 'var(--sidebar-title)', borderColor: 'var(--sidebar-border)', background: 'var(--sidebar-surface)' }}
                 >
                   <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

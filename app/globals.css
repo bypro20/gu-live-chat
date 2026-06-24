@@ -9,7 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #FFFFFF;
+  --background: #F8FAFC;
   --foreground: #111827;
   --card: #FFFFFF;
   --card-foreground: #111827;
@@ -49,14 +49,17 @@
   --input: #E5E7EB;
   --ring: #9333EA;
 
-  --sidebar-bg: #070B14;
-  --sidebar-bg-end: #0F172A;
-  --sidebar-foreground: #94A3B8;
-  --sidebar-foreground-active: #F8FAFC;
-  --sidebar-active: rgba(37, 99, 235, 0.12);
-  --sidebar-active-border: #3B82F6;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-bg: #FAF5FF;
+  --sidebar-bg-end: #F3E8FF;
+  --sidebar-foreground: #6B7280;
+  --sidebar-foreground-active: #1F2937;
+  --sidebar-title: #111827;
+  --sidebar-active: rgba(147, 51, 234, 0.14);
+  --sidebar-active-border: #9333EA;
+  --sidebar-border: #E9D5FF;
+  --sidebar-hover: rgba(147, 51, 234, 0.06);
+  --sidebar-surface: rgba(147, 51, 234, 0.06);
+  --sidebar-group-label: #A78BFA;
 
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
@@ -115,6 +118,15 @@
 
   --sidebar-bg: #0B1120;
   --sidebar-bg-end: #111827;
+  --sidebar-foreground: #94A3B8;
+  --sidebar-foreground-active: #F8FAFC;
+  --sidebar-title: #FFFFFF;
+  --sidebar-active: rgba(59, 130, 246, 0.12);
+  --sidebar-active-border: #3B82F6;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-surface: rgba(255, 255, 255, 0.04);
+  --sidebar-group-label: rgba(255, 255, 255, 0.35);
 
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
@@ -365,8 +377,8 @@ body {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(37, 99, 235, 0.06) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 40% at 50% -10%, color-mix(in srgb, var(--primary) 10%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 100% 100%, color-mix(in srgb, var(--primary) 5%, transparent) 0%, transparent 50%);
     pointer-events: none;
   }
 
@@ -377,24 +389,25 @@ body {
   }
 
   .app-sidebar-group-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-white/35 px-3 mb-2;
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] px-3 mb-2;
+    color: var(--sidebar-group-label);
   }
 
   .app-sidebar-link {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-colors duration-150 relative cursor-pointer;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--sidebar-foreground);
   }
 
   .app-sidebar-link:hover {
-    color: rgba(255, 255, 255, 0.92);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--sidebar-foreground-active);
+    background: var(--sidebar-hover);
   }
 
   .app-sidebar-link--active {
-    color: #fff;
+    color: var(--sidebar-foreground-active);
     background: var(--sidebar-active);
-    border: 1px solid rgba(59, 130, 246, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    border: 1px solid color-mix(in srgb, var(--sidebar-active-border) 22%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--sidebar-foreground-active) 4%, transparent);
   }
 
   .app-sidebar-link--active::before {
@@ -466,19 +479,23 @@ body {
     background: var(--admin-bg, #000000);
   }
 
-  /* Admin gelen kutusu — müşteri paneli ile aynı açık tema */
+  /* Admin gelen kutusu — admin temasına uyumlu */
   .admin-shell .app-main .inbox-shell {
-    background: #f8fafc;
-    color: #0f172a;
+    background: var(--admin-bg);
+    color: var(--admin-text);
     color-scheme: light;
   }
 
+  .admin-shell-v2[data-admin-theme='dark'] .app-main .inbox-shell {
+    color-scheme: dark;
+  }
+
   .admin-shell .app-main .inbox-shell .text-foreground {
-    color: #0f172a;
+    color: var(--admin-text);
   }
 
   .admin-shell .app-main .inbox-shell .text-muted-foreground {
-    color: #64748b;
+    color: var(--admin-text-muted);
   }
 
   /* ─── Admin v2 — Karanlık / Aydınlık tema ─── */
@@ -516,13 +533,13 @@ body {
   }
 
   .admin-shell-v2[data-admin-theme='light'] {
-    --admin-bg: #eef2f7;
-    --admin-bg-subtle: #e2e8f0;
+    --admin-bg: #f4f4f5;
+    --admin-bg-subtle: #e4e4e7;
     --admin-bg-elevated: #ffffff;
     --admin-bg-card: #ffffff;
     --admin-bg-hover: rgba(15, 23, 42, 0.05);
-    --admin-border: #dbe3ee;
-    --admin-border-strong: #c7d2e0;
+    --admin-border: #e4e4e7;
+    --admin-border-strong: #d4d4d8;
     --admin-text: #0f172a;
     --admin-text-secondary: #334155;
     --admin-text-muted: #64748b;
@@ -532,8 +549,9 @@ body {
     --admin-topbar-bg: rgba(255, 255, 255, 0.94);
     --admin-input-bg: #ffffff;
     --admin-hero-gradient: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(255, 255, 255, 0.98) 55%, #f8fafc 100%);
-    --admin-sidebar-bg: #0f172a;
-    --admin-sidebar-bg-end: #1e293b;
+    --admin-sidebar-bg: #faf5ff;
+    --admin-sidebar-bg-end: #f3e8ff;
+    --admin-sidebar-active: rgba(220, 38, 38, 0.08);
     --admin-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.06);
   }
 
@@ -690,18 +708,50 @@ body {
 
   .admin-shell-v2 .app-sidebar {
     background: linear-gradient(180deg, var(--admin-sidebar-bg) 0%, var(--admin-sidebar-bg-end) 100%);
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset -1px 0 0 var(--admin-border);
   }
 
-  /* Sidebar — siyah zemin, beyaz başlık, somon etiket vurgusu */
+  /* Sidebar — tema uyumlu */
   .admin-shell-v2 .admin-sidebar {
+    --sidebar-fg: var(--admin-text);
+    --sidebar-fg-muted: var(--admin-text-muted);
+    --sidebar-fg-faint: var(--admin-text-faint);
+    --sidebar-surface: var(--admin-bg-hover);
+    --sidebar-surface-hover: var(--admin-accent-soft);
+    --sidebar-border: var(--admin-border);
+    color: var(--sidebar-fg);
+  }
+
+  .admin-shell-v2[data-admin-theme='dark'] .admin-sidebar {
     --sidebar-fg: #ffffff;
     --sidebar-fg-muted: rgba(255, 255, 255, 0.7);
     --sidebar-fg-faint: rgba(255, 255, 255, 0.45);
     --sidebar-surface: rgba(255, 255, 255, 0.04);
     --sidebar-surface-hover: rgba(239, 68, 68, 0.1);
     --sidebar-border: rgba(255, 255, 255, 0.1);
-    color: var(--sidebar-fg);
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-sidebar {
+    --sidebar-fg: var(--admin-text);
+    --sidebar-fg-muted: var(--admin-text-muted);
+    --sidebar-fg-faint: var(--admin-text-faint);
+    --sidebar-surface: rgba(147, 51, 234, 0.06);
+    --sidebar-surface-hover: var(--admin-accent-soft);
+    --sidebar-border: #e9d5ff;
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-sidebar-group-label {
+    color: #a78bfa;
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-sidebar-item--active {
+    background: var(--admin-sidebar-active);
+    color: var(--admin-text);
+    box-shadow: inset 3px 0 0 var(--admin-accent);
+  }
+
+  .admin-shell-v2[data-admin-theme='light'] .admin-sidebar-item--active .admin-sidebar-item-icon {
+    color: var(--admin-accent);
   }
 
   .admin-sidebar-title { color: var(--sidebar-fg); }
@@ -2120,6 +2170,114 @@ html.native-app .native-hub-row:last-child {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
+}
+
+.inbox-shell {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.inbox-shell-list {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.inbox-shell-chat {
+  background: color-mix(in srgb, var(--background) 82%, var(--muted) 18%);
+}
+
+.inbox-conversation-item {
+  border-color: var(--border);
+}
+
+.inbox-conversation-item:hover {
+  background: var(--accent);
+}
+
+.inbox-conversation-item--selected {
+  background: var(--primary-light);
+  border-left-color: var(--primary);
+  box-shadow: var(--shadow-xs);
+}
+
+.inbox-conversation-item--unread {
+  background: color-mix(in srgb, var(--primary-light) 65%, transparent);
+}
+
+/* Gelen kutusu — hardcoded slate/indigo sınıflarını temaya bağla */
+.inbox-shell .text-slate-400,
+.inbox-shell .text-slate-500 {
+  color: var(--muted-foreground);
+}
+
+.inbox-shell .text-slate-600,
+.inbox-shell .text-slate-800 {
+  color: var(--foreground);
+}
+
+.inbox-shell .bg-slate-50,
+.inbox-shell .bg-slate-100 {
+  background-color: var(--muted);
+}
+
+.inbox-shell .border-slate-200,
+.inbox-shell .border-slate-200\/80,
+.inbox-shell .border-indigo-100 {
+  border-color: var(--border);
+}
+
+.inbox-shell .placeholder\:text-slate-400::placeholder {
+  color: var(--muted-foreground);
+}
+
+.dark .inbox-shell .bg-white,
+.dark .inbox-shell .bg-white\/80,
+.dark .inbox-shell .bg-white\/95 {
+  background-color: color-mix(in srgb, var(--card) 92%, transparent) !important;
+}
+
+.dark .inbox-shell .ring-white\/80 {
+  --tw-ring-color: var(--border);
+}
+
+.dark .inbox-shell .border-white {
+  border-color: var(--border);
+}
+
+.app-sidebar-bell {
+  color: var(--sidebar-foreground);
+}
+
+.app-sidebar-bell:hover {
+  color: var(--sidebar-foreground-active);
+  background: var(--sidebar-hover);
+}
+
+.admin-shell .inbox-shell-list {
+  background: var(--admin-bg-elevated);
+  border-color: var(--admin-border);
+}
+
+.admin-shell .inbox-shell-chat {
+  background: var(--admin-bg);
+}
+
+.admin-shell .inbox-conversation-item {
+  border-color: var(--admin-border);
+}
+
+.admin-shell .inbox-conversation-item:hover {
+  background: var(--admin-bg-hover);
+}
+
+.admin-shell .inbox-conversation-item--selected {
+  background: var(--admin-accent-soft);
+  border-left-color: var(--admin-accent);
+}
+
+.admin-shell .inbox-conversation-item--unread {
+  background: color-mix(in srgb, var(--admin-accent-soft) 80%, transparent);
 }
 
 .inbox-composer-shell {

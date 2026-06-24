@@ -272,7 +272,7 @@ export default function NotificationBell({
   const buttonClass =
     variant === 'toolbar'
       ? 'relative p-2 min-w-[44px] min-h-[44px] rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition cursor-pointer touch-manipulation flex items-center justify-center'
-      : 'relative p-2 min-w-[44px] min-h-[44px] rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.08] transition cursor-pointer touch-manipulation flex items-center justify-center'
+      : 'app-sidebar-bell relative p-2 min-w-[44px] min-h-[44px] rounded-lg transition cursor-pointer touch-manipulation flex items-center justify-center'
 
   return (
     <>

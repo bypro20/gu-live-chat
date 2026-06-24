@@ -11,7 +11,16 @@ import {
   useAdminInboxMessages,
   type AdminMessage,
 } from '@/lib/hooks/use-admin-inbox'
-import { useInboxSoundAlert, playNewMessageSound } from '@/lib/hooks/use-inbox-sound-alert'
+import { useInboxSoundAlert } from '@/lib/hooks/use-inbox-sound-alert'
+import {
+  startPersistentInboxAlert,
+  stopPersistentInboxAlertsForConversation,
+  subscribePersistentInboxAlerts,
+  getPersistentInboxAlerts,
+  type PersistentInboxAlert,
+} from '@/lib/inbox-persistent-alert'
+import { showDesktopNotification } from '@/lib/inbox-sound'
+import { InboxPersistentAlertBar } from '@/components/inbox/inbox-persistent-alert-bar'
 import {
   connectSocket,
   retainSocket,
@@ -66,6 +75,7 @@ export function AdminInboxPanel() {
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [persistentAlerts, setPersistentAlerts] = useState<PersistentInboxAlert[]>([])
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
@@ -114,7 +124,7 @@ export function AdminInboxPanel() {
   }, [loadSetup])
 
   const websiteId = marketingSite?.websiteId
-  const inboxPrimary = resolveInboxPrimary(marketingSite?.primaryColor)
+  const inboxPrimary = '#ef4444'
   const { conversations, isLoading, error, mutate: mutateConversations } =
     useAdminInboxConversations(!!marketingSite)
   const { messages, sendMessage, sending, isLoading: messagesLoading, mutate: mutateMessages } =
@@ -127,7 +137,40 @@ export function AdminInboxPanel() {
 
   useInboxMobileChat(!!selectedId)
 
-  useInboxSoundAlert(conversations, soundOn, liveConnected)
+  useInboxSoundAlert(conversations, false, liveConnected)
+
+  useEffect(() => {
+    setPersistentAlerts(getPersistentInboxAlerts())
+    return subscribePersistentInboxAlerts(() => {
+      setPersistentAlerts(getPersistentInboxAlerts())
+    })
+  }, [])
+
+  useEffect(() => {
+    if (selectedId) stopPersistentInboxAlertsForConversation(selectedId)
+  }, [selectedId])
+
+  const triggerPersistentAlert = useCallback(
+    (alert: {
+      id: string
+      label: string
+      reason: PersistentInboxAlert['reason']
+      preview?: string
+      conversationId?: string
+    }) => {
+      if (!soundOnRef.current) return
+      unlockInboxAudio()
+      startPersistentInboxAlert(alert)
+      showDesktopNotification(alert.label, alert.preview || 'Yeni aktivite')
+    },
+    []
+  )
+
+  const openPersistentAlert = useCallback((alert: PersistentInboxAlert) => {
+    const conversationId = alert.conversationId || (alert.id.startsWith('visitor:') ? null : alert.id)
+    if (conversationId) setSelectedId(conversationId)
+    stopPersistentInboxAlertsForConversation(conversationId || alert.id)
+  }, [])
 
   const filteredConversations = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -266,7 +309,21 @@ export function AdminInboxPanel() {
       createdAt: string
     }) => {
       const isSelected = selectedIdRef.current === data.conversationId
-      playNewMessageSound(soundOnRef.current, data.senderType)
+
+      if (data.senderType === 'VISITOR' && !isSelected) {
+        const conv = conversations.find((c) => c.id === data.conversationId)
+        const name =
+          conv?.visitor.name?.trim() ||
+          conv?.visitor.email?.split('@')[0] ||
+          'Ziyaretçi'
+        triggerPersistentAlert({
+          id: data.conversationId,
+          conversationId: data.conversationId,
+          label: `Yeni mesaj — ${name}`,
+          preview: data.content?.slice(0, 120) || 'Mesaj geldi',
+          reason: 'message',
+        })
+      }
 
       if (isSelected) {
         mutateMessages((current) => {
@@ -292,7 +349,7 @@ export function AdminInboxPanel() {
         setSelectedId(data.conversationId)
       }
     },
-    [mutateMessages, mutateConversations]
+    [mutateMessages, mutateConversations, conversations, triggerPersistentAlert]
   )
 
   useEffect(() => {
@@ -306,7 +363,30 @@ export function AdminInboxPanel() {
 
     const onConversationNew = (data: { conversationId: string }) => {
       void mutateConversations()
+      triggerPersistentAlert({
+        id: data.conversationId,
+        conversationId: data.conversationId,
+        label: 'Yeni sohbet başladı',
+        preview: 'Müşteri widget üzerinden yazdı',
+        reason: 'conversation',
+      })
       setSelectedId((cur) => cur ?? data.conversationId)
+    }
+    const onVisitorOnline = (data: {
+      visitorId: string
+      name?: string | null
+      email?: string | null
+      currentTitle?: string | null
+      currentPage?: string | null
+    }) => {
+      if (selectedIdRef.current) return
+      const name = data.name?.trim() || data.email?.split('@')[0] || 'Ziyaretçi'
+      triggerPersistentAlert({
+        id: `visitor:${data.visitorId}`,
+        label: `Ziyaretçi sitede — ${name}`,
+        preview: data.currentTitle || data.currentPage || 'Canlı oturum',
+        reason: 'visitor',
+      })
     }
     const onConversationUpdated = () => {
       void mutateConversations()
@@ -316,6 +396,7 @@ export function AdminInboxPanel() {
     socket.on('agent:message', handleIncomingMessage)
     socket.on('agent:conversation:new', onConversationNew)
     socket.on('agent:conversation:updated', onConversationUpdated)
+    socket.on('agent:visitor:online', onVisitorOnline)
     if (socket.connected) auth()
 
     return () => {
@@ -323,9 +404,10 @@ export function AdminInboxPanel() {
       socket.off('agent:message', handleIncomingMessage)
       socket.off('agent:conversation:new', onConversationNew)
       socket.off('agent:conversation:updated', onConversationUpdated)
+      socket.off('agent:visitor:online', onVisitorOnline)
       releaseSocket()
     }
-  }, [session?.user?.id, websiteId, mutateConversations, handleIncomingMessage])
+  }, [session?.user?.id, websiteId, mutateConversations, handleIncomingMessage, triggerPersistentAlert])
 
   useEffect(() => {
     if (!selectedId || !session?.user?.id) return
@@ -451,10 +533,10 @@ export function AdminInboxPanel() {
   if (!marketingSite) return null
 
   return (
-    <div className="inbox-shell h-full min-h-0 w-full max-w-full flex overflow-hidden bg-slate-50">
+    <div className="inbox-shell h-full min-h-0 w-full max-w-full flex overflow-hidden">
       {/* Sidebar — müşteri paneli ile aynı */}
       <div
-        className={`w-full lg:w-[340px] xl:w-[380px] border-r border-indigo-100 flex flex-col min-h-0 bg-white shrink-0 shadow-sm ${
+        className={`inbox-shell-list w-full lg:w-[340px] xl:w-[380px] border-r flex flex-col min-h-0 shrink-0 ${
           selectedConversation ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
         }`}
       >
@@ -590,7 +672,7 @@ export function AdminInboxPanel() {
 
       {/* Chat panel */}
       <div
-        className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-100/80 ${
+        className={`inbox-shell-chat flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden ${
           selectedConversation ? `${INBOX_CHAT_PANEL_MOBILE}` : 'hidden lg:flex'
         }`}
       >

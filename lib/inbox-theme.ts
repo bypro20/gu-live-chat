@@ -24,10 +24,10 @@ export function inboxAgentBubbleStyle(primary: string): CSSProperties {
 
 export function inboxVisitorBubbleStyle(): CSSProperties {
   return {
-    background: '#ffffff',
-    color: '#0F172A',
-    border: '1px solid rgba(15, 23, 42, 0.07)',
-    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 8px rgba(15, 23, 42, 0.03)',
+    background: 'var(--card)',
+    color: 'var(--foreground)',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-xs)',
   }
 }
 
@@ -54,16 +54,16 @@ export function inboxHeaderStyle(primary: string): CSSProperties {
 
 export function inboxComposerShellStyle(): CSSProperties {
   return {
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.98) 100%)',
-    borderTop: '1px solid rgba(15, 23, 42, 0.06)',
+    background: 'color-mix(in srgb, var(--card) 97%, transparent)',
+    borderTop: '1px solid var(--border)',
     backdropFilter: 'blur(12px)',
   }
 }
 
 export function inboxComposerRowStyle(primary: string): CSSProperties {
   return {
-    background: '#ffffff',
+    background: 'var(--card)',
     border: `1px solid ${hexToRgba(primary, 0.12)}`,
-    boxShadow: `0 2px 12px ${hexToRgba(primary, 0.06)}, inset 0 1px 0 rgba(255,255,255,1)`,
+    boxShadow: `0 2px 12px ${hexToRgba(primary, 0.06)}`,
   }
 }

@@ -237,7 +237,7 @@ export function MessageComposer({
           placeholder={resolvedPlaceholder}
           disabled={disabled || sending}
           rows={1}
-          className="flex-1 min-h-[44px] max-h-32 px-1 py-2.5 bg-transparent border-0 resize-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
+          className="flex-1 min-h-[44px] max-h-32 px-1 py-2.5 bg-transparent border-0 resize-none text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         <Button
           type="button"
@@ -258,7 +258,7 @@ export function MessageComposer({
           )}
         </Button>
       </div>
-      <p className="px-4 pb-2.5 text-[10px] text-slate-400 text-center font-medium">
+      <p className="px-4 pb-2.5 text-[10px] text-muted-foreground text-center font-medium">
         {inbox.sendHint}
       </p>
     </div>

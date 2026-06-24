@@ -17,7 +17,7 @@ interface AdminThemeContextValue {
 const AdminThemeContext = createContext<AdminThemeContextValue | null>(null)
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<AdminTheme>('dark')
+  const [theme, setThemeState] = useState<AdminTheme>('light')
   const [mounted, setMounted] = useState(false)
 
   const syncThemeDom = useCallback((next: AdminTheme) => {
@@ -27,8 +27,11 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    const next = stored === 'light' ? 'light' : 'dark'
+    if (!localStorage.getItem('gu-admin-theme-v2')) {
+      localStorage.setItem('gu-admin-theme-v2', '1')
+      localStorage.setItem(STORAGE_KEY, 'light')
+    }
+    const next = localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
     setThemeState(next)
     syncThemeDom(next)
     setMounted(true)
@@ -110,9 +113,11 @@ export function AdminThemeToggle({ variant = 'sidebar' }: AdminThemeToggleProps)
         {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
       </span>
       <span className="flex-1 text-left">
-        <span className="block text-[13px] font-semibold admin-sidebar-title">{label}</span>
+        <span className="block text-[13px] font-semibold admin-sidebar-title">
+          {isDark ? 'Karanlık mod' : 'Aydınlık mod'}
+        </span>
         <span className="block text-[10px] admin-sidebar-desc">
-          {isDark ? 'Siyah arka plan' : 'Açık arka plan'}
+          {isDark ? 'Koyu sidebar ve arka plan' : 'Açık sidebar ve arka plan'}
         </span>
       </span>
     </button>
