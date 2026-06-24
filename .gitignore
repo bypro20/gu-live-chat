@@ -1,4 +1,5 @@
 /tools/canavar-ai/canavar.config.json
+/tools/canavar-ai/webui.local.env
 
 # dependencies
 /node_modules

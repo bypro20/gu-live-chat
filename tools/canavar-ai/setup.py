@@ -47,7 +47,7 @@ def main() -> None:
     if EXAMPLE_PATH.exists():
         example = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
 
-    base_url = prompt("Sunucu adresi (Open WebUI)", example.get("base_url", "https://gulivechat.online"))
+    base_url = prompt("Sunucu adresi", example.get("base_url", "http://127.0.0.1:8080"))
     api_key = prompt("API anahtarı (Open WebUI → Settings → Account → API Keys)", example.get("api_key", ""))
     workspace = prompt("Çalışma klasörü", example.get("workspace", str(Path.home() / "Desktop")))
 

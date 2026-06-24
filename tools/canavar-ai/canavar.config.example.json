@@ -1,7 +1,7 @@
 {
   "name": "Canavar AI",
   "backend": "openwebui",
-  "base_url": "https://gulivechat.online",
+  "base_url": "http://127.0.0.1:8080",
   "api_key": "",
   "model": "",
   "workspace": "~/Desktop",
