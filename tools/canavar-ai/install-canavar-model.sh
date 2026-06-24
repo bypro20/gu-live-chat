@@ -16,12 +16,12 @@ fi
 echo "[1/2] qwen2.5-coder:14b indiriliyor (ilk sefer uzun sürebilir)..."
 ollama pull qwen2.5-coder:14b
 
-echo "[2/2] canavar-ai modeli oluşturuluyor..."
-ollama create canavar-ai -f Modelfile.canavar
+echo "[2/2] canavar modeli oluşturuluyor..."
+ollama create canavar -f Modelfile.canavar
 
 echo ""
 echo "✅ Hazır modeller:"
 ollama list | grep -E "canavar|qwen2.5-coder" || ollama list
 echo ""
-echo "Open WebUI'da model ID: canavar-ai:latest"
+echo "Open WebUI model ID: qwen2.5-coder:14b veya canavar:latest"
 echo "Canavar AI.command kurulumunda bu modeli seçin."

@@ -49,8 +49,8 @@ export const MODEL_PRESETS: Record<AiProvider, ModelPreset[]> = {
   ],
   /** Canavar AI + coder modelleri (gulivechat.online / OLLAMA_MODELS ile birleşir) */
   OLLAMA: [
-    { label: 'Canavar AI 14B (tam yetenek · önerilen)', value: 'canavar-ai:latest', tier: 'standard', note: 'Modelfile.canavar' },
-    { label: 'Qwen2.5 Coder 14B', value: 'qwen2.5-coder:14b', tier: 'standard' },
+    { label: 'Qwen2.5 Coder 14B (Canavar · önerilen)', value: 'qwen2.5-coder:14b', tier: 'standard', note: 'Mac M4 24GB' },
+    { label: 'Canavar AI (Modelfile)', value: 'canavar:latest', tier: 'standard' },
     { label: 'Qwen2.5 Coder 7B (hızlı)', value: 'qwen2.5-coder:7b', tier: 'economy' },
   ],
 }

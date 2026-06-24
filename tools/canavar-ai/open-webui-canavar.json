@@ -1,29 +1,7 @@
 {
-  "id": "canavar-ai",
-  "name": "Canavar AI (14B · Tam Yetenek)",
+  "name": "Canavar AI — qwen2.5-coder:14b",
   "base_model_id": "qwen2.5-coder:14b",
-  "ollama_model_id": "canavar-ai:latest",
-  "description": "Kod + web + dosya + terminal — Mac Mini M4 24GB için optimize",
-  "params": {
-    "temperature": 0.45,
-    "top_p": 0.9,
-    "num_ctx": 16384
-  },
-  "system": "Sen Canavar AI'sın — Türkçe konuşan, kod yazan, web'de gezen, dosya ve terminal kullanan akıllı asistan. Kullanıcıya Cursor benzeri yardım et: planla, kod yaz, hata düzelt, araştır. Model kimliğin: canavar-ai (qwen2.5-coder:14b). Asla boş model adı kullanma.",
-  "capabilities": [
-    "chat",
-    "code",
-    "web_search",
-    "file_read_write",
-    "terminal",
-    "turkish"
-  ],
-  "open_webui_setup_tr": [
-    "1. gulivechat.online → Workspace → Models → +",
-    "2. Model ID: canavar-ai:latest (veya qwen2.5-coder:14b)",
-    "3. Base model: qwen2.5-coder:14b — BOŞ BIRAKMAYIN",
-    "4. System prompt: bu dosyadaki system alanını yapıştırın",
-    "5. Claude Sonnet gibi sahte modelleri silin",
-    "6. Yeni sohbet → Canavar AI seç → test"
-  ]
+  "ollama_model_id": "qwen2.5-coder:14b",
+  "description": "Kod + site yapma. Model ID boş bırakılmamalı.",
+  "system": "Sen Canavar AI'sın. qwen2.5-coder:14b. Türkçe, kod, HTML site. Kurulum tekrarlama. Site istenince tam HTML ver."
 }

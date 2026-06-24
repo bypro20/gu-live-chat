@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-🐉 Canavar AI — masaüstü ajan
-Web gezme, kod/dosya işlemleri, terminal. Open WebUI / Ollama backend.
+🐉 Canavar AI — qwen2.5-coder:14b + Python araçları (Cursor benzeri)
+Site yapma, web, kod, dosya, terminal.
 """
 from __future__ import annotations
 
@@ -12,17 +12,28 @@ import subprocess
 import sys
 import textwrap
 import urllib.error
-import urllib.parse
 import urllib.request
 from html import unescape
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from site_builder import build_site  # noqa: E402
+from smart_router import plan_auto_actions  # noqa: E402
+
 CONFIG_PATHS = [
     ROOT / "canavar.config.json",
     Path.home() / ".canavar-ai" / "canavar.config.json",
 ]
+
+DEFAULT_MODEL = "qwen2.5-coder:14b"
+
+SYSTEM_PROMPT_SMART = """Sen Canavar AI'sın (qwen2.5-coder:14b). Türkçe konuş.
+Python aracı GERÇEK iş yaptı (web, dosya, site, terminal) — sonuçları kullan.
+Kurulum adımı tekrarlama. Kısa, net, iş bitmiş gibi cevap ver.
+Site istendiğinde HTML zaten dosyaya kaydedildi — yolu söyle, kodu tekrar yazma."""
 
 
 def config_path() -> Path:
@@ -32,45 +43,21 @@ def config_path() -> Path:
     return CONFIG_PATHS[0]
 
 
-def save_config_path() -> Path:
-    home_cfg = CONFIG_PATHS[1]
-    home_cfg.parent.mkdir(parents=True, exist_ok=True)
-    return home_cfg
-
-SYSTEM_PROMPT_CHAT = """Sen Canavar AI'sın — Türkçe konuşan tam yetenekli asistan (Cursor benzeri).
-Kod yaz, hata düzelt, adım adım anlat. Mac Mini M4 üzerinde çalışıyorsun."""
-
-SYSTEM_PROMPT = """Sen Canavar AI'sın — akıllı masaüstü ajanısın (Cursor gibi).
-Görevleri adım adım yap: web'de ara, sayfa oku, dosya yaz/düzenle, kod çalıştır.
-
-Araç kullanırken YALNIZCA tek satır JSON yaz:
-{{"tool":"web_search","args":{{"query":"..."}}}}
-{{"tool":"web_fetch","args":{{"url":"https://..."}}}}
-{{"tool":"read_file","args":{{"path":"..."}}}}
-{{"tool":"write_file","args":{{"path":"...","content":"..."}}}}
-{{"tool":"append_file","args":{{"path":"...","content":"..."}}}}
-{{"tool":"search_files","args":{{"pattern":"def main","glob":"*.py"}}}}
-{{"tool":"list_dir","args":{{"path":"."}}}}
-{{"tool":"run_cmd","args":{{"command":"..."}}}}
-{{"tool":"open_url","args":{{"url":"https://..."}}}}
-
-Bitince: {{"answer":"Türkçe özet ve sonuç"}}
-
-Kurallar:
-- Çalışma alanı: {workspace}
-- Yollar bu klasör içinde
-- Tehlikeli komut yok (rm -rf, mkfs, dd)
-- Önce düşün, araç kullan, sonra answer
-"""
-
-
 def load_config() -> dict[str, Any]:
     path = config_path()
     if not path.exists():
-        print("⚠ Ayar dosyası yok. Kurulum başlatılıyor...")
+        print("⚠ Kurulum yok — setup.py başlatılıyor...")
         subprocess.run([sys.executable, str(ROOT / "setup.py")], check=True)
         path = config_path()
-    return json.loads(path.read_text(encoding="utf-8"))
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    if not cfg.get("model"):
+        cfg["model"] = DEFAULT_MODEL
+    return cfg
+
+
+def is_local_ollama(cfg: dict[str, Any]) -> bool:
+    base = cfg.get("base_url", "").lower()
+    return "127.0.0.1" in base or "localhost" in base
 
 
 def expand_path(raw: str, workspace: Path) -> Path:
@@ -96,259 +83,142 @@ def strip_html(html: str) -> str:
     return text.strip()[:12000]
 
 
-def http_get(url: str, headers: dict[str, str] | None = None, timeout: int = 20) -> str:
-    req = urllib.request.Request(url, headers=headers or {"User-Agent": "CanavarAI/1.0"})
+def http_get(url: str, timeout: int = 20) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": "CanavarAI/2.0"})
     with urllib.request.urlopen(req, timeout=timeout) as res:
         return res.read().decode(errors="replace")
 
 
 def tool_web_search(query: str) -> str:
-    q = urllib.parse.quote(query)
-    url = f"https://lite.duckduckgo.com/lite/?q={q}"
+    q = __import__("urllib.parse").quote(query)
     try:
-        html = http_get(url)
+        html = http_get(f"https://lite.duckduckgo.com/lite/?q={q}")
     except Exception as e:
         return f"Arama hatası: {e}"
     links = re.findall(r'class="result-link"[^>]*href="([^"]+)"[^>]*>([^<]+)', html)
-    if not links:
-        return "Sonuç bulunamadı."
-    lines = []
-    for href, title in links[:8]:
-        lines.append(f"- {title.strip()}: {href}")
-    return "\n".join(lines)
+    return "\n".join(f"- {t.strip()}: {h}" for h, t in links[:8]) or "Sonuç yok."
 
 
 def tool_web_fetch(url: str) -> str:
     try:
         body = http_get(url)
     except Exception as e:
-        return f"Sayfa hatası: {e}"
-    if "<html" in body.lower():
-        return strip_html(body)
-    return body[:12000]
+        return f"Hata: {e}"
+    return strip_html(body) if "<html" in body.lower() else body[:12000]
 
 
 def tool_read_file(path: Path, workspace: Path) -> str:
     if not in_workspace(path, workspace):
-        return "Hata: dosya çalışma alanı dışında."
+        return "Hata: izin dışı."
     if not path.exists():
         return "Hata: dosya yok."
     if path.stat().st_size > 500_000:
-        return "Hata: dosya çok büyük (max 500KB)."
+        return "Hata: çok büyük."
     return path.read_text(encoding="utf-8", errors="replace")
 
 
 def tool_write_file(path: Path, content: str, workspace: Path) -> str:
     if not in_workspace(path, workspace):
-        return "Hata: dosya çalışma alanı dışında."
+        return "Hata: izin dışı."
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
-    return f"Yazıldı: {path} ({len(content)} karakter)"
-
-
-def tool_append_file(path: Path, content: str, workspace: Path) -> str:
-    if not in_workspace(path, workspace):
-        return "Hata: dosya çalışma alanı dışında."
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
-        f.write(content)
-    return f"Eklendi: {path} (+{len(content)} karakter)"
-
-
-def tool_search_files(pattern: str, workspace: Path, glob_pat: str = "**/*") -> str:
-    if not pattern.strip():
-        return "Hata: pattern boş."
-    hits: list[str] = []
-    try:
-        rx = re.compile(pattern, re.IGNORECASE)
-    except re.error as e:
-        return f"Hata: geçersiz regex: {e}"
-    for fp in workspace.glob(glob_pat):
-        if not fp.is_file() or fp.stat().st_size > 300_000:
-            continue
-        try:
-            text = fp.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        for i, line in enumerate(text.splitlines(), 1):
-            if rx.search(line):
-                hits.append(f"{fp.relative_to(workspace)}:{i}: {line.strip()[:120]}")
-                if len(hits) >= 40:
-                    break
-        if len(hits) >= 40:
-            break
-    return "\n".join(hits) if hits else "Eşleşme yok."
-
-
-def tool_open_url(url: str) -> str:
-    if not url.startswith(("http://", "https://")):
-        return "Hata: geçersiz URL."
-    if sys.platform == "darwin":
-        subprocess.run(["open", url], check=False)
-        return f"Tarayıcıda açıldı: {url}"
-    return f"URL (manuel aç): {url}"
+    return f"Yazıldı: {path}"
 
 
 def tool_list_dir(path: Path, workspace: Path) -> str:
     if not in_workspace(path, workspace):
-        return "Hata: klasör çalışma alanı dışında."
+        return "Hata: izin dışı."
     if not path.exists():
-        return "Hata: klasör yok."
-    items = sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower()))[:80]
-    lines = []
-    for item in items:
-        mark = "/" if item.is_dir() else ""
-        lines.append(f"{item.name}{mark}")
-    return "\n".join(lines) or "(boş)"
+        return "Hata: yok."
+    items = sorted(path.iterdir(), key=lambda x: x.name.lower())[:80]
+    return "\n".join(f"{x.name}/" if x.is_dir() else x.name for x in items) or "(boş)"
 
 
 def tool_run_cmd(command: str, workspace: Path, allow: bool) -> str:
     if not allow:
-        return "Hata: terminal kapalı (canavar.config.json → allow_shell: true)"
-    blocked = ("rm -rf", "mkfs", ":(){", "dd if=", "format ", "> /dev/")
-    low = command.lower()
-    if any(b in low for b in blocked):
-        return "Hata: güvenlik — komut engellendi."
+        return "Hata: shell kapalı."
+    if any(x in command.lower() for x in ("rm -rf", "mkfs", "dd if=")):
+        return "Hata: engellendi."
     try:
-        proc = subprocess.run(
-            command,
-            shell=True,
-            cwd=str(workspace),
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-        out = (proc.stdout or "") + (proc.stderr or "")
-        out = out.strip()[:8000]
-        return out or f"(çıktı yok, kod {proc.returncode})"
-    except subprocess.TimeoutExpired:
-        return "Hata: komut zaman aşımı (120s)"
+        p = subprocess.run(command, shell=True, cwd=str(workspace), capture_output=True, text=True, timeout=120)
+        return (p.stdout or "") + (p.stderr or "") or f"kod {p.returncode}"
     except Exception as e:
-        return f"Komut hatası: {e}"
+        return str(e)
 
 
 def run_tool(name: str, args: dict[str, Any], cfg: dict[str, Any], workspace: Path) -> str:
     if name == "web_search":
-        if not cfg.get("allow_web", True):
-            return "Hata: web arama kapalı."
         return tool_web_search(str(args.get("query", "")))
     if name == "web_fetch":
-        if not cfg.get("allow_web", True):
-            return "Hata: web kapalı."
         return tool_web_fetch(str(args.get("url", "")))
     if name == "read_file":
         return tool_read_file(expand_path(str(args.get("path", ".")), workspace), workspace)
     if name == "write_file":
-        return tool_write_file(
-            expand_path(str(args.get("path", "")), workspace),
-            str(args.get("content", "")),
-            workspace,
-        )
-    if name == "append_file":
-        return tool_append_file(
-            expand_path(str(args.get("path", "")), workspace),
-            str(args.get("content", "")),
-            workspace,
-        )
-    if name == "search_files":
-        return tool_search_files(
-            str(args.get("pattern", "")),
-            workspace,
-            str(args.get("glob", "**/*")),
-        )
-    if name == "open_url":
-        if not cfg.get("allow_web", True):
-            return "Hata: web kapalı."
-        return tool_open_url(str(args.get("url", "")))
+        return tool_write_file(expand_path(str(args.get("path", "")), workspace), str(args.get("content", "")), workspace)
     if name == "list_dir":
         return tool_list_dir(expand_path(str(args.get("path", ".")), workspace), workspace)
     if name == "run_cmd":
         return tool_run_cmd(str(args.get("command", "")), workspace, cfg.get("allow_shell", True))
-    return f"Bilinmeyen araç: {name}"
-
-
-def parse_action(text: str) -> dict[str, Any] | None:
-    text = text.strip()
-    for candidate in re.findall(r"\{[^{}]*\}", text, flags=re.DOTALL):
-        try:
-            obj = json.loads(candidate)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(obj, dict) and ("tool" in obj or "answer" in obj):
-            return obj
-    try:
-        obj = json.loads(text)
-        if isinstance(obj, dict):
-            return obj
-    except json.JSONDecodeError:
-        pass
-    return None
+    return f"Bilinmeyen: {name}"
 
 
 def chat_llm(cfg: dict[str, Any], messages: list[dict[str, str]]) -> str:
-    base = cfg["base_url"].rstrip("/")
     api_key = cfg.get("api_key", "")
-    model = cfg.get("model") or "llama3.2"
+    model = cfg.get("model") or DEFAULT_MODEL
+    base = cfg["base_url"].rstrip("/")
+
+    if is_local_ollama(cfg):
+        if "11434" not in base:
+            base = "http://127.0.0.1:11434"
+        endpoints = [f"{base}/v1/chat/completions"]
+    else:
+        endpoints = [
+            f"{base}/api/chat/completions",
+            f"{base}/ollama/v1/chat/completions",
+        ]
+
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    payload = json.dumps(
-        {
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "temperature": 0.4,
-        }
-    ).encode()
-
-    endpoints = [
-        f"{base}/api/chat/completions",
-        f"{base}/ollama/v1/chat/completions",
-        f"{base}/v1/chat/completions",
-        f"{base}/api/chat",
-    ]
-
+    payload = json.dumps({"model": model, "messages": messages, "stream": False, "temperature": 0.35}).encode()
     last_err = ""
     for url in endpoints:
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=180) as res:
+            with urllib.request.urlopen(req, timeout=300) as res:
                 data = json.loads(res.read().decode())
+            if "choices" in data:
+                return (data["choices"][0].get("message", {}).get("content") or "").strip()
         except urllib.error.HTTPError as e:
-            body = e.read().decode(errors="replace")[:500]
+            body = e.read().decode(errors="replace")[:300]
             if e.code == 401:
-                raise RuntimeError(
-                    "401 Kimlik doğrulama hatası — API anahtarı gerekli.\n"
-                    "   gulivechat.online → Settings → Account → API Keys\n"
-                    "   python3 setup.py veya canavar.config.json → api_key"
-                ) from e
-            if e.code == 404 and "model" in body.lower():
-                raise RuntimeError(
-                    f"404 Model bulunamadı: {model}\n"
-                    "   python3 test-connection.py ile mevcut modelleri görün"
-                ) from e
-            last_err = f"{url} → HTTP {e.code}: {body[:200]}"
-            continue
+                raise RuntimeError("401 — API key gerekli (gulivechat.online → Settings → API Keys)") from e
+            last_err = f"HTTP {e.code}: {body}"
         except Exception as e:
-            last_err = f"{url} → {e}"
-            continue
-
-        if "choices" in data:
-            msg = data["choices"][0].get("message", {})
-            return (msg.get("content") or "").strip()
-        if "message" in data and isinstance(data["message"], dict):
-            return (data["message"].get("content") or "").strip()
-        if "response" in data:
-            return str(data["response"]).strip()
-
-    raise RuntimeError(last_err or "LLM yanıt vermedi — base_url ve api_key kontrol edin.")
+            last_err = str(e)
+    raise RuntimeError(last_err or "Model yanıt vermedi")
 
 
-def run_chat_mode(cfg: dict[str, Any]) -> None:
-    """Doğrudan sohbet — model JSON araç formatı kullanmaz."""
-    history: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT_CHAT}]
-    print("💬 Sohbet modu. Tam ajan (web+dosya+terminal): mode → \"full\" veya \"agent\"\n")
+def run_smart_mode(cfg: dict[str, Any], workspace: Path) -> None:
+    print("🐉 Canavar AI — qwen2.5-coder:14b + araçlar (benim gibi)\n")
+    print("  Örnekler:")
+    print("    • FindGU için IMVU analiz sitesi yap")
+    print("    • webde ara Python asyncio")
+    print("    • !ls -la  |  oku: dosya.py  |  https://...\n")
+
+    history: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT_SMART}]
+
+    def rt(name: str, args: dict[str, Any]) -> str:
+        return run_tool(name, args, cfg, workspace)
+
+    def site_fn(text: str) -> tuple[str, Path | None]:
+        return build_site(
+            text,
+            workspace,
+            lambda msgs: chat_llm(cfg, msgs),
+            lambda p, c: tool_write_file(p, c, workspace),
+        )
 
     while True:
         try:
@@ -356,17 +226,28 @@ def run_chat_mode(cfg: dict[str, Any]) -> None:
         except (EOFError, KeyboardInterrupt):
             print("\nGörüşürüz!")
             break
-        if not user:
-            continue
-        if user.lower() in {"quit", "exit", "q", "çık", "cik"}:
-            print("Görüşürüz!")
+        if not user or user.lower() in {"q", "quit", "exit", "çık", "cik"}:
+            if user:
+                print("Görüşürüz!")
             break
 
-        history.append({"role": "user", "content": user})
+        logs, ctx, site_path = plan_auto_actions(user, workspace, rt, site_fn)
+        for line in logs:
+            print(f"  {line}")
+        if site_path and sys.platform == "darwin":
+            subprocess.run(["open", str(site_path)], check=False)
+
+        if ctx and site_path:
+            print(f"\n🐉 Canavar: Site hazır → {site_path}")
+            history.append({"role": "assistant", "content": f"Site: {site_path}"})
+            continue
+
+        msg = f"{ctx}\n\nKullanıcı: {user}" if ctx else user
+        history.append({"role": "user", "content": msg})
         try:
             print("\n🐉 Canavar: ", end="", flush=True)
-            reply = chat_llm(cfg, history)
-            print(reply or "(boş yanıt — modeli veya API key'i kontrol edin)")
+            reply = chat_llm(cfg, [history[0], *history[-4:]])
+            print(reply or "(boş)")
         except RuntimeError as e:
             print(f"\n❌ {e}")
             history.pop()
@@ -374,99 +255,31 @@ def run_chat_mode(cfg: dict[str, Any]) -> None:
         history.append({"role": "assistant", "content": reply})
 
 
-def run_full_agent(cfg: dict[str, Any], workspace: Path) -> None:
-    """Tam yetenek: web + kod + dosya + terminal (Cursor benzeri)."""
-    system = SYSTEM_PROMPT.format(workspace=workspace)
-    history: list[dict[str, str]] = [{"role": "system", "content": system}]
-    max_rounds = int(cfg.get("max_tool_rounds", 16))
-    print("🐉 Tam ajan modu — web, kod, dosya, terminal aktif\n")
-
-    while True:
-        try:
-            user = input("\n🧑 Sen: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nGörüşürüz!")
-            break
-        if not user:
-            continue
-        if user.lower() in {"quit", "exit", "q", "çık", "cik"}:
-            print("Görüşürüz!")
-            break
-
-        history.append({"role": "user", "content": user})
-        rounds = 0
-        while rounds < max_rounds:
-            rounds += 1
-            try:
-                reply = chat_llm(cfg, history)
-            except RuntimeError as e:
-                print(f"\n❌ {e}")
-                break
-
-            action = parse_action(reply)
-            if action and "answer" in action:
-                print(f"\n🐉 Canavar: {action['answer']}")
-                history.append({"role": "assistant", "content": str(action["answer"])})
-                break
-            if action and "tool" in action:
-                tool = str(action["tool"])
-                args = action.get("args") or {}
-                print(f"\n⚙️  {tool}: {args}")
-                result = run_tool(tool, args, cfg, workspace)
-                preview = result if len(result) < 800 else result[:800] + "…"
-                print(f"   → {preview}")
-                history.append({"role": "assistant", "content": reply})
-                history.append({"role": "user", "content": f"Araç ({tool}) sonucu:\n{result}\n\nDevam et veya answer ile bitir."})
-                continue
-
-            if reply.strip():
-                print(f"\n🐉 Canavar: {reply}")
-                history.append({"role": "assistant", "content": reply})
-            break
-
-
 def main() -> None:
     cfg = load_config()
     workspace = expand_path(cfg.get("workspace", "~/Desktop"), Path.home())
     workspace.mkdir(parents=True, exist_ok=True)
 
-    model = cfg.get("model") or "(model seçilmedi)"
     print(textwrap.dedent(f"""
-    ╔══════════════════════════════════════╗
-    ║  🐉 Canavar AI                       ║
-    ║  Sunucu: {cfg.get("base_url", "?")[:28]:<28} ║
-    ║  Model: {model[:28]:<28} ║
-    ║  Klasör: {str(workspace)[:27]:<27} ║
-    ║  Çıkış: quit / exit                  ║
-    ╚══════════════════════════════════════╝
+    ╔══════════════════════════════════════════╗
+    ║  🐉 Canavar AI · {cfg.get("model", DEFAULT_MODEL)[:22]:<22} ║
+    ║  {cfg.get("base_url", "?")[:40]:<40} ║
+    ╚══════════════════════════════════════════╝
     """))
 
-    if not cfg.get("api_key", "").strip():
-        print("❌ API anahtarı yok — cevap vermez!")
-        print("   python3 setup.py  veya  python3 test-connection.py\n")
+    if not cfg.get("api_key") and not is_local_ollama(cfg):
+        print("❌ API key yok → python3 setup.py\n")
         sys.exit(1)
 
-    print("Bağlantı kontrol ediliyor...")
-    test = subprocess.run(
-        [sys.executable, str(ROOT / "test-connection.py")],
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-    )
-    if test.returncode != 0:
-        print(test.stdout or "")
-        print(test.stderr or "")
-        sys.exit(1)
-    if test.stdout:
-        print(test.stdout)
+    if not is_local_ollama(cfg):
+        r = subprocess.run([sys.executable, str(ROOT / "test-connection.py")], cwd=str(ROOT))
+        if r.returncode != 0:
+            sys.exit(1)
 
-    mode = (cfg.get("mode") or "full").lower()
+    mode = (cfg.get("mode") or "smart").lower()
     if mode == "chat":
-        run_chat_mode(cfg)
-        return
-    if mode in {"full", "agent"}:
-        run_full_agent(cfg, workspace)
-        return
+        cfg["mode"] = "smart"
+    run_smart_mode(cfg, workspace)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FindGU — IMVU analiz ve izleme hizmetleri">
+  <title>FindGU — IMVU Analiz &amp; İzleme</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFHLv93zJkidAflX69MdKHzMk/rwQr5Op/X0" crossorigin="anonymous">
+  <style>
+    :root {
+      --brand: #6c5ce7;
+      --brand-dark: #5649c0;
+    }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .navbar {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.92) 0%, rgba(108, 92, 231, 0.75) 100%),
+        url("https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1920&q=80") center/cover no-repeat;
+      color: #fff;
+      padding: 6rem 1rem 4rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 5vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      opacity: 0.95;
+      max-width: 36rem;
+      margin: 0 auto 1.75rem;
+    }
+    .cta-button {
+      padding: 0.75rem 1.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+    .cta-button:hover {
+      background: var(--brand-dark);
+      border-color: var(--brand-dark);
+    }
+    .features {
+      padding: 4rem 0;
+    }
+    .feature-card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      height: 100%;
+    }
+    footer {
+      background: #1a1a2e;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 2rem 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">FindGU</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Menü">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="#home">Ana Sayfa</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#services">Hizmetler</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">İletişim</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="moreMenu" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Daha Fazla
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="moreMenu">
+              <a class="dropdown-item" href="#about">Hakkımızda</a>
+              <a class="dropdown-item" href="#privacy">Gizlilik Politikası</a>
+              <a class="dropdown-item" href="#terms">Kullanım Şartları</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero" id="home">
+    <div class="container">
+      <h1>IMVU Analiz ve İzleme Hizmetleri</h1>
+      <p>Hızlı, güvenilir ve kapsamlı çözümler — hesap ve aktivite takibi tek panelde.</p>
+      <a href="#contact" class="btn btn-primary cta-button">Başlayın</a>
+    </div>
+  </section>
+
+  <section class="features" id="services">
+    <div class="container">
+      <h2 class="text-center mb-4 font-weight-bold">Hizmetler</h2>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card feature-card p-4">
+            <h5 class="font-weight-bold">Analiz</h5>
+            <p class="text-muted mb-0">Detaylı IMVU profil ve aktivite analizi.</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card feature-card p-4">
+            <h5 class="font-weight-bold">İzleme</h5>
+            <p class="text-muted mb-0">Gerçek zamanlı takip ve bildirimler.</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card feature-card p-4">
+            <h5 class="font-weight-bold">Raporlama</h5>
+            <p class="text-muted mb-0">Özet raporlar ve geçmiş kayıtlar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5 bg-white" id="contact">
+    <div class="container text-center">
+      <h2 class="font-weight-bold mb-3">İletişim</h2>
+      <p class="text-muted">Sorularınız için bize ulaşın.</p>
+      <a href="mailto:destek@findgu.example" class="btn btn-outline-primary">destek@findgu.example</a>
+    </div>
+  </section>
+
+  <footer class="text-center">
+    <div class="container">
+      <p class="mb-0">&copy; <span id="y"></span> FindGU. Tüm hakları saklıdır.</p>
+    </div>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpe/uEhS1iFJ/qx/qgHy071DtZ8t/ekGxl" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83OW2DuU5e1eA4JFgIewTdBmI/0+O5W+8K4+JEpK9Q2hqx4j8J5K8" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CiH/qJ8F0n0Y4JEpK9Q2hqx4j8J5K8" crossorigin="anonymous"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>

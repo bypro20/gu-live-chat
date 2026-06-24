@@ -78,8 +78,8 @@ def main() -> None:
         else:
             print("  ⚠ Model listesi alınamadı — API anahtarını kontrol edin.")
 
-    default_model = models[0] if models else example.get("model", "canavar-ai:latest")
-    model = prompt("Kullanılacak model (Canavar tam yetenek)", default_model)
+    default_model = models[0] if models else example.get("model", "qwen2.5-coder:14b")
+    model = prompt("Model (14B önerilir)", default_model)
 
     cfg = {
         "name": "Canavar AI",
@@ -88,7 +88,7 @@ def main() -> None:
         "api_key": api_key,
         "model": model,
         "workspace": workspace,
-        "mode": "full",
+        "mode": "smart",
         "allow_web": True,
         "allow_shell": True,
         "max_tool_rounds": 12,
@@ -104,7 +104,8 @@ def main() -> None:
             print("\n⚠ Test başarısız — test-connection.py çıktısına bakın.")
         sys.exit(test.returncode)
 
-    print("  Çift tık: «Canavar AI.command» veya: python3 agent.py\n")
+    print("  Çift tık: «Canavar AI.command» veya: python3 agent.py")
+    print("  Model kur (Mac): Canavar-Model-Kur.command veya bash install-canavar-model.sh\n")
 
 
 if __name__ == "__main__":
