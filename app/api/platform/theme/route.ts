@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { buildPlatformThemeCss, getPlatformTheme } from '@/lib/platform-theme'
+import { buildPlatformThemeCss } from '@/lib/platform-theme'
+import { getPlatformTheme } from '@/lib/platform-theme-server'
 
 export async function GET() {
   try {

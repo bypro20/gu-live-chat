@@ -1,4 +1,5 @@
-import { buildPlatformThemeCss, getPlatformTheme, PLATFORM_THEME_STYLE_ID } from '@/lib/platform-theme'
+import { buildPlatformThemeCss, PLATFORM_THEME_STYLE_ID } from '@/lib/platform-theme'
+import { getPlatformTheme } from '@/lib/platform-theme-server'
 
 export async function PlatformThemeStyle() {
   const theme = await getPlatformTheme()

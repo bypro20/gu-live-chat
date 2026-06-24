@@ -3,13 +3,14 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import {
   DEFAULT_PLATFORM_THEME,
-  getPlatformTheme,
   isValidHexColor,
-  normalizePlatformTheme,
-  resetPlatformTheme,
-  updatePlatformTheme,
   type PlatformTheme,
 } from '@/lib/platform-theme'
+import {
+  getPlatformTheme,
+  resetPlatformTheme,
+  updatePlatformTheme,
+} from '@/lib/platform-theme-server'
 
 export async function GET() {
   try {
