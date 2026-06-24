@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
 
+import { SUPPORT_EMAIL_ADDRESS } from './site-config'
+
 export type PlatformSettings = {
   platformName: string
   supportEmail: string
@@ -7,7 +9,7 @@ export type PlatformSettings = {
 
 const DEFAULTS: PlatformSettings = {
   platformName: process.env.PLATFORM_NAME || 'Gu Live Chat',
-  supportEmail: process.env.SUPPORT_EMAIL || 'destek@gulivechat.com',
+  supportEmail: process.env.SUPPORT_EMAIL || SUPPORT_EMAIL_ADDRESS,
 }
 
 const KEYS = {

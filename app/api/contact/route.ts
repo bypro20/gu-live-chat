@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
+import { getContactEmail, SUPPORT_EMAIL_ADDRESS } from '@/lib/site-config'
 import { notifyAdminsOfContact } from '@/lib/contact-inbox'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/html-escape'
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     }
 
     const { name, email, subject, message } = parsed.data
-    const to = process.env.CONTACT_EMAIL || process.env.SUPPORT_EMAIL || process.env.ADMIN_EMAIL || 'destek@gulivechat.com'
+    const to = getContactEmail()
 
     let emailDelivered = false
     if (isEmailConfigured()) {
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       delivered: emailDelivered,
       note: emailDelivered
         ? undefined
-        : 'Mesajınız admin paneline iletildi (e-posta yapılandırması bekleniyor).',
+        : 'Mesajınız admin E-posta Merkezi\'ne iletildi.',
     })
   } catch (error) {
     console.error('[Contact]', error)

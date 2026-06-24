@@ -84,7 +84,7 @@ async function main() {
     console.log('2) Vercel env...')
     await upsertEnv('NEXT_PUBLIC_MARKETING_WEBSITE_ID', marketingId)
     await upsertEnv('NEXT_PUBLIC_WIDGET_WEBSITE_ID', marketingId)
-    await upsertEnv('CONTACT_EMAIL', process.env.CONTACT_EMAIL || 'admin@gulivechat.com')
+    await upsertEnv('CONTACT_EMAIL', process.env.CONTACT_EMAIL || 'destek@gulivechat.com')
     await upsertEnv('SUPPORT_EMAIL', process.env.SUPPORT_EMAIL || 'destek@gulivechat.com')
     await upsertEnv('EMAIL_FROM', process.env.EMAIL_FROM || 'Gu Live Chat <noreply@gulivechat.com>')
   }

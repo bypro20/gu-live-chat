@@ -10,7 +10,9 @@ const ROOT = resolve(import.meta.dirname, '..')
 const SITE = process.env.SITE_DOMAIN || 'gulivechat.com'
 
 const VARS = {
-  ORGANIC_MARKETING_NOTIFY_EMAIL: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL || `destek@${SITE}`,
+  SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || 'destek@gulivechat.com',
+  CONTACT_EMAIL: process.env.CONTACT_EMAIL || 'destek@gulivechat.com',
+  ORGANIC_MARKETING_NOTIFY_EMAIL: process.env.ORGANIC_MARKETING_NOTIFY_EMAIL || 'destek@gulivechat.com',
   ORGANIC_MARKETING_WEBHOOK_URL:
     process.env.ORGANIC_MARKETING_WEBHOOK_URL ||
     `https://www.${SITE}/api/internal/organic-marketing-dispatch`,

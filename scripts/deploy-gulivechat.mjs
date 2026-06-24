@@ -95,7 +95,7 @@ async function main() {
     SOCKET_SERVER_URL: SOCKET,
     NEXT_PUBLIC_MARKETING_WEBSITE_ID: MARKETING_ID,
     NEXT_PUBLIC_WIDGET_WEBSITE_ID: MARKETING_ID,
-    CONTACT_EMAIL: 'admin@gulivechat.com',
+    CONTACT_EMAIL: 'destek@gulivechat.com',
     SUPPORT_EMAIL: 'destek@gulivechat.com',
     ADMIN_EMAIL: 'admin@gulivechat.com',
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',

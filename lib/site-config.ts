@@ -33,16 +33,15 @@ export function getAuthUrl(): string {
   return `https://www.${SITE_DOMAIN}`
 }
 
+/** Resmi destek / iletişim e-postası */
+export const SUPPORT_EMAIL_ADDRESS = 'destek@gulivechat.com'
+
 export function getSupportEmail(): string {
-  return process.env.SUPPORT_EMAIL?.trim() || `destek@${SITE_DOMAIN}`
+  return process.env.SUPPORT_EMAIL?.trim() || SUPPORT_EMAIL_ADDRESS
 }
 
 export function getContactEmail(): string {
-  return (
-    process.env.CONTACT_EMAIL?.trim() ||
-    process.env.ADMIN_EMAIL?.trim() ||
-    getSupportEmail()
-  )
+  return process.env.CONTACT_EMAIL?.trim() || getSupportEmail()
 }
 
 export function getNoreplyEmail(): string {
