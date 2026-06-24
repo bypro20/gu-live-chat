@@ -16,7 +16,22 @@ export default async function MarketingLayout({ children }: { children: React.Re
     <>
       <JsonLd data={organizationJsonLd()} />
       <MarketingProviders initialLocale={initialLocale}>
-        <div className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-white text-foreground antialiased">
+        <div
+          className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden antialiased"
+          style={{
+            background: '#ffffff',
+            color: '#111827',
+            ['--foreground' as string]: '#111827',
+            ['--background' as string]: '#ffffff',
+            ['--card' as string]: '#ffffff',
+            ['--card-foreground' as string]: '#111827',
+            ['--muted' as string]: '#F9FAFB',
+            ['--muted-foreground' as string]: '#6B7280',
+            ['--border' as string]: '#E5E7EB',
+            ['--primary' as string]: '#1D4ED8',
+            ['--primary-foreground' as string]: '#ffffff',
+          }}
+        >
           <SourceProtection />
           {children}
           <MarketingWidgetLoader />
