@@ -1373,22 +1373,23 @@ export default function WidgetPage() {
                     </option>
                   ))}
                 </select>
-                {!isEmbedded && (
-                  <button
-                    onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
-                    aria-label={t.close}
-                    style={{
-                      width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)',
-                      border: '1px solid rgba(255,255,255,0.25)', borderRadius: '12px', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#fff', flexShrink: 0, lineHeight: 0,
-                    }}
-                  >
-                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
+                <button
+                  onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
+                  aria-label={t.close}
+                  style={{
+                    width: isEmbedded ? '44px' : '34px',
+                    height: isEmbedded ? '44px' : '34px',
+                    background: 'rgba(255,255,255,0.15)',
+                    border: '1px solid rgba(255,255,255,0.25)', borderRadius: '12px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', flexShrink: 0, lineHeight: 0,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 

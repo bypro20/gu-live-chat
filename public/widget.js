@@ -197,12 +197,17 @@
   var chatOpen = false;
   var userOpenedChat = false;
   var isMobileViewport = window.matchMedia('(max-width: 768px)').matches;
+  try {
+    window.matchMedia('(max-width: 768px)').addEventListener('change', function(e) {
+      isMobileViewport = e.matches;
+    });
+  } catch (e) {}
 
   function showIframe() {
     iframe.style.display = 'block';
     if (isMobileViewport) {
       iframe.classList.add('gu-iframe-mobile-full');
-      chatDock.style.display = 'none';
+      hideTeaser();
     }
     // Animate in on the next frame so the transition runs.
     requestAnimationFrame(function() {
@@ -215,7 +220,6 @@
     iframe.style.transform = isMobileViewport ? 'none' : 'translateY(12px) scale(0.98)';
     if (isMobileViewport) {
       iframe.classList.remove('gu-iframe-mobile-full');
-      chatDock.style.display = 'flex';
     }
     setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 260);
   }
@@ -614,6 +618,13 @@
     } else if (event.data.type === 'gu:unread') {
       // The chat UI reports how many unread messages arrived while closed.
       if (!chatOpen) setUnread(parseInt(event.data.count, 10) || 0);
+    } else if (event.data.type === 'gu:close') {
+      if (!chatOpen) return;
+      chatOpen = false;
+      hideIframe();
+      notifyIframeClose();
+      setIconChat();
+      if (!greetingDismissed) showTeaser();
     } else if (event.data.type === 'gu:request-pageview') {
       trackPageView();
     }
