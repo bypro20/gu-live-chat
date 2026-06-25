@@ -3,10 +3,14 @@ import { bridgeSocketEmit } from './socket-bridge'
 import {
   emitAgentMessageOnIO,
   emitBotMessageOnIO,
+  emitBotTypingOnIO,
   emitVisitorMessageOnIO,
+  emitVisitorMessagesReadOnIO,
   type AgentMessageEmit,
   type BotMessageEmit,
+  type BotTypingEmit,
   type VisitorMessageEmit,
+  type VisitorMessagesReadEmit,
 } from './socket-emit-core'
 
 export function emitAgentMessage(params: AgentMessageEmit) {
@@ -34,4 +38,22 @@ export function emitBotMessage(params: BotMessageEmit) {
     return
   }
   void bridgeSocketEmit({ kind: 'bot', params })
+}
+
+export function emitBotTyping(params: BotTypingEmit & { start: boolean }) {
+  const io = getIO()
+  if (io) {
+    emitBotTypingOnIO(io, params)
+    return
+  }
+  void bridgeSocketEmit({ kind: 'bot-typing', params })
+}
+
+export function emitVisitorMessagesRead(params: VisitorMessagesReadEmit) {
+  const io = getIO()
+  if (io) {
+    emitVisitorMessagesReadOnIO(io, params)
+    return
+  }
+  void bridgeSocketEmit({ kind: 'visitor-read', params })
 }

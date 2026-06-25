@@ -125,13 +125,46 @@ export function emitBotMessageOnIO(io: SocketIOServer, params: BotMessageEmit) {
   })
 }
 
+export type BotTypingEmit = {
+  conversationId: string
+  agentName: string
+}
+
+export type VisitorMessagesReadEmit = {
+  conversationId: string
+  messageIds: string[]
+}
+
+export function emitBotTypingOnIO(
+  io: SocketIOServer,
+  params: BotTypingEmit & { start: boolean }
+) {
+  if (params.start) {
+    io.to(`conversation:${params.conversationId}`).emit('visitor:typing', {
+      agentName: params.agentName,
+    })
+  } else {
+    io.to(`conversation:${params.conversationId}`).emit('visitor:typing:stop', {})
+  }
+}
+
+export function emitVisitorMessagesReadOnIO(io: SocketIOServer, params: VisitorMessagesReadEmit) {
+  io.to(`conversation:${params.conversationId}`).emit('visitor:message:read', {
+    messageIds: params.messageIds,
+  })
+}
+
 export type RemoteSocketEmit =
   | { kind: 'agent'; params: AgentMessageEmit }
   | { kind: 'visitor'; params: VisitorMessageEmit }
   | { kind: 'bot'; params: BotMessageEmit }
+  | { kind: 'bot-typing'; params: BotTypingEmit & { start: boolean } }
+  | { kind: 'visitor-read'; params: VisitorMessagesReadEmit }
 
 export function applyRemoteSocketEmit(io: SocketIOServer, body: RemoteSocketEmit) {
   if (body.kind === 'agent') emitAgentMessageOnIO(io, body.params)
   else if (body.kind === 'visitor') emitVisitorMessageOnIO(io, body.params)
-  else emitBotMessageOnIO(io, body.params)
+  else if (body.kind === 'bot') emitBotMessageOnIO(io, body.params)
+  else if (body.kind === 'bot-typing') emitBotTypingOnIO(io, body.params)
+  else if (body.kind === 'visitor-read') emitVisitorMessagesReadOnIO(io, body.params)
 }

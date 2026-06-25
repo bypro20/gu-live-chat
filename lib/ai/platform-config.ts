@@ -2,7 +2,9 @@ import type { AiProvider } from './provider'
 
 /** Vercel / sunucu ortamında platform geneli AI — tüm müşteri siteleri için yedek. */
 export const PLATFORM_AI_PROVIDER: AiProvider = 'GEMINI'
-export const PLATFORM_AI_MODEL = 'gemini-2.5-flash'
+/** Hızlı widget yanıtları için Flash-Lite */
+export const PLATFORM_AI_MODEL = 'gemini-2.5-flash-lite'
+export const PLATFORM_AI_MODEL_FULL = 'gemini-2.5-flash'
 
 export const PLATFORM_AI_ENV_KEYS = ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY'] as const
 

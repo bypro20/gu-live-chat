@@ -56,6 +56,8 @@ export interface GenerateAiReplyParams {
   websiteId?: string
   conversationId?: string
   visitorContext?: string
+  /** Yanıt uzunluğu sınırı — widget auto-reply için düşük tutulabilir */
+  maxTokens?: number
 }
 
 const MAX_TOKENS = 1024
@@ -388,7 +390,7 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
 
 // ─── Provider calls ─────────────────────────────────────────────────
 
-async function callOpenAiCompat(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+async function callOpenAiCompat(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   const client = new OpenAI({
     apiKey: runtime.apiKey,
     baseURL: runtime.baseURL,
@@ -397,7 +399,7 @@ async function callOpenAiCompat(runtime: AiRuntimeConfig, systemPrompt: string, 
   const completion = await client.chat.completions.create({
     model: runtime.model,
     temperature: runtime.temperature,
-    max_tokens: MAX_TOKENS,
+    max_tokens: maxTokens,
     messages: [
       { role: 'system', content: systemPrompt },
       ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -406,11 +408,11 @@ async function callOpenAiCompat(runtime: AiRuntimeConfig, systemPrompt: string, 
   return completion.choices[0]?.message?.content?.trim() || ''
 }
 
-async function callAnthropic(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+async function callAnthropic(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   const client = new Anthropic({ apiKey: runtime.apiKey })
   const resp = await client.messages.create({
     model: runtime.model,
-    max_tokens: MAX_TOKENS,
+    max_tokens: maxTokens,
     temperature: runtime.temperature,
     system: systemPrompt,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
@@ -419,7 +421,7 @@ async function callAnthropic(runtime: AiRuntimeConfig, systemPrompt: string, mes
   return textBlock && 'text' in textBlock ? textBlock.text.trim() : ''
 }
 
-async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(runtime.model)}:generateContent?key=${encodeURIComponent(runtime.apiKey)}`
 
   const contents = messages.map((m) => ({
@@ -435,7 +437,7 @@ async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messag
       contents,
       generationConfig: {
         temperature: runtime.temperature,
-        maxOutputTokens: MAX_TOKENS,
+        maxOutputTokens: maxTokens,
       },
     }),
   })
@@ -451,17 +453,17 @@ async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messag
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
 }
 
-async function callLlm(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+async function callLlm(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   switch (runtime.provider) {
     case 'ANTHROPIC':
-      return callAnthropic(runtime, systemPrompt, messages)
+      return callAnthropic(runtime, systemPrompt, messages, maxTokens)
     case 'GEMINI':
-      return callGemini(runtime, systemPrompt, messages)
+      return callGemini(runtime, systemPrompt, messages, maxTokens)
     case 'OPENAI':
     case 'GROQ':
     case 'OPENROUTER':
     case 'OLLAMA':
-      return callOpenAiCompat(runtime, systemPrompt, messages)
+      return callOpenAiCompat(runtime, systemPrompt, messages, maxTokens)
     default:
       return ''
   }
@@ -484,7 +486,8 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
   const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, params.visitorContext)
 
   try {
-    const text = await callLlm(runtime, systemPrompt, messages)
+    const maxTokens = params.maxTokens ?? MAX_TOKENS
+    const text = await callLlm(runtime, systemPrompt, messages, maxTokens)
     return text || fallbackReply(siteName, messages, knowledge)
   } catch (err) {
     console.error(`[AI] ${runtime.provider} call failed:`, err instanceof Error ? err.message : err)

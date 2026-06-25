@@ -83,6 +83,10 @@ export function getWidgetGlobalCss(): string {
       25%      { transform: rotate(-4deg); }
       75%      { transform: rotate(4deg); }
     }
+    @keyframes gwCursorBlink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
     .gw-scroll::-webkit-scrollbar       { width: 5px; }
     .gw-scroll::-webkit-scrollbar-track { background: transparent; }
     .gw-scroll::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.14); border-radius: 8px; }

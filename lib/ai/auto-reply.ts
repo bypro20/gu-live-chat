@@ -1,5 +1,5 @@
 import { prisma } from '../db'
-import { emitBotMessage } from '../socket-events'
+import { emitBotMessage, emitBotTyping, emitVisitorMessagesRead } from '../socket-events'
 import { generateAiReply, isAiLlmAvailable } from './provider'
 import { loadKnowledge, selectRelevantKnowledge, toChatMessages } from './knowledge'
 import { loadVisitorContext } from './visitor-context'
@@ -13,7 +13,9 @@ import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
 import type { PlanType } from '../constants'
 
-const HISTORY_LIMIT = 20
+const HISTORY_LIMIT = 12
+const KNOWLEDGE_LIMIT = 6
+const WIDGET_MAX_TOKENS = 420
 let marketingAiReadyPromise: Promise<void> | null = null
 
 async function ensureMarketingAiBeforeReply(
@@ -28,6 +30,24 @@ async function ensureMarketingAiBeforeReply(
     })
   }
   await marketingAiReadyPromise
+}
+
+async function markVisitorMessagesRead(conversationId: string): Promise<string[]> {
+  await prisma.message.updateMany({
+    where: {
+      conversationId,
+      senderType: 'VISITOR',
+      status: { in: ['SENT', 'DELIVERED'] },
+    },
+    data: { status: 'READ', readAt: new Date() },
+  })
+  const read = await prisma.message.findMany({
+    where: { conversationId, senderType: 'VISITOR', status: 'READ' },
+    select: { id: true },
+    orderBy: { createdAt: 'desc' },
+    take: 8,
+  })
+  return read.map((m) => m.id)
 }
 
 interface AutoReplyParams {
@@ -131,11 +151,22 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (!last || last.senderType !== 'VISITOR') return
 
     const knowledge = await loadKnowledge(params.websiteDbId)
-    const relevantKnowledge = selectRelevantKnowledge(last.content, knowledge, 12)
-    const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge
+    const relevantKnowledge = selectRelevantKnowledge(last.content, knowledge, KNOWLEDGE_LIMIT)
+    const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge.slice(0, KNOWLEDGE_LIMIT)
     const siteName = (conversation.website.name || 'Destek').trim()
     const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
     const botDisplayName = isMarketing ? 'Gu Live Chat Asistanı' : siteName
+
+    emitBotTyping({
+      conversationId: params.conversationId,
+      agentName: botDisplayName,
+      start: true,
+    })
+
+    const readIds = await markVisitorMessagesRead(params.conversationId)
+    if (readIds.length > 0) {
+      emitVisitorMessagesRead({ conversationId: params.conversationId, messageIds: readIds })
+    }
 
     const dbConfig = {
       provider: aiConfig.provider,
@@ -145,40 +176,54 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     }
     const llmReady = isAiLlmAvailable(dbConfig)
 
-    // LLM varken kelime eşleşmesiyle aynı metni yapıştırma — model bilgi bankasından doğal yanıt üretsin
-    if (!llmReady) {
-      const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
-      if (faqHit && faqHit.confidence >= 0.5) {
-        await sendBotReply(params, faqHit.answer, botDisplayName)
-        return
+    try {
+      // LLM varken kelime eşleşmesiyle aynı metni yapıştırma — model bilgi bankasından doğal yanıt üretsin
+      if (!llmReady) {
+        const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
+        if (faqHit && faqHit.confidence >= 0.5) {
+          await sendBotReply(params, faqHit.answer, botDisplayName)
+          return
+        }
       }
+
+      const messages = toChatMessages(ordered)
+      if (messages.length === 0) return
+
+      const visitorContext = await loadVisitorContext(
+        params.visitorId || conversation.visitorId,
+        params.conversationId
+      )
+
+      const reply = await generateAiReply({
+        siteName: conversation.website.name,
+        messages,
+        knowledge: knowledgeForReply,
+        systemPrompt: aiConfig.systemPrompt || undefined,
+        visitorContext,
+        dbConfig,
+        plan: conversation.website.plan as PlanType,
+        websiteId: params.websiteDbId,
+        conversationId: params.conversationId,
+        maxTokens: WIDGET_MAX_TOKENS,
+      })
+
+      const content = reply?.trim()
+      if (!content) return
+
+      await sendBotReply(params, content, botDisplayName)
+    } finally {
+      emitBotTyping({
+        conversationId: params.conversationId,
+        agentName: botDisplayName,
+        start: false,
+      })
     }
-
-    const messages = toChatMessages(ordered)
-    if (messages.length === 0) return
-
-    const visitorContext = await loadVisitorContext(
-      params.visitorId || conversation.visitorId,
-      params.conversationId
-    )
-
-    const reply = await generateAiReply({
-      siteName: conversation.website.name,
-      messages,
-      knowledge: knowledgeForReply,
-      systemPrompt: aiConfig.systemPrompt || undefined,
-      visitorContext,
-      dbConfig,
-      plan: conversation.website.plan as PlanType,
-      websiteId: params.websiteDbId,
-      conversationId: params.conversationId,
-    })
-
-    const content = reply?.trim()
-    if (!content) return
-
-    await sendBotReply(params, content, botDisplayName)
   } catch {
     console.error('[AI auto-reply] failed for conversation', params.conversationId)
+    emitBotTyping({
+      conversationId: params.conversationId,
+      agentName: 'Asistan',
+      start: false,
+    })
   }
 }

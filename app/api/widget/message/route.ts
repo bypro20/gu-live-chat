@@ -227,7 +227,10 @@ export async function POST(req: Request) {
     })
 
     const visitorName = visitor.name || visitor.email?.split('@')[0] || 'Ziyaretçi'
-    const responseBody = { message, conversationId }
+    const responseBody = {
+      message: { ...message, status: message.status },
+      conversationId,
+    }
 
     // Yanıtı hemen döndür — chatbot/AI/webhook beklemesin (widget mesaj kaybını önler)
     void (async () => {
@@ -245,72 +248,76 @@ export async function POST(req: Request) {
           isNewConversation,
         })
 
-        if (isNewConversation) {
-          await notifyNewConversation(website.id, visitorName, conversationId)
-          await dispatchWebhooks(website.id, 'conversation.created', {
-            conversationId,
-            visitorId: visitor.id,
-            visitorName,
-            source: 'WIDGET',
-          })
-          await runWorkflows('CONVERSATION_CREATED', {
-            websiteDbId: website.id,
-            websitePublicId: website.websiteId,
-            conversationId,
-            visitorId: visitor.id,
-          })
-        } else {
-          await notifyWebsiteMembers({
-            websiteId: website.id,
-            type: 'NEW_MESSAGE',
-            title: 'Yeni mesaj',
-            message: `${visitorName} bir mesaj gönderdi`,
-            data: { conversationId },
-          })
-        }
-
-        await dispatchWebhooks(website.id, 'message.received', {
-          conversationId,
-          messageId: message.id,
-          content: message.content,
-          visitorId: visitor.id,
-          visitorName,
-        })
-
-        await runWorkflows('MESSAGE_RECEIVED', {
-          websiteDbId: website.id,
-          websitePublicId: website.websiteId,
-          conversationId,
-          visitorId: visitor.id,
-          messageContent: message.content,
-          senderType: 'VISITOR',
-        })
-
         const priorConversations = await prisma.conversation.count({
           where: { visitorId: visitor.id, websiteId: website.id },
         })
-
         const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
 
-        await processChatbotOnVisitorMessage({
-          websiteDbId: website.id,
-          websitePublicId: website.websiteId,
-          conversationId,
-          visitorId: visitor.id,
-          messageContent: validated.content,
-          isFirstVisit: priorConversations <= 1,
-          agentsOnline,
-        })
-
-        const resolved = await maybeAutoResolveOnSatisfaction(conversationId, validated.content)
-        if (!resolved) {
-          await maybeRunAiAutoReply({
+        const aiTask = (async () => {
+          await processChatbotOnVisitorMessage({
             websiteDbId: website.id,
             websitePublicId: website.websiteId,
             conversationId,
             visitorId: visitor.id,
+            messageContent: validated.content,
+            isFirstVisit: priorConversations <= 1,
+            agentsOnline,
           })
-        }
+          const resolved = await maybeAutoResolveOnSatisfaction(conversationId, validated.content)
+          if (!resolved) {
+            await maybeRunAiAutoReply({
+              websiteDbId: website.id,
+              websitePublicId: website.websiteId,
+              conversationId,
+              visitorId: visitor.id,
+            })
+          }
+        })()
+
+        const sideTask = (async () => {
+          if (isNewConversation) {
+            await notifyNewConversation(website.id, visitorName, conversationId)
+            await dispatchWebhooks(website.id, 'conversation.created', {
+              conversationId,
+              visitorId: visitor.id,
+              visitorName,
+              source: 'WIDGET',
+            })
+            await runWorkflows('CONVERSATION_CREATED', {
+              websiteDbId: website.id,
+              websitePublicId: website.websiteId,
+              conversationId,
+              visitorId: visitor.id,
+            })
+          } else {
+            await notifyWebsiteMembers({
+              websiteId: website.id,
+              type: 'NEW_MESSAGE',
+              title: 'Yeni mesaj',
+              message: `${visitorName} bir mesaj gönderdi`,
+              data: { conversationId },
+            })
+          }
+
+          await dispatchWebhooks(website.id, 'message.received', {
+            conversationId,
+            messageId: message.id,
+            content: message.content,
+            visitorId: visitor.id,
+            visitorName,
+          })
+
+          await runWorkflows('MESSAGE_RECEIVED', {
+            websiteDbId: website.id,
+            websitePublicId: website.websiteId,
+            conversationId,
+            visitorId: visitor.id,
+            messageContent: message.content,
+            senderType: 'VISITOR',
+          })
+        })()
+
+        await Promise.all([aiTask, sideTask])
       } catch (postErr) {
         console.error('[widget/message] post-process failed (message saved):', postErr)
       }

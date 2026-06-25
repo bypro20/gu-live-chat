@@ -80,6 +80,8 @@ export async function GET(req: Request) {
         type: true,
         senderType: true,
         createdAt: true,
+        status: true,
+        readAt: true,
         sender: { select: { name: true } },
         attachments: {
           select: { id: true, url: true, fileName: true, fileSize: true, mimeType: true },
@@ -97,6 +99,7 @@ export async function GET(req: Request) {
         type: m.type,
         senderType: m.senderType,
         senderName: m.sender?.name || null,
+        status: m.status,
         createdAt: m.createdAt,
         attachments: m.attachments.map((a) => ({
           id: a.id,

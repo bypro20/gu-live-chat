@@ -63,8 +63,35 @@ interface Message {
   type: string
   senderType: 'VISITOR' | 'AGENT' | 'BOT' | 'SYSTEM'
   senderName?: string
+  status?: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
   createdAt: string
   attachments?: Attachment[]
+}
+
+function renderReadTicks(status: Message['status'] | undefined, color: string) {
+  const read = status === 'READ'
+  return (
+    <svg width="16" height="11" viewBox="0 0 16 11" aria-hidden style={{ flexShrink: 0 }}>
+      <path
+        d="M1 6l3 3 6-6"
+        stroke={read ? color : '#CBD5E1'}
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {read && (
+        <path
+          d="M5 6l3 3 7-7"
+          stroke={color}
+          strokeWidth="1.6"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  )
 }
 
 // ─── Lightweight i18n (TR default, EN optional) ─────────────────────────
@@ -166,6 +193,7 @@ const WIDGET_STRINGS = {
     autoTranslateOn: 'Canlı çeviri AÇIK',
     autoTranslateOff: 'Canlı çeviri',
     originalLabel: 'Orijinal',
+    typingWriting: 'yazıyor',
     emoji: 'Emoji',
     langName: 'Türkçe',
   },
@@ -212,6 +240,7 @@ const WIDGET_STRINGS = {
     autoTranslateOn: 'Live translate ON',
     autoTranslateOff: 'Live translate',
     originalLabel: 'Original',
+    typingWriting: 'is typing',
     emoji: 'Emoji',
     langName: 'English',
   },
@@ -303,6 +332,10 @@ export default function WidgetPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [typingAgentName, setTypingAgentName] = useState('')
+  const [awaitingReply, setAwaitingReply] = useState(false)
+  const [revealedText, setRevealedText] = useState<Record<string, string>>({})
+  const [streamingId, setStreamingId] = useState<string | null>(null)
   const [queuePosition, setQueuePosition] = useState(0)
   const [estimatedWait, setEstimatedWait] = useState('')
   const [visitorInfo, setVisitorInfo] = useState({ name: '', email: '' })
@@ -348,6 +381,37 @@ export default function WidgetPage() {
   // English for interface labels while message translation still targets it.
   const t: WidgetStrings = WIDGET_STRINGS[lang as keyof typeof WIDGET_STRINGS] || WIDGET_STRINGS.en
 
+  const startTypewriter = useCallback((id: string, fullText: string) => {
+    if (!fullText || animatedMsgIdsRef.current.has(id)) return
+    animatedMsgIdsRef.current.add(id)
+    setStreamingId(id)
+    setIsTyping(false)
+    setAwaitingReply(false)
+
+    const existing = typewriterTimersRef.current.get(id)
+    if (existing) clearInterval(existing)
+
+    let i = 0
+    setRevealedText((prev) => ({ ...prev, [id]: '' }))
+    const timer = setInterval(() => {
+      i += Math.random() > 0.3 ? 2 : 1
+      if (i >= fullText.length) {
+        setRevealedText((prev) => ({ ...prev, [id]: fullText }))
+        setStreamingId((cur) => (cur === id ? null : cur))
+        clearInterval(timer)
+        typewriterTimersRef.current.delete(id)
+        return
+      }
+      setRevealedText((prev) => ({ ...prev, [id]: fullText.slice(0, i) }))
+    }, 22)
+    typewriterTimersRef.current.set(id, timer)
+  }, [])
+
+  const queueIncomingBotMessage = useCallback((msg: Message) => {
+    if (msg.senderType !== 'AGENT' && msg.senderType !== 'BOT') return
+    startTypewriter(msg.id, msg.content)
+  }, [startTypewriter])
+
   const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -358,6 +422,8 @@ export default function WidgetPage() {
   const gifBtnRef = useRef<HTMLButtonElement>(null)
   const lastTypingEmitRef = useRef(0)
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const animatedMsgIdsRef = useRef(new Set<string>())
+  const typewriterTimersRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map())
 
   useEffect(() => {
     try {
@@ -659,12 +725,21 @@ export default function WidgetPage() {
 
     if (socket.connected) authenticateVisitor()
 
-    socket.on('visitor:typing', (data: { agentName: string }) => {
+    socket.on('visitor:typing', (data: { agentName?: string }) => {
       setIsTyping(true)
+      if (data.agentName) setTypingAgentName(data.agentName)
     })
 
     socket.on('visitor:typing:stop', () => {
       setIsTyping(false)
+    })
+
+    socket.on('visitor:message:read', (data: { messageIds?: string[] }) => {
+      const ids = data.messageIds || []
+      if (ids.length === 0) return
+      setMessages((prev) =>
+        prev.map((m) => (ids.includes(m.id) ? { ...m, status: 'READ' as const } : m))
+      )
     })
 
     socket.on('visitor:screen:start', () => {
@@ -725,7 +800,7 @@ export default function WidgetPage() {
           if (prev.some(m => m.id === data.id)) return prev
           return [...prev, newMsg]
         })
-        setIsTyping(false)
+        queueIncomingBotMessage(newMsg)
       }
     })
 
@@ -739,7 +814,7 @@ export default function WidgetPage() {
       socket.off('connect_error', onConnectError)
       releaseSocket()
     }
-  }, [isInitialized, websiteId, conversationId])
+  }, [isInitialized, websiteId, conversationId, queueIncomingBotMessage])
 
   // Join conversation room when conversationId is set
   useEffect(() => {
@@ -768,7 +843,7 @@ export default function WidgetPage() {
     if (!conversationId) return
 
     let active = true
-    const pollMs = isSocketEnabled() && socketConnected ? 4000 : 2000
+    const pollMs = awaitingReply ? 900 : isSocketEnabled() && socketConnected ? 4000 : 2000
 
     const poll = async () => {
       if (document.hidden) return
@@ -793,6 +868,7 @@ export default function WidgetPage() {
             type: string
             senderType: string
             senderName?: string | null
+            status?: Message['status']
             createdAt: string
             attachments?: Attachment[]
           }) => ({
@@ -801,10 +877,22 @@ export default function WidgetPage() {
             type: m.type || 'TEXT',
             senderType: m.senderType as Message['senderType'],
             senderName: m.senderName || undefined,
+            status: m.status,
             createdAt: m.createdAt,
             attachments: Array.isArray(m.attachments) ? m.attachments : undefined,
           }))
-          setMessages((prev) => mergeWidgetMessages(prev, incoming))
+          setMessages((prev) => {
+            const merged = mergeWidgetMessages(prev, incoming)
+            for (const m of merged) {
+              if (
+                (m.senderType === 'BOT' || m.senderType === 'AGENT') &&
+                !prev.some((p) => p.id === m.id)
+              ) {
+                queueIncomingBotMessage(m)
+              }
+            }
+            return merged
+          })
         }
 
         if (data.status) {
@@ -821,7 +909,7 @@ export default function WidgetPage() {
       active = false
       clearInterval(id)
     }
-  }, [conversationId, socketConnected, websiteId])
+  }, [conversationId, socketConnected, websiteId, awaitingReply, queueIncomingBotMessage])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -1034,6 +1122,9 @@ export default function WidgetPage() {
 
     setMessages((prev) => [...prev, newMessage])
     setInputMessage('')
+    setIsTyping(true)
+    setTypingAgentName(config?.websiteName || 'Gu Live Chat Asistanı')
+    setAwaitingReply(true)
 
     const socket = getSocket()
     if (socket?.connected && conversationId) {
@@ -1061,6 +1152,8 @@ export default function WidgetPage() {
       if (!res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId))
         setSendError(data.error || 'Mesaj gönderilemedi')
+        setIsTyping(false)
+        setAwaitingReply(false)
         console.error('[Gu Widget] Send message failed:', data.error)
         return
       }
@@ -1069,15 +1162,21 @@ export default function WidgetPage() {
       }
       if (data.message?.id) {
         setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? { ...m, id: data.message.id } : m))
+          prev.map((m) =>
+            m.id === tempId
+              ? { ...m, id: data.message.id, status: (data.message.status as Message['status']) || 'DELIVERED' }
+              : m
+          )
         )
       }
     } catch (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       setSendError('Bağlantı hatası — mesaj gönderilemedi')
+      setIsTyping(false)
+      setAwaitingReply(false)
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [inputMessage, websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired])
+  }, [inputMessage, websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config?.websiteName, queueIncomingBotMessage])
 
   const handlePickFile = () => {
     setUploadError(null)
@@ -1677,11 +1776,7 @@ export default function WidgetPage() {
                           {renderAttachments(msg, true)}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', margin: '4px 2px 0 0' }}>
                             <span style={{ fontSize: '10px', color: '#CBD5E1' }}>{formatTime(msg.createdAt)}</span>
-                            {idx === messages.length - 1 && (
-                              <svg width="13" height="13" viewBox="0 0 13 13" style={{ animation: 'gwCheckIn 0.3s ease-out' }}>
-                                <path d="M2 7l3 3 6-6" stroke={primaryColor} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            )}
+                            {renderReadTicks(msg.status || 'DELIVERED', primaryColor)}
                           </div>
                         </div>
                       </div>
@@ -1703,11 +1798,31 @@ export default function WidgetPage() {
                           )}
                           <div style={agentBubbleStyle()}>
                             {(() => {
-                              const { primary, secondary, mode } = getDisplayText(msg.id, msg.content)
+                              const isBotLike = msg.senderType === 'BOT' || msg.senderType === 'AGENT'
+                              const typed = revealedText[msg.id]
+                              const displayPrimary =
+                                isBotLike && typed !== undefined ? typed : getDisplayText(msg.id, msg.content).primary
+                              const showCursor = streamingId === msg.id
+                              const { secondary, mode } = getDisplayText(msg.id, msg.content)
                               return (
                                 <>
-                                  <span>{primary}</span>
-                                  {secondary && hasTranslation(msg.id) && (
+                                  <span style={{ whiteSpace: 'pre-wrap' }}>
+                                    {displayPrimary}
+                                    {showCursor && (
+                                      <span
+                                        style={{
+                                          display: 'inline-block',
+                                          width: '2px',
+                                          height: '1em',
+                                          marginLeft: '2px',
+                                          verticalAlign: 'text-bottom',
+                                          background: primaryColor,
+                                          animation: 'gwCursorBlink 1s step-end infinite',
+                                        }}
+                                      />
+                                    )}
+                                  </span>
+                                  {secondary && hasTranslation(msg.id) && !showCursor && (
                                     <span style={{
                                       display: 'block', marginTop: '8px', paddingTop: '8px',
                                       borderTop: '1px solid #F1F5F9',
@@ -1773,20 +1888,28 @@ export default function WidgetPage() {
                     }}>
                       {avatarEl(30)}
                     </div>
-                    <div style={{
-                      background: '#ffffff', borderRadius: '4px 16px 16px 16px',
-                      padding: '14px 18px',
-                      boxShadow: '0 1px 3px rgba(15,23,42,0.06)',
-                    }}>
-                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                        {[0, 0.18, 0.36].map((delay, i) => (
-                          <span key={i} style={{
-                            width: '7px', height: '7px',
-                            background: '#94A3B8', borderRadius: '50%',
+                    <div style={{ maxWidth: '280px' }}>
+                      {typingAgentName && (
+                        <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
+                          {typingAgentName}
+                        </p>
+                      )}
+                      <div style={{
+                        background: '#ffffff', borderRadius: '4px 16px 16px 16px',
+                        padding: '12px 16px',
+                        boxShadow: '0 1px 3px rgba(15,23,42,0.06)',
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                      }}>
+                        <span style={{ fontSize: '13px', color: '#64748B' }}>{t.typingWriting}</span>
+                        <span
+                          style={{
                             display: 'inline-block',
-                            animation: `gwBounce 1.2s ${delay}s infinite ease-in-out`,
-                          }} />
-                        ))}
+                            width: '2px',
+                            height: '14px',
+                            background: primaryColor,
+                            animation: 'gwCursorBlink 1s step-end infinite',
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
