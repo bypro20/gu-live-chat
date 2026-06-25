@@ -177,15 +177,46 @@ export async function POST(req: Request) {
         select: { sessionId: true },
       })
     } catch (sessionErr) {
-      console.warn('[widget/init] visitorSession create failed, minimal:', sessionErr)
-      session = await prisma.visitorSession.create({
-        data: {
-          visitorId: visitor.id,
-          websiteId: website.id,
-          sessionId: crypto.randomUUID(),
-        },
-        select: { sessionId: true },
-      })
+      console.warn('[widget/init] visitorSession create failed, retry core geo:', sessionErr)
+      try {
+        session = await prisma.visitorSession.create({
+          data: {
+            visitorId: visitor.id,
+            websiteId: website.id,
+            sessionId: crypto.randomUUID(),
+            landingPage: embedPage,
+            currentPage: embedPage,
+            currentTitle: extractPageTitle(embedPage) ?? null,
+            referrer: validated.referrer?.trim() || null,
+            utmSource: utm.utmSource,
+            utmMedium: utm.utmMedium,
+            utmCampaign: utm.utmCampaign,
+            ipAddress: sessionMetadata.ipAddress,
+            userAgent: sessionMetadata.userAgent,
+            browser: sessionMetadata.browser,
+            os: sessionMetadata.os,
+            device: sessionMetadata.device,
+            deviceType: sessionMetadata.deviceType,
+            country: sessionMetadata.country,
+            city: sessionMetadata.city,
+            region: sessionMetadata.region,
+            latitude: sessionMetadata.latitude,
+            longitude: sessionMetadata.longitude,
+            timezone: sessionMetadata.timezone,
+            isp: sessionMetadata.isp,
+          },
+          select: { sessionId: true },
+        })
+      } catch {
+        session = await prisma.visitorSession.create({
+          data: {
+            visitorId: visitor.id,
+            websiteId: website.id,
+            sessionId: crypto.randomUUID(),
+          },
+          select: { sessionId: true },
+        })
+      }
     }
 
     // Check for open conversation

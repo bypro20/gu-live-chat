@@ -98,7 +98,7 @@ export function LiveVisitorsGeoMap({
         map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 })
       }
 
-      map.invalidateSize()
+      window.setTimeout(() => map.invalidateSize(), 120)
     })()
 
     return () => {

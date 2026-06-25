@@ -489,7 +489,7 @@ export function AdminVisitorsMonitor({
 
   return (
     <div className={`flex flex-col gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
-      {!upgradeRequired && (
+      {!upgradeRequired && isDashboard && (
         <div className={`shrink-0 ${isDashboard ? '' : 'admin-monitor-panel p-3'}`}>
           <p className={`text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1 ${textMuted}`}>
             <Globe2 className="w-3 h-3" /> {m.liveLocationMap}

@@ -8,7 +8,9 @@ import {
 import { getDeviceLabel, getBrowserLabel, formatDuration } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { AdminVisitorsMonitor } from '@/components/admin/admin-visitors-monitor'
+import { LiveVisitorsGeoMap } from '@/components/admin/live-visitors-geo-map'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
 
 interface HistorySession {
   id: string
@@ -90,6 +92,7 @@ const countryMap: Record<string, { flag: string; x: number; y: number }> = {
 function getFlag(country?: string | null): string {
   if (!country) return '🌍'
   const c = country.toUpperCase()
+  if (c === 'TURKEY' || c === 'TÜRKIYE' || c === 'TURKIYE') return '🇹🇷'
   return countryMap[c]?.flag || '🌍'
 }
 
@@ -115,7 +118,6 @@ export default function AdminVisitorsPage() {
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
   const [timeFilter, setTimeFilter] = useState('24h')
-  const [mapHover, setMapHover] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -193,7 +195,6 @@ export default function AdminVisitorsPage() {
     : '—'
 
   const countryData = getCountryCounts(sortedVisitors)
-  const maxCountryCount = Math.max(...Object.values(countryData).map(c => c.count), 1)
 
   const deviceTypes: Record<string, number> = { Masaüstü: 0, Mobil: 0, Tablet: 0 }
   for (const v of sortedVisitors) {
@@ -319,82 +320,36 @@ export default function AdminVisitorsPage() {
             </span>
           </div>
 
-          <div className="relative w-full aspect-[2/1] bg-gradient-to-b from-blue-500/[0.03] via-transparent to-emerald-500/[0.03] rounded-xl border border-white/[0.04] overflow-hidden">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)',
-              backgroundSize: '24px 24px',
-            }} />
-
-            {Object.entries(countryMap).map(([code, pos]) => {
-              const data = countryData[code]
-              if (!data) return null
-              const size = Math.max(8, Math.round(8 + (data.count / maxCountryCount) * 24))
-              const intensity = data.count / maxCountryCount
-              const r = Math.round(34 + intensity * 221)
-              const g = Math.round(197 - intensity * 160)
-              const b = Math.round(94 - intensity * 80)
-              return (
-                <div
-                  key={code}
-                  className="absolute flex items-center justify-center transition-all duration-300 cursor-pointer group"
-                  style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
-                  onMouseEnter={() => setMapHover(code)}
-                  onMouseLeave={() => setMapHover(null)}
-                >
-                  <div
-                    className="rounded-full transition-all duration-300 shadow-lg"
-                    style={{
-                      width: size,
-                      height: size,
-                      background: `radial-gradient(circle at 35% 35%, rgba(${r},${g},${b},0.9), rgba(${Math.round(r*0.5)},${Math.round(g*0.5)},${Math.round(b*0.5)},0.6))`,
-                      boxShadow: `0 0 ${size}px rgba(${r},${g},${b},0.3), inset 0 -2px 4px rgba(0,0,0,0.2)`,
-                    }}
-                  />
-                  {(mapHover === code || data.count > 1) && (
-                    <div className={`absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-lg bg-gray-900/95 border border-white/10 whitespace-nowrap text-xs font-medium text-white shadow-xl backdrop-blur-sm transition-all duration-200 ${
-                      mapHover === code ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
-                    }`}>
-                      {pos.flag} {code} · {data.count}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-
-            {sortedVisitors
-              .filter((v) => v.latitude != null && v.longitude != null)
-              .map((v) => {
-                const x = ((v.longitude! + 180) / 360) * 100
-                const y = ((90 - v.latitude!) / 180) * 100
-                return (
-                  <div
-                    key={`geo-${v.visitorId}`}
-                    className="absolute w-2 h-2 rounded-full bg-sky-400 ring-2 ring-sky-300/40 -translate-x-1/2 -translate-y-1/2 animate-pulse"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                    title={`${v.name || 'Anonim'} — ${v.city || v.country || ''}`}
-                  />
-                )
-              })}
-
-            {Object.keys(countryData).length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-sm">
-                <div className="text-center">
-                  <Globe2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                  <p>Henüz konum verisi yok</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <LiveVisitorsGeoMap
+            visitors={sortedVisitors}
+            className="w-full aspect-[2/1] min-h-[280px] rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d1117]"
+            emptyLabel={
+              sortedVisitors.length > 0
+                ? 'Konum henüz çözümlenmedi — ziyaretçi widget açınca IP/GPS konumu burada görünür'
+                : 'Henüz ziyaretçi yok'
+            }
+          />
 
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {Object.entries(countryData).sort((a, b) => b[1].count - a[1].count).slice(0, 8).map(([country, data]) => (
-              <span
-                key={country}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-gray-300"
-              >
-                {getFlag(country)} {country === 'Bilinmiyor' ? country : country} <span className="text-gray-500 font-medium">{data.count}</span>
-              </span>
-            ))}
+            {sortedVisitors.slice(0, 8).map((v) => {
+              const line = formatVisitorGeoLine(v) || v.country || 'Konum bilinmiyor'
+              return (
+                <span
+                  key={v.visitorId}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-gray-300 max-w-full truncate"
+                  title={line}
+                >
+                  {getFlag(v.country)} {v.name || 'Anonim'}
+                  <span className="text-gray-500 font-medium truncate">{line}</span>
+                  {v.entrySource ? (
+                    <span className="text-violet-400/80 truncate">· {v.entrySource}</span>
+                  ) : null}
+                </span>
+              )
+            })}
+            {sortedVisitors.length === 0 && (
+              <span className="text-xs text-gray-500">Henüz konum verisi yok</span>
+            )}
           </div>
         </div>
 
