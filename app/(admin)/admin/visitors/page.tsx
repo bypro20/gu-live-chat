@@ -325,7 +325,6 @@ export default function AdminVisitorsPage() {
             visitors={sortedVisitors}
             selectedVisitorId={focusedVisitorId}
             onSelect={setFocusedVisitorId}
-            className="w-full aspect-[2/1] min-h-[280px] rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d1117]"
             emptyLabel={
               sortedVisitors.length > 0
                 ? 'Konum henüz çözümlenmedi — ziyaretçi widget açınca IP/GPS konumu burada görünür'

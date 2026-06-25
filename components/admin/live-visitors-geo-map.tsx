@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
+import type { Map as LeafletMap, LayerGroup, CircleMarker } from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { DEFAULT_MAP_CENTER, resolveVisitorMapCoords } from '@/lib/country-coords'
 import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
@@ -21,25 +23,20 @@ type LiveVisitorsGeoMapProps = {
   emptyLabel?: string
 }
 
-type LeafletContainer = HTMLDivElement & { _leaflet_id?: number }
-
-function resetLeafletContainer(container: LeafletContainer) {
-  if (container._leaflet_id != null) {
-    container.replaceChildren()
-    delete container._leaflet_id
-  }
-}
+const MAP_HEIGHT = 320
+const OSM_TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 export function LiveVisitorsGeoMap({
   visitors,
   selectedVisitorId,
   onSelect,
-  className = 'h-56 w-full rounded-xl overflow-hidden border border-white/[0.08]',
+  className = '',
   emptyLabel = 'Henüz konum verisi yok',
 }: LiveVisitorsGeoMapProps) {
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<import('leaflet').Map | null>(null)
-  const layerRef = useRef<import('leaflet').LayerGroup | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<LeafletMap | null>(null)
+  const layerRef = useRef<LayerGroup | null>(null)
+  const markersRef = useRef<CircleMarker[]>([])
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -60,51 +57,62 @@ export function LiveVisitorsGeoMap({
   }, [visitors])
 
   useEffect(() => {
-    const wrapper = wrapperRef.current
-    if (!wrapper) return
+    const container = containerRef.current
+    if (!container || mapRef.current) return
 
-    let cancelled = false
     let resizeObserver: ResizeObserver | undefined
+    let cancelled = false
 
-    ;(async () => {
-      const L = (await import('leaflet')).default
-      await import('leaflet/dist/leaflet.css')
-      if (cancelled || !wrapperRef.current) return
+    void import('leaflet').then((mod) => {
+      if (cancelled || !containerRef.current || mapRef.current) return
 
-      let container = wrapper.querySelector('[data-live-map-root]') as LeafletContainer | null
-      if (!container) {
-        container = document.createElement('div')
-        container.dataset.liveMapRoot = 'true'
-        container.className = className
-        container.style.minHeight = '280px'
-        wrapper.prepend(container)
+      const L = mod.default
+      const map = L.map(container, {
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: true,
+      })
+
+      L.tileLayer(OSM_TILE, {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19,
+      }).addTo(map)
+
+      layerRef.current = L.layerGroup().addTo(map)
+      map.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
+      mapRef.current = map
+
+      const invalidate = () => map.invalidateSize()
+      resizeObserver = new ResizeObserver(invalidate)
+      resizeObserver.observe(container)
+      requestAnimationFrame(invalidate)
+      window.setTimeout(invalidate, 120)
+      window.setTimeout(invalidate, 400)
+    })
+
+    return () => {
+      cancelled = true
+      resizeObserver?.disconnect()
+      markersRef.current = []
+      layerRef.current = null
+      mapRef.current?.remove()
+      mapRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    const layer = layerRef.current
+    if (!map || !layer) return
+
+    void import('leaflet').then((mod) => {
+      if (!mapRef.current || !layerRef.current) return
+      const L = mod.default
+
+      for (const marker of markersRef.current) {
+        marker.remove()
       }
-
-      if (!mapRef.current) {
-        resetLeafletContainer(container)
-        const map = L.map(container, {
-          zoomControl: true,
-          attributionControl: true,
-          scrollWheelZoom: true,
-        })
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap',
-          maxZoom: 19,
-        }).addTo(map)
-        layerRef.current = L.layerGroup().addTo(map)
-        mapRef.current = map
-        map.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
-
-        resizeObserver = new ResizeObserver(() => {
-          mapRef.current?.invalidateSize()
-        })
-        resizeObserver.observe(container)
-      }
-
-      const map = mapRef.current
-      const layer = layerRef.current
-      if (!map || !layer) return
-
+      markersRef.current = []
       layer.clearLayers()
 
       if (pins.length === 0) {
@@ -140,6 +148,7 @@ export function LiveVisitorsGeoMap({
         marker.bindPopup(`<strong>${label}</strong><br/>${address}${source}${entry}`)
         marker.on('click', () => onSelectRef.current?.(pin.visitorId))
         marker.addTo(layer)
+        markersRef.current.push(marker)
       }
 
       const allApproximate = pins.every((p) => p.approximate)
@@ -150,30 +159,23 @@ export function LiveVisitorsGeoMap({
       }
 
       window.setTimeout(() => map.invalidateSize(), 80)
-    })()
-
-    return () => {
-      cancelled = true
-      resizeObserver?.disconnect()
-    }
-  }, [pins, selectedVisitorId, className])
-
-  useEffect(() => {
-    return () => {
-      mapRef.current?.remove()
-      mapRef.current = null
-      layerRef.current = null
-    }
-  }, [])
+    })
+  }, [pins, selectedVisitorId])
 
   return (
-    <div ref={wrapperRef} className="relative" style={{ minHeight: pins.length > 0 ? 280 : undefined }}>
+    <div className="relative w-full">
+      <div
+        ref={containerRef}
+        className={`w-full rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d1117] ${className}`}
+        style={{ height: MAP_HEIGHT, minHeight: MAP_HEIGHT }}
+        aria-label="Canlı ziyaretçi haritası"
+      />
       {pins.length === 0 && (
         <div
-          className={`${className} flex items-center justify-center bg-[#0d1117] text-xs text-gray-500`}
-          style={{ minHeight: 280 }}
+          className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#0d1117]/55"
+          style={{ height: MAP_HEIGHT }}
         >
-          {emptyLabel}
+          <p className="max-w-[85%] text-center text-xs text-gray-400 px-4">{emptyLabel}</p>
         </div>
       )}
       {pins.some((p) => p.approximate) && pins.length > 0 && (
