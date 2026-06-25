@@ -31,18 +31,68 @@ function isPrivateIp(ip: string): boolean {
 const geoCache = new Map<string, { data: GeoLocation; expiresAt: number }>()
 const CACHE_TTL_MS = 60 * 60 * 1000
 
-export async function lookupIpGeo(ip: string | null | undefined): Promise<GeoLocation | null> {
-  if (!ip || isPrivateIp(ip)) return null
+async function lookupIpWhoIs(ip: string): Promise<GeoLocation | null> {
+  try {
+    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      success?: boolean
+      country?: string
+      country_code?: string
+      city?: string
+      region?: string
+      latitude?: number
+      longitude?: number
+      timezone?: { id?: string }
+      connection?: { isp?: string }
+      postal?: string
+    }
+    if (!data.success) return null
 
-  const cached = geoCache.get(ip)
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.data
+    const latitude = typeof data.latitude === 'number' ? data.latitude : null
+    const longitude = typeof data.longitude === 'number' ? data.longitude : null
+    let geoAddress: string | null = null
+    let district: string | null = null
+    let postalCode = data.postal || null
+
+    if (latitude != null && longitude != null) {
+      const reversed = await reverseGeocode(latitude, longitude)
+      if (reversed) {
+        geoAddress = reversed.geoAddress || null
+        district = reversed.district
+        postalCode = postalCode || reversed.postalCode
+      }
+    }
+
+    if (!geoAddress) {
+      geoAddress = [data.city, data.region, data.country].filter(Boolean).join(', ') || null
+    }
+
+    return {
+      country: data.country || null,
+      countryCode: data.country_code || null,
+      city: data.city || null,
+      region: data.region || null,
+      district,
+      postalCode,
+      latitude,
+      longitude,
+      timezone: data.timezone?.id || null,
+      isp: data.connection?.isp || null,
+      geoAddress,
+    }
+  } catch {
+    return null
   }
+}
 
+async function lookupIpApiHttp(ip: string): Promise<GeoLocation | null> {
   try {
     const res = await fetch(
-      `https://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,district`,
-      { next: { revalidate: 3600 } }
+      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,district`,
+      { cache: 'no-store' }
     )
     if (!res.ok) return null
 
@@ -69,7 +119,7 @@ export async function lookupIpGeo(ip: string | null | undefined): Promise<GeoLoc
       geoAddress = [district, data.city, data.regionName, data.country].filter(Boolean).join(', ') || null
     }
 
-    const result: GeoLocation = {
+    return {
       country: data.country || null,
       countryCode: data.countryCode || null,
       city: data.city || null,
@@ -82,10 +132,22 @@ export async function lookupIpGeo(ip: string | null | undefined): Promise<GeoLoc
       isp: data.isp || null,
       geoAddress,
     }
-
-    geoCache.set(ip, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
-    return result
   } catch {
     return null
   }
+}
+
+export async function lookupIpGeo(ip: string | null | undefined): Promise<GeoLocation | null> {
+  if (!ip || isPrivateIp(ip)) return null
+
+  const cached = geoCache.get(ip)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data
+  }
+
+  const result = (await lookupIpWhoIs(ip)) || (await lookupIpApiHttp(ip))
+  if (!result) return null
+
+  geoCache.set(ip, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
+  return result
 }
