@@ -441,11 +441,113 @@ export async function fetchAdminWebsitesRich() {
   return websites.map((w) => mapWebsiteListRow(w, sessionBySite))
 }
 
+async function fetchWidgetStatusCounts() {
+  const [widgetActive, widgetInstalledOnly, widgetNever] = await Promise.all([
+    prisma.website.count({ where: buildWidgetStatusWhere('ACTIVE') ?? {} }),
+    prisma.website.count({ where: buildWidgetStatusWhere('INSTALLED') ?? {} }),
+    prisma.website.count({ where: buildWidgetStatusWhere('NEVER') ?? {} }),
+  ])
+
+  return {
+    widgetActive,
+    widgetInstalled: widgetActive + widgetInstalledOnly,
+    widgetNever,
+  }
+}
+
+async function fetchInactiveSitesPreview(limit = 20) {
+  return prisma.website.findMany({
+    where: {
+      conversations: { none: {} },
+      visitorSessions: { none: {} },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    select: {
+      id: true,
+      name: true,
+      domain: true,
+      websiteId: true,
+      createdAt: true,
+      owner: { select: { email: true } },
+    },
+  })
+}
+
+async function fetchTopActiveSites(limit = 15) {
+  const sessionGroups = await prisma.visitorSession.groupBy({
+    by: ['websiteId'],
+    _max: { lastActiveAt: true },
+  })
+
+  const ranked = sessionGroups
+    .filter((g) => g._max.lastActiveAt)
+    .sort((a, b) => b._max.lastActiveAt!.getTime() - a._max.lastActiveAt!.getTime())
+    .slice(0, limit)
+
+  if (ranked.length === 0) return []
+
+  const websiteIds = ranked.map((g) => g.websiteId)
+  const lastActiveBySite = new Map(ranked.map((g) => [g.websiteId, g._max.lastActiveAt]))
+
+  const websites = await prisma.website.findMany({
+    where: { id: { in: websiteIds } },
+    select: {
+      id: true,
+      name: true,
+      domain: true,
+      websiteId: true,
+      plan: true,
+      trialBonusWidgetGranted: true,
+      owner: { select: { email: true } },
+      _count: {
+        select: {
+          conversations: true,
+          visitors: true,
+          visitorSessions: true,
+        },
+      },
+    },
+  })
+
+  return websites
+    .map((w) => {
+      const lastActiveAt = lastActiveBySite.get(w.id) ?? null
+      const widgetStatus = computeWidgetUsageStatus({
+        lastActiveAt,
+        conversationCount: w._count.conversations,
+        visitorCount: w._count.visitors,
+        sessionCount: w._count.visitorSessions,
+        trialBonusWidgetGranted: w.trialBonusWidgetGranted,
+      })
+
+      return {
+        id: w.id,
+        name: w.name,
+        domain: w.domain,
+        websiteId: w.websiteId,
+        ownerEmail: w.owner.email,
+        plan: w.plan,
+        widgetStatus,
+        lastActiveAt,
+        conversations: w._count.conversations,
+        visitors: w._count.visitors,
+      }
+    })
+    .sort((a, b) => (b.lastActiveAt?.getTime() ?? 0) - (a.lastActiveAt?.getTime() ?? 0))
+}
+
 export async function fetchPlatformIntelligence() {
   const now = new Date()
   const dayAgo = new Date(now.getTime() - 86_400_000)
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000)
   const monthAgo = new Date(now.getTime() - 30 * 86_400_000)
+  const liveSince = new Date(now.getTime() - 5 * 60_000)
+
+  const inactiveWhere = {
+    conversations: { none: {} },
+    visitorSessions: { none: {} },
+  } satisfies Prisma.WebsiteWhereInput
 
   const [
     totalUsers,
@@ -460,7 +562,10 @@ export async function fetchPlatformIntelligence() {
     liveSessions,
     paidSites,
     trialSites,
-    websitesRich,
+    inactiveSiteCount,
+    widgetCounts,
+    inactiveSites,
+    topActiveSites,
     recentUsers,
     planGroups,
     utmGroups,
@@ -475,7 +580,7 @@ export async function fetchPlatformIntelligence() {
     prisma.website.count({ where: { createdAt: { gte: weekAgo } } }),
     prisma.conversation.count({ where: { createdAt: { gte: dayAgo } } }),
     prisma.visitorSession.count({
-      where: { lastActiveAt: { gte: new Date(now.getTime() - 5 * 60_000) }, endedAt: null },
+      where: { lastActiveAt: { gte: liveSince }, endedAt: null },
     }),
     prisma.website.count({ where: { subscriptionStatus: 'ACTIVE' } }),
     prisma.website.count({
@@ -484,7 +589,10 @@ export async function fetchPlatformIntelligence() {
         subscriptionStatus: { not: 'ACTIVE' },
       },
     }),
-    fetchAdminWebsitesRich(),
+    prisma.website.count({ where: inactiveWhere }),
+    fetchWidgetStatusCounts(),
+    fetchInactiveSitesPreview(20),
+    fetchTopActiveSites(15),
     prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       take: 15,
@@ -508,15 +616,6 @@ export async function fetchPlatformIntelligence() {
     }),
   ])
 
-  const widgetActive = websitesRich.filter((w) => w.widgetStatus === 'ACTIVE').length
-  const widgetInstalled = websitesRich.filter(
-    (w) => w.widgetStatus === 'ACTIVE' || w.widgetStatus === 'INSTALLED',
-  ).length
-  const widgetNever = websitesRich.filter((w) => w.widgetStatus === 'NEVER').length
-  const inactiveSites = websitesRich.filter(
-    (w) => w._count.conversations === 0 && w._count.visitorSessions === 0,
-  )
-
   return {
     summary: {
       totalUsers,
@@ -531,10 +630,10 @@ export async function fetchPlatformIntelligence() {
       totalMessages,
       totalVisitors,
       liveSessions,
-      widgetActive,
-      widgetInstalled,
-      widgetNever,
-      inactiveSiteCount: inactiveSites.length,
+      widgetActive: widgetCounts.widgetActive,
+      widgetInstalled: widgetCounts.widgetInstalled,
+      widgetNever: widgetCounts.widgetNever,
+      inactiveSiteCount,
     },
     planDistribution: planGroups.map((p) => ({ plan: p.plan, count: p._count.id })),
     signupSources: utmGroups.map((u) => ({
@@ -542,7 +641,7 @@ export async function fetchPlatformIntelligence() {
       count: u._count.id,
     })),
     recentUsers,
-    inactiveSites: inactiveSites.slice(0, 20).map((w) => ({
+    inactiveSites: inactiveSites.map((w) => ({
       id: w.id,
       name: w.name,
       domain: w.domain,
@@ -550,24 +649,6 @@ export async function fetchPlatformIntelligence() {
       createdAt: w.createdAt,
       websiteId: w.websiteId,
     })),
-    topActiveSites: [...websitesRich]
-      .sort((a, b) => {
-        const ta = a.lastActiveAt?.getTime() ?? 0
-        const tb = b.lastActiveAt?.getTime() ?? 0
-        return tb - ta
-      })
-      .slice(0, 15)
-      .map((w) => ({
-        id: w.id,
-        name: w.name,
-        domain: w.domain,
-        websiteId: w.websiteId,
-        ownerEmail: w.owner.email,
-        plan: w.plan,
-        widgetStatus: w.widgetStatus,
-        lastActiveAt: w.lastActiveAt,
-        conversations: w._count.conversations,
-        visitors: w._count.visitors,
-      })),
+    topActiveSites,
   }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Users, Globe, MessageSquare, Activity, Zap, AlertCircle,
-  TrendingUp, Code2, Eye, ArrowRight, Radio,
+  TrendingUp, Code2, Eye, ArrowRight, Radio, Loader2,
 } from 'lucide-react'
 import { useToast } from '@/lib/toast'
 
@@ -57,9 +57,9 @@ type Intel = {
 }
 
 const widgetBadge: Record<string, string> = {
-  ACTIVE: 'bg-red-500/15 text-white border-red-500/30',
-  INSTALLED: 'bg-red-500/10 text-red-400 border-red-500/20',
-  INACTIVE: 'bg-white/5 text-white/70 border-white/10',
+  ACTIVE: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+  INSTALLED: 'bg-sky-500/15 text-sky-600 border-sky-500/30',
+  INACTIVE: 'admin-badge-muted border',
   NEVER: 'admin-badge-muted border',
 }
 
@@ -81,7 +81,7 @@ function Kpi({ label, value, sub, icon: Icon, accent }: {
     <div className="admin-kpi-card">
       <div className="flex items-start justify-between gap-2 mb-3">
         <p className="text-xs font-medium admin-text-muted uppercase tracking-wide">{label}</p>
-        <div className={`p-2 rounded-xl ${accent || 'bg-violet-500/10 text-violet-400'}`}>
+        <div className={`p-2 rounded-xl ${accent || ''}`} style={accent ? undefined : { background: 'var(--admin-accent-soft)', color: 'var(--admin-accent)' }}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function AdminPlatformPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] gap-3 admin-text-muted">
-        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--admin-accent)' }} />
         Platform analizi yükleniyor…
       </div>
     )
@@ -130,12 +130,12 @@ export default function AdminPlatformPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
-        <Kpi label="Kullanıcı" value={s.totalUsers} sub={`${s.activeUsersMonth} aktif (30g)`} icon={Users} />
-        <Kpi label="Site" value={s.totalWebsites} sub={`+${s.newSitesWeek} bu hafta`} icon={Globe} accent="bg-blue-500/10 text-blue-400" />
-        <Kpi label="Widget aktif" value={s.widgetActive} sub={`${s.widgetInstalled} kurulu toplam`} icon={Code2} accent="bg-emerald-500/10 text-emerald-400" />
-        <Kpi label="Canlı oturum" value={s.liveSessions} sub="Son 5 dk" icon={Radio} accent="bg-red-500/10 text-red-400" />
-        <Kpi label="Sohbet" value={s.totalConversations} sub={`+${s.conversationsToday} bugün`} icon={MessageSquare} accent="bg-cyan-500/10 text-cyan-400" />
-        <Kpi label="Ücretli" value={s.paidSites} sub={`${s.trialSites} deneme`} icon={TrendingUp} accent="bg-amber-500/10 text-amber-400" />
+        <Kpi label="Kullanıcı" value={s.totalUsers} sub={`${s.activeUsersMonth} aktif (30g)`} icon={Users} accent="bg-indigo-500/10 text-indigo-600" />
+        <Kpi label="Site" value={s.totalWebsites} sub={`+${s.newSitesWeek} bu hafta`} icon={Globe} accent="bg-blue-500/10 text-blue-600" />
+        <Kpi label="Widget aktif" value={s.widgetActive} sub={`${s.widgetInstalled} kurulu toplam`} icon={Code2} accent="bg-emerald-500/10 text-emerald-600" />
+        <Kpi label="Canlı oturum" value={s.liveSessions} sub="Son 5 dk" icon={Radio} accent="bg-violet-500/10 text-violet-600" />
+        <Kpi label="Sohbet" value={s.totalConversations} sub={`+${s.conversationsToday} bugün`} icon={MessageSquare} accent="bg-cyan-500/10 text-cyan-600" />
+        <Kpi label="Ücretli" value={s.paidSites} sub={`${s.trialSites} deneme`} icon={TrendingUp} accent="bg-amber-500/10 text-amber-600" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
@@ -264,7 +264,7 @@ export default function AdminPlatformPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Link href="/admin/conversations" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">
+        <Link href="/admin/conversations" className="admin-btn-primary">
           <MessageSquare className="w-4 h-4" />
           Tüm müşteri sohbetleri
         </Link>
