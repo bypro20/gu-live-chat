@@ -14,12 +14,10 @@ import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo, getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
-import { LiveVisitorsGeoMap } from '@/components/admin/live-visitors-geo-map'
-import { VisitorGeoPanel } from '@/components/visitors/visitor-geo-panel'
 import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
 import {
   Eye, Users, Search, X, Monitor, Smartphone, Tablet,
-  Globe2, MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
+  MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
 interface AdminVisitorsMonitorProps {
@@ -27,6 +25,7 @@ interface AdminVisitorsMonitorProps {
   websiteId?: string | null
   websiteIds?: string[]
   initialVisitorId?: string | null
+  onVisitorSelect?: (visitorId: string | null) => void
 }
 
 function DeviceIcon({ device }: { device?: string | null }) {
@@ -45,6 +44,7 @@ export function AdminVisitorsMonitor({
   websiteId = null,
   websiteIds: websiteIdsProp = [],
   initialVisitorId = null,
+  onVisitorSelect,
 }: AdminVisitorsMonitorProps = {}) {
   const isDashboard = variant === 'dashboard'
   const agentLabel = isDashboard ? 'dashboard' : 'admin'
@@ -150,6 +150,14 @@ export function AdminVisitorsMonitor({
     const match = visitors.get(initialVisitorId)
     if (match) selectVisitor(initialVisitorId)
   }, [initialVisitorId, visitors, selectVisitor])
+
+  const handleSelectVisitor = useCallback(
+    (visitorId: string | null) => {
+      selectVisitor(visitorId)
+      onVisitorSelect?.(visitorId)
+    },
+    [selectVisitor, onVisitorSelect]
+  )
 
   useEffect(() => { fetchLiveVisitors() }, [fetchLiveVisitors])
 
@@ -489,22 +497,6 @@ export function AdminVisitorsMonitor({
 
   return (
     <div className={`flex flex-col gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
-      {!upgradeRequired && isDashboard && (
-        <div className={`shrink-0 ${isDashboard ? '' : 'admin-monitor-panel p-3'}`}>
-          <p className={`text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1 ${textMuted}`}>
-            <Globe2 className="w-3 h-3" /> {m.liveLocationMap}
-          </p>
-          <LiveVisitorsGeoMap
-            visitors={filtered}
-            selectedVisitorId={selectedVisitorId}
-            onSelect={(id) => selectVisitor(id)}
-            emptyLabel={m.noGeoYet}
-            className={`h-52 w-full rounded-xl overflow-hidden border ${
-              isDashboard ? 'border-white/[0.08]' : ''
-            }`}
-          />
-        </div>
-      )}
       {!socketReady && (
         <div className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 shrink-0">
           {m.socketOffline}
@@ -554,7 +546,7 @@ export function AdminVisitorsMonitor({
               return (
                 <div key={visitor.visitorId}>
                   <button
-                    onClick={() => selectVisitor(expanded ? null : visitor.visitorId)}
+                    onClick={() => handleSelectVisitor(expanded ? null : visitor.visitorId)}
                     className={`w-full text-left p-3.5 transition-colors ${rowHover} ${expanded ? rowActive : ''}`}
                   >
                     <div className="flex items-start gap-3">
@@ -637,7 +629,7 @@ export function AdminVisitorsMonitor({
         {selectedVisitor && (
           <button
             type="button"
-            onClick={() => selectVisitor(null)}
+            onClick={() => handleSelectVisitor(null)}
             className={`xl:hidden flex items-center gap-1.5 px-3 py-2 text-xs border-b shrink-0 ${textSecondary} ${borderSubtle}`}
             style={!isDashboard ? { borderColor: 'var(--admin-border)' } : undefined}
           >
@@ -658,10 +650,7 @@ export function AdminVisitorsMonitor({
                   onStateChange={setWebrtcState}
                 />
               )}
-              <div className="flex-1 min-h-0 flex flex-col gap-2">
-                {selectedVisitor && (
-                  <VisitorGeoPanel visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
-                )}
+              <div className="flex-1 min-h-0">
                 <VisitorDetailPanel
                   visitor={selectedVisitor}
                   recentClicks={recentClicks}

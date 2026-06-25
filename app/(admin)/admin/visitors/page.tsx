@@ -118,6 +118,7 @@ export default function AdminVisitorsPage() {
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
   const [timeFilter, setTimeFilter] = useState('24h')
+  const [focusedVisitorId, setFocusedVisitorId] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -322,6 +323,8 @@ export default function AdminVisitorsPage() {
 
           <LiveVisitorsGeoMap
             visitors={sortedVisitors}
+            selectedVisitorId={focusedVisitorId}
+            onSelect={setFocusedVisitorId}
             className="w-full aspect-[2/1] min-h-[280px] rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d1117]"
             emptyLabel={
               sortedVisitors.length > 0
@@ -418,7 +421,10 @@ export default function AdminVisitorsPage() {
       </div>
 
       {/* CANLI İZLEME — ekran, sayfa geçmişi, konum */}
-      <AdminVisitorsMonitor />
+      <AdminVisitorsMonitor
+        initialVisitorId={focusedVisitorId}
+        onVisitorSelect={setFocusedVisitorId}
+      />
     </div>
   )
 }

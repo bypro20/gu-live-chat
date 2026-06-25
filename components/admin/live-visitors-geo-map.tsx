@@ -21,6 +21,15 @@ type LiveVisitorsGeoMapProps = {
   emptyLabel?: string
 }
 
+type LeafletContainer = HTMLDivElement & { _leaflet_id?: number }
+
+function resetLeafletContainer(container: LeafletContainer) {
+  if (container._leaflet_id != null) {
+    container.replaceChildren()
+    delete container._leaflet_id
+  }
+}
+
 export function LiveVisitorsGeoMap({
   visitors,
   selectedVisitorId,
@@ -28,7 +37,7 @@ export function LiveVisitorsGeoMap({
   className = 'h-56 w-full rounded-xl overflow-hidden border border-white/[0.08]',
   emptyLabel = 'Henüz konum verisi yok',
 }: LiveVisitorsGeoMapProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<import('leaflet').Map | null>(null)
   const layerRef = useRef<import('leaflet').LayerGroup | null>(null)
   const onSelectRef = useRef(onSelect)
@@ -51,18 +60,29 @@ export function LiveVisitorsGeoMap({
   }, [visitors])
 
   useEffect(() => {
-    if (!containerRef.current) return
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
 
     let cancelled = false
+    let resizeObserver: ResizeObserver | undefined
 
     ;(async () => {
       const L = (await import('leaflet')).default
       await import('leaflet/dist/leaflet.css')
+      if (cancelled || !wrapperRef.current) return
 
-      if (cancelled || !containerRef.current) return
+      let container = wrapper.querySelector('[data-live-map-root]') as LeafletContainer | null
+      if (!container) {
+        container = document.createElement('div')
+        container.dataset.liveMapRoot = 'true'
+        container.className = className
+        container.style.minHeight = '280px'
+        wrapper.prepend(container)
+      }
 
       if (!mapRef.current) {
-        mapRef.current = L.map(containerRef.current, {
+        resetLeafletContainer(container)
+        const map = L.map(container, {
           zoomControl: true,
           attributionControl: true,
           scrollWheelZoom: true,
@@ -70,9 +90,15 @@ export function LiveVisitorsGeoMap({
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap',
           maxZoom: 19,
-        }).addTo(mapRef.current)
-        layerRef.current = L.layerGroup().addTo(mapRef.current)
-        mapRef.current.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
+        }).addTo(map)
+        layerRef.current = L.layerGroup().addTo(map)
+        mapRef.current = map
+        map.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
+
+        resizeObserver = new ResizeObserver(() => {
+          mapRef.current?.invalidateSize()
+        })
+        resizeObserver.observe(container)
       }
 
       const map = mapRef.current
@@ -83,12 +109,11 @@ export function LiveVisitorsGeoMap({
 
       if (pins.length === 0) {
         map.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
-        window.setTimeout(() => map.invalidateSize(), 120)
+        window.setTimeout(() => map.invalidateSize(), 80)
         return
       }
 
       const bounds: [number, number][] = []
-
       for (const pin of pins) {
         bounds.push([pin.lat, pin.lng])
         const selected = pin.visitorId === selectedVisitorId
@@ -105,7 +130,7 @@ export function LiveVisitorsGeoMap({
         const address = formatVisitorGeoLine(pin.visitor)
         const entry = pin.visitor.entrySource ? `<br/>Giriş: ${pin.visitor.entrySource}` : ''
         const source = pin.approximate
-          ? ' (yaklaşık konum)'
+          ? ' (yaklaşık)'
           : pin.visitor.geoSource === 'gps'
             ? ' (GPS)'
             : pin.visitor.geoSource === 'ip'
@@ -124,13 +149,14 @@ export function LiveVisitorsGeoMap({
         map.fitBounds(bounds, { padding: [28, 28], maxZoom: allApproximate ? 6 : 14 })
       }
 
-      window.setTimeout(() => map.invalidateSize(), 120)
+      window.setTimeout(() => map.invalidateSize(), 80)
     })()
 
     return () => {
       cancelled = true
+      resizeObserver?.disconnect()
     }
-  }, [pins, selectedVisitorId])
+  }, [pins, selectedVisitorId, className])
 
   useEffect(() => {
     return () => {
@@ -141,18 +167,18 @@ export function LiveVisitorsGeoMap({
   }, [])
 
   return (
-    <div className="relative">
-      <div ref={containerRef} className={className} style={{ minHeight: 280 }} />
+    <div ref={wrapperRef} className="relative" style={{ minHeight: pins.length > 0 ? 280 : undefined }}>
       {pins.length === 0 && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
-          <p className="text-xs text-gray-500 bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-            {emptyLabel}
-          </p>
+        <div
+          className={`${className} flex items-center justify-center bg-[#0d1117] text-xs text-gray-500`}
+          style={{ minHeight: 280 }}
+        >
+          {emptyLabel}
         </div>
       )}
       {pins.some((p) => p.approximate) && pins.length > 0 && (
         <p className="mt-2 text-[10px] text-amber-500/90">
-          Kesikli turuncu pinler yaklaşık konum (ülke/şehir tahmini).
+          Turuncu kesikli pinler yaklaşık konum (ülke/şehir).
         </p>
       )}
     </div>
