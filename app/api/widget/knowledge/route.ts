@@ -70,6 +70,9 @@ export async function GET(req: Request) {
         { excerpt: { contains: search } },
       ]
     }
+    const featuredOnly = searchParams.get('featured') === '1'
+    if (featuredOnly) where.isFeatured = true
+    const limit = Math.min(Number(searchParams.get('limit') || 100) || 100, 100)
 
     const articles = await prisma.knowledgeArticle.findMany({
       where,
@@ -83,7 +86,7 @@ export async function GET(req: Request) {
         category: { select: { id: true, name: true, slug: true } },
       },
       orderBy: [{ isFeatured: 'desc' }, { order: 'asc' }, { createdAt: 'desc' }],
-      take: 100,
+      take: limit,
     })
 
     return NextResponse.json({ articles, websiteName: website.name })

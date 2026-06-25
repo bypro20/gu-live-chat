@@ -132,6 +132,16 @@ export async function isPlatformMarketingWebsiteId(
   return marketingId === websiteId
 }
 
+/** Client/server — env ile bilinen marketing site public id. */
+export function isKnownMarketingWebsitePublicId(websiteId: string | null | undefined): boolean {
+  if (!websiteId) return false
+  const ids = [
+    process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID?.trim(),
+    process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim(),
+  ].filter(Boolean)
+  return ids.includes(websiteId)
+}
+
 export async function ensureMarketingWebsite(ownerUserId: string): Promise<string> {
   const existing = await findMarketingWebsiteInDb()
 

@@ -32,6 +32,15 @@ import {
 import { recordWidgetPageview, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 
+function isMarketingWidgetSite(websiteId: string, cfg: WidgetConfig | null | undefined): boolean {
+  if (cfg?.aiAssistant) return true
+  const ids = [
+    process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID?.trim(),
+    process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim(),
+  ].filter(Boolean) as string[]
+  return ids.includes(websiteId)
+}
+
 interface WidgetConfig {
   primaryColor: string
   position: string
@@ -40,6 +49,7 @@ interface WidgetConfig {
   avatarUrl: string | null
   websiteName: string | null
   agentsOnline: number
+  aiAssistant?: boolean
   showPreChatForm?: boolean
   requireName?: boolean
   requireEmail?: boolean
@@ -153,6 +163,10 @@ const WIDGET_STRINGS = {
   tr: {
     online: 'Çevrimiçi',
     typicalReply: 'Tipik yanıt: 2 dk',
+    aiInstantReply: 'AI asistan · Anında yanıt',
+    quickTopics: 'Ne hakkında konuşalım?',
+    quickTopicsHint: 'Bir konu seçin — AI size yanıtlasın.',
+    askAi: 'AI\'ya sor',
     today: 'Bugün',
     welcomeFallback: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
     quickChat: '💬 Sohbet başlat',
@@ -200,6 +214,10 @@ const WIDGET_STRINGS = {
   en: {
     online: 'Online',
     typicalReply: 'Typically replies in 2 min',
+    aiInstantReply: 'AI assistant · Instant reply',
+    quickTopics: 'What would you like to know?',
+    quickTopicsHint: 'Pick a topic — our AI will answer.',
+    askAi: 'Ask AI',
     today: 'Today',
     welcomeFallback: 'Hello! 👋 How can we help you?',
     quickChat: '💬 Start chat',
@@ -1048,7 +1066,7 @@ export default function WidgetPage() {
   const handleGifClick = (label: string) => {
     setInputMessage(label)
     setShowGifPicker(false)
-    setTimeout(() => handleStartChat(), 50)
+    setTimeout(() => void sendChatMessage(label.replace(/^[^\s]+\s/, '')), 50)
   }
 
   const handleOpenKB = async () => {
@@ -1060,7 +1078,9 @@ export default function WidgetPage() {
     if (kbArticles.length > 0) return
     setKbLoading(true)
     try {
-      const res = await fetch(`/api/widget/knowledge?websiteId=${websiteId}`)
+      const marketing = isMarketingWidgetSite(websiteId, config)
+      const qs = marketing ? '&featured=1&limit=8' : ''
+      const res = await fetch(`/api/widget/knowledge?websiteId=${websiteId}${qs}`)
       const data = await res.json()
       setKbArticles(Array.isArray(data) ? data : data.articles || [])
     } catch (err) {
@@ -1103,13 +1123,16 @@ export default function WidgetPage() {
     }
   }, [config, visitorInfo, websiteId])
 
-  const handleStartChat = useCallback(async () => {
+  const sendChatMessage = useCallback(async (rawContent: string) => {
     if (!identityComplete) {
       setIdentityError(t.preChatRequired)
       return
     }
-    const content = inputMessage.trim()
+    const content = rawContent.trim()
     if (!content) return
+
+    setShowKnowledgeBase(false)
+    setSelectedArticle(null)
 
     const tempId = `temp_${Date.now()}`
     const newMessage: Message = {
@@ -1117,13 +1140,18 @@ export default function WidgetPage() {
       content,
       type: 'TEXT',
       senderType: 'VISITOR',
+      status: 'SENT',
       createdAt: new Date().toISOString(),
     }
 
     setMessages((prev) => [...prev, newMessage])
     setInputMessage('')
     setIsTyping(true)
-    setTypingAgentName(config?.websiteName || 'Gu Live Chat Asistanı')
+    setTypingAgentName(
+      isMarketingWidgetSite(websiteId, config)
+        ? 'Gu Live Chat Asistanı'
+        : config?.websiteName || 'Asistan'
+    )
     setAwaitingReply(true)
 
     const socket = getSocket()
@@ -1176,7 +1204,11 @@ export default function WidgetPage() {
       setAwaitingReply(false)
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [inputMessage, websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config?.websiteName, queueIncomingBotMessage])
+  }, [websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config])
+
+  const handleStartChat = useCallback(async () => {
+    await sendChatMessage(inputMessage.trim())
+  }, [inputMessage, sendChatMessage])
 
   const handlePickFile = () => {
     setUploadError(null)
@@ -1290,6 +1322,7 @@ export default function WidgetPage() {
 
   const primaryColor = config?.primaryColor || '#1972F5'
   const agentsOnline = config?.agentsOnline ?? 3
+  const marketingAi = isMarketingWidgetSite(websiteId, config)
   const agentName = config?.websiteName || 'Destek'
   const agentInitials = getInitials(agentName)
   const agentAvatar = config?.avatarUrl || null
@@ -1434,7 +1467,7 @@ export default function WidgetPage() {
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: '#6EE7B7', boxShadow: '0 0 6px rgba(110,231,183,0.9)' }} />
-                  {t.online} · {t.typicalReply}
+                  {t.online} · {marketingAi ? t.aiInstantReply : t.typicalReply}
                 </p>
               </div>
 
@@ -1494,13 +1527,17 @@ export default function WidgetPage() {
 
             {!showKnowledgeBase && identityComplete && messages.length === 0 && (
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
-                {[t.quickChat, t.quickPricing, t.quickSupport].map((label) => (
+                {[
+                  { label: t.quickChat, send: null },
+                  { label: t.quickPricing, send: 'Fiyatlandırma paketleri hakkında bilgi verir misiniz?' },
+                  { label: t.quickSupport, send: 'Widget kurulumu ve canlı destek hakkında yardım istiyorum.' },
+                ].map(({ label, send }) => (
                   <button
                     key={label}
                     type="button"
                     onClick={() => {
-                      if (label === t.quickChat) inputRef.current?.focus()
-                      else setInputMessage(label.replace(/^[^\s]+\s/, ''))
+                      if (send) void sendChatMessage(send)
+                      else inputRef.current?.focus()
                     }}
                     style={quickChipStyle()}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.32)' }}
@@ -1512,7 +1549,10 @@ export default function WidgetPage() {
               </div>
             )}
             <div style={getTrustStripStyle()}>
-              {['⚡ Anında yanıt', '🔒 Güvenli', '✨ Ücretsiz'].map((badge) => (
+              {(marketingAi
+                ? ['🤖 AI asistan', '🔒 Güvenli', '✨ Ücretsiz']
+                : ['⚡ Anında yanıt', '🔒 Güvenli', '✨ Ücretsiz']
+              ).map((badge) => (
                 <span key={badge} style={getTrustBadgeStyle()}>{badge}</span>
               ))}
             </div>
@@ -1526,7 +1566,14 @@ export default function WidgetPage() {
               display: 'flex', flexDirection: 'column', gap: '8px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0F172A' }}>{t.help}</p>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0F172A' }}>
+                    {marketingAi ? t.quickTopics : t.help}
+                  </p>
+                  {marketingAi && (
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748B' }}>{t.quickTopicsHint}</p>
+                  )}
+                </div>
                 <button
                   onClick={() => { setShowKnowledgeBase(false); setSelectedArticle(null) }}
                   style={{
@@ -1542,7 +1589,7 @@ export default function WidgetPage() {
               </div>
               {kbLoading ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8', fontSize: '14px' }}>{t.loading}</div>
-              ) : selectedArticle ? (
+              ) : selectedArticle && !marketingAi ? (
                 <div>
                   <button
                     onClick={() => setSelectedArticle(null)}
@@ -1562,7 +1609,13 @@ export default function WidgetPage() {
                 kbArticles.map((article) => (
                   <button
                     key={article.id}
-                    onClick={() => setSelectedArticle(article)}
+                    onClick={() => {
+                      if (marketingAi) {
+                        void sendChatMessage(`${article.title} hakkında kısaca bilgi verir misiniz?`)
+                        return
+                      }
+                      setSelectedArticle(article)
+                    }}
                     style={{
                       background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '14px',
                       padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
@@ -1573,7 +1626,7 @@ export default function WidgetPage() {
                   >
                     <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#0F172A' }}>{article.title}</p>
                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748B', lineHeight: 1.5 }}>
-                      {article.content?.slice(0, 90)}{article.content?.length > 90 ? '...' : ''}
+                      {marketingAi ? t.askAi : `${article.content?.slice(0, 90)}${article.content?.length > 90 ? '...' : ''}`}
                     </p>
                   </button>
                 ))
@@ -2108,6 +2161,7 @@ export default function WidgetPage() {
                 />
 
                 <button
+                  title={marketingAi ? t.quickTopics : t.help}
                   onClick={() => { setShowEmojiPicker(false); setShowGifPicker(false); if (!showKnowledgeBase) handleOpenKB(); else { setShowKnowledgeBase(false); setSelectedArticle(null) } }}
                   style={{
                     width: '34px', height: '34px',

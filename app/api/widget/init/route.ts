@@ -15,6 +15,7 @@ import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { createVisitorToken } from '@/lib/secure-tokens'
 import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
 import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
+import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -210,6 +211,7 @@ export async function POST(req: Request) {
     aiTranslate = translateAllowed && isTranslationAvailable(null)
 
     const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+    const aiAssistant = await isPlatformMarketingWebsiteId(website.websiteId)
 
     const identityPolicy = withWidgetIdentityDefaults(website)
 
@@ -256,6 +258,7 @@ export async function POST(req: Request) {
         showPreChatForm: identityPolicy.showPreChatForm,
         requireName: identityPolicy.requireName,
         requireEmail: identityPolicy.requireEmail,
+        aiAssistant,
       },
     })
   } catch (error: unknown) {
