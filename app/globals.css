@@ -316,6 +316,15 @@ body {
     transform: none;
   }
 
+  @media (max-width: 1023px) {
+    body:has(.marketing-site) #gu-chat-dock {
+      bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+      right: 12px !important;
+      left: auto !important;
+      padding: 0 !important;
+    }
+  }
+
   /* ── App shell (dashboard + admin) ── */
   .app-shell {
     --app-sidebar-width: 280px;

@@ -64,8 +64,8 @@ export function HeroShowcase() {
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-white leading-none">Deniz · Destek</p>
-                <p className="text-[8px] text-white/80 mt-0.5">Genelde birkaç saniye içinde yanıt</p>
+                <p className="text-[10px] font-bold text-white leading-none">Gu Live Chat</p>
+                <p className="text-[8px] text-white/80 mt-0.5">Çevrimiçi</p>
               </div>
             </div>
             <div className="p-2.5 space-y-2 bg-slate-50/80 min-h-[72px]">

@@ -102,9 +102,9 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
         domain: MARKETING_DOMAIN,
         avatarUrl: MARKETING_PRIMARY_AGENT.image,
         welcomeMessage: MARKETING_WIDGET_WELCOME,
-        showPreChatForm: true,
-        requireName: true,
-        requireEmail: true,
+        showPreChatForm: false,
+        requireName: false,
+        requireEmail: false,
       },
     })
   } catch (e) {
@@ -172,9 +172,9 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
         avatarUrl: MARKETING_PRIMARY_AGENT.image,
         welcomeMessage: MARKETING_WIDGET_WELCOME,
         offlineMessage: 'Şu an çevrimdışıyız. Mesaj bırakın, size dönelim.',
-        showPreChatForm: true,
-        requireName: true,
-        requireEmail: true,
+        showPreChatForm: false,
+        requireName: false,
+        requireEmail: false,
         plan: 'PRO',
         subscriptionStatus: 'ACTIVE',
         members: {

@@ -84,7 +84,7 @@
   forceStyle.id = 'gu-widget-force-style';
   forceStyle.textContent =
     '#gu-chat-dock{position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:14px!important;pointer-events:none!important;filter:none!important;}' +
-    '@media(max-width:768px){#gu-chat-dock{bottom:max(14px,env(safe-area-inset-bottom,14px))!important;right:14px!important;gap:10px!important;}#gu-chat-button{width:60px!important;height:60px!important;border-radius:20px!important;}#gu-teaser-card{width:min(300px,calc(100vw - 28px))!important;border-radius:20px!important;}}' +
+    '@media(max-width:768px){#gu-chat-dock{bottom:0!important;right:0!important;left:0!important;padding:0 12px max(12px,env(safe-area-inset-bottom,12px)) 12px!important;gap:10px!important;align-items:flex-end!important;}#gu-chat-button{width:60px!important;height:60px!important;border-radius:20px!important;}#gu-teaser-card{width:min(300px,calc(100vw - 24px))!important;border-radius:20px!important;}}' +
     '#gu-teaser-card{pointer-events:auto!important;max-width:calc(100vw - 40px)!important;animation:gu-slide-up 0.55s cubic-bezier(0.16,1,0.3,1)!important;}' +
     '#gu-teaser-top{height:5px!important;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA)!important;background-size:200% 100%!important;animation:gu-shimmer 3s ease infinite!important;}' +
     '#gu-launcher-row{display:flex!important;align-items:center!important;gap:12px!important;pointer-events:none!important;}' +
@@ -252,13 +252,12 @@
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
           '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#0F172A;letter-spacing:-0.03em;">' + siteName + '</p>' +
-          '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#10B981;">🟢 Çevrimiçi · ~30 sn yanıt</p>' +
+          '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#10B981;">🟢 Çevrimiçi</p>' +
         '</div>' +
         '<button type="button" id="gu-teaser-close" aria-label="Kapat" style="width:28px;height:28px;border:none;border-radius:10px;background:#F1F5F9;color:#64748B;font:700 16px/1 sans-serif;cursor:pointer;flex-shrink:0;">×</button>' +
       '</div>' +
       '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#334155;">' + welcome + '</p>' +
-      '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:linear-gradient(135deg,' + color + ',#818CF8);color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>' +
-      '<p style="margin:10px 0 0;text-align:center;font:600 10px/1.4 -apple-system,sans-serif;color:#94A3B8;letter-spacing:0.04em;">ÜCRETSİZ · ANINDA YANIT · GÜVENLİ</p>';
+      '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:linear-gradient(135deg,' + color + ',#818CF8);color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>';
 
     var closeBtn = document.getElementById('gu-teaser-close');
     if (closeBtn) {
@@ -1360,7 +1359,7 @@
   function createConsentBanner() {
     var banner = document.createElement('div');
     banner.id = 'gu-consent-banner';
-    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:2147483646;background:#1A1D2E;color:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 -4px 24px rgba(0,0,0,0.15);animation:gu-slide-up 0.4s ease;transform:none;filter:none;';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:2147483646;background:#1A1D2E;color:#fff;padding:16px 24px max(16px,env(safe-area-inset-bottom,16px));font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 -4px 24px rgba(0,0,0,0.15);animation:gu-slide-up 0.4s ease;transform:none;filter:none;';
 
     var content = document.createElement('div');
     content.style.cssText = 'max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px;';
@@ -1402,9 +1401,6 @@
     content.appendChild(text);
     content.appendChild(buttons);
     banner.appendChild(content);
-
-    // Sohbet balonunun üstünde — altta üst üste binmesin
-    banner.style.bottom = 'max(100px, calc(88px + env(safe-area-inset-bottom, 0px)))';
 
     return banner;
   }

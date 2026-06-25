@@ -458,8 +458,8 @@ export function AdminVisitorsMonitor({
     })
 
   const listPanelClass = isDashboard
-    ? 'w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px]'
-    : 'admin-monitor-panel w-full xl:w-[400px] shrink-0 min-h-[480px]'
+    ? `w-full shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'xl:w-[400px]' : 'flex-1 min-w-0'}`
+    : `admin-monitor-panel w-full shrink-0 min-h-[480px] ${selectedVisitor ? 'xl:w-[400px]' : 'flex-1 min-w-0'}`
   const detailPanelClass = isDashboard
     ? 'flex-1 flex flex-col min-h-[480px] bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden'
     : 'admin-monitor-panel flex-1 min-h-[480px]'
@@ -626,7 +626,7 @@ export function AdminVisitorsMonitor({
       </div>
 
       {/* Sağ: ekran izleme */}
-      <div className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden xl:flex'}`}>
+      <div className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden'}`}>
         {selectedVisitor && (
           <button
             type="button"

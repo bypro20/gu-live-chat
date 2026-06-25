@@ -33,6 +33,7 @@ import { recordWidgetPageview, requestWidgetDeviceGeo, resolveWidgetEmbedContext
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
+  MARKETING_AI_BRAND_NAME,
   resolveMarketingAgentImage,
 } from '@/lib/marketing-demo-agents'
 
@@ -1384,6 +1385,7 @@ export default function WidgetPage() {
     return null
   })()
   const agentName =
+    (marketingAi ? MARKETING_AI_BRAND_NAME : null) ||
     latestAgentProfile?.name ||
     marketingPersona?.displayName ||
     config?.websiteName ||
@@ -1537,12 +1539,12 @@ export default function WidgetPage() {
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: '#6EE7B7', boxShadow: '0 0 6px rgba(110,231,183,0.9)' }} />
-                  {t.online} · {marketingAi ? t.aiInstantReply : t.typicalReply}
+                  {t.online}
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {aiTranslateAvailable && (
+                {!marketingAi && aiTranslateAvailable && (
                   <button
                     type="button"
                     onClick={toggleAutoTranslate}
@@ -1557,6 +1559,7 @@ export default function WidgetPage() {
                     {autoTranslateOn ? '🌐 ✓' : '🌐'}
                   </button>
                 )}
+                {!marketingAi && (
                 <select
                   value={lang}
                   onChange={(e) => { setLang(e.target.value) }}
@@ -1575,6 +1578,7 @@ export default function WidgetPage() {
                     </option>
                   ))}
                 </select>
+                )}
                 <button
                   onClick={() => { setIsOpen(false); sendResizeToParent(false) }}
                   aria-label={t.close}
@@ -1595,7 +1599,7 @@ export default function WidgetPage() {
               </div>
             </div>
 
-            {!showKnowledgeBase && identityComplete && messages.length === 0 && (
+            {!marketingAi && !showKnowledgeBase && identityComplete && messages.length === 0 && (
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
                 {[
                   { label: t.quickChat, send: null },
@@ -1618,14 +1622,13 @@ export default function WidgetPage() {
                 ))}
               </div>
             )}
+            {!marketingAi && (
             <div style={getTrustStripStyle()}>
-              {(marketingAi
-                ? ['🤖 AI asistan', '🔒 Güvenli', '✨ Ücretsiz']
-                : ['⚡ Anında yanıt', '🔒 Güvenli', '✨ Ücretsiz']
-              ).map((badge) => (
+              {['⚡ Anında yanıt', '🔒 Güvenli', '✨ Ücretsiz'].map((badge) => (
                 <span key={badge} style={getTrustBadgeStyle()}>{badge}</span>
               ))}
             </div>
+            )}
           </div>
 
           {/* ─── KNOWLEDGE BASE VIEW ─────────────────────────────────────────── */}
