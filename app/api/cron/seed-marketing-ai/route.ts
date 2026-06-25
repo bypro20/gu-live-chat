@@ -40,6 +40,9 @@ export async function GET(request: NextRequest) {
       knowledgeArticles: articleCount,
       aiConfig,
       platformAiKey: hasAnyPlatformAiKey(),
+      platformProvider: 'GEMINI',
+      platformModel: 'gemini-2.5-flash',
+      platformEnv: ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY'],
     })
   } catch (error) {
     console.error('[cron/seed-marketing-ai]', error)

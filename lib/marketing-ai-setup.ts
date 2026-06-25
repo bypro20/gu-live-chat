@@ -4,6 +4,12 @@ import { homeTr } from './messages/home-tr'
 import { TRIAL_DAYS } from './trial-config'
 import { pickDefaultProvider, hasAnyPlatformAiKey } from './ai/provider'
 import { getDefaultModelForPlan } from './ai/plan-models'
+import {
+  PLATFORM_AI_MODEL,
+  PLATFORM_AI_PROVIDER,
+  isPlatformGeminiConfigured,
+  platformAiEnvHint,
+} from './ai/platform-config'
 
 const KB_CATEGORY = {
   name: 'Gu Live Chat — Platform',
@@ -186,12 +192,13 @@ export async function ensureMarketingKnowledgeBase(websiteDbId: string): Promise
 }
 
 export async function ensureMarketingAiConfig(websiteDbId: string): Promise<void> {
-  if (!hasAnyPlatformAiKey()) {
-    console.warn('[marketing-ai-setup] Platform AI key yok — GEMINI_API_KEY Vercel env kontrol edin')
+  const geminiReady = isPlatformGeminiConfigured()
+  if (!geminiReady && !hasAnyPlatformAiKey()) {
+    console.warn(`[marketing-ai-setup] Platform AI anahtarı yok — ${platformAiEnvHint()}`)
   }
 
-  const provider = pickDefaultProvider() ?? 'GEMINI'
-  const model = getDefaultModelForPlan('PRO', provider)
+  const provider = geminiReady ? PLATFORM_AI_PROVIDER : pickDefaultProvider() ?? PLATFORM_AI_PROVIDER
+  const model = geminiReady ? PLATFORM_AI_MODEL : getDefaultModelForPlan('PRO', provider)
 
   await prisma.aIConfig.upsert({
     where: { websiteId: websiteDbId },
@@ -202,7 +209,7 @@ export async function ensureMarketingAiConfig(websiteDbId: string): Promise<void
       autoSuggest: true,
       provider,
       model,
-      apiKey: '',
+      apiKey: '', // platform: GEMINI_API_KEY (Vercel env)
       temperature: 0.72,
       systemPrompt: MARKETING_AI_SYSTEM_PROMPT,
     },
@@ -216,6 +223,10 @@ export async function ensureMarketingAiConfig(websiteDbId: string): Promise<void
       systemPrompt: MARKETING_AI_SYSTEM_PROMPT,
     },
   })
+
+  if (geminiReady) {
+    console.log(`[marketing-ai-setup] AI: ${provider} / ${model} (platform ${platformAiEnvHint()})`)
+  }
 }
 
 /** Marketing sitesinde script chatbot yerine doğrudan AI yanıt versin. */

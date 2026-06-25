@@ -9,6 +9,7 @@ import {
   canUsePlatformFallback,
   clampRequestedForPlan,
 } from './platform-router'
+import { getPlatformGeminiKey, isPlatformGeminiConfigured } from './platform-config'
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -77,7 +78,12 @@ function ollamaBaseUrl() {
 // ─── Env / provider discovery ───────────────────────────────────────
 
 function geminiKey() {
-  return ENV_KEYS.GEMINI?.trim() || ''
+  return getPlatformGeminiKey()
+}
+
+export function hasAnyPlatformAiKey(): boolean {
+  if (pickDefaultProvider() !== null) return true
+  return isPlatformGeminiConfigured()
 }
 
 export function getEnvProviderStatus() {
@@ -116,10 +122,6 @@ export function pickDefaultProvider(): AiProvider | null {
     if (ENV_KEYS[p]?.trim()) return p
   }
   return null
-}
-
-export function hasAnyPlatformAiKey(): boolean {
-  return pickDefaultProvider() !== null
 }
 
 function runtimeForProvider(provider: AiProvider, db: DbAiConfig | null | undefined, temperature: number): AiRuntimeConfig | null {
