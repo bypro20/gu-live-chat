@@ -1,4 +1,6 @@
+import type { Prisma } from '@/app/generated/prisma/client'
 import { prisma } from '@/lib/db'
+import { buildAdminPaginatedResult } from '@/lib/admin-list-query'
 import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
 import {
   buildRegisteredSiteUrl,
@@ -67,6 +69,48 @@ function aggregateVerifiedEmbedLocations(
   return result
 }
 
+async function getWebsiteEmbedIntelForWebsite(websiteId: string): Promise<WebsiteEmbedIntel | null> {
+  const [pageViews, sessions] = await Promise.all([
+    prisma.pageView.findMany({
+      where: { session: { websiteId } },
+      select: {
+        url: true,
+        viewedAt: true,
+        session: { select: { websiteId: true } },
+      },
+      orderBy: { viewedAt: 'desc' },
+      take: 400,
+    }),
+    prisma.visitorSession.findMany({
+      where: { websiteId },
+      select: {
+        websiteId: true,
+        landingPage: true,
+        currentPage: true,
+        startedAt: true,
+        lastActiveAt: true,
+      },
+      take: 200,
+    }),
+  ])
+
+  const rows: Array<{ websiteId: string; url: string; at: Date }> = []
+  for (const pv of pageViews) {
+    rows.push({ websiteId: pv.session.websiteId, url: pv.url, at: pv.viewedAt })
+  }
+  for (const session of sessions) {
+    if (session.landingPage) {
+      rows.push({ websiteId: session.websiteId, url: session.landingPage, at: session.startedAt })
+    }
+    if (session.currentPage) {
+      rows.push({ websiteId: session.websiteId, url: session.currentPage, at: session.lastActiveAt })
+    }
+  }
+
+  return aggregateVerifiedEmbedLocations(rows).get(websiteId) ?? null
+}
+
+/** @deprecated Prefer paginated list APIs — loads all page views. */
 async function getWebsiteEmbedLocationMaps() {
   const [pageViews, sessions] = await Promise.all([
     prisma.pageView.findMany({
@@ -173,87 +217,228 @@ export async function getWebsiteIntelMaps() {
   return { sessionBySite, visitorsBySite }
 }
 
+const websiteListSelect = {
+  id: true,
+  name: true,
+  domain: true,
+  websiteId: true,
+  plan: true,
+  subscriptionStatus: true,
+  trialStartsAt: true,
+  trialEndsAt: true,
+  trialUsed: true,
+  trialBonusWidgetGranted: true,
+  trialBonusChatGranted: true,
+  signupUtmSource: true,
+  signupUtmMedium: true,
+  signupUtmCampaign: true,
+  signupReferrer: true,
+  signupLandingPage: true,
+  createdAt: true,
+  updatedAt: true,
+  owner: {
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      lastSeenAt: true,
+      createdAt: true,
+      role: true,
+    },
+  },
+  members: {
+    select: {
+      role: true,
+      user: { select: { id: true, email: true, name: true } },
+    },
+  },
+  _count: {
+    select: {
+      conversations: true,
+      members: true,
+      visitors: true,
+      visitorSessions: true,
+    },
+  },
+} as const
+
+function buildWebsiteSearchWhere(search?: string): Prisma.WebsiteWhereInput | undefined {
+  if (!search) return undefined
+  return {
+    OR: [
+      { name: { contains: search } },
+      { domain: { contains: search } },
+      { websiteId: { contains: search } },
+      { owner: { email: { contains: search } } },
+      { owner: { name: { contains: search } } },
+    ],
+  }
+}
+
+function buildWidgetStatusWhere(widgetStatus?: string): Prisma.WebsiteWhereInput | undefined {
+  if (!widgetStatus || widgetStatus === 'ALL') return undefined
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000)
+
+  if (widgetStatus === 'ACTIVE') {
+    return { visitorSessions: { some: { lastActiveAt: { gte: sevenDaysAgo } } } }
+  }
+
+  if (widgetStatus === 'NEVER') {
+    return {
+      trialBonusWidgetGranted: false,
+      visitorSessions: { none: {} },
+      visitors: { none: {} },
+      conversations: { none: {} },
+    }
+  }
+
+  if (widgetStatus === 'INACTIVE') {
+    return {
+      AND: [
+        {
+          OR: [
+            { visitorSessions: { some: {} } },
+            { visitors: { some: {} } },
+            { conversations: { some: {} } },
+            { trialBonusWidgetGranted: true },
+          ],
+        },
+        {
+          NOT: {
+            visitorSessions: { some: { lastActiveAt: { gte: sevenDaysAgo } } },
+          },
+        },
+        {
+          OR: [
+            { visitorSessions: { none: { lastActiveAt: { gte: thirtyDaysAgo } } } },
+            { visitorSessions: { none: {} } },
+          ],
+        },
+      ],
+    }
+  }
+
+  if (widgetStatus === 'INSTALLED') {
+    return {
+      OR: [
+        { trialBonusWidgetGranted: true },
+        { visitorSessions: { some: {} } },
+        { visitors: { some: {} } },
+        { conversations: { some: {} } },
+      ],
+      NOT: { visitorSessions: { some: { lastActiveAt: { gte: sevenDaysAgo } } } },
+    }
+  }
+
+  return undefined
+}
+
+function mapWebsiteListRow(
+  w: Prisma.WebsiteGetPayload<{ select: typeof websiteListSelect }>,
+  sessionBySite: Map<string, { lastActiveAt: Date | null; firstSessionAt: Date | null; sessionCount: number }>,
+  embed?: WebsiteEmbedIntel | null,
+) {
+  const sess = sessionBySite.get(w.id)
+  const lastActiveAt = sess?.lastActiveAt ?? null
+  const widgetFirstSeenAt = sess?.firstSessionAt ?? null
+  const widgetStatus = computeWidgetUsageStatus({
+    lastActiveAt,
+    conversationCount: w._count.conversations,
+    visitorCount: w._count.visitors,
+    sessionCount: w._count.visitorSessions,
+    trialBonusWidgetGranted: w.trialBonusWidgetGranted,
+  })
+
+  return {
+    ...w,
+    embedSnippet: buildWidgetInstallSnippet(w.websiteId),
+    registeredSiteUrl: buildRegisteredSiteUrl(w.domain),
+    widgetFirstPageUrl: embed?.firstPageUrl ?? null,
+    widgetLastPageUrl: embed?.lastPageUrl ?? null,
+    widgetEmbedHosts: embed?.embedHosts ?? [],
+    widgetEmbedPages: embed?.embedPages ?? [],
+    lastActiveAt,
+    widgetFirstSeenAt,
+    widgetStatus,
+    widgetStatusLabel: widgetStatusLabel(widgetStatus),
+    isTrialActive:
+      !!w.trialEndsAt && new Date(w.trialEndsAt) > new Date() && w.subscriptionStatus !== 'ACTIVE',
+  }
+}
+
+export async function fetchAdminWebsitesPage(options: {
+  page?: number
+  pageSize?: number
+  search?: string
+  widgetStatus?: string
+}) {
+  const page = Math.max(1, options.page ?? 1)
+  const pageSize = Math.min(100, Math.max(10, options.pageSize ?? 25))
+  const skip = (page - 1) * pageSize
+
+  const filters = [
+    buildWebsiteSearchWhere(options.search),
+    buildWidgetStatusWhere(options.widgetStatus),
+  ].filter(Boolean) as Prisma.WebsiteWhereInput[]
+
+  const where: Prisma.WebsiteWhereInput = filters.length ? { AND: filters } : {}
+
+  const { sessionBySite } = await getWebsiteIntelMaps()
+
+  const [total, websites] = await Promise.all([
+    prisma.website.count({ where }),
+    prisma.website.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      select: websiteListSelect,
+    }),
+  ])
+
+  const items = websites.map((w) => mapWebsiteListRow(w, sessionBySite))
+  return buildAdminPaginatedResult(items, total, page, pageSize)
+}
+
+export async function fetchAdminWebsiteOptions(limit = 500) {
+  return prisma.website.findMany({
+    orderBy: { name: 'asc' },
+    take: Math.min(limit, 1000),
+    select: {
+      id: true,
+      websiteId: true,
+      name: true,
+      domain: true,
+    },
+  })
+}
+
+export async function fetchAdminWebsiteDetail(websiteId: string) {
+  const website = await prisma.website.findFirst({
+    where: { OR: [{ id: websiteId }, { websiteId }] },
+    select: websiteListSelect,
+  })
+  if (!website) return null
+
+  const [{ sessionBySite }, embed] = await Promise.all([
+    getWebsiteIntelMaps(),
+    getWebsiteEmbedIntelForWebsite(website.id),
+  ])
+
+  return mapWebsiteListRow(website, sessionBySite, embed)
+}
+
 export async function fetchAdminWebsitesRich() {
   const websites = await prisma.website.findMany({
     orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      domain: true,
-      websiteId: true,
-      plan: true,
-      subscriptionStatus: true,
-      trialStartsAt: true,
-      trialEndsAt: true,
-      trialUsed: true,
-      trialBonusWidgetGranted: true,
-      trialBonusChatGranted: true,
-      signupUtmSource: true,
-      signupUtmMedium: true,
-      signupUtmCampaign: true,
-      signupReferrer: true,
-      signupLandingPage: true,
-      createdAt: true,
-      updatedAt: true,
-      owner: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          lastSeenAt: true,
-          createdAt: true,
-          role: true,
-        },
-      },
-      members: {
-        select: {
-          role: true,
-          user: { select: { id: true, email: true, name: true } },
-        },
-      },
-      _count: {
-        select: {
-          conversations: true,
-          members: true,
-          visitors: true,
-          visitorSessions: true,
-        },
-      },
-    },
+    select: websiteListSelect,
   })
 
   const { sessionBySite } = await getWebsiteIntelMaps()
-  const embedBySite = await getWebsiteEmbedLocationMaps()
 
-  return websites.map((w) => {
-    const sess = sessionBySite.get(w.id)
-    const embed = embedBySite.get(w.id)
-    const lastActiveAt = sess?.lastActiveAt ?? null
-    const widgetFirstSeenAt = sess?.firstSessionAt ?? null
-    const widgetStatus = computeWidgetUsageStatus({
-      lastActiveAt,
-      conversationCount: w._count.conversations,
-      visitorCount: w._count.visitors,
-      sessionCount: w._count.visitorSessions,
-      trialBonusWidgetGranted: w.trialBonusWidgetGranted,
-    })
-
-    return {
-      ...w,
-      embedSnippet: buildWidgetInstallSnippet(w.websiteId),
-      registeredSiteUrl: buildRegisteredSiteUrl(w.domain),
-      widgetFirstPageUrl: embed?.firstPageUrl ?? null,
-      widgetLastPageUrl: embed?.lastPageUrl ?? null,
-      widgetEmbedHosts: embed?.embedHosts ?? [],
-      widgetEmbedPages: embed?.embedPages ?? [],
-      lastActiveAt,
-      widgetFirstSeenAt,
-      widgetStatus,
-      widgetStatusLabel: widgetStatusLabel(widgetStatus),
-      isTrialActive:
-        !!w.trialEndsAt && new Date(w.trialEndsAt) > new Date() && w.subscriptionStatus !== 'ACTIVE',
-    }
-  })
+  return websites.map((w) => mapWebsiteListRow(w, sessionBySite))
 }
 
 export async function fetchPlatformIntelligence() {

@@ -6,6 +6,7 @@ import {
   Calendar, MoreHorizontal, X, Check, AlertTriangle, Filter,
   ArrowUpDown, Clock, UserCheck, UserX, Hash, Loader2, MapPin
 } from 'lucide-react'
+import { useToast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
@@ -13,7 +14,9 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { useToast } from '@/lib/toast'
+import { AdminPagination } from '@/components/admin/admin-pagination'
+import { useDebouncedValue } from '@/lib/hooks/use-debounced-value'
+import type { AdminPaginatedResult } from '@/lib/admin-list-query'
 
 interface Website {
   id: string
@@ -61,9 +64,14 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
   const [roleFilter, setRoleFilter] = useState('TUMU')
   const [statusFilter, setStatusFilter] = useState('TUMU')
   const [sortBy, setSortBy] = useState('createdAt')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showDetail, setShowDetail] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -84,10 +92,24 @@ export default function AdminUsersPage() {
   const [addRole, setAddRole] = useState('USER')
 
   const loadUsers = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/admin/users')
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        sortBy,
+      })
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      if (roleFilter !== 'TUMU') params.set('role', roleFilter)
+      if (statusFilter !== 'TUMU') params.set('status', statusFilter)
+
+      const res = await fetch(`/api/admin/users?${params}`)
       if (res.ok) {
-        setUsers(await res.json())
+        const data = (await res.json()) as AdminPaginatedResult<User>
+        setUsers(data.items)
+        setTotal(data.total)
+        setTotalPages(data.totalPages)
+        setPage(data.page)
       } else {
         toast({ title: 'Kullanıcılar yüklenemedi', variant: 'error' })
       }
@@ -96,7 +118,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [debouncedSearch, roleFilter, statusFilter, sortBy, page, pageSize, toast])
 
   const loadUserDetail = useCallback(async (userId: string) => {
     try {
@@ -111,25 +133,11 @@ export default function AdminUsersPage() {
     }
   }, [])
 
-  useEffect(() => { loadUsers() }, [loadUsers])
+  useEffect(() => { void loadUsers() }, [loadUsers])
 
-  const filteredUsers = users
-    .filter(u => {
-      const q = search.toLowerCase()
-      const matchesSearch = !search ||
-        u.email.toLowerCase().includes(q) ||
-        (u.name && u.name.toLowerCase().includes(q))
-      const matchesRole = roleFilter === 'TUMU' || u.role === roleFilter
-      const matchesStatus = statusFilter === 'TUMU' || u.status === statusFilter
-      return matchesSearch && matchesRole && matchesStatus
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name': return (a.name || '').localeCompare(b.name || '')
-        case 'email': return a.email.localeCompare(b.email)
-        default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      }
-    })
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, roleFilter, statusFilter, sortBy, pageSize])
 
   async function apiAction(userId: string, action: string, extra?: object) {
     setActionLoading(`${action}-${userId}`)
@@ -167,6 +175,7 @@ export default function AdminUsersPage() {
       if (res.ok) {
         const created = await res.json()
         setUsers(prev => [created, ...prev])
+        setTotal((t) => t + 1)
         setShowAddModal(false)
         setAddEmail('')
         setAddName('')
@@ -294,7 +303,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Kullanıcı Yönetimi</h1>
-          <p className="text-muted-foreground mt-1">Toplam {users.length} kullanıcı</p>
+          <p className="text-muted-foreground mt-1">Toplam {total.toLocaleString('tr-TR')} kullanıcı</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} size="lg">
           <UserPlus className="size-4" />
@@ -353,7 +362,7 @@ export default function AdminUsersPage() {
               <Loader2 className="size-5 animate-spin" />
               Yükleniyor...
             </div>
-          ) : filteredUsers.length === 0 ? (
+          ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Search className="size-8 mb-2 opacity-40" />
               Kullanıcı bulunamadı
@@ -370,17 +379,13 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredUsers.map((user, i) => {
+                {users.map((user) => {
                   const status = getStatusInfo(user)
                   return (
                     <tr
                       key={user.id}
                       onClick={() => { setSelectedUser(user); setShowDetail(true); loadUserDetail(user.id) }}
-                      className={cn(
-                        'group cursor-pointer transition-all duration-300 hover:bg-accent/50',
-                        'animate-in-up',
-                      )}
-                      style={{ animationDelay: `${i * 30}ms`, animationFillMode: 'both' }}
+                      className="group cursor-pointer transition-colors hover:bg-accent/50"
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
@@ -435,6 +440,21 @@ export default function AdminUsersPage() {
             </table>
           )}
         </div>
+        {!loading && (
+          <div className="px-4 pb-4">
+            <AdminPagination
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size)
+                setPage(1)
+              }}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Detail Panel Overlay */}

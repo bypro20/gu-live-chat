@@ -36,7 +36,11 @@ function AdminWidgetContent() {
   useEffect(() => {
     const siteFromUrl = searchParams.get('site')
     Promise.all([
-      fetch('/api/admin/websites').then((r) => (r.ok ? r.json() : [])),
+      fetch('/api/admin/websites?options=1').then(async (r) => {
+        if (!r.ok) return []
+        const data = await r.json()
+        return data.items ?? []
+      }),
       fetch('/api/admin/marketing-website').then((r) => (r.ok ? r.json() : null)),
     ])
       .then(([list, marketing]) => {

@@ -1151,6 +1151,14 @@ body {
     border-color: var(--admin-border);
   }
 
+  .admin-table-row {
+    transition: background 0.12s ease;
+  }
+
+  .admin-table-row:hover {
+    background: var(--admin-bg-hover);
+  }
+
   .admin-table tbody tr:hover {
     background: var(--admin-bg-hover);
   }

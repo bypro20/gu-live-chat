@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -14,9 +14,14 @@ import {
   MessageSquare,
   Users,
   ExternalLink,
+  Loader2,
 } from 'lucide-react'
 import { useToast } from '@/lib/toast'
 import { ADMIN_SPLIT_DETAIL, useAdminMobileDetail } from '@/lib/hooks/use-inbox-mobile-chat'
+import { AdminPagination } from '@/components/admin/admin-pagination'
+import { AdminVirtualList } from '@/components/admin/admin-virtual-list'
+import { useDebouncedValue } from '@/lib/hooks/use-debounced-value'
+import type { AdminPaginatedResult } from '@/lib/admin-list-query'
 
 type Owner = {
   id: string
@@ -97,7 +102,7 @@ function ownerLabel(owner: Owner) {
 }
 
 function embedHostLabel(site: CustomerSite) {
-  if (site.widgetEmbedHosts.length > 0) return site.widgetEmbedHosts.join(', ')
+  if (site.widgetEmbedHosts?.length) return site.widgetEmbedHosts.join(', ')
   return 'Henüz doğrulanmış kurulum yok'
 }
 
@@ -110,53 +115,95 @@ export default function AdminCustomerSitesPage() {
   const [sites, setSites] = useState<CustomerSite[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
   const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'NEVER' | 'INSTALLED'>('ALL')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedDetail, setSelectedDetail] = useState<CustomerSite | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
   useAdminMobileDetail(!!selectedId)
 
-  useEffect(() => {
-    fetch('/api/admin/websites')
-      .then(async (r) => {
-        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Yüklenemedi')
-        return r.json()
+  const loadSites = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
       })
-      .then(setSites)
-      .catch((e) => toast({ title: e instanceof Error ? e.message : 'Liste yüklenemedi', variant: 'error' }))
-      .finally(() => setLoading(false))
-  }, [toast])
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      if (filter === 'ACTIVE') params.set('widgetStatus', 'ACTIVE')
+      if (filter === 'NEVER') params.set('widgetStatus', 'NEVER')
+      if (filter === 'INSTALLED') params.set('widgetStatus', 'INSTALLED')
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return sites.filter((s) => {
-      const matchQ =
-        !q ||
-        s.name.toLowerCase().includes(q) ||
-        s.domain.toLowerCase().includes(q) ||
-        s.websiteId.toLowerCase().includes(q) ||
-        s.owner.email.toLowerCase().includes(q) ||
-        (s.owner.name?.toLowerCase().includes(q) ?? false) ||
-        s.widgetEmbedHosts.some((h) => h.toLowerCase().includes(q)) ||
-        (s.widgetLastPageUrl?.toLowerCase().includes(q) ?? false) ||
-        (s.widgetFirstPageUrl?.toLowerCase().includes(q) ?? false)
-      if (!matchQ) return false
-      if (filter === 'ALL') return true
-      if (filter === 'ACTIVE') return s.widgetStatus === 'ACTIVE'
-      if (filter === 'NEVER') return s.widgetStatus === 'NEVER'
-      if (filter === 'INSTALLED') return s.widgetStatus !== 'NEVER'
-      return true
-    })
-  }, [sites, search, filter])
+      const res = await fetch(`/api/admin/websites?${params}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Yüklenemedi')
+      }
+      const data = (await res.json()) as AdminPaginatedResult<CustomerSite>
+      setSites(data.items)
+      setTotal(data.total)
+      setTotalPages(data.totalPages)
+      setPage(data.page)
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : 'Liste yüklenemedi', variant: 'error' })
+    } finally {
+      setLoading(false)
+    }
+  }, [debouncedSearch, filter, page, pageSize, toast])
 
   useEffect(() => {
-    if (loading || selectedId || filtered.length === 0) return
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      setSelectedId(filtered[0].id)
-    }
-  }, [loading, filtered, selectedId])
+    void loadSites()
+  }, [loadSites])
 
-  const selected = filtered.find((s) => s.id === selectedId) ?? sites.find((s) => s.id === selectedId) ?? null
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, filter, pageSize])
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSelectedDetail(null)
+      return
+    }
+
+    const fromList = sites.find((s) => s.id === selectedId)
+    if (fromList) setSelectedDetail(fromList)
+
+    let cancelled = false
+    setDetailLoading(true)
+    fetch(`/api/admin/websites?detail=${encodeURIComponent(selectedId)}`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error('Detay yüklenemedi')
+        return r.json() as Promise<CustomerSite>
+      })
+      .then((detail) => {
+        if (!cancelled) setSelectedDetail(detail)
+      })
+      .catch(() => {
+        if (!cancelled && fromList) setSelectedDetail(fromList)
+      })
+      .finally(() => {
+        if (!cancelled) setDetailLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedId, sites])
+
+  useEffect(() => {
+    if (loading || selectedId || sites.length === 0) return
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      setSelectedId(sites[0].id)
+    }
+  }, [loading, sites, selectedId])
+
+  const selected = selectedDetail
 
   async function copySnippet(snippet: string) {
     try {
@@ -169,7 +216,10 @@ export default function AdminCustomerSitesPage() {
     }
   }
 
-  const installedCount = sites.filter((s) => s.widgetStatus !== 'NEVER').length
+  const installedCount = useMemo(
+    () => sites.filter((s) => s.widgetStatus !== 'NEVER').length,
+    [sites],
+  )
 
   return (
     <div className="admin-split-shell h-full min-h-0 flex flex-col overflow-hidden">
@@ -216,50 +266,74 @@ export default function AdminCustomerSitesPage() {
               ))}
             </div>
             <p className="text-[10px] admin-text-muted tabular-nums">
-              {filtered.length} kayıt · {installedCount}/{sites.length} widget kurulu
+              {total.toLocaleString('tr-TR')} kayıt · bu sayfada {installedCount}/{sites.length} widget kurulu
             </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 flex flex-col">
             {loading ? (
-              <div className="p-6 text-center text-sm admin-text-muted">Yükleniyor…</div>
-            ) : filtered.length === 0 ? (
+              <div className="p-6 text-center text-sm admin-text-muted flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Yükleniyor…
+              </div>
+            ) : sites.length === 0 ? (
               <div className="p-6 text-center text-sm admin-text-muted">Kayıt bulunamadı</div>
             ) : (
-              filtered.map((site) => (
-                <button
-                  key={site.id}
-                  type="button"
-                  onClick={() => setSelectedId(site.id)}
-                  className={`admin-split-list-item ${selectedId === site.id ? 'admin-split-list-item--active' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm admin-text truncate">{site.name}</p>
-                      <p className="text-xs admin-text-secondary truncate mt-0.5">Panel domain: {site.domain}</p>
-                      <p className={`text-xs truncate mt-0.5 ${site.widgetEmbedHosts.length ? 'text-emerald-400/90' : 'text-amber-500/80'}`}>
-                        {embedHostLabel(site)}
-                      </p>
-                      {embedPageLabel(site) && (
-                        <p className="text-[11px] admin-text-muted truncate mt-0.5">{embedPageLabel(site)}</p>
-                      )}
-                      <p className="text-[11px] admin-text-muted truncate mt-1">
-                        {ownerLabel(site.owner)} · {site.owner.email}
-                      </p>
+              <AdminVirtualList
+                items={sites}
+                maxHeight="100%"
+                estimateSize={108}
+                className="flex-1 min-h-0"
+                getKey={(site) => site.id}
+                renderItem={(site) => (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(site.id)}
+                    className={`admin-split-list-item w-full text-left ${selectedId === site.id ? 'admin-split-list-item--active' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm admin-text truncate">{site.name}</p>
+                        <p className="text-xs admin-text-secondary truncate mt-0.5">Panel domain: {site.domain}</p>
+                        <p className={`text-xs truncate mt-0.5 ${site.widgetEmbedHosts?.length ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {embedHostLabel(site)}
+                        </p>
+                        {embedPageLabel(site) && (
+                          <p className="text-[11px] admin-text-muted truncate mt-0.5">{embedPageLabel(site)}</p>
+                        )}
+                        <p className="text-[11px] admin-text-muted truncate mt-1">
+                          {ownerLabel(site.owner)} · {site.owner.email}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded border ${widgetBadge[site.widgetStatus] || widgetBadge.NEVER}`}
+                      >
+                        {site.widgetStatus === 'NEVER' ? 'Kod yok' : site.widgetStatus === 'ACTIVE' ? 'Aktif' : 'Kurulu'}
+                      </span>
                     </div>
-                    <span
-                      className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded border ${widgetBadge[site.widgetStatus] || widgetBadge.NEVER}`}
-                    >
-                      {site.widgetStatus === 'NEVER' ? 'Kod yok' : site.widgetStatus === 'ACTIVE' ? 'Aktif' : 'Kurulu'}
-                    </span>
-                  </div>
-                  {site.widgetFirstSeenAt && (
-                    <p className="text-[10px] admin-text-muted mt-1.5">
-                      Widget: {fmtDate(site.widgetFirstSeenAt)}
-                    </p>
-                  )}
-                </button>
-              ))
+                    {site.widgetFirstSeenAt && (
+                      <p className="text-[10px] admin-text-muted mt-1.5">
+                        Widget: {fmtDate(site.widgetFirstSeenAt)}
+                      </p>
+                    )}
+                  </button>
+                )}
+              />
+            )}
+            {!loading && (
+              <div className="p-2 border-t shrink-0" style={{ borderColor: 'var(--admin-border)' }}>
+                <AdminPagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={total}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size)
+                    setPage(1)
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>
