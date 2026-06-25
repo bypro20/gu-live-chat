@@ -157,7 +157,7 @@ export function NativeSettingsHub() {
 
   return (
     <div className="native-settings-hub p-4 pb-8">
-      <div className="native-profile-card mb-6">
+      <div className="native-profile-card mb-4">
         <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center text-white text-xl font-bold bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0">
           {session?.user?.image ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -173,6 +173,28 @@ export function NativeSettingsHub() {
             <p className="text-xs text-primary font-medium mt-1 truncate">{activeWebsite.name}</p>
           )}
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        {websites.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setWebsitePickerOpen(true)}
+            className="native-hub-action col-span-2"
+          >
+            {shell.switchAccount}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => void handleSignOut()}
+          className="native-hub-action native-hub-action--danger col-span-2 flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          {shell.signOut}
+        </button>
       </div>
 
       {groups.map((group) => (
@@ -206,20 +228,6 @@ export function NativeSettingsHub() {
           {theme === 'dark' ? shell.lightTheme : shell.darkTheme}
         </button>
       )}
-
-      {websites.length > 1 && (
-        <button
-          type="button"
-          onClick={() => setWebsitePickerOpen(true)}
-          className="native-hub-action mb-3"
-        >
-          {shell.switchAccount}
-        </button>
-      )}
-
-      <button type="button" onClick={() => void handleSignOut()} className="native-hub-action native-hub-action--danger">
-        {shell.signOut}
-      </button>
 
       <WebsitePickerSheet
         open={websitePickerOpen}

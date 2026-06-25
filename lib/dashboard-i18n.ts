@@ -63,6 +63,7 @@ export type DashboardMessages = {
     menu: string
     selectWebsite: string
     switchAccount: string
+    accountMenu: string
     mainMenu: string
     back: string
   }
@@ -136,6 +137,7 @@ export type DashboardMessages = {
     timeMin: (n: number) => string
     timeHour: (n: number) => string
     timeDay: (n: number) => string
+    login: string
   }
   inbox: {
     title: string
@@ -339,6 +341,7 @@ const tr: DashboardMessages = {
     menu: 'Menü',
     selectWebsite: 'Website Seç',
     switchAccount: 'Hesap Değiştir',
+    accountMenu: 'Hesap menüsü',
     mainMenu: 'Ana menü',
     back: 'Geri',
   },
@@ -412,6 +415,7 @@ const tr: DashboardMessages = {
     timeMin: (n) => `${n} dk`,
     timeHour: (n) => `${n} sa`,
     timeDay: (n) => `${n} g`,
+    login: 'Giriş yap',
   },
   inbox: {
     title: 'Gelen Kutusu',
@@ -646,6 +650,7 @@ const en: DashboardMessages = {
     menu: 'Menu',
     selectWebsite: 'Select website',
     switchAccount: 'Switch account',
+    accountMenu: 'Account menu',
     mainMenu: 'Main menu',
     back: 'Back',
   },
@@ -719,6 +724,7 @@ const en: DashboardMessages = {
     timeMin: (n) => `${n}m`,
     timeHour: (n) => `${n}h`,
     timeDay: (n) => `${n}d`,
+    login: 'Sign in',
   },
   inbox: {
     title: 'Inbox',

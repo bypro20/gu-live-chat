@@ -11,6 +11,8 @@ interface NativeTopBarProps {
   pageTitle: string | null
   websiteName?: string | null
   onOpenWebsitePicker?: () => void
+  onOpenAccount?: () => void
+  userInitial?: string
 }
 
 export function NativeTopBar({
@@ -18,6 +20,8 @@ export function NativeTopBar({
   pageTitle,
   websiteName,
   onOpenWebsitePicker,
+  onOpenAccount,
+  userInitial = '?',
 }: NativeTopBarProps) {
   const router = useRouter()
   const { shell } = useDashboardI18n()
@@ -62,8 +66,20 @@ export function NativeTopBar({
         )}
       </div>
 
-      <div className="shrink-0">
+      <div className="shrink-0 flex items-center gap-1">
         <NotificationBell variant="toolbar" />
+        {onOpenAccount && (
+          <button
+            type="button"
+            onClick={onOpenAccount}
+            className="native-touch-target shrink-0 flex items-center justify-center rounded-xl active:bg-accent transition-colors touch-manipulation"
+            aria-label={shell.accountMenu}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-indigo-600 ring-2 ring-primary/20">
+              {userInitial}
+            </div>
+          </button>
+        )}
       </div>
     </header>
   )

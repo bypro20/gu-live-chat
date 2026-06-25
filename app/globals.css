@@ -1894,7 +1894,10 @@ html.native-app .native-app-auth {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-html.native-app #gu-live-chat-widget-root {
+html.native-app #gu-live-chat-widget-root,
+html.native-app #gu-chat-dock,
+body:has(.app-shell) #gu-chat-dock,
+body:has(.app-shell) #gu-live-chat-widget-root {
   display: none !important;
 }
 

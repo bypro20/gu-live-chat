@@ -13,6 +13,7 @@ import { clearNativeAppMark, nativeAppHomePath } from '@/lib/native-app'
 import { NativeBottomNav } from '@/components/app/native-bottom-nav'
 import { MobileWebBottomNav } from '@/components/app/mobile-web-bottom-nav'
 import { NativeTopBar } from '@/components/app/native-top-bar'
+import { MobileAccountSheet } from '@/components/app/mobile-account-sheet'
 import { WebsitePickerSheet } from '@/components/app/website-picker-sheet'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { getDashboardNavGroups, getDashboardPageTitle, type DashboardMessages } from '@/lib/dashboard-i18n'
@@ -393,6 +394,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             pageTitle={pageTitle}
             websiteName={activeWebsite?.name}
             onOpenWebsitePicker={() => setNativeWebsitePickerOpen(true)}
+            onOpenAccount={() => setMobileAccountOpen(true)}
+            userInitial={userInitial}
           />
         ) : (
         <div className={`lg:hidden shrink-0 h-14 flex items-center gap-2 px-3 sm:px-4 sticky top-0 z-30 glass-strong border-b border-border mobile-safe-area ${isNativeApp ? 'native-app-topbar' : ''}`}>
@@ -413,10 +416,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setMobileAccountOpen(true)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors touch-manipulation"
-              aria-label={s.switchAccount}
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors touch-manipulation"
+              aria-label={s.accountMenu}
             >
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-indigo-600">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-indigo-600 ring-2 ring-primary/15">
                 {userInitial}
               </div>
             </button>
@@ -447,50 +450,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         onSelect={switchWebsite}
       />
 
-      {mobileAccountOpen && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[55] bg-black/50 lg:hidden"
-            aria-label={s.menu}
-            onClick={() => setMobileAccountOpen(false)}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-[60] lg:hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <div className="rounded-2xl border border-border bg-card shadow-xl p-3 space-y-2">
-              <p className="px-2 pt-1 text-xs font-semibold text-muted-foreground truncate">{session?.user?.email}</p>
-              {websites.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileAccountOpen(false)
-                    setNativeWebsitePickerOpen(true)
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-muted text-foreground"
-                >
-                  {s.switchAccount}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileAccountOpen(false)
-                  void handleSignOut()
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-red-500"
-              >
-                {s.signOut}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobileAccountOpen(false)}
-                className="w-full py-2.5 text-sm font-medium text-muted-foreground"
-              >
-                {d.common.cancel}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      <MobileAccountSheet
+        open={mobileAccountOpen}
+        onClose={() => setMobileAccountOpen(false)}
+        session={session}
+        showSwitchAccount={websites.length > 1}
+        onSwitchAccount={() => setNativeWebsitePickerOpen(true)}
+        onSignOut={() => void handleSignOut()}
+        switchAccountLabel={s.switchAccount}
+        signOutLabel={s.signOut}
+        cancelLabel={d.common.cancel}
+        settingsLabel={d.pageTitles.settings}
+        loginLabel={d.common.login}
+      />
     </div>
   )
 }
