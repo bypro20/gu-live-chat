@@ -14,3 +14,4 @@ lib/pool-engine
 lib/pool-socket.ts
 lib/hooks/use-pool-socket.ts
 public/pool-manifest.json
+pion-ai

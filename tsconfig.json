@@ -43,6 +43,7 @@
     "lib/hooks/use-pool-socket.ts",
     "app/(marketing)/pool",
     "components/pool",
-    "mobile-pool"
+    "mobile-pool",
+    "pion-ai"
   ]
 }
