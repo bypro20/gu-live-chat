@@ -81,6 +81,50 @@ interface LiveVisitorsState {
 }
 
 const MAX_ACTIVITIES = 200
+const STALE_OFFLINE_MS = 10 * 60 * 1000
+
+function mergeLiveVisitor(existing: LiveVisitor | undefined, incoming: LiveVisitor): LiveVisitor {
+  if (!existing) return incoming
+  return {
+    ...existing,
+    ...incoming,
+    country: incoming.country ?? existing.country,
+    city: incoming.city ?? existing.city,
+    region: incoming.region ?? existing.region,
+    latitude: incoming.latitude ?? existing.latitude,
+    longitude: incoming.longitude ?? existing.longitude,
+    district: incoming.district ?? existing.district,
+    postalCode: incoming.postalCode ?? existing.postalCode,
+    geoAddress: incoming.geoAddress ?? existing.geoAddress,
+    geoSource: incoming.geoSource ?? existing.geoSource,
+    entrySource: incoming.entrySource ?? existing.entrySource,
+    cursorX: existing.cursorX ?? incoming.cursorX,
+    cursorY: existing.cursorY ?? incoming.cursorY,
+    viewportW: existing.viewportW ?? incoming.viewportW,
+    viewportH: existing.viewportH ?? incoming.viewportH,
+    scrollY: existing.scrollY ?? incoming.scrollY,
+    documentH: existing.documentH ?? incoming.documentH,
+    screenshotUrl: existing.screenshotUrl ?? incoming.screenshotUrl,
+    screenshotAt: existing.screenshotAt ?? incoming.screenshotAt,
+    isLive: existing.isLive || incoming.isLive,
+    lastActiveAt:
+      existing.lastActiveAt && incoming.lastActiveAt
+        ? new Date(existing.lastActiveAt) > new Date(incoming.lastActiveAt)
+          ? existing.lastActiveAt
+          : incoming.lastActiveAt
+        : existing.lastActiveAt || incoming.lastActiveAt,
+  }
+}
+
+function pruneStaleOfflineVisitors(map: Map<string, LiveVisitor>, apiIds: Set<string>) {
+  const now = Date.now()
+  for (const [id, visitor] of map) {
+    if (visitor.isLive) continue
+    if (apiIds.has(id)) continue
+    const last = visitor.lastActiveAt ? new Date(visitor.lastActiveAt).getTime() : 0
+    if (now - last > STALE_OFFLINE_MS) map.delete(id)
+  }
+}
 
 export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
   visitors: new Map(),
@@ -91,36 +135,24 @@ export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
 
   setVisitors: (visitors) =>
     set((state) => {
-      const newMap = new Map<string, LiveVisitor>()
-      visitors.forEach((v) => {
-        // Preserve existing cursor data from Socket.io (real-time updates)
-        const existing = state.visitors.get(v.visitorId)
-        if (existing) {
-          newMap.set(v.visitorId, {
-            ...v,
-            // Keep real-time cursor data if it's more recent than API data
-            cursorX: existing.cursorX ?? v.cursorX,
-            cursorY: existing.cursorY ?? v.cursorY,
-            viewportW: existing.viewportW ?? v.viewportW,
-            viewportH: existing.viewportH ?? v.viewportH,
-            scrollY: existing.scrollY ?? v.scrollY,
-            documentH: existing.documentH ?? v.documentH,
-            // Keep real-time screenshot data if available
-            screenshotUrl: existing.screenshotUrl ?? v.screenshotUrl,
-            screenshotAt: existing.screenshotAt ?? v.screenshotAt,
-            isLive: existing.isLive || v.isLive,
-          })
-        } else {
-          newMap.set(v.visitorId, v)
-        }
-      })
+      const newMap = new Map(state.visitors)
+      const apiIds = new Set<string>()
+
+      for (const incoming of visitors) {
+        apiIds.add(incoming.visitorId)
+        const existing = newMap.get(incoming.visitorId)
+        newMap.set(incoming.visitorId, mergeLiveVisitor(existing, incoming))
+      }
+
+      pruneStaleOfflineVisitors(newMap, apiIds)
       return { visitors: newMap }
     }),
 
   addVisitor: (visitor) =>
     set((state) => {
       const newMap = new Map(state.visitors)
-      newMap.set(visitor.visitorId, visitor)
+      const existing = newMap.get(visitor.visitorId)
+      newMap.set(visitor.visitorId, mergeLiveVisitor(existing, visitor))
       return { visitors: newMap }
     }),
 

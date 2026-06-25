@@ -108,10 +108,9 @@ export default function AdminVisitorsPage() {
   const liveVisitorList = useLiveVisitorsStore(
     useShallow((s) => Array.from(s.visitors.values()))
   )
-  const setLiveVisitors = useLiveVisitorsStore((s) => s.setVisitors)
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
-  const [timeFilter, setTimeFilter] = useState('24h')
+  const [timeFilter, setTimeFilter] = useState('1s')
   const [focusedVisitorId, setFocusedVisitorId] = useState<string | null>(null)
 
   const fetchHistory = useCallback(async () => {
@@ -130,30 +129,18 @@ export default function AdminVisitorsPage() {
     }
   }, [timeFilter])
 
-  const refreshLive = useCallback(async () => {
-    try {
-      const liveRes = await fetch('/api/admin/visitors/live')
-      if (liveRes.ok) {
-        const data = await liveRes.json()
-        setLiveVisitors(data.visitors || [])
-      }
-    } catch (e) {
-      console.error('[AdminVisitors] live fetch error:', e)
-    }
-  }, [setLiveVisitors])
-
   const fetchData = useCallback(async () => {
     setLoading(true)
-    await Promise.all([fetchHistory(), refreshLive()])
+    await fetchHistory()
     setLoading(false)
-  }, [fetchHistory, refreshLive])
+  }, [fetchHistory])
 
   useEffect(() => { void fetchData() }, [fetchData])
 
   useEffect(() => {
-    const interval = setInterval(fetchData, timeFilter === '1s' ? 10000 : 30000)
+    const interval = setInterval(fetchHistory, timeFilter === '1s' ? 60000 : 120000)
     return () => clearInterval(interval)
-  }, [fetchData, timeFilter])
+  }, [fetchHistory, timeFilter])
 
   const timeCutoff = timeFilter === '24h'
     ? Date.now() - 24 * 60 * 60 * 1000
@@ -161,12 +148,14 @@ export default function AdminVisitorsPage() {
       ? Date.now() - 7 * 24 * 60 * 60 * 1000
       : null
 
-  const filteredVisitors = useMemo(() => liveVisitorList.filter(v => {
+  const filteredVisitors = useMemo(() => liveVisitorList.filter((v) => {
+    if (timeFilter === '1s') {
+      if (v.isLive) return true
+      if (v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() <= 300000) return true
+      return false
+    }
     if (timeCutoff && v.lastActiveAt) {
       if (new Date(v.lastActiveAt).getTime() < timeCutoff) return false
-    }
-    if (timeFilter === '1s' && v.lastActiveAt) {
-      if (Date.now() - new Date(v.lastActiveAt).getTime() > 300000) return false
     }
     return true
   }), [liveVisitorList, timeCutoff, timeFilter])
@@ -177,10 +166,9 @@ export default function AdminVisitorsPage() {
     return bTime - aTime
   }), [filteredVisitors])
 
-  const activeCount = sortedVisitors.filter(v => {
-    if (!v.lastActiveAt) return false
-    return Date.now() - new Date(v.lastActiveAt).getTime() < 300000
-  }).length
+  const activeCount = sortedVisitors.filter((v) => v.isLive || (
+    v.lastActiveAt && Date.now() - new Date(v.lastActiveAt).getTime() < 300000
+  )).length
 
   const todayStr = new Date().toDateString()
   const todayVisitors = liveVisitorList.filter(v => {
@@ -420,7 +408,6 @@ export default function AdminVisitorsPage() {
         </div>
       </div>
 
-      {/* CANLI İZLEME — ekran, sayfa geçmişi, konum */}
       <AdminVisitorsMonitor
         initialVisitorId={focusedVisitorId}
         onVisitorSelect={setFocusedVisitorId}

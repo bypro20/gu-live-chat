@@ -163,7 +163,7 @@ export function AdminVisitorsMonitor({
   useEffect(() => { fetchLiveVisitors() }, [fetchLiveVisitors])
 
   useEffect(() => {
-    const interval = setInterval(fetchLiveVisitors, 15000)
+    const interval = setInterval(fetchLiveVisitors, 10000)
     return () => clearInterval(interval)
   }, [fetchLiveVisitors])
 
@@ -232,7 +232,10 @@ export function AdminVisitorsMonitor({
     }
 
     const handleVisitorOffline = (data: any) => {
-      updateVisitor(data.visitorId as string, { isLive: false })
+      updateVisitor(data.visitorId as string, {
+        isLive: false,
+        lastActiveAt: (data.timestamp as string) || new Date().toISOString(),
+      })
       addActivity({ visitorId: data.visitorId as string, eventType: 'offline', timestamp: new Date().toISOString() })
     }
 

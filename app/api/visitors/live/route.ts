@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { websiteHasFeature } from '@/lib/addon-features'
 import { resolveLiveVisitors } from '@/lib/socket-live-bridge'
-import { syncProductionSchema } from '@/lib/db-schema-sync'
 
 // GET /api/visitors/live?websiteId=xxx
 export async function GET(req: Request) {
@@ -12,8 +11,6 @@ export async function GET(req: Request) {
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
     }
-
-    await syncProductionSchema().catch(() => {})
 
     const { searchParams } = new URL(req.url)
     const websiteIdParam = searchParams.get('websiteId')
