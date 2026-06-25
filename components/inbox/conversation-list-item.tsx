@@ -101,7 +101,7 @@ export const ConversationListItem = memo(function ConversationListItem({
             'text-[13px] truncate mt-0.5 leading-snug',
             isAdmin
               ? conversation.unreadCount > 0
-                ? 'text-foreground/80 font-medium'
+                ? 'text-foreground/90 font-medium'
                 : 'text-muted-foreground'
               : conversation.unreadCount > 0
                 ? 'text-foreground/80 font-medium'

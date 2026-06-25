@@ -61,7 +61,7 @@ export function ChatHeader({
 
   return (
     <div
-      className="px-3 sm:px-4 py-3.5 flex items-center gap-2 shrink-0 min-w-0 overflow-hidden shadow-md relative"
+      className="inbox-chat-header px-3 sm:px-4 py-3.5 flex items-center gap-2 shrink-0 min-w-0 overflow-hidden shadow-md relative"
       style={inboxHeaderStyle(primary)}
     >
       <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />

@@ -517,22 +517,59 @@ body {
     background: var(--admin-bg, #ffffff);
   }
 
-  /* Admin gelen kutusu — admin temasına uyumlu */
+  /* Admin gelen kutusu — okunaklı açık palet + admin accent */
   .admin-shell .app-main .inbox-shell {
-    background: var(--admin-bg);
-    color: var(--admin-text);
     color-scheme: light;
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #475569;
+    --accent: #eef2ff;
+    --accent-foreground: #0f172a;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --input: #ffffff;
     --primary: var(--admin-accent);
-    --primary-foreground: var(--admin-accent-fg);
+    --primary-foreground: #ffffff;
+    --primary-light: var(--admin-accent-soft);
     --ring: var(--admin-accent);
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .admin-shell .app-main .inbox-shell .text-foreground {
-    color: var(--admin-text);
+    color: var(--foreground);
   }
 
   .admin-shell .app-main .inbox-shell .text-muted-foreground {
-    color: var(--admin-text-muted);
+    color: var(--muted-foreground);
+  }
+
+  .admin-shell .app-main .inbox-shell :is(input, select, textarea)::placeholder {
+    color: var(--muted-foreground);
+  }
+
+  /* Gradient header — beyaz metin korunur */
+  .admin-shell .app-main .inbox-shell .inbox-chat-header,
+  .admin-shell .app-main .inbox-shell .inbox-chat-header :is(h2, span, button, a, .text-white),
+  .admin-shell .app-main .inbox-shell .inbox-chat-header [class*='text-white'] {
+    color: #ffffff !important;
+  }
+
+  .admin-shell .app-main .inbox-shell .inbox-chat-header [class*='text-white/'] {
+    color: rgba(255, 255, 255, 0.88) !important;
+  }
+
+  .admin-shell .app-main .inbox-shell .inbox-chat-header [class*='bg-white/'] {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .admin-shell .app-main .inbox-shell .inbox-chat-header [class*='border-white/'] {
+    border-color: rgba(255, 255, 255, 0.28) !important;
   }
 
   /* ─── Admin v3 — slate / indigo ops console ─── */
@@ -2368,12 +2405,12 @@ html.native-app .native-hub-row:last-child {
 }
 
 .admin-shell .inbox-shell-list {
-  background: var(--admin-bg-elevated);
-  border-color: var(--admin-border);
+  background: var(--card);
+  border-color: var(--border);
 }
 
 .admin-shell .inbox-shell-chat {
-  background: var(--admin-bg);
+  background: var(--background);
 }
 
 .admin-shell .inbox-conversation-item {
@@ -2385,12 +2422,13 @@ html.native-app .native-hub-row:last-child {
 }
 
 .admin-shell .inbox-conversation-item--selected {
-  background: var(--admin-accent-soft);
-  border-left-color: var(--admin-accent);
+  background: var(--primary-light);
+  border-left-color: var(--primary);
+  color: var(--foreground);
 }
 
 .admin-shell .inbox-conversation-item--unread {
-  background: color-mix(in srgb, var(--admin-accent-soft) 80%, transparent);
+  background: color-mix(in srgb, var(--primary-light) 75%, #ffffff 25%);
 }
 
 .inbox-composer-shell {
