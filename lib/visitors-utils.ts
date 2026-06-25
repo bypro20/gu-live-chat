@@ -98,9 +98,18 @@ export function getBrowserLabel(browser?: string | null, locale: SiteLocale = 't
   return browser || getVisitorsMessages(locale).device.unknown
 }
 
-export function getDeviceLabel(device?: string | null, locale: SiteLocale = 'tr'): string {
-  const d = (device || '').toLowerCase()
+export function getDeviceLabel(
+  device?: string | null,
+  locale: SiteLocale = 'tr',
+  deviceType?: string | null
+): string {
+  const dt = (deviceType || '').toLowerCase()
   const labels = getVisitorsMessages(locale).device
+  if (dt === 'mobile') return labels.mobile
+  if (dt === 'tablet') return labels.tablet
+  if (dt === 'desktop') return labels.desktop
+
+  const d = (device || '').toLowerCase()
   if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return labels.mobile
   if (d.includes('tablet') || d.includes('ipad')) return labels.tablet
   return labels.desktop

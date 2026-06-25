@@ -1,6 +1,5 @@
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 
-/** API / socket yanıtlarını LiveVisitor geo alanlarıyla eşler. */
 export function withLiveVisitorGeo<T extends Record<string, unknown>>(
   row: T,
   session?: {
@@ -55,7 +54,36 @@ export function withLiveVisitorGeo<T extends Record<string, unknown>>(
   }
 }
 
-export function mapsExternalUrl(lat: number, lng: number, label?: string): string {
-  const q = label ? encodeURIComponent(label) : `${lat},${lng}`
-  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`
+/** Google Maps — koordinat veya adres araması. */
+export function mapsExternalUrl(lat: number, lng: number, _label?: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+}
+
+export function mapsSearchUrl(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
+export function resolveVisitorMapsUrl(input: {
+  latitude?: number | null
+  longitude?: number | null
+  country?: string | null
+  city?: string | null
+  region?: string | null
+  geoAddress?: string | null
+  name?: string | null
+}): string | null {
+  if (typeof input.latitude === 'number' && typeof input.longitude === 'number') {
+    return mapsExternalUrl(input.latitude, input.longitude)
+  }
+  const line =
+    input.geoAddress?.trim() ||
+    [input.city, input.region, input.country].filter(Boolean).join(', ')
+  if (line) return mapsSearchUrl(line)
+  return null
+}
+
+export function visitorDisplayName(name?: string | null): string {
+  const n = name?.trim()
+  if (!n || n.toLowerCase() === 'anonim' || n.toLowerCase() === 'anonymous') return 'Anonim'
+  return n
 }

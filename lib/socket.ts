@@ -5,6 +5,7 @@ import { socketCorsOrigins } from './socket-cors'
 import { resolveAgentSocketToken, resolveVisitorToken, type AgentSocketTokenPayload, type VisitorTokenPayload } from './secure-tokens'
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
+import { enrichVisitorLiveProfile } from './visitor-live-enrich'
 
 let io: SocketIOServer
 
@@ -108,6 +109,7 @@ async function buildVisitorOnlinePayload(
     browser: null as string | null,
     os: null as string | null,
     device: null as string | null,
+    deviceType: null as string | null,
     websiteName: null as string | null,
     currentPage: sessionInfo.currentPage || '',
     currentTitle: sessionInfo.currentTitle || '',
@@ -134,6 +136,9 @@ async function buildVisitorOnlinePayload(
         ? prisma.visitorSession.findUnique({
             where: { sessionId },
             select: {
+              id: true,
+              ipAddress: true,
+              userAgent: true,
               country: true,
               city: true,
               region: true,
@@ -150,6 +155,7 @@ async function buildVisitorOnlinePayload(
               browser: true,
               os: true,
               device: true,
+              deviceType: true,
               currentPage: true,
               currentTitle: true,
             },
@@ -163,25 +169,61 @@ async function buildVisitorOnlinePayload(
 
     payload.name = visitor?.name?.trim() || visitor?.email?.split('@')[0] || 'Anonim'
     payload.email = visitor?.email || null
-    payload.country = session?.country || visitor?.country || null
-    payload.city = session?.city || visitor?.city || null
-    payload.region = session?.region || null
-    payload.latitude = session?.latitude ?? null
-    payload.longitude = session?.longitude ?? null
-    payload.district = session?.district ?? null
-    payload.postalCode = session?.postalCode ?? null
-    payload.geoAddress = session?.geoAddress ?? null
-    payload.geoSource = session?.geoSource ?? null
-    payload.entrySource = session?.entrySource ?? null
-    payload.isp = session?.isp ?? null
-    payload.landingPage = session?.landingPage ?? null
-    payload.referrer = session?.referrer ?? null
-    payload.browser = session?.browser || visitor?.browser || null
-    payload.os = session?.os || visitor?.os || null
-    payload.device = session?.device || visitor?.device || null
     payload.websiteName = website?.name || null
     payload.currentPage = sessionInfo.currentPage || session?.currentPage || payload.currentPage
     payload.currentTitle = sessionInfo.currentTitle || session?.currentTitle || payload.currentTitle
+
+    const enriched = await enrichVisitorLiveProfile(
+      {
+        sessionDbId: session?.id,
+        sessionId,
+        visitorDbId: visitorId,
+        ipAddress: session?.ipAddress,
+        userAgent: session?.userAgent,
+        name: payload.name,
+        email: payload.email,
+        browser: session?.browser || visitor?.browser || null,
+        os: session?.os || visitor?.os || null,
+        device: session?.device || visitor?.device || null,
+        deviceType: session?.deviceType || null,
+        country: session?.country || visitor?.country || null,
+        city: session?.city || visitor?.city || null,
+        region: session?.region || null,
+        latitude: session?.latitude ?? null,
+        longitude: session?.longitude ?? null,
+        district: session?.district ?? null,
+        postalCode: session?.postalCode ?? null,
+        geoAddress: session?.geoAddress ?? null,
+        geoSource: session?.geoSource ?? null,
+        entrySource: session?.entrySource ?? null,
+        isp: session?.isp ?? null,
+        landingPage: session?.landingPage ?? null,
+        referrer: session?.referrer ?? null,
+        currentPage: payload.currentPage,
+        currentTitle: payload.currentTitle,
+      },
+      { persist: true }
+    )
+
+    payload.name = enriched.name
+    payload.email = enriched.email
+    payload.country = enriched.country
+    payload.city = enriched.city
+    payload.region = enriched.region
+    payload.latitude = enriched.latitude
+    payload.longitude = enriched.longitude
+    payload.district = enriched.district
+    payload.postalCode = enriched.postalCode
+    payload.geoAddress = enriched.geoAddress
+    payload.geoSource = enriched.geoSource
+    payload.entrySource = enriched.entrySource
+    payload.isp = enriched.isp
+    payload.landingPage = enriched.landingPage
+    payload.referrer = enriched.referrer
+    payload.browser = enriched.browser
+    payload.os = enriched.os
+    payload.device = enriched.device
+    payload.deviceType = enriched.deviceType
   } catch {
     // DB lookup optional — basic payload still works
   }

@@ -1,8 +1,12 @@
 'use client'
 
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
-import { formatDuration, getBrowserEmoji, getDeviceEmoji, getAccent, type VisitorTheme } from '@/lib/visitors-utils'
-import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
+import { formatDuration, getAccent, type VisitorTheme } from '@/lib/visitors-utils'
+import { visitorDisplayName } from '@/lib/visitor-live-geo'
+import {
+  formatVisitorLocationLine,
+  formatVisitorTechLine,
+} from '@/lib/visitor-intelligence'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
 interface VisitorStatusHeaderProps {
@@ -30,7 +34,7 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-base font-bold text-gray-900 dark:text-white">
-            {visitor.name || h.anonymousVisitor}
+            {visitorDisplayName(visitor.name)}
           </h3>
           {visitor.isLive && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
@@ -45,30 +49,27 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
         )}
 
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          {visitor.browser && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {getBrowserEmoji(visitor.browser)} {visitor.browser}
-            </span>
-          )}
-          {visitor.os && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">· {visitor.os}</span>
-          )}
-          {visitor.device && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              · {getDeviceEmoji(visitor.device)} {visitor.device}
-            </span>
-          )}
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {formatVisitorTechLine(visitor)}
+          </span>
         </div>
 
-        <div className="flex items-center gap-3 mt-1.5">
+        {visitor.entrySource && (
+          <p className="text-xs text-violet-500 dark:text-violet-400 mt-1">
+            Giriş: {visitor.entrySource}
+          </p>
+        )}
+
+        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
           {visitor.startedAt && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
               ⏱ {formatDuration(visitor.startedAt, undefined, locale)}
             </span>
           )}
-          {visitor.country && (
+          {formatVisitorLocationLine(visitor) && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
-              📍 {formatVisitorGeoLine(visitor) || [visitor.city, visitor.region, visitor.country].filter(Boolean).join(', ')}
+              📍 {formatVisitorLocationLine(visitor)}
+              {visitor.geoSource === 'gps' ? ' (GPS)' : visitor.geoSource === 'ip' ? ' (IP)' : ''}
             </span>
           )}
         </div>

@@ -7,6 +7,7 @@ export interface LiveVisitor {
   browser?: string | null
   os?: string | null
   device?: string | null
+  deviceType?: string | null
   country?: string | null
   city?: string | null
   currentPage: string
@@ -98,6 +99,10 @@ function mergeLiveVisitor(existing: LiveVisitor | undefined, incoming: LiveVisit
     geoAddress: incoming.geoAddress ?? existing.geoAddress,
     geoSource: incoming.geoSource ?? existing.geoSource,
     entrySource: incoming.entrySource ?? existing.entrySource,
+    browser: incoming.browser ?? existing.browser,
+    os: incoming.os ?? existing.os,
+    device: incoming.device ?? existing.device,
+    deviceType: incoming.deviceType ?? existing.deviceType,
     cursorX: existing.cursorX ?? incoming.cursorX,
     cursorY: existing.cursorY ?? incoming.cursorY,
     viewportW: existing.viewportW ?? incoming.viewportW,

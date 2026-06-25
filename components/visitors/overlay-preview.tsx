@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
 import type { LiveVisitor, VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { getAccent, type VisitorTheme } from '@/lib/visitors-utils'
+import { formatVisitorTechLine, formatVisitorLocationLine } from '@/lib/visitor-intelligence'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
@@ -385,13 +386,12 @@ export function OverlayPreview({
             )}
           </div>
         )}
-        <div className="flex items-center gap-2 text-[10px] text-white/40">
-          {(visitor.browser || visitor.device) && (
-            <span>{visitor.browser || 'Browser'} • {visitor.device || 'Desktop'}</span>
+        <div className="flex items-center gap-2 text-[10px] text-white/40 flex-wrap">
+          <span>{formatVisitorTechLine(visitor)}</span>
+          {formatVisitorLocationLine(visitor) && (
+            <span>• {formatVisitorLocationLine(visitor)}</span>
           )}
-          {visitor.country && (
-            <span>• {visitor.country}{visitor.city ? `, ${visitor.city}` : ''}</span>
-          )}
+          {visitor.entrySource && <span>• {visitor.entrySource}</span>}
         </div>
         {activities.length > 0 && (
           <div className="mt-2.5 pt-2.5 border-t border-white/[0.08]">

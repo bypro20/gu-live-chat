@@ -11,14 +11,15 @@ import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
 import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
-import { formatTimeAgo, getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
+import { formatTimeAgo } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
-import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
+import { visitorDisplayName } from '@/lib/visitor-live-geo'
+import { VisitorLiveProfile } from '@/components/visitors/visitor-live-profile'
 import {
-  Eye, Users, Search, X, Monitor, Smartphone, Tablet,
-  MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
+  Eye, Users, Search, X,
+  MousePointer2, Activity, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
 interface AdminVisitorsMonitorProps {
@@ -29,12 +30,6 @@ interface AdminVisitorsMonitorProps {
   onVisitorSelect?: (visitorId: string | null) => void
 }
 
-function DeviceIcon({ device }: { device?: string | null }) {
-  const d = (device || '').toLowerCase()
-  if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return <Smartphone className="w-3.5 h-3.5" />
-  if (d.includes('tablet') || d.includes('ipad')) return <Tablet className="w-3.5 h-3.5" />
-  return <Monitor className="w-3.5 h-3.5" />
-}
 
 function activityLabel(a: VisitorActivity, m: ReturnType<typeof useVisitorsI18n>['monitor']): string {
   return formatVisitorActivityLabel(a, m)
@@ -194,6 +189,7 @@ export function AdminVisitorsMonitor({
         browser: (data.browser as string) || null,
         os: (data.os as string) || null,
         device: (data.device as string) || null,
+        deviceType: (data.deviceType as string) || null,
         country: (data.country as string) || null,
         city: (data.city as string) || null,
         region: (data.region as string) || null,
@@ -564,31 +560,17 @@ export function AdminVisitorsMonitor({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className={`text-sm font-semibold truncate ${textPrimary}`}>{visitor.name || m.anonymous}</p>
+                          <p className={`text-sm font-semibold truncate ${textPrimary}`}>
+                            {visitorDisplayName(visitor.name)}
+                          </p>
                           <span className={`text-[10px] shrink-0 ${textMuted}`}>{visitor.lastActiveAt ? formatTimeAgo(visitor.lastActiveAt, locale) : ''}</span>
                         </div>
                         <p className="text-[11px] text-violet-300 truncate mt-0.5 flex items-center gap-1">
                           <MousePointer2 className="w-3 h-3 shrink-0" />
                           {visitor.currentTitle || visitor.currentPage || '—'}
                         </p>
-                        <div className={`flex items-center gap-2 mt-1 flex-wrap text-[10px] ${textMuted}`}>
-                          <DeviceIcon device={visitor.device} />
-                          {visitor.device && (
-                            <span>{getDeviceLabel(visitor.device, locale)}</span>
-                          )}
-                          {visitor.browser && (
-                            <span>{getBrowserLabel(visitor.browser, locale)}</span>
-                          )}
-                          {visitor.websiteName && <span className="text-violet-300">{visitor.websiteName}</span>}
-                          {(visitor.city || visitor.country) && (
-                            <span className="flex items-center gap-0.5">
-                              <MapPin className="w-3 h-3" />
-                              {formatVisitorGeoLine(visitor) || [visitor.city, visitor.country].filter(Boolean).join(', ')}
-                            </span>
-                          )}
-                          {visitor.entrySource && (
-                            <span className="text-violet-300/90">{visitor.entrySource}</span>
-                          )}
+                        <div className={`flex items-center gap-2 mt-1.5 ${textMuted}`}>
+                          <VisitorLiveProfile visitor={visitor} theme={isDashboard ? 'dashboard' : 'admin'} compact />
                         </div>
                         {visitor.pages && visitor.pages.length > 0 && (
                           <div className="mt-2 space-y-1">
@@ -654,7 +636,8 @@ export function AdminVisitorsMonitor({
                   onStateChange={setWebrtcState}
                 />
               )}
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col gap-2">
+                <VisitorLiveProfile visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
                 <VisitorDetailPanel
                   visitor={selectedVisitor}
                   recentClicks={recentClicks}

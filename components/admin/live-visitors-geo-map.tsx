@@ -5,7 +5,13 @@ import type { DivIcon, LayerGroup, Map as LeafletMap, Marker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { DEFAULT_MAP_CENTER, resolveVisitorMapCoords } from '@/lib/country-coords'
+import { resolveVisitorMapsUrl, visitorDisplayName } from '@/lib/visitor-live-geo'
 import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
+import {
+  deviceKindLabel,
+  formatVisitorTechLine,
+  resolveDeviceKind,
+} from '@/lib/visitor-intelligence'
 
 type MapPin = {
   visitorId: string
@@ -71,19 +77,29 @@ function buildPinIcon(
 
 function buildPopupHtml(pin: MapPin): string {
   const v = pin.visitor
-  const name = v.name || 'Ziyaretçi'
+  const name = visitorDisplayName(v.name)
   const address = formatVisitorGeoLine(v) || v.country || 'Konum bilinmiyor'
-  const source =
-    pin.approximate
-      ? 'Yaklaşık konum (ülke/şehir)'
-      : v.geoSource === 'gps'
-        ? 'GPS — anlık konum'
-        : v.geoSource === 'ip'
-          ? 'IP konumu'
-          : 'Konum'
+  const source = pin.approximate
+    ? 'IP — şehir/ülke düzeyi'
+    : v.geoSource === 'gps'
+      ? 'GPS — kesin konum'
+      : v.geoSource === 'ip'
+        ? 'IP — kesin koordinat'
+        : 'Konum'
+  const device = formatVisitorTechLine(v)
+  const mapsUrl = resolveVisitorMapsUrl({
+    ...v,
+    latitude: v.latitude ?? pin.lat,
+    longitude: v.longitude ?? pin.lng,
+    geoAddress: v.geoAddress || formatVisitorGeoLine(v) || null,
+  })
+  const mapsLink = mapsUrl
+    ? `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;font-weight:600;color:#7c3aed;text-decoration:none">📍 Konuma git</a>`
+    : ''
   const entry = v.entrySource
     ? `<div style="margin-top:6px;font-size:11px;color:#a78bfa">Giriş: ${v.entrySource}</div>`
-    : ''
+    : `<div style="margin-top:6px;font-size:11px;color:#94a3b8">Giriş: Doğrudan giriş</div>`
+  const deviceLine = `<div style="margin-top:4px;font-size:11px;color:#475569">${deviceKindLabel(resolveDeviceKind(v))} · ${device}</div>`
   const landing = v.landingPage
     ? `<div style="margin-top:4px;font-size:10px;color:#94a3b8;word-break:break-all">Sayfa: ${v.landingPage}</div>`
     : ''
@@ -96,7 +112,7 @@ function buildPopupHtml(pin: MapPin): string {
       <div style="font-weight:600;font-size:13px;color:#0f172a">${countryFlag(v.country)} ${name}</div>
       <div style="margin-top:4px;font-size:12px;color:#334155">${address}</div>
       <div style="margin-top:4px;font-size:10px;color:#64748b">${source}</div>
-      ${entry}${landing}${site}
+      ${deviceLine}${entry}${landing}${site}${mapsLink}
     </div>
   `
 }
@@ -120,7 +136,12 @@ export function LiveVisitorsGeoMap({
   const pins = useMemo(() => {
     const out: MapPin[] = []
     for (const visitor of visitors) {
-      const coords = resolveVisitorMapCoords(visitor)
+      const coords = resolveVisitorMapCoords({
+        latitude: visitor.latitude,
+        longitude: visitor.longitude,
+        country: visitor.country,
+        city: visitor.city,
+      })
       if (!coords) continue
       out.push({
         visitorId: visitor.visitorId,
@@ -132,7 +153,10 @@ export function LiveVisitorsGeoMap({
     }
     return out
   }, [visitors])
-
+  const pendingGeo = useMemo(
+    () => visitors.filter((v) => v.isLive && !pins.some((p) => p.visitorId === v.visitorId)),
+    [visitors, pins]
+  )
   const countrySummary = useMemo(() => {
     const map = new Map<string, number>()
     for (const pin of pins) {
@@ -316,7 +340,18 @@ export function LiveVisitorsGeoMap({
           </div>
         )}
 
-        {pins.length === 0 && (
+        {pins.length === 0 && visitors.length > 0 && (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#0d1117]/45"
+            style={{ height }}
+          >
+            <p className="max-w-[85%] text-center text-xs text-gray-300 px-4">
+              {pendingGeo.length} canlı ziyaretçi — IP/GPS konumu çözümleniyor
+            </p>
+          </div>
+        )}
+
+        {pins.length === 0 && visitors.length === 0 && (
           <div
             className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#0d1117]/55"
             style={{ height }}
@@ -330,10 +365,28 @@ export function LiveVisitorsGeoMap({
         <p className="mt-2 text-[10px] text-gray-500">
           <span className="text-emerald-400">●</span> Kesin konum (IP/GPS)
           {' · '}
-          <span className="text-amber-400">●</span> Yaklaşık (ülke/şehir)
+          <span className="text-amber-400">●</span> Şehir/ülke (IP yedek)
           {' · '}
           Nabız = şu an sitede
         </p>
+      )}
+
+      {pendingGeo.length > 0 && (
+        <div className="mt-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+            Konum bekleyen ({pendingGeo.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {pendingGeo.slice(0, 6).map((v) => (
+              <span
+                key={v.visitorId}
+                className="inline-flex items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] text-gray-300"
+              >
+                {visitorDisplayName(v.name)} · {deviceKindLabel(resolveDeviceKind(v))}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

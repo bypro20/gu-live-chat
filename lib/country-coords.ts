@@ -73,6 +73,8 @@ export function resolveVisitorMapCoords(input: {
     return { lat: input.latitude, lng: input.longitude, approximate: false }
   }
   const fallback = fallbackCoordsFromLocation(input.country, input.city)
-  if (!fallback) return null
-  return { lat: fallback.lat, lng: fallback.lng, approximate: true }
+  if (fallback) {
+    return { lat: fallback.lat, lng: fallback.lng, approximate: true }
+  }
+  return null
 }

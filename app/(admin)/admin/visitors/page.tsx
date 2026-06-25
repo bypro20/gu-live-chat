@@ -188,7 +188,7 @@ export default function AdminVisitorsPage() {
 
   const deviceTypes: Record<string, number> = { Masaüstü: 0, Mobil: 0, Tablet: 0 }
   for (const v of sortedVisitors) {
-    const label = getDeviceLabel(v.device)
+    const label = getDeviceLabel(v.device, 'tr', v.deviceType)
     deviceTypes[label] = (deviceTypes[label] || 0) + 1
   }
   const deviceTotal = Object.values(deviceTypes).reduce((a, b) => a + b, 0) || 1

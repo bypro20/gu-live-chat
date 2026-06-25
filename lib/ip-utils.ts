@@ -1,6 +1,15 @@
 import type { NextRequest } from 'next/server'
 
 export function getClientIp(req: Request | NextRequest): string | null {
+  const cfIp = req.headers.get('cf-connecting-ip')
+  if (cfIp?.trim()) return cfIp.trim()
+
+  const vercelIp = req.headers.get('x-vercel-forwarded-for')
+  if (vercelIp?.trim()) {
+    const ip = vercelIp.split(',')[0]?.trim()
+    if (ip) return ip
+  }
+
   const forwarded = req.headers.get('x-forwarded-for')
   if (forwarded) {
     const ip = forwarded.split(',')[0]?.trim()
