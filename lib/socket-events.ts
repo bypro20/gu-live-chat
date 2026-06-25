@@ -11,6 +11,7 @@ import {
   type BotTypingEmit,
   type VisitorMessageEmit,
   type VisitorMessagesReadEmit,
+  type VisitorGeoEmit,
 } from './socket-emit-core'
 
 export function emitAgentMessage(params: AgentMessageEmit) {
@@ -49,6 +50,8 @@ export function emitBotTyping(params: BotTypingEmit & { start: boolean }) {
   void bridgeSocketEmit({ kind: 'bot-typing', params })
 }
 
+export type { VisitorGeoEmit } from './socket-emit-core'
+
 export function emitVisitorMessagesRead(params: VisitorMessagesReadEmit) {
   const io = getIO()
   if (io) {
@@ -56,4 +59,14 @@ export function emitVisitorMessagesRead(params: VisitorMessagesReadEmit) {
     return
   }
   void bridgeSocketEmit({ kind: 'visitor-read', params })
+}
+
+export function emitVisitorGeoUpdate(params: VisitorGeoEmit) {
+  const io = getIO()
+  const payload = { ...params, timestamp: new Date().toISOString() }
+  if (io) {
+    io.to(`website:${params.websiteId}`).emit('agent:visitor:geo', payload)
+    return
+  }
+  void bridgeSocketEmit({ kind: 'visitor-geo', params })
 }

@@ -95,6 +95,16 @@ async function buildVisitorOnlinePayload(
     country: null as string | null,
     city: null as string | null,
     region: null as string | null,
+    latitude: null as number | null,
+    longitude: null as number | null,
+    district: null as string | null,
+    postalCode: null as string | null,
+    geoAddress: null as string | null,
+    geoSource: null as string | null,
+    entrySource: null as string | null,
+    isp: null as string | null,
+    landingPage: null as string | null,
+    referrer: null as string | null,
     browser: null as string | null,
     os: null as string | null,
     device: null as string | null,
@@ -127,6 +137,16 @@ async function buildVisitorOnlinePayload(
               country: true,
               city: true,
               region: true,
+              latitude: true,
+              longitude: true,
+              district: true,
+              postalCode: true,
+              geoAddress: true,
+              geoSource: true,
+              entrySource: true,
+              isp: true,
+              landingPage: true,
+              referrer: true,
               browser: true,
               os: true,
               device: true,
@@ -146,6 +166,16 @@ async function buildVisitorOnlinePayload(
     payload.country = session?.country || visitor?.country || null
     payload.city = session?.city || visitor?.city || null
     payload.region = session?.region || null
+    payload.latitude = session?.latitude ?? null
+    payload.longitude = session?.longitude ?? null
+    payload.district = session?.district ?? null
+    payload.postalCode = session?.postalCode ?? null
+    payload.geoAddress = session?.geoAddress ?? null
+    payload.geoSource = session?.geoSource ?? null
+    payload.entrySource = session?.entrySource ?? null
+    payload.isp = session?.isp ?? null
+    payload.landingPage = session?.landingPage ?? null
+    payload.referrer = session?.referrer ?? null
     payload.browser = session?.browser || visitor?.browser || null
     payload.os = session?.os || visitor?.os || null
     payload.device = session?.device || visitor?.device || null

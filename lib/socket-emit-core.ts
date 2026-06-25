@@ -159,12 +159,24 @@ export function emitVisitorMessagesReadOnIO(io: SocketIOServer, params: VisitorM
   })
 }
 
+export type VisitorGeoEmit = {
+  websiteId: string
+  visitorId: string
+  latitude: number
+  longitude: number
+  geoAddress?: string | null
+  district?: string | null
+  postalCode?: string | null
+  geoSource?: string | null
+}
+
 export type RemoteSocketEmit =
   | { kind: 'agent'; params: AgentMessageEmit }
   | { kind: 'visitor'; params: VisitorMessageEmit }
   | { kind: 'bot'; params: BotMessageEmit }
   | { kind: 'bot-typing'; params: BotTypingEmit & { start: boolean } }
   | { kind: 'visitor-read'; params: VisitorMessagesReadEmit }
+  | { kind: 'visitor-geo'; params: VisitorGeoEmit }
 
 export function applyRemoteSocketEmit(io: SocketIOServer, body: RemoteSocketEmit) {
   if (body.kind === 'agent') emitAgentMessageOnIO(io, body.params)
@@ -172,4 +184,10 @@ export function applyRemoteSocketEmit(io: SocketIOServer, body: RemoteSocketEmit
   else if (body.kind === 'bot') emitBotMessageOnIO(io, body.params)
   else if (body.kind === 'bot-typing') emitBotTypingOnIO(io, body.params)
   else if (body.kind === 'visitor-read') emitVisitorMessagesReadOnIO(io, body.params)
+  else if (body.kind === 'visitor-geo') {
+    io.to(`website:${body.params.websiteId}`).emit('agent:visitor:geo', {
+      ...body.params,
+      timestamp: new Date().toISOString(),
+    })
+  }
 }

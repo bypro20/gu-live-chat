@@ -59,6 +59,48 @@ export async function resolveWidgetEmbedContext(
   }
 }
 
+export async function submitWidgetVisitorGeo(input: {
+  websiteId: string
+  sessionId: string
+  visitorToken: string
+  latitude: number
+  longitude: number
+  accuracy?: number
+}) {
+  try {
+    await fetch('/api/widget/geo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    // Konum isteğe bağlı — sessizce yoksay
+  }
+}
+
+export function requestWidgetDeviceGeo(
+  websiteId: string,
+  sessionId: string,
+  visitorToken: string
+) {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      void submitWidgetVisitorGeo({
+        websiteId,
+        sessionId,
+        visitorToken,
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      })
+    },
+    () => {},
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 120_000 }
+  )
+}
+
 export async function recordWidgetPageview(input: {
   sessionId: string
   url: string

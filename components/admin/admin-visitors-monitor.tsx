@@ -14,7 +14,9 @@ import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo, getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
-import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
+import { LiveVisitorsGeoMap } from '@/components/admin/live-visitors-geo-map'
+import { VisitorGeoPanel } from '@/components/visitors/visitor-geo-panel'
+import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
 import {
   Eye, Users, Search, X, Monitor, Smartphone, Tablet,
   Globe2, MousePointer2, Activity, MapPin, ChevronDown, ChevronUp,
@@ -186,6 +188,16 @@ export function AdminVisitorsMonitor({
         country: (data.country as string) || null,
         city: (data.city as string) || null,
         region: (data.region as string) || null,
+        latitude: (data.latitude as number) ?? null,
+        longitude: (data.longitude as number) ?? null,
+        district: (data.district as string) || null,
+        postalCode: (data.postalCode as string) || null,
+        geoAddress: (data.geoAddress as string) || null,
+        geoSource: (data.geoSource as string) || null,
+        entrySource: (data.entrySource as string) || null,
+        isp: (data.isp as string) || null,
+        landingPage: (data.landingPage as string) || undefined,
+        referrer: (data.referrer as string) || undefined,
         currentPage: (data.currentPage as string) || '',
         currentTitle: (data.currentTitle as string) || '',
         isLive: true,
@@ -195,6 +207,19 @@ export function AdminVisitorsMonitor({
         lastActiveAt: new Date().toISOString(),
       })
       addActivity({ visitorId: data.visitorId as string, eventType: 'online', timestamp: new Date().toISOString() })
+    }
+
+    const handleVisitorGeo = (data: any) => {
+      updateVisitor(data.visitorId as string, {
+        latitude: data.latitude as number,
+        longitude: data.longitude as number,
+        geoAddress: (data.geoAddress as string) || null,
+        district: (data.district as string) || null,
+        postalCode: (data.postalCode as string) || null,
+        geoSource: (data.geoSource as string) || null,
+        isLive: true,
+        lastActiveAt: (data.timestamp as string) || new Date().toISOString(),
+      })
     }
 
     const handleVisitorOffline = (data: any) => {
@@ -288,6 +313,7 @@ export function AdminVisitorsMonitor({
 
     const unsubs = [
       on('agent:visitor:online', handleVisitorOnline),
+      on('agent:visitor:geo', handleVisitorGeo),
       on('agent:visitor:offline', handleVisitorOffline),
       on('agent:visitor:activity', handleVisitorActivity),
       on('agent:visitor:cursor', handleVisitorCursor),
@@ -422,8 +448,6 @@ export function AdminVisitorsMonitor({
       return bt - at
     })
 
-  const geoVisitors = filtered.filter((v) => v.latitude != null && v.longitude != null)
-
   const listPanelClass = isDashboard
     ? 'w-full xl:w-[400px] shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px]'
     : 'admin-monitor-panel w-full xl:w-[400px] shrink-0 min-h-[480px]'
@@ -465,6 +489,22 @@ export function AdminVisitorsMonitor({
 
   return (
     <div className={`flex flex-col gap-4 min-h-[560px] ${isDashboard ? 'flex-1 h-full min-h-0' : ''}`}>
+      {!upgradeRequired && (
+        <div className={`shrink-0 ${isDashboard ? '' : 'admin-monitor-panel p-3'}`}>
+          <p className={`text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1 ${textMuted}`}>
+            <Globe2 className="w-3 h-3" /> {m.liveLocationMap}
+          </p>
+          <LiveVisitorsGeoMap
+            visitors={filtered}
+            selectedVisitorId={selectedVisitorId}
+            onSelect={(id) => selectVisitor(id)}
+            emptyLabel={m.noGeoYet}
+            className={`h-52 w-full rounded-xl overflow-hidden border ${
+              isDashboard ? 'border-white/[0.08]' : ''
+            }`}
+          />
+        </div>
+      )}
       {!socketReady && (
         <div className="w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 shrink-0">
           {m.socketOffline}
@@ -547,8 +587,11 @@ export function AdminVisitorsMonitor({
                           {(visitor.city || visitor.country) && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-3 h-3" />
-                              {[visitor.city, visitor.country].filter(Boolean).join(', ')}
+                              {formatVisitorGeoLine(visitor) || [visitor.city, visitor.country].filter(Boolean).join(', ')}
                             </span>
+                          )}
+                          {visitor.entrySource && (
+                            <span className="text-violet-300/90">{visitor.entrySource}</span>
                           )}
                         </div>
                         {visitor.pages && visitor.pages.length > 0 && (
@@ -570,29 +613,6 @@ export function AdminVisitorsMonitor({
             })
           )}
         </div>
-
-        {/* Konum özeti */}
-        {geoVisitors.length > 0 && (
-          <div className="p-3 border-t border-white/[0.06] shrink-0">
-            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Globe2 className="w-3 h-3" /> {m.liveLocation(geoVisitors.length)}
-            </p>
-            <div className="relative w-full aspect-[2/1] bg-white/[0.02] rounded-lg border border-white/[0.06] overflow-hidden">
-              {geoVisitors.map((v) => {
-                const x = ((v.longitude! + 180) / 360) * 100
-                const y = ((90 - v.latitude!) / 180) * 100
-                return (
-                  <div
-                    key={v.visitorId}
-                    className="absolute w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50 -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                    title={`${v.name || m.anonymous} — ${v.city || v.country || ''}`}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Aktivite akışı */}
         {selectedVisitorId && visitorActivities.length > 0 && (
@@ -638,7 +658,10 @@ export function AdminVisitorsMonitor({
                   onStateChange={setWebrtcState}
                 />
               )}
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col gap-2">
+                {selectedVisitor && (
+                  <VisitorGeoPanel visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
+                )}
                 <VisitorDetailPanel
                   visitor={selectedVisitor}
                   recentClicks={recentClicks}

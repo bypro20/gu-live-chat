@@ -35,6 +35,9 @@ export const MARKETING_PRIMARY_AGENT = MARKETING_DEMO_AGENTS[0]
 /** Shown in widget header / bot replies on gulivechat.com */
 export const MARKETING_WIDGET_DISPLAY_NAME = `${MARKETING_PRIMARY_AGENT.name} · Destek`
 
+/** AI selamlama ve marka kimliği — widget başlığından ayrı */
+export const MARKETING_AI_BRAND_NAME = 'Gu Live Chat'
+
 export const MARKETING_WIDGET_WELCOME =
   'Merhaba! 👋 Fiyat, kurulum ve özellikler hakkında sorularınızı yanıtlayabilirim.'
 

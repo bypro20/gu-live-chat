@@ -324,6 +324,11 @@ model VisitorSession {
   os          String?
   device      String?
   deviceType  String?     // mobile, desktop, tablet
+  district    String?
+  postalCode  String?
+  geoAddress  String?
+  geoSource   String?     // ip | gps
+  entrySource String?
 
   pages       PageView[]
 

@@ -15,6 +15,7 @@ import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { createVisitorToken } from '@/lib/secure-tokens'
 import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
 import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
+import { parseUtmFromUrl } from '@/lib/entry-source'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
@@ -67,6 +68,11 @@ export async function POST(req: Request) {
     const sessionMetadata = await buildVisitorSessionMetadata({
       userAgent: validated.userAgent,
       clientIp,
+      entry: {
+        referrer: validated.referrer,
+        landingPage: validated.currentPage,
+        ...parseUtmFromUrl(validated.currentPage),
+      },
     })
     const visitorProfileUpdate = buildVisitorGeoUpdate(sessionMetadata)
 
@@ -150,6 +156,7 @@ export async function POST(req: Request) {
       validated.currentPage && isValidCustomerEmbedUrl(validated.currentPage)
         ? normalizeExternalUrl(validated.currentPage)
         : null
+    const utm = parseUtmFromUrl(embedPage || validated.currentPage)
 
     let session: { sessionId: string }
     try {
@@ -162,6 +169,9 @@ export async function POST(req: Request) {
           currentPage: embedPage,
           currentTitle: extractPageTitle(embedPage) ?? null,
           referrer: validated.referrer?.trim() || null,
+          utmSource: utm.utmSource,
+          utmMedium: utm.utmMedium,
+          utmCampaign: utm.utmCampaign,
           ...sessionMetadata,
         },
         select: { sessionId: true },

@@ -352,7 +352,7 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
   }
 
   if (GREETING_RE.test(lastUser) && lastUser.length < 40) {
-    return `Merhaba, hoş geldiniz! ${siteName} olarak buradayız — size nasıl yardımcı olabilirim?`
+    return `Merhaba, hoş geldiniz! ${siteName} destek ekibi olarak buradayız — size nasıl yardımcı olabilirim?`
   }
 
   if (THANKS_RE.test(lastUser) && lastUser.length < 40) {

@@ -2,6 +2,7 @@
 
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { formatDuration, getBrowserEmoji, getDeviceEmoji, getAccent, type VisitorTheme } from '@/lib/visitors-utils'
+import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
 
 interface VisitorStatusHeaderProps {
@@ -67,7 +68,7 @@ export function VisitorStatusHeader({ visitor, theme = 'dashboard' }: VisitorSta
           )}
           {visitor.country && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
-              📍 {[visitor.city, visitor.region, visitor.country].filter(Boolean).join(', ')}
+              📍 {formatVisitorGeoLine(visitor) || [visitor.city, visitor.region, visitor.country].filter(Boolean).join(', ')}
             </span>
           )}
         </div>

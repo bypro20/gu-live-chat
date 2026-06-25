@@ -11,7 +11,7 @@ import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
-import { MARKETING_PRIMARY_AGENT, resolveMarketingAgentImage } from '../marketing-demo-agents'
+import { MARKETING_PRIMARY_AGENT, resolveMarketingAgentImage, MARKETING_AI_BRAND_NAME } from '../marketing-demo-agents'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
@@ -163,11 +163,13 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       conversation.website.avatarUrl ||
       (isMarketing ? resolveMarketingAgentImage(botDisplayName) : null)
 
-    emitBotTyping({
-      conversationId: params.conversationId,
-      agentName: botDisplayName,
-      start: true,
-    })
+    if (!isMarketing) {
+      emitBotTyping({
+        conversationId: params.conversationId,
+        agentName: botDisplayName,
+        start: true,
+      })
+    }
 
     const readIds = await markVisitorMessagesRead(params.conversationId)
     if (readIds.length > 0) {
@@ -201,7 +203,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       )
 
       const reply = await generateAiReply({
-        siteName: conversation.website.name,
+        siteName: isMarketing ? MARKETING_AI_BRAND_NAME : conversation.website.name,
         messages,
         knowledge: knowledgeForReply,
         systemPrompt: aiConfig.systemPrompt || undefined,
@@ -218,18 +220,22 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
 
       await sendBotReply(params, content, botDisplayName, botAvatar)
     } finally {
-      emitBotTyping({
-        conversationId: params.conversationId,
-        agentName: botDisplayName,
-        start: false,
-      })
+      if (!isMarketing) {
+        emitBotTyping({
+          conversationId: params.conversationId,
+          agentName: botDisplayName,
+          start: false,
+        })
+      }
     }
   } catch {
     console.error('[AI auto-reply] failed for conversation', params.conversationId)
-    emitBotTyping({
-      conversationId: params.conversationId,
-      agentName: 'Asistan',
-      start: false,
-    })
+    if (!(await isPlatformMarketingWebsiteId(params.websitePublicId))) {
+      emitBotTyping({
+        conversationId: params.conversationId,
+        agentName: 'Asistan',
+        start: false,
+      })
+    }
   }
 }

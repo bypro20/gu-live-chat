@@ -23,6 +23,12 @@ export interface LiveVisitor {
   region?: string | null
   latitude?: number | null
   longitude?: number | null
+  district?: string | null
+  postalCode?: string | null
+  geoAddress?: string | null
+  geoSource?: string | null
+  entrySource?: string | null
+  isp?: string | null
   pages?: { title: string | null; url: string; viewedAt: string }[]
   // Cursor tracking
   cursorX?: number

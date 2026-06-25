@@ -29,7 +29,7 @@ import {
   validateVisitorIdentityInput,
   widgetIdentityRequired,
 } from '@/lib/widget-identity'
-import { recordWidgetPageview, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
+import { recordWidgetPageview, requestWidgetDeviceGeo, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
@@ -432,8 +432,14 @@ export default function WidgetPage() {
 
   const queueIncomingBotMessage = useCallback((msg: Message) => {
     if (msg.senderType !== 'AGENT' && msg.senderType !== 'BOT') return
+    if (isMarketingWidgetSite(websiteId, config)) {
+      setIsTyping(false)
+      setAwaitingReply(false)
+      setRevealedText((prev) => ({ ...prev, [msg.id]: msg.content }))
+      return
+    }
     startTypewriter(msg.id, msg.content)
-  }, [startTypewriter])
+  }, [websiteId, config, startTypewriter])
 
   const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -531,6 +537,10 @@ export default function WidgetPage() {
             title: embedContext.embedTitle,
             referrer: embedContext.embedReferrer,
           })
+        }
+
+        if (data.sessionId && data.visitorToken) {
+          requestWidgetDeviceGeo(websiteId, data.sessionId, data.visitorToken)
         }
       } catch (error) {
         console.error('[Gu Widget] Init failed:', error)
@@ -1209,6 +1219,22 @@ export default function WidgetPage() {
           )
         )
       }
+
+      if (data.aiReply?.content) {
+        const botMsg: Message = {
+          id: data.aiReply.id,
+          content: data.aiReply.content,
+          type: 'TEXT',
+          senderType: 'BOT',
+          senderName: data.aiReply.senderName,
+          senderImage: data.aiReply.senderImage ?? null,
+          createdAt: data.aiReply.createdAt || new Date().toISOString(),
+        }
+        setMessages((prev) => (prev.some((m) => m.id === botMsg.id) ? prev : [...prev, botMsg]))
+        setIsTyping(false)
+        setAwaitingReply(false)
+        setRevealedText((prev) => ({ ...prev, [botMsg.id]: botMsg.content }))
+      }
     } catch (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       setSendError('Bağlantı hatası — mesaj gönderilemedi')
@@ -1217,6 +1243,15 @@ export default function WidgetPage() {
       console.error('[Gu Widget] Send message failed:', error)
     }
   }, [websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config])
+
+  useEffect(() => {
+    if (!awaitingReply || !isTyping) return
+    const timeout = window.setTimeout(() => {
+      setIsTyping(false)
+      setAwaitingReply(false)
+    }, 45000)
+    return () => window.clearTimeout(timeout)
+  }, [awaitingReply, isTyping])
 
   const handleStartChat = useCallback(async () => {
     await sendChatMessage(inputMessage.trim())

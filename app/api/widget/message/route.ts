@@ -18,6 +18,11 @@ import { extendTrialForActivation } from '@/lib/trial'
 import { resolveVisitorIdentity } from '@/lib/widget-identity'
 import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
+import {
+  MARKETING_PRIMARY_AGENT,
+  resolveMarketingAgentImage,
+} from '@/lib/marketing-demo-agents'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -227,97 +232,139 @@ export async function POST(req: Request) {
     })
 
     const visitorName = visitor.name || visitor.email?.split('@')[0] || 'Ziyaretçi'
-    const responseBody = {
+    const responseBody: {
+      message: typeof message & { status: typeof message.status }
+      conversationId: string
+      aiReply?: {
+        id: string
+        content: string
+        senderName: string
+        senderImage: string | null
+        createdAt: string
+      }
+    } = {
       message: { ...message, status: message.status },
       conversationId,
     }
 
-    // Yanıtı hemen döndür — chatbot/AI/webhook beklemesin (widget mesaj kaybını önler)
+    const priorConversations = await prisma.conversation.count({
+      where: { visitorId: visitor.id, websiteId: website.id },
+    })
+    const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
+    const isMarketing = await isPlatformMarketingWebsiteId(website.websiteId)
+
+    const runAiPipeline = async () => {
+      await processChatbotOnVisitorMessage({
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+        messageContent: validated.content,
+        isFirstVisit: priorConversations <= 1,
+        agentsOnline,
+      })
+      const resolved = await maybeAutoResolveOnSatisfaction(conversationId, validated.content)
+      if (!resolved) {
+        await maybeRunAiAutoReply({
+          websiteDbId: website.id,
+          websitePublicId: website.websiteId,
+          conversationId,
+          visitorId: visitor.id,
+        })
+      }
+    }
+
+    const runSideEffects = async () => {
+      if (isNewConversation) {
+        await notifyNewConversation(website.id, visitorName, conversationId)
+        await dispatchWebhooks(website.id, 'conversation.created', {
+          conversationId,
+          visitorId: visitor.id,
+          visitorName,
+          source: 'WIDGET',
+        })
+        await runWorkflows('CONVERSATION_CREATED', {
+          websiteDbId: website.id,
+          websitePublicId: website.websiteId,
+          conversationId,
+          visitorId: visitor.id,
+        })
+      } else {
+        await notifyWebsiteMembers({
+          websiteId: website.id,
+          type: 'NEW_MESSAGE',
+          title: 'Yeni mesaj',
+          message: `${visitorName} bir mesaj gönderdi`,
+          data: { conversationId },
+        })
+      }
+
+      await dispatchWebhooks(website.id, 'message.received', {
+        conversationId,
+        messageId: message.id,
+        content: message.content,
+        visitorId: visitor.id,
+        visitorName,
+      })
+
+      await runWorkflows('MESSAGE_RECEIVED', {
+        websiteDbId: website.id,
+        websitePublicId: website.websiteId,
+        conversationId,
+        visitorId: visitor.id,
+        messageContent: message.content,
+        senderType: 'VISITOR',
+      })
+    }
+
+    emitVisitorMessage({
+      conversationId,
+      websiteId: website.websiteId,
+      message: {
+        id: message.id,
+        content: message.content,
+        type: message.type,
+        visitorId: visitor.id,
+        createdAt: message.createdAt,
+      },
+      isNewConversation,
+    })
+
+    if (isMarketing) {
+      try {
+        await runAiPipeline()
+        const botMessage = await prisma.message.findFirst({
+          where: {
+            conversationId,
+            senderType: 'BOT',
+            createdAt: { gte: message.createdAt },
+          },
+          orderBy: { createdAt: 'desc' },
+        })
+        if (botMessage?.content?.trim()) {
+          responseBody.aiReply = {
+            id: botMessage.id,
+            content: botMessage.content,
+            senderName: MARKETING_PRIMARY_AGENT.fullName,
+            senderImage:
+              website.avatarUrl ||
+              resolveMarketingAgentImage(MARKETING_PRIMARY_AGENT.fullName),
+            createdAt: botMessage.createdAt.toISOString(),
+          }
+        }
+      } catch (aiErr) {
+        console.error('[widget/message] marketing AI sync failed:', aiErr)
+      }
+      void runSideEffects().catch((err) => {
+        console.error('[widget/message] side effects failed:', err)
+      })
+      return NextResponse.json(responseBody, { status: 201 })
+    }
+
+    // Diğer siteler: yanıtı hemen döndür, AI arka planda
     void (async () => {
       try {
-        emitVisitorMessage({
-          conversationId,
-          websiteId: website.websiteId,
-          message: {
-            id: message.id,
-            content: message.content,
-            type: message.type,
-            visitorId: visitor.id,
-            createdAt: message.createdAt,
-          },
-          isNewConversation,
-        })
-
-        const priorConversations = await prisma.conversation.count({
-          where: { visitorId: visitor.id, websiteId: website.id },
-        })
-        const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
-
-        const aiTask = (async () => {
-          await processChatbotOnVisitorMessage({
-            websiteDbId: website.id,
-            websitePublicId: website.websiteId,
-            conversationId,
-            visitorId: visitor.id,
-            messageContent: validated.content,
-            isFirstVisit: priorConversations <= 1,
-            agentsOnline,
-          })
-          const resolved = await maybeAutoResolveOnSatisfaction(conversationId, validated.content)
-          if (!resolved) {
-            await maybeRunAiAutoReply({
-              websiteDbId: website.id,
-              websitePublicId: website.websiteId,
-              conversationId,
-              visitorId: visitor.id,
-            })
-          }
-        })()
-
-        const sideTask = (async () => {
-          if (isNewConversation) {
-            await notifyNewConversation(website.id, visitorName, conversationId)
-            await dispatchWebhooks(website.id, 'conversation.created', {
-              conversationId,
-              visitorId: visitor.id,
-              visitorName,
-              source: 'WIDGET',
-            })
-            await runWorkflows('CONVERSATION_CREATED', {
-              websiteDbId: website.id,
-              websitePublicId: website.websiteId,
-              conversationId,
-              visitorId: visitor.id,
-            })
-          } else {
-            await notifyWebsiteMembers({
-              websiteId: website.id,
-              type: 'NEW_MESSAGE',
-              title: 'Yeni mesaj',
-              message: `${visitorName} bir mesaj gönderdi`,
-              data: { conversationId },
-            })
-          }
-
-          await dispatchWebhooks(website.id, 'message.received', {
-            conversationId,
-            messageId: message.id,
-            content: message.content,
-            visitorId: visitor.id,
-            visitorName,
-          })
-
-          await runWorkflows('MESSAGE_RECEIVED', {
-            websiteDbId: website.id,
-            websitePublicId: website.websiteId,
-            conversationId,
-            visitorId: visitor.id,
-            messageContent: message.content,
-            senderType: 'VISITOR',
-          })
-        })()
-
-        await Promise.all([aiTask, sideTask])
+        await Promise.all([runAiPipeline(), runSideEffects()])
       } catch (postErr) {
         console.error('[widget/message] post-process failed (message saved):', postErr)
       }

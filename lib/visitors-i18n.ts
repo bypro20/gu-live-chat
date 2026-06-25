@@ -12,6 +12,8 @@ export type VisitorsMessages = {
     noActiveVisitors: string
     anonymous: string
     liveLocation: (n: number) => string
+    liveLocationMap: string
+    noGeoYet: string
     movements: string
     backToList: string
     screenWatchTitle: string
@@ -121,6 +123,8 @@ const tr: VisitorsMessages = {
     noActiveVisitors: 'Henüz aktif ziyaretçi yok',
     anonymous: 'Anonim',
     liveLocation: (n) => `Anlık Konum (${n})`,
+    liveLocationMap: 'Canlı ziyaretçi haritası',
+    noGeoYet: 'Henüz konum verisi yok — ziyaretçi siteye girdiğinde IP/GPS konumu burada görünür',
     movements: 'Hareketler',
     backToList: '← Listeye dön',
     screenWatchTitle: 'Ekran İzleme',
@@ -230,6 +234,8 @@ const en: VisitorsMessages = {
     noActiveVisitors: 'No active visitors yet',
     anonymous: 'Anonymous',
     liveLocation: (n) => `Live Location (${n})`,
+    liveLocationMap: 'Live visitor map',
+    noGeoYet: 'No location data yet — appears when a visitor enters the site',
     movements: 'Activity',
     backToList: '← Back to list',
     screenWatchTitle: 'Screen Monitoring',
