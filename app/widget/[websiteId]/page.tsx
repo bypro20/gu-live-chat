@@ -31,6 +31,10 @@ import {
 } from '@/lib/widget-identity'
 import { recordWidgetPageview, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
+import {
+  getMarketingWidgetPersona,
+  resolveMarketingAgentImage,
+} from '@/lib/marketing-demo-agents'
 
 function isMarketingWidgetSite(websiteId: string, cfg: WidgetConfig | null | undefined): boolean {
   if (cfg?.aiAssistant) return true
@@ -73,6 +77,7 @@ interface Message {
   type: string
   senderType: 'VISITOR' | 'AGENT' | 'BOT' | 'SYSTEM'
   senderName?: string
+  senderImage?: string | null
   status?: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
   createdAt: string
   attachments?: Attachment[]
@@ -492,7 +497,11 @@ export default function WidgetPage() {
           return
         }
 
-        setConfig(data.websiteConfig)
+        setConfig({
+          ...data.websiteConfig,
+          avatarUrl: data.websiteConfig.avatarUrl || getMarketingWidgetPersona().avatarUrl,
+          websiteName: data.websiteConfig.websiteName || getMarketingWidgetPersona().displayName,
+        })
         setConversationId(data.conversationId)
         setAiTranslateAvailable(!!data.features?.aiTranslate)
 
@@ -804,7 +813,7 @@ export default function WidgetPage() {
       }
     })
 
-    socket.on('visitor:message', (data: { id: string; content: string; senderType: string; senderName?: string; createdAt: string }) => {
+    socket.on('visitor:message', (data: { id: string; content: string; senderType: string; senderName?: string; senderImage?: string | null; createdAt: string }) => {
       if (data.senderType === 'AGENT' || data.senderType === 'BOT') {
         const newMsg: Message = {
           id: data.id,
@@ -812,6 +821,7 @@ export default function WidgetPage() {
           type: 'TEXT',
           senderType: data.senderType as 'AGENT' | 'BOT',
           senderName: data.senderName,
+          senderImage: data.senderImage ?? null,
           createdAt: data.createdAt,
         }
         setMessages((prev) => {
@@ -886,6 +896,7 @@ export default function WidgetPage() {
             type: string
             senderType: string
             senderName?: string | null
+            senderImage?: string | null
             status?: Message['status']
             createdAt: string
             attachments?: Attachment[]
@@ -895,6 +906,7 @@ export default function WidgetPage() {
             type: m.type || 'TEXT',
             senderType: m.senderType as Message['senderType'],
             senderName: m.senderName || undefined,
+            senderImage: m.senderImage ?? null,
             status: m.status,
             createdAt: m.createdAt,
             attachments: Array.isArray(m.attachments) ? m.attachments : undefined,
@@ -1149,7 +1161,7 @@ export default function WidgetPage() {
     setIsTyping(true)
     setTypingAgentName(
       isMarketingWidgetSite(websiteId, config)
-        ? 'Gu Live Chat Asistanı'
+        ? (getMarketingWidgetPersona().botName)
         : config?.websiteName || 'Asistan'
     )
     setAwaitingReply(true)
@@ -1323,9 +1335,36 @@ export default function WidgetPage() {
   const primaryColor = config?.primaryColor || '#1972F5'
   const agentsOnline = config?.agentsOnline ?? 3
   const marketingAi = isMarketingWidgetSite(websiteId, config)
-  const agentName = config?.websiteName || 'Destek'
+  const marketingPersona = marketingAi ? getMarketingWidgetPersona() : null
+  const latestAgentProfile = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i]
+      if (msg.senderType === 'AGENT') {
+        return {
+          name: msg.senderName,
+          image: msg.senderImage,
+        }
+      }
+    }
+    return null
+  })()
+  const agentName =
+    latestAgentProfile?.name ||
+    marketingPersona?.displayName ||
+    config?.websiteName ||
+    'Destek'
   const agentInitials = getInitials(agentName)
-  const agentAvatar = config?.avatarUrl || null
+  const agentAvatar =
+    latestAgentProfile?.image ||
+    marketingPersona?.avatarUrl ||
+    config?.avatarUrl ||
+    null
+
+  const renderAvatar = (size: number, imageUrl: string | null | undefined, name: string, initials: string) => (
+    imageUrl
+      ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+      : <span style={{ fontSize: size * 0.38, fontWeight: 700, color: 'white', letterSpacing: '-0.5px', userSelect: 'none' }}>{initials || '?'}</span>
+  )
 
   const renderAttachments = (msg: Message, onDark: boolean) => {
     if (!msg.attachments || msg.attachments.length === 0) return null
@@ -1408,11 +1447,7 @@ export default function WidgetPage() {
     return loadingWidget
   }
 
-  const avatarEl = (size: number) => (
-    agentAvatar
-      ? <img src={agentAvatar} alt={agentName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-      : <span style={{ fontSize: size * 0.38, fontWeight: 700, color: 'white', letterSpacing: '-0.5px', userSelect: 'none' }}>{agentInitials || '?'}</span>
-  )
+  const avatarEl = (size: number) => renderAvatar(size, agentAvatar, agentName, agentInitials)
 
   const identityGate = !!config && needsIdentityGate(config) && !identityComplete
 
@@ -1835,14 +1870,27 @@ export default function WidgetPage() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        {(() => {
+                          const bubbleName = msg.senderName || agentName
+                          const bubbleImage =
+                            msg.senderType === 'AGENT'
+                              ? (msg.senderImage || config?.avatarUrl || marketingPersona?.avatarUrl || null)
+                              : msg.senderType === 'BOT'
+                                ? (msg.senderImage || config?.avatarUrl || marketingPersona?.avatarUrl || resolveMarketingAgentImage(msg.senderName))
+                                : (config?.avatarUrl || marketingPersona?.avatarUrl || null)
+                          const bubbleInitials = getInitials(bubbleName)
+                          return (
                         <div style={{
                           width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
-                          background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
+                          background: bubbleImage ? '#ffffff' : `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -25)})`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           overflow: 'hidden',
+                          border: bubbleImage ? '1px solid #E2E8F0' : undefined,
                         }}>
-                          {avatarEl(30)}
+                          {renderAvatar(30, bubbleImage, bubbleName, bubbleInitials)}
                         </div>
+                          )
+                        })()}
                         <div style={{ maxWidth: '280px' }}>
                           {msg.senderName && (
                             <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>

@@ -2,6 +2,11 @@ import { prisma } from './db'
 import { generateWebsiteId } from './utils'
 import { marketingDomainVariants, SITE_DOMAIN } from './site-config'
 import { ensureMarketingSiteAiReady } from './marketing-ai-setup'
+import {
+  MARKETING_PRIMARY_AGENT,
+  MARKETING_WIDGET_DISPLAY_NAME,
+  MARKETING_WIDGET_WELCOME,
+} from './marketing-demo-agents'
 
 const MARKETING_DOMAIN = (
   process.env.MARKETING_WEBSITE_DOMAIN || SITE_DOMAIN
@@ -21,7 +26,10 @@ function scheduleMarketingAiReady(websitePublicId: string): void {
       where: { websiteId: websitePublicId },
       select: { id: true },
     })
-    if (site) await ensureMarketingSiteAiReady(site.id)
+    if (site) {
+      await ensureMarketingSiteBranding(site.id)
+      await ensureMarketingSiteAiReady(site.id)
+    }
   })().catch((e) => {
     console.error('[marketing-website] AI bootstrap failed:', e)
     marketingAiBootstrap = null
@@ -90,10 +98,10 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
     await prisma.website.update({
       where: { id: websiteInternalId },
       data: {
-        name: MARKETING_NAME,
+        name: MARKETING_WIDGET_DISPLAY_NAME,
         domain: MARKETING_DOMAIN,
-        welcomeMessage:
-          'Merhaba! 👋 Gu Live Chat hakkında fiyat, kurulum ve özelliklerle ilgili sorularınızı yanıtlayabilirim.',
+        avatarUrl: MARKETING_PRIMARY_AGENT.image,
+        welcomeMessage: MARKETING_WIDGET_WELCOME,
         showPreChatForm: true,
         requireName: true,
         requireEmail: true,
@@ -157,12 +165,12 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
   try {
     const created = await prisma.website.create({
       data: {
-        name: MARKETING_NAME,
+        name: MARKETING_WIDGET_DISPLAY_NAME,
         domain: MARKETING_DOMAIN,
         websiteId: generateWebsiteId(),
         ownerId: ownerUserId,
-        welcomeMessage:
-          'Merhaba! 👋 Gu Live Chat hakkında fiyat, kurulum ve özelliklerle ilgili sorularınızı yanıtlayabilirim.',
+        avatarUrl: MARKETING_PRIMARY_AGENT.image,
+        welcomeMessage: MARKETING_WIDGET_WELCOME,
         offlineMessage: 'Şu an çevrimdışıyız. Mesaj bırakın, size dönelim.',
         showPreChatForm: true,
         requireName: true,

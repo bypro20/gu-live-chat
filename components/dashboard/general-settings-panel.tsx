@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useWebsite } from '@/lib/hooks/use-website'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { AgentProfileSection } from '@/components/dashboard/agent-profile-section'
 
 export function GeneralSettingsPanel({ compact = false }: { compact?: boolean }) {
   const { website, isLoading, updateWebsite } = useWebsite()
@@ -46,6 +47,10 @@ export function GeneralSettingsPanel({ compact = false }: { compact?: boolean })
           <p className="app-page-subtitle">{t.pageSubtitle}</p>
         </div>
       )}
+
+      <div className="mb-6">
+        <AgentProfileSection />
+      </div>
 
       <div className="surface p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t.sectionTitle}</h2>

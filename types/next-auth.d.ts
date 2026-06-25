@@ -23,5 +23,7 @@ declare module 'next-auth/jwt' {
     id: string
     role: string
     activeWebsiteId?: string
+    name?: string | null
+    picture?: string | null
   }
 }

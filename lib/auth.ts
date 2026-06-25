@@ -221,6 +221,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user) {
           if (user.id) token.id = user.id
           if (user.email) token.email = user.email
+          if (user.name) token.name = user.name
+          if (user.image !== undefined) token.picture = user.image
           if (signInRole) token.role = signInRole
         }
 
@@ -229,12 +231,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (email) {
           const dbUser = await prisma.user.findUnique({
             where: { email: email.trim().toLowerCase() },
-            select: { id: true, role: true, activeWebsiteId: true },
+            select: { id: true, role: true, activeWebsiteId: true, name: true, image: true },
           })
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
             token.activeWebsiteId = dbUser.activeWebsiteId || undefined
+            token.name = dbUser.name
+            token.picture = dbUser.image
           } else if (signInRole && !token.role) {
             token.role = signInRole
           }
@@ -244,12 +248,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (trigger === 'update' && token.email) {
           const dbUser = await prisma.user.findUnique({
             where: { email: (token.email as string).trim().toLowerCase() },
-            select: { id: true, role: true, activeWebsiteId: true },
+            select: { id: true, role: true, activeWebsiteId: true, name: true, image: true },
           })
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
             token.activeWebsiteId = dbUser.activeWebsiteId || undefined
+            token.name = dbUser.name
+            token.picture = dbUser.image
           }
         }
 
@@ -257,12 +263,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!token.role && token.email) {
           const dbUser = await prisma.user.findUnique({
             where: { email: (token.email as string).trim().toLowerCase() },
-            select: { id: true, role: true, activeWebsiteId: true },
+            select: { id: true, role: true, activeWebsiteId: true, name: true, image: true },
           })
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
             token.activeWebsiteId = dbUser.activeWebsiteId || undefined
+            token.name = dbUser.name
+            token.picture = dbUser.image
           }
         }
       } catch (err) {
@@ -277,6 +285,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string
         session.user.role = (token.role as string) || 'USER'
         session.user.activeWebsiteId = (token.activeWebsiteId as string) || null
+        if (token.name) session.user.name = token.name as string
+        if (token.picture !== undefined) session.user.image = token.picture as string | null
       }
       return session
     },

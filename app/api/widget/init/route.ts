@@ -16,6 +16,7 @@ import { createVisitorToken } from '@/lib/secure-tokens'
 import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
 import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
+import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -219,6 +220,17 @@ export async function POST(req: Request) {
       console.warn('[widget/init] trial widget bonus skipped:', err)
     })
 
+    const origin = new URL(req.url).origin
+    const branding = await resolveMarketingWidgetBranding(
+      website.websiteId,
+      {
+        avatarUrl: website.avatarUrl,
+        websiteName: website.name,
+        welcomeMessage: website.welcomeMessage,
+      },
+      origin
+    )
+
     if (isNewVisitor) {
       try {
         const { runWorkflows } = await import('@/lib/workflow-runner')
@@ -250,10 +262,10 @@ export async function POST(req: Request) {
       websiteConfig: {
         primaryColor: website.primaryColor,
         position: website.position,
-        welcomeMessage: website.welcomeMessage,
+        welcomeMessage: branding.welcomeMessage,
         offlineMessage: website.offlineMessage,
-        avatarUrl: website.avatarUrl,
-        websiteName: website.name,
+        avatarUrl: branding.avatarUrl,
+        websiteName: branding.websiteName,
         agentsOnline,
         showPreChatForm: identityPolicy.showPreChatForm,
         requireName: identityPolicy.requireName,

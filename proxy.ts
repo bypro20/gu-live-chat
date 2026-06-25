@@ -135,6 +135,7 @@ const PROTECTED_API_PREFIXES = [
   '/api/iyzico/subscription',
   '/api/trial',
   '/api/user',
+  '/api/profile',
   '/api/invoices',
   '/api/canned-responses',
   '/api/ratings',

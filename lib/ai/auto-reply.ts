@@ -11,6 +11,7 @@ import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
+import { MARKETING_PRIMARY_AGENT, resolveMarketingAgentImage } from '../marketing-demo-agents'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
@@ -60,7 +61,8 @@ interface AutoReplyParams {
 async function sendBotReply(
   params: AutoReplyParams,
   content: string,
-  siteName: string
+  siteName: string,
+  senderImage?: string | null
 ): Promise<void> {
   const botMessage = await prisma.message.create({
     data: {
@@ -87,6 +89,7 @@ async function sendBotReply(
       id: botMessage.id,
       content: botMessage.content,
       senderName: siteName,
+      senderImage: senderImage ?? null,
       createdAt: botMessage.createdAt,
     },
   })
@@ -112,7 +115,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         chatbotHandedToAi: true,
         chatbotId: true,
         visitorId: true,
-        website: { select: { id: true, name: true, plan: true } },
+        website: { select: { id: true, name: true, plan: true, avatarUrl: true } },
       },
     })
 
@@ -155,7 +158,10 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge.slice(0, KNOWLEDGE_LIMIT)
     const siteName = (conversation.website.name || 'Destek').trim()
     const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
-    const botDisplayName = isMarketing ? 'Gu Live Chat Asistanı' : siteName
+    const botDisplayName = isMarketing ? MARKETING_PRIMARY_AGENT.fullName : siteName
+    const botAvatar =
+      conversation.website.avatarUrl ||
+      (isMarketing ? resolveMarketingAgentImage(botDisplayName) : null)
 
     emitBotTyping({
       conversationId: params.conversationId,
@@ -181,7 +187,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       if (!llmReady) {
         const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
         if (faqHit && faqHit.confidence >= 0.5) {
-          await sendBotReply(params, faqHit.answer, botDisplayName)
+          await sendBotReply(params, faqHit.answer, botDisplayName, botAvatar)
           return
         }
       }
@@ -210,7 +216,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       const content = reply?.trim()
       if (!content) return
 
-      await sendBotReply(params, content, botDisplayName)
+      await sendBotReply(params, content, botDisplayName, botAvatar)
     } finally {
       emitBotTyping({
         conversationId: params.conversationId,

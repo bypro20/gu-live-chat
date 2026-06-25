@@ -19,9 +19,13 @@
 
   function safeAvatarUrl(url) {
     if (!url) return '';
+    var s = String(url).trim();
+    if (s.indexOf('/') === 0) {
+      s = getWidgetBaseUrl().replace(/\/$/, '') + s;
+    }
     try {
-      var u = new URL(String(url));
-      if (u.protocol !== 'https:') return '';
+      var u = new URL(s, getWidgetBaseUrl());
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') return '';
       return escapeHtml(u.href);
     } catch (e) {
       return '';

@@ -70,6 +70,18 @@ export type SettingsMessages = {
     domainPlaceholder: string
     nameRequired: string
     savedSuccess: string
+    profileSectionTitle: string
+    profileSectionSubtitle: string
+    profileDisplayName: string
+    profileDisplayNamePlaceholder: string
+    profileDisplayNameHint: string
+    profileUploadPhoto: string
+    profileRemovePhoto: string
+    profilePhotoAlt: string
+    profileNameRequired: string
+    profileSavedSuccess: string
+    profilePhotoTypeError: string
+    profilePhotoUploadFailed: string
   }
   planUpgrade: {
     features: Partial<Record<PlanFeature, string>>
@@ -745,6 +757,18 @@ const tr: SettingsMessages = {
     domainPlaceholder: 'orneksite.com',
     nameRequired: 'Website adı boş olamaz',
     savedSuccess: 'Ayarlar kaydedildi!',
+    profileSectionTitle: 'Temsilci Profili',
+    profileSectionSubtitle: 'Widget ve gelen kutusunda görünen adınız ve fotoğrafınız.',
+    profileDisplayName: 'Görünen ad',
+    profileDisplayNamePlaceholder: 'Adınız Soyadınız',
+    profileDisplayNameHint: 'Ziyaretçiler mesajlarınızda bu ismi görür.',
+    profileUploadPhoto: 'Fotoğraf yükle',
+    profileRemovePhoto: 'Fotoğrafı kaldır',
+    profilePhotoAlt: 'Profil fotoğrafı',
+    profileNameRequired: 'Görünen ad boş olamaz',
+    profileSavedSuccess: 'Profil güncellendi!',
+    profilePhotoTypeError: 'Lütfen JPEG, PNG, WebP veya GIF yükleyin.',
+    profilePhotoUploadFailed: 'Fotoğraf yüklenemedi',
   },
   planUpgrade: {
     features: {
@@ -1561,6 +1585,18 @@ const en: SettingsMessages = {
     domainPlaceholder: 'example.com',
     nameRequired: 'Website name cannot be empty',
     savedSuccess: 'Settings saved!',
+    profileSectionTitle: 'Agent profile',
+    profileSectionSubtitle: 'Your name and photo shown in the widget and inbox.',
+    profileDisplayName: 'Display name',
+    profileDisplayNamePlaceholder: 'Your name',
+    profileDisplayNameHint: 'Visitors see this name on your messages.',
+    profileUploadPhoto: 'Upload photo',
+    profileRemovePhoto: 'Remove photo',
+    profilePhotoAlt: 'Profile photo',
+    profileNameRequired: 'Display name cannot be empty',
+    profileSavedSuccess: 'Profile updated!',
+    profilePhotoTypeError: 'Please upload JPEG, PNG, WebP, or GIF.',
+    profilePhotoUploadFailed: 'Photo upload failed',
   },
   planUpgrade: {
     features: {

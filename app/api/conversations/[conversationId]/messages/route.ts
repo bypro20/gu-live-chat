@@ -133,6 +133,7 @@ export async function POST(
         type: message.type,
         senderId: session.user.id,
         senderName: message.sender?.name || 'Temsilci',
+        senderImage: message.sender?.image ?? null,
         createdAt: message.createdAt,
       },
     })

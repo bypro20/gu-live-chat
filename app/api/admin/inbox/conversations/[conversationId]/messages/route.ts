@@ -117,6 +117,7 @@ export async function POST(
         type: message.type,
         senderId: check.user.id,
         senderName: message.sender?.name || 'Admin',
+        senderImage: message.sender?.image ?? null,
         createdAt: message.createdAt,
       },
     })

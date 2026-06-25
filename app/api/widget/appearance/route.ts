@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { resolveAgentsOnline } from '@/lib/agents-online'
+import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
 /** GET /api/widget/appearance?websiteId= — Public branding for embed launcher teaser */
 export async function GET(req: Request) {
@@ -17,12 +18,22 @@ export async function GET(req: Request) {
     }
 
     const agentsOnline = (await resolveAgentsOnline(website.websiteId, website.id)) > 0
+    const origin = new URL(req.url).origin
+    const branding = await resolveMarketingWidgetBranding(
+      website.websiteId,
+      {
+        avatarUrl: website.avatarUrl || null,
+        websiteName: website.name || 'Destek',
+        welcomeMessage: website.welcomeMessage || 'Merhaba! 👋 Size nasıl yardımcı olabilirim?',
+      },
+      origin
+    )
 
     return NextResponse.json({
       primaryColor: website.primaryColor || '#1972F5',
-      welcomeMessage: website.welcomeMessage || 'Merhaba! 👋 Size nasıl yardımcı olabilirim?',
-      avatarUrl: website.avatarUrl || null,
-      websiteName: website.name || 'Destek',
+      welcomeMessage: branding.welcomeMessage,
+      avatarUrl: branding.avatarUrl,
+      websiteName: branding.websiteName,
       agentsOnline,
     })
   } catch (error) {

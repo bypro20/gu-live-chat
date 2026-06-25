@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { resolveVisitorToken } from '@/lib/secure-tokens'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { MARKETING_PRIMARY_AGENT } from '@/lib/marketing-demo-agents'
+import { isMarketingWidgetWebsite, resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
 /**
  * Public endpoint the chat widget polls to receive new messages (agent/bot
@@ -44,7 +46,7 @@ export async function GET(req: Request) {
         status: true,
         visitorId: true,
         visitor: { select: { fingerprint: true } },
-        website: { select: { websiteId: true } },
+        website: { select: { websiteId: true, avatarUrl: true, name: true, welcomeMessage: true } },
       },
     })
 
@@ -82,7 +84,7 @@ export async function GET(req: Request) {
         createdAt: true,
         status: true,
         readAt: true,
-        sender: { select: { name: true } },
+        sender: { select: { name: true, image: true } },
         attachments: {
           select: { id: true, url: true, fileName: true, fileSize: true, mimeType: true },
         },
@@ -91,6 +93,26 @@ export async function GET(req: Request) {
       take: 200,
     })
 
+    const publicWebsiteId = conversation.website?.websiteId
+    const origin = new URL(req.url).origin
+    const branding = publicWebsiteId
+      ? await resolveMarketingWidgetBranding(
+          publicWebsiteId,
+          {
+            avatarUrl: conversation.website?.avatarUrl || null,
+            websiteName: conversation.website?.name || null,
+            welcomeMessage: conversation.website?.welcomeMessage || null,
+          },
+          origin
+        )
+      : {
+          avatarUrl: conversation.website?.avatarUrl || null,
+          websiteName: conversation.website?.name || null,
+          welcomeMessage: null,
+        }
+    const siteAvatar = branding.avatarUrl
+    const marketingSite = publicWebsiteId ? await isMarketingWidgetWebsite(publicWebsiteId) : false
+
     return NextResponse.json({
       status: conversation.status,
       messages: messages.map((m) => ({
@@ -98,7 +120,16 @@ export async function GET(req: Request) {
         content: m.content,
         type: m.type,
         senderType: m.senderType,
-        senderName: m.sender?.name || null,
+        senderName:
+          m.senderType === 'BOT' && marketingSite
+            ? MARKETING_PRIMARY_AGENT.fullName
+            : m.sender?.name || null,
+        senderImage:
+          m.senderType === 'AGENT'
+            ? m.sender?.image || siteAvatar
+            : m.senderType === 'BOT'
+              ? siteAvatar
+              : null,
         status: m.status,
         createdAt: m.createdAt,
         attachments: m.attachments.map((a) => ({

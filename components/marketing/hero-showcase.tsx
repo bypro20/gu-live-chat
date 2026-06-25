@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MessageCircle, Send, Bell, Zap, Shield, Clock } from 'lucide-react'
+import Image from 'next/image'
+import { Send, Bell, Zap, Shield, Clock } from 'lucide-react'
+import { MARKETING_DEMO_AGENTS } from '@/lib/marketing-demo-agents'
 
 /** Crisp / Tidio tarzı: müşteri sitesi + widget + mobil sohbet — tek profesyonel kompozit */
 export function HeroShowcase() {
   const [step, setStep] = useState(0)
+  const agents = MARKETING_DEMO_AGENTS
+  const primary = agents[0]
 
   useEffect(() => {
     const id = window.setInterval(() => setStep((s) => (s + 1) % 4), 2800)
@@ -49,27 +53,40 @@ export function HeroShowcase() {
             }`}
           >
             <div className="px-3 py-2 bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-500 flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-                <MessageCircle className="w-3.5 h-3.5 text-white" />
+              <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-white/40 shrink-0">
+                <Image
+                  src={primary.image}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="28px"
+                  unoptimized
+                />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-white leading-none">Gu Live Chat</p>
+                <p className="text-[10px] font-bold text-white leading-none">Deniz · Destek</p>
                 <p className="text-[8px] text-white/80 mt-0.5">Genelde birkaç saniye içinde yanıt</p>
               </div>
             </div>
             <div className="p-2.5 space-y-2 bg-slate-50/80 min-h-[72px]">
               <div
-                className={`transition-all duration-500 ${step >= 1 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}
+                className={`flex gap-1.5 items-end transition-all duration-500 ${step >= 1 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}
               >
+                <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0 border border-slate-200">
+                  <Image src={primary.image} alt="" fill className="object-cover" sizes="20px" unoptimized />
+                </div>
                 <div className="bg-white border border-slate-100 rounded-xl rounded-tl-sm px-2.5 py-1.5 max-w-[85%] shadow-sm">
                   <p className="text-[9px] text-slate-700">Merhaba, bu ürün stokta mı?</p>
                 </div>
               </div>
               <div
-                className={`flex justify-end transition-all duration-500 delay-150 ${step >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}
+                className={`flex justify-end gap-1.5 items-end transition-all duration-500 delay-150 ${step >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}
               >
                 <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl rounded-tr-sm px-2.5 py-1.5 max-w-[88%] shadow-sm">
                   <p className="text-[9px] text-white">Evet, hemen sipariş verebilirsiniz ✓</p>
+                </div>
+                <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0 border border-indigo-200">
+                  <Image src={primary.image} alt="" fill className="object-cover" sizes="20px" unoptimized />
                 </div>
               </div>
             </div>
@@ -123,8 +140,15 @@ export function HeroShowcase() {
       </div>
 
       {/* Metrik chip */}
-      <div className="absolute -right-2 sm:right-0 -bottom-3 px-3 py-1.5 rounded-full bg-white border border-indigo-100 shadow-md text-[10px] font-semibold text-indigo-700 flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <div className="absolute -right-2 sm:right-0 -bottom-3 px-3 py-1.5 rounded-full bg-white border border-indigo-100 shadow-md text-[10px] font-semibold text-indigo-700 flex items-center gap-2">
+        <span className="flex -space-x-1.5">
+          {agents.map((agent) => (
+            <span key={agent.name} className="relative w-5 h-5 rounded-full overflow-hidden border-2 border-white">
+              <Image src={agent.image} alt="" fill className="object-cover" sizes="20px" unoptimized />
+            </span>
+          ))}
+        </span>
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
         3 temsilci çevrimiçi
       </div>
     </div>

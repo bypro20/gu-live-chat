@@ -9,6 +9,7 @@ export type AgentMessageEmit = {
     type: string
     senderId: string
     senderName: string
+    senderImage?: string | null
     createdAt: Date | string
   }
 }
@@ -33,6 +34,7 @@ export type BotMessageEmit = {
     id: string
     content: string
     senderName: string
+    senderImage?: string | null
     createdAt: Date | string
   }
 }
@@ -51,6 +53,7 @@ export function emitAgentMessageOnIO(io: SocketIOServer, params: AgentMessageEmi
     senderType: 'AGENT',
     senderId: params.message.senderId,
     senderName: params.message.senderName,
+    senderImage: params.message.senderImage ?? null,
     createdAt,
   })
 
@@ -62,6 +65,7 @@ export function emitAgentMessageOnIO(io: SocketIOServer, params: AgentMessageEmi
     senderType: 'AGENT',
     senderId: params.message.senderId,
     senderName: params.message.senderName,
+    senderImage: params.message.senderImage ?? null,
     createdAt,
   })
 
@@ -116,6 +120,7 @@ export function emitBotMessageOnIO(io: SocketIOServer, params: BotMessageEmit) {
     type: 'TEXT',
     senderType: 'BOT',
     senderName: params.message.senderName,
+    senderImage: params.message.senderImage ?? null,
     createdAt,
   })
 

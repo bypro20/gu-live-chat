@@ -158,8 +158,13 @@ export function NativeSettingsHub() {
   return (
     <div className="native-settings-hub p-4 pb-8">
       <div className="native-profile-card mb-6">
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0">
-          {userInitial}
+        <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center text-white text-xl font-bold bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0">
+          {session?.user?.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+          ) : (
+            userInitial
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-bold text-foreground truncate">{session?.user?.name || shell.user}</p>
