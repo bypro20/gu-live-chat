@@ -26,7 +26,7 @@
     try {
       var u = new URL(s, getWidgetBaseUrl());
       if (u.protocol !== 'https:' && u.protocol !== 'http:') return '';
-      return escapeHtml(u.href);
+      return u.href.replace(/"/g, '&quot;');
     } catch (e) {
       return '';
     }
@@ -361,7 +361,10 @@
 
   fetchAppearance(function() {
     applyPrimaryColor(appearance.primaryColor);
-    // Teaser otomatik açılmaz — kullanıcı launcher'a tıklar
+    buildTeaserContent();
+    if (!greetingDismissed && !chatOpen) {
+      showTeaser();
+    }
   });
 
   // ─── Proactive Messages ────────────────────────────────────────────
