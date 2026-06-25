@@ -19,7 +19,7 @@ export function HeroShowcase() {
   return (
     <div className="relative w-full max-w-[540px] mx-auto lg:mx-0 lg:ml-auto">
       {/* Glow */}
-      <div className="absolute -inset-8 bg-gradient-to-tr from-indigo-500/20 via-violet-500/10 to-cyan-400/15 rounded-[3rem] blur-3xl pointer-events-none" />
+      <div className="absolute -inset-8 bg-gradient-to-tr from-[#0B5FFF]/15 via-[#0B5FFF]/5 to-cyan-400/10 rounded-[3rem] blur-3xl pointer-events-none" />
 
       {/* Browser — müşteri web sitesi */}
       <div className="relative rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-900/10 overflow-hidden">
@@ -48,11 +48,11 @@ export function HeroShowcase() {
 
           {/* Site üzerinde açık widget */}
           <div
-            className={`absolute bottom-3 right-3 w-[min(220px,58%)] rounded-2xl border border-indigo-100 bg-white shadow-xl shadow-indigo-500/15 overflow-hidden transition-all duration-500 ${
+            className={`absolute bottom-3 right-3 w-[min(220px,58%)] rounded-2xl border border-[#0B5FFF]/10 bg-white shadow-xl shadow-[#0B5FFF]/10 overflow-hidden transition-all duration-500 ${
               step >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
             }`}
           >
-            <div className="px-3 py-2 bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-500 flex items-center gap-2">
+            <div className="px-3 py-2 bg-gradient-to-r from-[#0B5FFF] to-[#0088FF] flex items-center gap-2">
               <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-white/40 shrink-0">
                 <Image
                   src={primary.image}
@@ -82,7 +82,7 @@ export function HeroShowcase() {
               <div
                 className={`flex justify-end gap-1.5 items-end transition-all duration-500 delay-150 ${step >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}
               >
-                <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl rounded-tr-sm px-2.5 py-1.5 max-w-[88%] shadow-sm">
+                <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0066FF] rounded-xl rounded-tr-sm px-2.5 py-1.5 max-w-[88%] shadow-sm">
                   <p className="text-[9px] text-white">Evet, hemen sipariş verebilirsiniz ✓</p>
                 </div>
                 <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0 border border-indigo-200">

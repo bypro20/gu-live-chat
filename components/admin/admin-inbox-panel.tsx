@@ -514,8 +514,12 @@ export function AdminInboxPanel() {
 
   if (loadError) {
     return (
-      <div className="inbox-shell p-8 text-center space-y-3 h-full">
-        <p className="text-sm text-destructive font-medium">{loadError}</p>
+      <div className="inbox-shell p-8 text-center space-y-4 h-full flex flex-col items-center justify-center">
+        <MessageSquare className="w-10 h-10 text-muted-foreground/50" />
+        <p className="text-sm text-destructive font-medium max-w-md">{loadError}</p>
+        <p className="text-xs text-muted-foreground max-w-sm">
+          Marketing sitesi veya env ayarı eksik olabilir. Arka planda kurulum devam ediyor olabilir — birkaç saniye sonra tekrar deneyin.
+        </p>
         <Button onClick={() => loadSetup()}>Yeniden dene</Button>
       </div>
     )

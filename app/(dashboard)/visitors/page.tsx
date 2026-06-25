@@ -1,39 +1,24 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { AdminVisitorsMonitor } from '@/components/admin/admin-visitors-monitor'
 import { LiveVisitorsGeoMap } from '@/components/admin/live-visitors-geo-map'
-import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
+import { useLiveVisitorsStore } from '@/lib/stores/live-visitors-store'
 
 function VisitorsMonitorContent() {
   const { activeWebsite, websites } = useActiveWebsite()
   const searchParams = useSearchParams()
   const initialVisitorId = searchParams.get('visitor')
-  const [liveVisitors, setLiveVisitors] = useState<LiveVisitor[]>([])
   const [focusedVisitorId, setFocusedVisitorId] = useState<string | null>(initialVisitorId)
+  const liveVisitors = useLiveVisitorsStore(useShallow((s) => Array.from(s.visitors.values())))
 
-  const fetchLive = useCallback(async () => {
-    if (!activeWebsite?.websiteId) {
-      setLiveVisitors([])
-      return
-    }
-    try {
-      const res = await fetch(`/api/visitors/live?websiteId=${encodeURIComponent(activeWebsite.websiteId)}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setLiveVisitors(data.visitors || [])
-    } catch {
-      /* ignore */
-    }
-  }, [activeWebsite?.websiteId])
-
-  useEffect(() => {
-    void fetchLive()
-    const interval = setInterval(fetchLive, 15000)
-    return () => clearInterval(interval)
-  }, [fetchLive])
+  const mapVisitors = useMemo(() => {
+    if (!activeWebsite?.websiteId) return []
+    return liveVisitors.filter((v) => v.websiteId === activeWebsite.websiteId)
+  }, [liveVisitors, activeWebsite?.websiteId])
 
   useEffect(() => {
     if (initialVisitorId) setFocusedVisitorId(initialVisitorId)
@@ -46,10 +31,10 @@ function VisitorsMonitorContent() {
           Canlı ziyaretçi haritası
         </p>
         <LiveVisitorsGeoMap
-          visitors={liveVisitors}
+          visitors={mapVisitors}
           selectedVisitorId={focusedVisitorId}
           onSelect={setFocusedVisitorId}
-          className="w-full h-44 rounded-xl overflow-hidden border border-white/[0.08] bg-[#0d1117]"
+          height={220}
           emptyLabel="Henüz konum verisi yok — widget açılınca haritada görünür"
         />
       </div>

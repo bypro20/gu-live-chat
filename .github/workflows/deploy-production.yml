@@ -1,0 +1,78 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-build-secret-min-32-chars-long
+          AUTH_SECRET: ci-build-secret-min-32-chars-long
+          CRON_SECRET: ci-build-cron-secret
+          NEXTAUTH_URL: https://www.gulivechat.com
+          NEXT_PUBLIC_APP_URL: https://www.gulivechat.com
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Deploy to Vercel production
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: node scripts/trigger-vercel-deploy.mjs
+
+      - name: Wait for production health
+        if: ${{ secrets.VERCEL_TOKEN == '' }}
+        env:
+          PRODUCTION_URL: https://www.gulivechat.com
+          DEPLOY_HEALTH_ATTEMPTS: '42'
+        run: node scripts/post-deploy.mjs
+
+  post-deploy:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CRON_SECRET != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Schema sync + health
+        env:
+          PRODUCTION_URL: https://www.gulivechat.com
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOY_HEALTH_ATTEMPTS: '42'
+        run: node scripts/post-deploy.mjs

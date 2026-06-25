@@ -1,4 +1,5 @@
 import { prisma } from './db'
+import { marketingDomainVariants } from './site-config'
 import { ensureAdminMarketingAccess } from './marketing-website'
 
 export type AdminInboxSite = {
@@ -34,18 +35,33 @@ async function findSiteByPublicId(publicId: string): Promise<AdminInboxSite | nu
   }
 }
 
-/** Admin gelen kutusu için site çözümle. Şema sync burada ÇALIŞTIRILMAZ (cron'da yapılır). */
+/** AI/KB bootstrap — gelen kutusu UI'ını bloklamaz. */
+export function scheduleAdminInboxBootstrap(adminUserId: string): void {
+  void ensureAdminMarketingAccess(adminUserId).catch((e) => {
+    console.warn('[admin-inbox-setup] background bootstrap:', e)
+  })
+}
+
+/** Admin gelen kutusu için site — yalnızca hızlı DB sorguları, bootstrap yok. */
 export async function resolveAdminInboxSite(adminUserId: string): Promise<AdminInboxSite> {
-  let publicId: string | null = null
-  try {
-    publicId = await ensureAdminMarketingAccess(adminUserId)
-  } catch (e) {
-    console.error('[admin-inbox-setup] ensure failed:', e)
+  const envId =
+    process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID?.trim() ||
+    process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim()
+
+  if (envId) {
+    const site = await findSiteByPublicId(envId)
+    if (site) return site
   }
 
-  if (publicId) {
-    const site = await findSiteByPublicId(publicId)
-    if (site) return site
+  try {
+    const marketing = await prisma.website.findFirst({
+      where: { domain: { in: marketingDomainVariants() } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, websiteId: true, name: true, domain: true, primaryColor: true },
+    })
+    if (marketing) return marketing
+  } catch (e) {
+    console.warn('[admin-inbox-setup] marketing domain lookup failed:', e)
   }
 
   try {
@@ -62,7 +78,7 @@ export async function resolveAdminInboxSite(adminUserId: string): Promise<AdminI
   try {
     const member = await prisma.teamMember.findFirst({
       where: { userId: adminUserId },
-      include: { website: { select: { id: true, websiteId: true, name: true, domain: true } } },
+      include: { website: { select: { id: true, websiteId: true, name: true, domain: true, primaryColor: true } } },
       orderBy: { acceptedAt: 'desc' },
     })
     if (member?.website) return member.website
@@ -70,5 +86,7 @@ export async function resolveAdminInboxSite(adminUserId: string): Promise<AdminI
     console.warn('[admin-inbox-setup] member lookup failed:', e)
   }
 
-  throw new Error('Hiçbir site bulunamadı. Önce seed-admin çalıştırın.')
+  throw new Error(
+    'Site bulunamadı. MARKETING_WEBSITE_DOMAIN veya NEXT_PUBLIC_MARKETING_WEBSITE_ID ayarlayın veya seed-admin çalıştırın.'
+  )
 }

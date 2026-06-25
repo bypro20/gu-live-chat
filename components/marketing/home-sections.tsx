@@ -86,67 +86,63 @@ export function HomeHero() {
   const t = useT()
   const { locale } = useLocale()
   return (
-    <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Arka plan — Linear / Crisp tarzı grid + aurora */}
-      <div className="absolute inset-0 bg-[#fafbff]" />
+    <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden marketing-hero-bg">
       <div
-        className="absolute inset-0 opacity-[0.35] pointer-events-none"
+        className="absolute inset-0 opacity-40 pointer-events-none"
         style={{
-          backgroundImage: `
-            linear-gradient(to right, rgba(99,102,241,0.06) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(99,102,241,0.06) 1px, transparent 1px)
-          `,
-          backgroundSize: '48px 48px',
+          backgroundImage: `radial-gradient(circle at 20% 20%, rgba(11,95,255,0.08) 0%, transparent 42%),
+            radial-gradient(circle at 80% 0%, rgba(0,163,255,0.06) 0%, transparent 38%)`,
         }}
       />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-gradient-to-r from-indigo-400/15 via-violet-400/10 to-cyan-400/10 blur-3xl pointer-events-none" />
+      <div
+        className="absolute inset-0 opacity-[0.25] pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(11,95,255,0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(11,95,255,0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: '56px 56px',
+        }}
+      />
 
       <div className="relative max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 lg:gap-16 items-center">
-          {/* Sol — metin (Crisp/Tidio split hero) */}
+        <div className="grid lg:grid-cols-[1fr_1.08fr] gap-12 lg:gap-20 items-center">
           <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
             <FadeIn>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 text-white shadow-lg shadow-fuchsia-500/25 animate-pulse">
-                🚀 {locale === 'tr' ? 'PRO 14 gün ücretsiz — lansman fiyatı ₺990/ay' : '14-day PRO trial — launch price from $49/mo'}
-              </div>
-            </FadeIn>
-            <FadeIn>
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 bg-white text-indigo-700 border border-indigo-100 shadow-sm">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 bg-white/90 text-[#0B5FFF] border border-[#0B5FFF]/15 shadow-sm backdrop-blur-sm">
                 <Sparkles className="w-3.5 h-3.5" />
                 {t.hero.badge}
               </span>
             </FadeIn>
             <FadeIn delay={0.05}>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.15rem] font-extrabold tracking-tight leading-[1.06] text-slate-900">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08] text-[#0B1220]">
                 {locale === 'tr' ? (
                   <>
-                    Web sitenize{' '}
-                    <span className="text-gradient-brand">canlı sohbet</span>
-                    {' '}ekleyin — ziyaretçileriniz anında yanıt alsın
+                    Müşterilerinize{' '}
+                    <span className="text-gradient-brand">anlık destek</span>
+                    {' '}— tek inbox, tüm kanallar
                   </>
                 ) : (
                   <>
-                    Add <span className="text-gradient-brand">live chat</span> to your site — instant answers for every visitor
+                    <span className="text-gradient-brand">Instant support</span>
+                    {' '}for every visitor — one inbox, every channel
                   </>
                 )}
               </h1>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <p className="mt-5 text-lg text-slate-600 leading-relaxed">
+              <p className="mt-5 text-lg sm:text-xl text-slate-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {t.hero.subtitle}
               </p>
             </FadeIn>
             <FadeIn delay={0.14}>
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 shadow-lg shadow-fuchsia-500/30 hover:shadow-fuchsia-500/45 hover:scale-[1.02] transition-all"
-                >
+                <Link href="/register" className="btn-primary px-7 py-3.5 rounded-xl text-base shadow-brand">
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/demo"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white border border-slate-200/90 hover:border-[#0B5FFF]/30 hover:bg-[#F0F6FF] transition-all shadow-sm"
                 >
                   {t.hero.demo}
                 </Link>
@@ -158,7 +154,6 @@ export function HomeHero() {
             </FadeIn>
           </div>
 
-          {/* Sağ — ürün kompoziti */}
           <FadeIn delay={0.12} className="relative pt-4 lg:pt-0">
             <HeroShowcase />
           </FadeIn>
@@ -171,16 +166,16 @@ export function HomeHero() {
 export function TrustStrip() {
   const h = useT().home
   return (
-    <section className="py-12 border-y border-border bg-muted/20">
+    <section className="py-14 marketing-section-dark border-y border-white/5">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <p className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-8">
+        <p className="text-center text-xs font-semibold text-slate-400 uppercase tracking-[0.2em] mb-10">
           {h.trustStrip.title}
         </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {h.trustStrip.stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">{stat.value}</p>
-              <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
+              <p className="text-3xl sm:text-4xl font-bold text-white tracking-tight tabular-nums">{stat.value}</p>
+              <p className="mt-2 text-sm text-slate-400 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -267,8 +262,8 @@ export function FeatureGrid() {
             const Icon = FEATURE_ICONS[i] ?? MessageCircle
             return (
             <FadeIn key={f.title} delay={i * 0.04}>
-              <div className="surface-hover p-5 h-full">
-                <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center mb-4">
+              <div className="marketing-card surface-hover p-6 h-full transition-all duration-200">
+                <div className="w-11 h-11 rounded-xl bg-[#0B5FFF]/10 text-[#0B5FFF] flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-semibold mb-1.5">{f.title}</h3>
@@ -690,7 +685,7 @@ export function FooterCta() {
     <section className="py-20 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
         <FadeIn>
-          <div className="rounded-2xl bg-gradient-brand px-8 py-14 text-center text-white">
+          <div className="rounded-3xl bg-gradient-to-br from-[#0B5FFF] via-[#0066FF] to-[#0B1220] px-8 py-14 sm:py-16 text-center text-white shadow-brand-lg">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{h.title}</h2>
             <p className="mt-3 text-white/80 max-w-md mx-auto">
               {h.desc}
@@ -703,7 +698,7 @@ export function FooterCta() {
               ))}
             </div>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/register" className="px-7 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-white/90 transition-colors inline-flex items-center gap-2">
+              <Link href="/register" className="px-7 py-3.5 bg-white text-[#0B5FFF] font-semibold rounded-xl hover:bg-white/95 transition-colors inline-flex items-center gap-2 shadow-sm">
                 {h.register} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/contact" className="px-7 py-3 border border-white/30 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors">

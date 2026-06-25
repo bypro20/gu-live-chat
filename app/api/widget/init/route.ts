@@ -18,6 +18,7 @@ import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visito
 import { parseUtmFromUrl } from '@/lib/entry-source'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
+import { syncProductionSchema } from '@/lib/db-schema-sync'
 
 const widgetInitSchema = z.object({
   websiteId: z.string(),
@@ -49,6 +50,8 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
+    await syncProductionSchema().catch(() => {})
+
     const limited = rateLimitByIp(req, 'widget-init', 60, 60_000)
     if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
 

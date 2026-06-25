@@ -20,17 +20,21 @@ export default async function MarketingLayout({ children }: { children: React.Re
         <div
           className="marketing-site min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden antialiased pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0"
           style={{
-            background: '#ffffff',
-            color: '#111827',
-            ['--foreground' as string]: '#111827',
-            ['--background' as string]: '#ffffff',
-            ['--card' as string]: '#ffffff',
-            ['--card-foreground' as string]: '#111827',
-            ['--muted' as string]: '#F9FAFB',
-            ['--muted-foreground' as string]: '#6B7280',
-            ['--border' as string]: '#E5E7EB',
-            ['--primary' as string]: '#1D4ED8',
+            background: '#FAFBFC',
+            color: '#0F172A',
+            ['--foreground' as string]: '#0F172A',
+            ['--background' as string]: '#FAFBFC',
+            ['--card' as string]: '#FFFFFF',
+            ['--card-foreground' as string]: '#0F172A',
+            ['--muted' as string]: '#F1F5F9',
+            ['--muted-foreground' as string]: '#64748B',
+            ['--border' as string]: '#E2E8F0',
+            ['--primary' as string]: '#0B5FFF',
+            ['--primary-hover' as string]: '#004EE0',
             ['--primary-foreground' as string]: '#ffffff',
+            ['--marketing-hero' as string]: 'linear-gradient(180deg, #FFFFFF 0%, #F0F6FF 48%, #FAFBFC 100%)',
+            ['--marketing-accent' as string]: '#0B5FFF',
+            ['--marketing-navy' as string]: '#0B1220',
           }}
         >
           <SourceProtection />

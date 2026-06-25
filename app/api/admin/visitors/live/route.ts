@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { resolveLiveVisitors } from '@/lib/socket-live-bridge'
 import { requireAdmin } from '@/lib/admin-auth'
+import { syncProductionSchema } from '@/lib/db-schema-sync'
 
 // GET /api/admin/visitors/live?websiteId=xxx
 export async function GET(req: Request) {
   try {
     const check = await requireAdmin()
     if ('error' in check) return check.error
+
+    await syncProductionSchema().catch(() => {})
 
     const { searchParams } = new URL(req.url)
     const websiteIdFilter = searchParams.get('websiteId')

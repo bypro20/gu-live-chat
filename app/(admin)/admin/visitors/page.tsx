@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Globe, Monitor, Smartphone, Tablet, Globe2, Clock,
   Users, Activity, Eye, RefreshCw,
 } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { getDeviceLabel, getBrowserLabel, formatDuration } from '@/lib/visitors-utils'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
+import { useLiveVisitorsStore } from '@/lib/stores/live-visitors-store'
 import { AdminVisitorsMonitor } from '@/components/admin/admin-visitors-monitor'
 import { LiveVisitorsGeoMap } from '@/components/admin/live-visitors-geo-map'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
@@ -96,17 +98,6 @@ function getFlag(country?: string | null): string {
   return countryMap[c]?.flag || '🌍'
 }
 
-function getCountryCounts(visitors: LiveVisitor[]): Record<string, { count: number; visitors: LiveVisitor[] }> {
-  const map: Record<string, { count: number; visitors: LiveVisitor[] }> = {}
-  for (const v of visitors) {
-    const key = v.country || 'Bilinmiyor'
-    if (!map[key]) map[key] = { count: 0, visitors: [] }
-    map[key].count++
-    map[key].visitors.push(v)
-  }
-  return map
-}
-
 const TIME_SINCE: Record<string, string | null> = {
   '1s': null,
   '24h': '24h',
@@ -114,38 +105,50 @@ const TIME_SINCE: Record<string, string | null> = {
 }
 
 export default function AdminVisitorsPage() {
-  const [visitors, setVisitors] = useState<LiveVisitor[]>([])
+  const liveVisitorList = useLiveVisitorsStore(
+    useShallow((s) => Array.from(s.visitors.values()))
+  )
+  const setLiveVisitors = useLiveVisitorsStore((s) => s.setVisitors)
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [loading, setLoading] = useState(true)
   const [timeFilter, setTimeFilter] = useState('24h')
   const [focusedVisitorId, setFocusedVisitorId] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const since = TIME_SINCE[timeFilter]
       const historyUrl = since
         ? `/api/admin/visitors/history?page=1&limit=100&since=${since}`
         : '/api/admin/visitors/history?page=1&limit=50'
-      const [liveRes, historyRes] = await Promise.all([
-        fetch('/api/admin/visitors/live'),
-        fetch(historyUrl),
-      ])
-      if (liveRes.ok) {
-        const data = await liveRes.json()
-        setVisitors(data.visitors || [])
-      }
+      const historyRes = await fetch(historyUrl)
       if (historyRes.ok) {
         const data = await historyRes.json()
         setHistorySessions(data.sessions || [])
       }
     } catch (e) {
-      console.error('[AdminVisitors] fetch error:', e)
-    } finally {
-      setLoading(false)
+      console.error('[AdminVisitors] history fetch error:', e)
     }
   }, [timeFilter])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  const refreshLive = useCallback(async () => {
+    try {
+      const liveRes = await fetch('/api/admin/visitors/live')
+      if (liveRes.ok) {
+        const data = await liveRes.json()
+        setLiveVisitors(data.visitors || [])
+      }
+    } catch (e) {
+      console.error('[AdminVisitors] live fetch error:', e)
+    }
+  }, [setLiveVisitors])
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    await Promise.all([fetchHistory(), refreshLive()])
+    setLoading(false)
+  }, [fetchHistory, refreshLive])
+
+  useEffect(() => { void fetchData() }, [fetchData])
 
   useEffect(() => {
     const interval = setInterval(fetchData, timeFilter === '1s' ? 10000 : 30000)
@@ -158,7 +161,7 @@ export default function AdminVisitorsPage() {
       ? Date.now() - 7 * 24 * 60 * 60 * 1000
       : null
 
-  const filteredVisitors = visitors.filter(v => {
+  const filteredVisitors = useMemo(() => liveVisitorList.filter(v => {
     if (timeCutoff && v.lastActiveAt) {
       if (new Date(v.lastActiveAt).getTime() < timeCutoff) return false
     }
@@ -166,13 +169,13 @@ export default function AdminVisitorsPage() {
       if (Date.now() - new Date(v.lastActiveAt).getTime() > 300000) return false
     }
     return true
-  })
+  }), [liveVisitorList, timeCutoff, timeFilter])
 
-  const sortedVisitors = [...filteredVisitors].sort((a, b) => {
+  const sortedVisitors = useMemo(() => [...filteredVisitors].sort((a, b) => {
     const aTime = a.lastActiveAt ? new Date(a.lastActiveAt).getTime() : 0
     const bTime = b.lastActiveAt ? new Date(b.lastActiveAt).getTime() : 0
     return bTime - aTime
-  })
+  }), [filteredVisitors])
 
   const activeCount = sortedVisitors.filter(v => {
     if (!v.lastActiveAt) return false
@@ -180,7 +183,7 @@ export default function AdminVisitorsPage() {
   }).length
 
   const todayStr = new Date().toDateString()
-  const todayVisitors = visitors.filter(v => {
+  const todayVisitors = liveVisitorList.filter(v => {
     if (!v.lastActiveAt) return false
     return new Date(v.lastActiveAt).toDateString() === todayStr
   })
@@ -194,8 +197,6 @@ export default function AdminVisitorsPage() {
   const avgDurationStr = avgSessions > 0
     ? formatDuration(new Date(0).toISOString(), new Date(avgDurationMs / avgSessions).toISOString())
     : '—'
-
-  const countryData = getCountryCounts(sortedVisitors)
 
   const deviceTypes: Record<string, number> = { Masaüstü: 0, Mobil: 0, Tablet: 0 }
   for (const v of sortedVisitors) {
@@ -312,9 +313,9 @@ export default function AdminVisitorsPage() {
             <div>
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Globe2 className="w-4 h-4 text-primary" />
-                Dünya Haritası
+                Canlı Konum Haritası
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">{Object.keys(countryData).length} ülkeden ziyaretçi</p>
+              <p className="text-xs text-gray-500 mt-0.5">Ülke, şehir ve giriş kaynağı — anlık güncellenir</p>
             </div>
             <span className="text-xs text-gray-500 bg-white/[0.04] px-3 py-1.5 rounded-lg border border-white/[0.06]">
               {sortedVisitors.length} ziyaretçi

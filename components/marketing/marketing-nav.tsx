@@ -31,11 +31,13 @@ export function MarketingNav() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-        scrolled ? 'glass-nav glass-nav-scrolled' : 'bg-background/95 border-border'
+        scrolled
+          ? 'glass-nav glass-nav-scrolled bg-white/90 border-slate-200/80'
+          : 'bg-[#FAFBFC]/80 backdrop-blur-md border-transparent'
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-[4.25rem]">
           <Logo boyut="default" linkOlsun animasyonlu={false} />
 
           <div className="hidden lg:flex items-center gap-1">
@@ -43,7 +45,7 @@ export function MarketingNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/80 transition-colors duration-150"
+                className="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-[#0B1220] rounded-lg hover:bg-slate-100/80 transition-colors duration-150"
               >
                 {item.label}
               </Link>
@@ -62,7 +64,7 @@ export function MarketingNav() {
             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">
               {t.nav.login}
             </Link>
-            <Link href="/register" className="btn-primary shadow-brand">
+            <Link href="/register" className="btn-primary rounded-xl px-5 py-2.5 shadow-brand">
               {t.nav.startFree} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

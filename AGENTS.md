@@ -6,5 +6,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Production deploy
 
-- **Do not** run `npx vercel --prod` from the local workspace — it uploads untracked folders and can break TypeScript build.
-- **Do** commit + `git push origin master` (Vercel Git auto-deploy) or `npm run deploy:prod` (GitHub master via Vercel API).
+Otomatik akış (tercih edilen):
+
+1. Değişiklikleri bitir → `npm run deploy:auto -- "commit mesajı"`  
+   (commit + push master + Vercel production + health/schema sync)
+2. `master` push edilince GitHub Actions `.github/workflows/deploy-production.yml` build + post-deploy çalıştırır.
+
+Manuel alternatifler:
+
+- `git push origin master` — Vercel Git entegrasyonu deploy tetikler
+- `npm run deploy:prod` — Vercel API ile GitHub master'dan deploy (yerel dosya yüklemez)
+- `npm run post-deploy` — canlı health + schema sync
+
+**Yapma:** `npx vercel --prod` (untracked dosyalar build'i bozabilir).
+
+GitHub repo secrets (Actions için): `VERCEL_TOKEN`, isteğe bağlı `CRON_SECRET`.

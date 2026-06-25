@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import type { Map as LeafletMap, LayerGroup, CircleMarker } from 'leaflet'
+import type { DivIcon, LayerGroup, Map as LeafletMap, Marker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { LiveVisitor } from '@/lib/stores/live-visitors-store'
 import { DEFAULT_MAP_CENTER, resolveVisitorMapCoords } from '@/lib/country-coords'
@@ -21,10 +21,85 @@ type LiveVisitorsGeoMapProps = {
   onSelect?: (visitorId: string) => void
   className?: string
   emptyLabel?: string
+  height?: number
 }
 
-const MAP_HEIGHT = 320
-const OSM_TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const DEFAULT_HEIGHT = 440
+const MAP_TILE =
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+
+function countryFlag(country?: string | null): string {
+  if (!country) return '🌍'
+  const c = country.trim().toUpperCase()
+  if (c === 'TURKEY' || c === 'TÜRKIYE' || c === 'TURKIYE' || c === 'TR') return '🇹🇷'
+  if (c.length === 2) {
+    const code = c
+    return String.fromCodePoint(
+      ...[...code].map((ch) => 127397 + ch.charCodeAt(0))
+    )
+  }
+  return '🌍'
+}
+
+function buildPinIcon(
+  L: typeof import('leaflet'),
+  selected: boolean,
+  approximate: boolean,
+  live: boolean
+): DivIcon {
+  const color = selected ? '#8b5cf6' : approximate ? '#f59e0b' : '#10b981'
+  const pulse = live
+    ? `<span class="gu-map-pin-pulse" style="background:${color}"></span>`
+    : ''
+  return L.divIcon({
+    className: 'gu-map-pin-wrap',
+    html: `
+      <div class="gu-map-pin ${selected ? 'gu-map-pin--selected' : ''}" style="--pin-color:${color}">
+        ${pulse}
+        <svg viewBox="0 0 24 36" width="28" height="42" aria-hidden="true">
+          <path fill="${color}" stroke="#fff" stroke-width="1.5"
+            d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z"/>
+          <circle cx="12" cy="12" r="4.5" fill="#fff"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [28, 42],
+    iconAnchor: [14, 42],
+    popupAnchor: [0, -38],
+  })
+}
+
+function buildPopupHtml(pin: MapPin): string {
+  const v = pin.visitor
+  const name = v.name || 'Ziyaretçi'
+  const address = formatVisitorGeoLine(v) || v.country || 'Konum bilinmiyor'
+  const source =
+    pin.approximate
+      ? 'Yaklaşık konum (ülke/şehir)'
+      : v.geoSource === 'gps'
+        ? 'GPS — anlık konum'
+        : v.geoSource === 'ip'
+          ? 'IP konumu'
+          : 'Konum'
+  const entry = v.entrySource
+    ? `<div style="margin-top:6px;font-size:11px;color:#a78bfa">Giriş: ${v.entrySource}</div>`
+    : ''
+  const landing = v.landingPage
+    ? `<div style="margin-top:4px;font-size:10px;color:#94a3b8;word-break:break-all">Sayfa: ${v.landingPage}</div>`
+    : ''
+  const site = v.websiteName
+    ? `<div style="margin-top:4px;font-size:10px;color:#64748b">${v.websiteName}</div>`
+    : ''
+
+  return `
+    <div style="min-width:180px;font-family:system-ui,sans-serif">
+      <div style="font-weight:600;font-size:13px;color:#0f172a">${countryFlag(v.country)} ${name}</div>
+      <div style="margin-top:4px;font-size:12px;color:#334155">${address}</div>
+      <div style="margin-top:4px;font-size:10px;color:#64748b">${source}</div>
+      ${entry}${landing}${site}
+    </div>
+  `
+}
 
 export function LiveVisitorsGeoMap({
   visitors,
@@ -32,11 +107,13 @@ export function LiveVisitorsGeoMap({
   onSelect,
   className = '',
   emptyLabel = 'Henüz konum verisi yok',
+  height = DEFAULT_HEIGHT,
 }: LiveVisitorsGeoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const layerRef = useRef<LayerGroup | null>(null)
-  const markersRef = useRef<CircleMarker[]>([])
+  const markersRef = useRef<Map<string, Marker>>(new Map())
+  const boundsKeyRef = useRef('')
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -56,6 +133,15 @@ export function LiveVisitorsGeoMap({
     return out
   }, [visitors])
 
+  const countrySummary = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const pin of pins) {
+      const key = pin.visitor.country || 'Bilinmiyor'
+      map.set(key, (map.get(key) || 0) + 1)
+    }
+    return [...map.entries()].sort((a, b) => b[1] - a[1])
+  }, [pins])
+
   useEffect(() => {
     const container = containerRef.current
     if (!container || mapRef.current) return
@@ -63,19 +149,20 @@ export function LiveVisitorsGeoMap({
     let resizeObserver: ResizeObserver | undefined
     let cancelled = false
 
-    void import('leaflet').then((mod) => {
+    void import('leaflet').then((leafletMod) => {
       if (cancelled || !containerRef.current || mapRef.current) return
 
-      const L = mod.default
+      const L = 'default' in leafletMod && leafletMod.default ? leafletMod.default : leafletMod
       const map = L.map(container, {
         zoomControl: true,
         attributionControl: true,
         scrollWheelZoom: true,
       })
 
-      L.tileLayer(OSM_TILE, {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 19,
+      L.tileLayer(MAP_TILE, {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20,
       }).addTo(map)
 
       layerRef.current = L.layerGroup().addTo(map)
@@ -93,7 +180,7 @@ export function LiveVisitorsGeoMap({
     return () => {
       cancelled = true
       resizeObserver?.disconnect()
-      markersRef.current = []
+      markersRef.current.clear()
       layerRef.current = null
       mapRef.current?.remove()
       mapRef.current = null
@@ -105,57 +192,62 @@ export function LiveVisitorsGeoMap({
     const layer = layerRef.current
     if (!map || !layer) return
 
-    void import('leaflet').then((mod) => {
+    void import('leaflet').then((leafletMod) => {
       if (!mapRef.current || !layerRef.current) return
-      const L = mod.default
+      const L = 'default' in leafletMod && leafletMod.default ? leafletMod.default : leafletMod
 
-      for (const marker of markersRef.current) {
-        marker.remove()
+      const nextIds = new Set(pins.map((p) => p.visitorId))
+      for (const [id, marker] of markersRef.current) {
+        if (!nextIds.has(id)) {
+          marker.remove()
+          markersRef.current.delete(id)
+        }
       }
-      markersRef.current = []
-      layer.clearLayers()
 
       if (pins.length === 0) {
+        layer.clearLayers()
+        markersRef.current.clear()
         map.setView([DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng], 5)
+        boundsKeyRef.current = ''
         window.setTimeout(() => map.invalidateSize(), 80)
         return
       }
 
       const bounds: [number, number][] = []
+
       for (const pin of pins) {
         bounds.push([pin.lat, pin.lng])
         const selected = pin.visitorId === selectedVisitorId
-        const marker = L.circleMarker([pin.lat, pin.lng], {
-          radius: selected ? 10 : pin.approximate ? 6 : 8,
-          color: selected ? '#ffffff' : pin.approximate ? '#fbbf24' : '#34d399',
-          weight: selected ? 2 : 1,
-          fillColor: selected ? '#8b5cf6' : pin.approximate ? '#f59e0b' : '#10b981',
-          fillOpacity: 0.92,
-          dashArray: pin.approximate ? '4 3' : undefined,
-        })
+        const existing = markersRef.current.get(pin.visitorId)
 
-        const label = pin.visitor.name || 'Ziyaretçi'
-        const address = formatVisitorGeoLine(pin.visitor)
-        const entry = pin.visitor.entrySource ? `<br/>Giriş: ${pin.visitor.entrySource}` : ''
-        const source = pin.approximate
-          ? ' (yaklaşık)'
-          : pin.visitor.geoSource === 'gps'
-            ? ' (GPS)'
-            : pin.visitor.geoSource === 'ip'
-              ? ' (IP)'
-              : ''
-
-        marker.bindPopup(`<strong>${label}</strong><br/>${address}${source}${entry}`)
-        marker.on('click', () => onSelectRef.current?.(pin.visitorId))
-        marker.addTo(layer)
-        markersRef.current.push(marker)
+        if (existing) {
+          existing.setLatLng([pin.lat, pin.lng])
+          existing.setIcon(buildPinIcon(L, selected, pin.approximate, pin.visitor.isLive))
+          existing.setPopupContent(buildPopupHtml(pin))
+          if (selected) existing.openPopup()
+        } else {
+          const marker = L.marker([pin.lat, pin.lng], {
+            icon: buildPinIcon(L, selected, pin.approximate, pin.visitor.isLive),
+          })
+          marker.bindPopup(buildPopupHtml(pin))
+          marker.on('click', () => onSelectRef.current?.(pin.visitorId))
+          marker.addTo(layer)
+          markersRef.current.set(pin.visitorId, marker)
+        }
       }
 
-      const allApproximate = pins.every((p) => p.approximate)
-      if (bounds.length === 1) {
-        map.setView(bounds[0], allApproximate ? 8 : 14)
-      } else {
-        map.fitBounds(bounds, { padding: [28, 28], maxZoom: allApproximate ? 6 : 14 })
+      const boundsKey = bounds.map((b) => b.join(',')).join('|')
+      if (boundsKey !== boundsKeyRef.current) {
+        boundsKeyRef.current = boundsKey
+        const allApproximate = pins.every((p) => p.approximate)
+        if (bounds.length === 1) {
+          map.setView(bounds[0], allApproximate ? 8 : 14)
+        } else {
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: allApproximate ? 6 : 14 })
+        }
+      } else if (selectedVisitorId) {
+        const pin = pins.find((p) => p.visitorId === selectedVisitorId)
+        if (pin) map.panTo([pin.lat, pin.lng], { animate: true, duration: 0.4 })
       }
 
       window.setTimeout(() => map.invalidateSize(), 80)
@@ -164,23 +256,83 @@ export function LiveVisitorsGeoMap({
 
   return (
     <div className="relative w-full">
-      <div
-        ref={containerRef}
-        className={`w-full rounded-xl overflow-hidden border border-white/[0.06] bg-[#0d1117] ${className}`}
-        style={{ height: MAP_HEIGHT, minHeight: MAP_HEIGHT }}
-        aria-label="Canlı ziyaretçi haritası"
-      />
-      {pins.length === 0 && (
+      <style jsx global>{`
+        .gu-map-pin-wrap {
+          background: transparent !important;
+          border: none !important;
+        }
+        .gu-map-pin {
+          position: relative;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+          transition: transform 0.15s ease;
+        }
+        .gu-map-pin--selected {
+          transform: scale(1.12);
+          z-index: 1000 !important;
+        }
+        .gu-map-pin-pulse {
+          position: absolute;
+          left: 50%;
+          top: 10px;
+          width: 14px;
+          height: 14px;
+          margin-left: -7px;
+          border-radius: 50%;
+          opacity: 0.45;
+          animation: gu-map-pulse 1.8s ease-out infinite;
+          pointer-events: none;
+        }
+        @keyframes gu-map-pulse {
+          0% { transform: scale(0.6); opacity: 0.6; }
+          100% { transform: scale(2.8); opacity: 0; }
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+        }
+      `}</style>
+
+      <div className="relative">
         <div
-          className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#0d1117]/55"
-          style={{ height: MAP_HEIGHT }}
-        >
-          <p className="max-w-[85%] text-center text-xs text-gray-400 px-4">{emptyLabel}</p>
-        </div>
-      )}
-      {pins.some((p) => p.approximate) && pins.length > 0 && (
-        <p className="mt-2 text-[10px] text-amber-500/90">
-          Turuncu kesikli pinler yaklaşık konum (ülke/şehir).
+          ref={containerRef}
+          className={`w-full rounded-xl overflow-hidden border border-white/[0.06] bg-[#eef2f6] ${className}`}
+          style={{ height, minHeight: height }}
+          aria-label="Canlı ziyaretçi haritası"
+        />
+
+        {countrySummary.length > 0 && (
+          <div className="pointer-events-none absolute top-3 right-3 z-[1000] max-w-[160px] rounded-xl border border-white/20 bg-slate-900/85 backdrop-blur-sm p-2.5 shadow-lg">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              Ülkeler
+            </p>
+            <ul className="space-y-1">
+              {countrySummary.slice(0, 6).map(([country, count]) => (
+                <li key={country} className="flex items-center justify-between gap-2 text-[11px] text-slate-200">
+                  <span className="truncate">{countryFlag(country)} {country}</span>
+                  <span className="tabular-nums text-emerald-400 font-semibold">{count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {pins.length === 0 && (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#0d1117]/55"
+            style={{ height }}
+          >
+            <p className="max-w-[85%] text-center text-xs text-gray-400 px-4">{emptyLabel}</p>
+          </div>
+        )}
+      </div>
+
+      {pins.length > 0 && (
+        <p className="mt-2 text-[10px] text-gray-500">
+          <span className="text-emerald-400">●</span> Kesin konum (IP/GPS)
+          {' · '}
+          <span className="text-amber-400">●</span> Yaklaşık (ülke/şehir)
+          {' · '}
+          Nabız = şu an sitede
         </p>
       )}
     </div>
