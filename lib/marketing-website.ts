@@ -1,6 +1,7 @@
 import { prisma } from './db'
 import { generateWebsiteId } from './utils'
 import { marketingDomainVariants, SITE_DOMAIN } from './site-config'
+import { ensureMarketingSiteAiReady } from './marketing-ai-setup'
 
 const MARKETING_DOMAIN = (
   process.env.MARKETING_WEBSITE_DOMAIN || SITE_DOMAIN
@@ -9,6 +10,23 @@ const MARKETING_DOMAIN = (
   .replace(/^https?:\/\//, '')
   .replace(/\/$/, '')
 const MARKETING_NAME = process.env.MARKETING_WEBSITE_NAME || 'Gu Live Chat — Platform'
+
+let marketingAiBootstrap: Promise<void> | null = null
+
+/** Idempotent KB + AI config — once per server instance on first marketing page load. */
+function scheduleMarketingAiReady(websitePublicId: string): void {
+  if (marketingAiBootstrap) return
+  marketingAiBootstrap = (async () => {
+    const site = await prisma.website.findUnique({
+      where: { websiteId: websitePublicId },
+      select: { id: true },
+    })
+    if (site) await ensureMarketingSiteAiReady(site.id)
+  })().catch((e) => {
+    console.error('[marketing-website] AI bootstrap failed:', e)
+    marketingAiBootstrap = null
+  })
+}
 
 /** Marketing sitesini bul — domain varyantları + env override. */
 async function findMarketingWebsiteInDb() {
@@ -120,6 +138,7 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
     await ensureMarketingSiteProPlan(existing.id)
     await ensureMarketingSiteBranding(existing.id)
     await ensureAllPlatformAdmins(existing.id)
+    await ensureMarketingSiteAiReady(existing.id)
     return existing.websiteId
   }
 
@@ -148,6 +167,7 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
       select: { id: true, websiteId: true },
     })
     await ensureAllPlatformAdmins(created.id)
+    await ensureMarketingSiteAiReady(created.id)
     return created.websiteId
   } catch (createError) {
     console.error('[marketing-website] create failed, retrying find:', createError)
@@ -174,6 +194,7 @@ export async function ensureAdminMarketingAccess(adminUserId: string): Promise<s
         await ensureMarketingSiteProPlan(site.id)
         await ensureMarketingSiteBranding(site.id)
         await ensureAllPlatformAdmins(site.id)
+        await ensureMarketingSiteAiReady(site.id)
         return site.websiteId
       }
     }
@@ -196,7 +217,10 @@ export async function ensureAdminMarketingAccess(adminUserId: string): Promise<s
 export async function resolveOrBootstrapMarketingWebsiteId(): Promise<string | null> {
   try {
     const existing = await resolveMarketingWebsiteId()
-    if (existing) return existing
+    if (existing) {
+      scheduleMarketingAiReady(existing)
+      return existing
+    }
 
     const adminEmail = process.env.ADMIN_EMAIL?.trim()
     const admin = adminEmail

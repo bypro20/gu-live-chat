@@ -1,6 +1,7 @@
 import { prisma } from './db'
 import { emitBotMessage } from './socket-events'
 import { websiteHasFeature } from './addon-features'
+import { isPlatformMarketingWebsiteId } from './marketing-website'
 
 interface RunChatbotParams {
   websiteDbId: string
@@ -341,6 +342,10 @@ export async function processChatbotOnVisitorMessage(
   params: RunChatbotParams
 ): Promise<{ waitingForInput: boolean }> {
   try {
+    if (await isPlatformMarketingWebsiteId(params.websitePublicId)) {
+      return { waitingForInput: false }
+    }
+
     const website = await prisma.website.findUnique({
       where: { id: params.websiteDbId },
       select: { plan: true },

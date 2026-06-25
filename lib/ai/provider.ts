@@ -296,6 +296,8 @@ function buildSystemPrompt(
 - Bilmediğin konuda uydurma; "bu konuda sizi canlı temsilcimize aktarayım" gibi doğal geçiş yap.
 - Satış veya bilgi talebinde nazikçe yönlendir, faydayı vurgula ama baskıcı olma.
 - "yapay zeka", "bot", "asistan", "LLM" kelimelerini kullanma — sen destek ekibindensin.
+- Her yanıt soruya özel olsun; önceki mesajlardaki cümleleri ve kalıpları tekrarlama.
+- "Mesajınızı aldım", "kısa süre içinde dönüş yapacağız" gibi şablon cümleler kullanma.
 - Her yanıt 1-4 cümle olsun; gereksiz uzatma.`
 
   let prompt = base

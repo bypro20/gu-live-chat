@@ -1,7 +1,7 @@
 import { prisma } from '../db'
 import { emitBotMessage } from '../socket-events'
 import { generateAiReply, isAiLlmAvailable } from './provider'
-import { loadKnowledge, toChatMessages } from './knowledge'
+import { loadKnowledge, selectRelevantKnowledge, toChatMessages } from './knowledge'
 import { loadVisitorContext } from './visitor-context'
 import { isChatbotWaitingForInput } from '../chatbot-runner'
 import { deliverChannelReply } from '../channels/deliver-reply'
@@ -112,6 +112,8 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (!last || last.senderType !== 'VISITOR') return
 
     const knowledge = await loadKnowledge(params.websiteDbId)
+    const relevantKnowledge = selectRelevantKnowledge(last.content, knowledge, 12)
+    const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge
     const siteName = (conversation.website.name || 'Destek').trim()
 
     const dbConfig = {
@@ -122,23 +124,27 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     }
     const llmReady = isAiLlmAvailable(dbConfig)
 
-    // Kesin SSS eşleşmesi (LLM varken sadece yüksek güven)
-    const faqHit = matchFaqFromKnowledge(last.content, knowledge)
-    const faqThreshold = llmReady ? 0.88 : 0.5
-    if (faqHit && faqHit.confidence >= faqThreshold) {
-      await sendBotReply(params, faqHit.answer, siteName)
-      return
+    // LLM varken kelime eşleşmesiyle aynı metni yapıştırma — model bilgi bankasından doğal yanıt üretsin
+    if (!llmReady) {
+      const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
+      if (faqHit && faqHit.confidence >= 0.5) {
+        await sendBotReply(params, faqHit.answer, siteName)
+        return
+      }
     }
 
     const messages = toChatMessages(ordered)
     if (messages.length === 0) return
 
-    const visitorContext = await loadVisitorContext(params.visitorId || conversation.visitorId)
+    const visitorContext = await loadVisitorContext(
+      params.visitorId || conversation.visitorId,
+      params.conversationId
+    )
 
     const reply = await generateAiReply({
       siteName: conversation.website.name,
       messages,
-      knowledge,
+      knowledge: knowledgeForReply,
       systemPrompt: aiConfig.systemPrompt || undefined,
       visitorContext,
       dbConfig,

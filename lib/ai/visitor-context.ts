@@ -1,7 +1,10 @@
 import { prisma } from '../db'
 
 /** Builds a short visitor profile string for AI system prompts. */
-export async function loadVisitorContext(visitorId: string): Promise<string> {
+export async function loadVisitorContext(
+  visitorId: string,
+  conversationId?: string
+): Promise<string> {
   try {
     const visitor = await prisma.visitor.findUnique({
       where: { id: visitorId },
@@ -29,6 +32,18 @@ export async function loadVisitorContext(visitorId: string): Promise<string> {
       parts.push(`Cihaz: ${[visitor.browser, visitor.device].filter(Boolean).join(' / ')}`)
     }
     if (visitor.notes?.trim()) parts.push(`Notlar: ${visitor.notes.trim().slice(0, 200)}`)
+
+    let session = await prisma.visitorSession.findFirst({
+      where: { visitorId },
+      orderBy: { startedAt: 'desc' },
+      select: { currentPage: true, currentTitle: true, landingPage: true },
+    })
+
+    if (session?.currentPage) {
+      parts.push(`Şu an baktığı sayfa: ${session.currentTitle || session.currentPage}`)
+    } else if (session?.landingPage) {
+      parts.push(`Giriş sayfası: ${session.landingPage}`)
+    }
 
     return parts.length > 0 ? parts.join(' · ') : ''
   } catch {
