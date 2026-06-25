@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { AdminCommandCenter, type CommandCenterStats } from '@/components/admin/admin-command-center'
+import { useAdminShellLive } from '@/components/admin/admin-shell-context'
 
 const emptyTrialFunnel = {
   activeTrials: 0,
@@ -11,6 +12,7 @@ const emptyTrialFunnel = {
 }
 
 export default function AdminDashboardPage() {
+  const { inboxUnread, mailUnread, health, lastHealthCheck } = useAdminShellLive()
   const [stats, setStats] = useState<CommandCenterStats>({
     totalUsers: 0,
     totalWebsites: 0,
@@ -32,15 +34,18 @@ export default function AdminDashboardPage() {
   })
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())
-  const [health, setHealth] = useState({ ok: true, db: true, socket: false })
 
   const loadStats = useCallback(async () => {
-    let next: Partial<CommandCenterStats> = {}
-
     try {
-      const res = await fetch('/api/admin/stats')
-      if (res.ok) {
-        const data = await res.json()
+      const [statsRes, visitorsRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/visitors/live'),
+      ])
+
+      let next: Partial<CommandCenterStats> = {}
+
+      if (statsRes.ok) {
+        const data = await statsRes.json()
         next = {
           totalUsers: data.totalUsers,
           totalWebsites: data.totalWebsites,
@@ -65,71 +70,46 @@ export default function AdminDashboardPage() {
             : emptyTrialFunnel,
         }
       }
-    } catch {
-      // ignore
-    }
 
-    try {
-      const res = await fetch('/api/admin/visitors/live')
-      if (res.ok) {
-        const data = await res.json()
+      if (visitorsRes.ok) {
+        const data = await visitorsRes.json()
         next.activeVisitors = data.count || 0
       }
+
+      setStats((prev) => ({ ...prev, ...next }))
+      setLastUpdated(new Date())
     } catch {
       // ignore
+    } finally {
+      setLoading(false)
     }
-
-    try {
-      const res = await fetch('/api/admin/inbox-unread')
-      if (res.ok) {
-        const data = await res.json()
-        next.inboxUnread = Number(data.unreadCount) || 0
-      }
-    } catch {
-      // ignore
-    }
-
-    try {
-      const res = await fetch('/api/admin/mail/unread-count')
-      if (res.ok) {
-        const data = await res.json()
-        next.mailUnread = Number(data.unreadCount) || 0
-      }
-    } catch {
-      // ignore
-    }
-
-    try {
-      const res = await fetch('/api/health')
-      if (res.ok) {
-        const data = await res.json()
-        setHealth({ ok: !!data.ok, db: !!data.db, socket: !!data.socket })
-      } else {
-        setHealth({ ok: false, db: false, socket: false })
-      }
-    } catch {
-      setHealth({ ok: false, db: false, socket: false })
-    }
-
-    setStats((prev) => ({ ...prev, ...next }))
-    setLastUpdated(new Date())
-    setLoading(false)
   }, [])
 
   useEffect(() => {
     loadStats()
-    const interval = setInterval(loadStats, 30000)
+    const interval = setInterval(loadStats, 60000)
     return () => clearInterval(interval)
   }, [loadStats])
+
+  const mergedStats: CommandCenterStats = {
+    ...stats,
+    inboxUnread,
+    mailUnread,
+  }
 
   if (loading) {
     return (
       <div className="admin-command-center max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse space-y-8">
-          <div className="h-32 rounded-2xl admin-panel-card" />
+        <div className="admin-skeleton space-y-6">
+          <div className="h-28 rounded-2xl admin-panel-card" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-24 rounded-xl admin-panel-card" />
+            ))}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-48 rounded-2xl admin-panel-card" />
+              <div key={i} className="h-44 rounded-2xl admin-panel-card" />
             ))}
           </div>
         </div>
@@ -137,5 +117,11 @@ export default function AdminDashboardPage() {
     )
   }
 
-  return <AdminCommandCenter stats={stats} health={health} lastUpdated={lastUpdated} />
+  return (
+    <AdminCommandCenter
+      stats={mergedStats}
+      health={health}
+      lastUpdated={lastUpdated.getTime() > lastHealthCheck.getTime() ? lastUpdated : lastHealthCheck}
+    />
+  )
 }

@@ -91,13 +91,13 @@ export function AdminCommandCenter({ stats, health, lastUpdated }: AdminCommandC
               </span>
             </div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] admin-accent-label mb-1">
-              Platform Yönetimi
+              Operasyon Merkezi
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold admin-text tracking-tight">
-              Komuta Merkezi
+              Platform özeti
             </h1>
             <p className="text-sm admin-text-muted mt-1 max-w-xl">
-              Tüm platformu tek ekrandan izleyin — canlı ziyaretçiler, mesajlar, müşteriler, gelir ve sistem sağlığı.
+              Canlı ziyaretçiler, mesajlar, müşteriler ve gelir — tek bakışta.
             </p>
           </div>
           <Link

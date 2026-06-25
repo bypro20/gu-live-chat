@@ -480,8 +480,8 @@ body {
 
   .admin-shell .app-sidebar::before {
     background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(239, 68, 68, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 40% at 50% -10%, color-mix(in srgb, var(--admin-accent) 8%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 100% 100%, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
   }
 
   .admin-shell .app-main {
@@ -503,56 +503,88 @@ body {
     color: var(--admin-text-muted);
   }
 
-  /* ─── Admin v2 — tek palet (beyaz / siyah / kırmızı), her iki modda aynı ─── */
+  /* ─── Admin v3 — slate / indigo ops console ─── */
   .admin-shell-v2 {
-    --app-sidebar-width: 300px;
-    --admin-fire: #ef4444;
-    --admin-fire-bright: #dc2626;
-    --admin-fire-deep: #991b1b;
-    --admin-fire-soft: rgba(239, 68, 68, 0.18);
-    --admin-fire-border: rgba(239, 68, 68, 0.32);
-    --admin-bg: #ffffff;
-    --admin-bg-subtle: #fafafa;
-    --admin-bg-elevated: #fafafa;
+    --app-sidebar-width: 264px;
+    --admin-bg: #f8fafc;
+    --admin-bg-subtle: #f1f5f9;
+    --admin-bg-elevated: #ffffff;
     --admin-bg-card: #ffffff;
-    --admin-bg-hover: #f5f5f5;
-    --admin-border: #e5e5e5;
-    --admin-border-strong: #d4d4d4;
-    --admin-text: #000000;
-    --admin-text-secondary: #171717;
-    --admin-text-muted: #404040;
-    --admin-text-faint: #737373;
-    --admin-accent: #dc2626;
-    --admin-accent-hover: #b91c1c;
-    --admin-accent-soft: #fef2f2;
+    --admin-bg-hover: #f1f5f9;
+    --admin-border: #e2e8f0;
+    --admin-border-strong: #cbd5e1;
+    --admin-text: #0f172a;
+    --admin-text-secondary: #334155;
+    --admin-text-muted: #64748b;
+    --admin-text-faint: #94a3b8;
+    --admin-accent: #4f46e5;
+    --admin-accent-hover: #4338ca;
+    --admin-accent-soft: #eef2ff;
     --admin-accent-fg: #ffffff;
-    --admin-topbar-bg: #ffffff;
+    --admin-accent-ring: color-mix(in srgb, var(--admin-accent) 14%, transparent);
+    --admin-accent-border: color-mix(in srgb, var(--admin-accent) 28%, transparent);
+    --admin-topbar-bg: color-mix(in srgb, var(--admin-bg-elevated) 88%, transparent);
     --admin-input-bg: #ffffff;
-    --admin-hero-gradient: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+    --admin-hero-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 55%, #eef2ff 100%);
     --admin-sidebar-bg: #ffffff;
-    --admin-sidebar-bg-end: #ffffff;
-    --admin-sidebar-active: #fef2f2;
-    --admin-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --admin-sidebar-bg-end: #f8fafc;
+    --admin-sidebar-active: #eef2ff;
+    --admin-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.03);
+    --sidebar-fg: var(--admin-text);
+    --sidebar-fg-muted: var(--admin-text-muted);
+    --sidebar-fg-faint: var(--admin-text-faint);
+    --sidebar-group-label: var(--admin-text-faint);
+    --sidebar-active-fg: var(--admin-accent);
+    --sidebar-active-desc: var(--admin-text-muted);
+    --sidebar-surface: var(--admin-bg-subtle);
+    --sidebar-border: var(--admin-border);
+    --sidebar-surface-hover: var(--admin-bg-hover);
     color-scheme: light;
     color: var(--admin-text);
   }
 
+  .admin-shell-v2[data-admin-theme='dark'] {
+    --admin-bg: #0b1120;
+    --admin-bg-subtle: #111827;
+    --admin-bg-elevated: #111827;
+    --admin-bg-card: #111827;
+    --admin-bg-hover: #1e293b;
+    --admin-border: #334155;
+    --admin-border-strong: #475569;
+    --admin-text: #f8fafc;
+    --admin-text-secondary: #e2e8f0;
+    --admin-text-muted: #94a3b8;
+    --admin-text-faint: #64748b;
+    --admin-accent: #818cf8;
+    --admin-accent-hover: #6366f1;
+    --admin-accent-soft: rgba(99, 102, 241, 0.12);
+    --admin-accent-fg: #ffffff;
+    --admin-topbar-bg: color-mix(in srgb, var(--admin-bg-elevated) 92%, transparent);
+    --admin-input-bg: #0f172a;
+    --admin-hero-gradient: linear-gradient(135deg, #111827 0%, #0b1120 60%, rgba(99, 102, 241, 0.08) 100%);
+    --admin-sidebar-bg: #0b1120;
+    --admin-sidebar-bg-end: #111827;
+    --admin-sidebar-active: rgba(99, 102, 241, 0.14);
+    --admin-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+  }
+
   /* Portal/overlay — shell ile aynı palet */
   .admin-overlay-host {
-    --admin-bg: #ffffff;
-    --admin-bg-subtle: #fafafa;
-    --admin-bg-elevated: #fafafa;
+    --admin-bg: #f8fafc;
+    --admin-bg-subtle: #f1f5f9;
+    --admin-bg-elevated: #ffffff;
     --admin-bg-card: #ffffff;
-    --admin-bg-hover: #f5f5f5;
-    --admin-border: #e5e5e5;
-    --admin-border-strong: #d4d4d4;
-    --admin-text: #000000;
-    --admin-text-secondary: #171717;
-    --admin-text-muted: #404040;
-    --admin-text-faint: #737373;
-    --admin-accent: #dc2626;
-    --admin-accent-hover: #b91c1c;
-    --admin-accent-soft: #fef2f2;
+    --admin-bg-hover: #f1f5f9;
+    --admin-border: #e2e8f0;
+    --admin-border-strong: #cbd5e1;
+    --admin-text: #0f172a;
+    --admin-text-secondary: #334155;
+    --admin-text-muted: #64748b;
+    --admin-text-faint: #94a3b8;
+    --admin-accent: #4f46e5;
+    --admin-accent-hover: #4338ca;
+    --admin-accent-soft: #eef2ff;
     --admin-accent-fg: #ffffff;
     --admin-input-bg: #ffffff;
     color-scheme: light;
@@ -577,27 +609,27 @@ body {
     --accent-foreground: #000000;
     --border: #e5e5e5;
     --input: #ffffff;
-    --ring: #dc2626;
+    --ring: var(--admin-accent);
   }
 
   .admin-overlay-host .admin-command-palette {
-    background: #ffffff !important;
-    color: #000000 !important;
-    border-color: #e5e5e5 !important;
+    background: var(--admin-bg-elevated) !important;
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
   }
 
   .admin-overlay-host .admin-command-palette-item,
   .admin-overlay-host .admin-command-palette-results {
-    color: #000000;
+    color: var(--admin-text);
   }
 
   .admin-overlay-host .admin-command-palette-item .admin-text-muted,
   .admin-overlay-host .admin-command-palette-results p {
-    color: #404040 !important;
+    color: var(--admin-text-muted) !important;
   }
 
   .admin-overlay-host .admin-command-palette-item--active {
-    background: rgba(220, 38, 38, 0.1) !important;
+    background: var(--admin-accent-soft) !important;
   }
 
   /* Admin bildirim paneli (body portal) */
@@ -635,9 +667,25 @@ body {
     background: var(--admin-bg);
   }
 
+  .admin-content-root {
+    color: var(--admin-text);
+    background: var(--admin-bg);
+    contain: layout style;
+  }
+
+  .admin-sidebar-nav {
+    contain: strict;
+    overscroll-behavior: contain;
+  }
+
+  .admin-skeleton .admin-panel-card {
+    @apply animate-pulse border-transparent;
+    background: var(--admin-bg-hover);
+  }
+
   .admin-shell-v2 .app-sidebar {
     background: linear-gradient(180deg, var(--admin-sidebar-bg) 0%, var(--admin-sidebar-bg-end) 100%);
-    box-shadow: inset -1px 0 0 var(--admin-border);
+    box-shadow: 1px 0 0 var(--admin-border);
   }
 
   /* Sidebar — tema değişkenleri .admin-shell-v2 üzerinden gelir */
@@ -662,8 +710,8 @@ body {
   }
 
   .admin-sidebar-filter:focus {
-    border-color: rgba(239, 68, 68, 0.45);
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+    border-color: var(--admin-accent-border);
+    box-shadow: 0 0 0 3px var(--admin-accent-ring);
   }
 
   .admin-text { color: var(--admin-text); }
@@ -708,8 +756,8 @@ body {
   }
 
   .admin-input:focus {
-    border-color: rgba(239, 68, 68, 0.45);
-    --tw-ring-color: rgba(239, 68, 68, 0.15);
+    border-color: var(--admin-accent-border);
+    --tw-ring-color: var(--admin-accent-ring);
   }
 
   .admin-theme-toggle {
@@ -722,7 +770,7 @@ body {
   .admin-theme-toggle:hover {
     background: var(--sidebar-surface-hover);
     color: var(--sidebar-fg);
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: var(--admin-accent-border);
   }
 
   .admin-theme-toggle--compact,
@@ -760,7 +808,7 @@ body {
 
   .admin-sidebar-search-trigger:hover {
     background: var(--sidebar-surface-hover);
-    border-color: rgba(239, 68, 68, 0.28);
+    border-color: var(--admin-accent-border);
     color: var(--sidebar-fg);
   }
 
@@ -770,7 +818,7 @@ body {
   }
 
   .admin-sidebar-item {
-    @apply flex items-start gap-2.5 px-2.5 py-2.5 rounded-xl transition-all duration-150;
+    @apply flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-colors duration-150;
     color: var(--sidebar-fg);
   }
 
@@ -782,7 +830,7 @@ body {
   .admin-shell-v2 .admin-sidebar-item--active {
     background: var(--admin-sidebar-active);
     color: var(--sidebar-active-fg);
-    box-shadow: inset 3px 0 0 var(--admin-accent);
+    box-shadow: inset 2px 0 0 var(--admin-accent);
   }
 
   .admin-shell-v2 .admin-sidebar-item--active .admin-sidebar-desc {
@@ -794,13 +842,13 @@ body {
   }
 
   .admin-sidebar-item-icon {
-    @apply shrink-0 mt-0.5;
+    @apply shrink-0;
     color: var(--sidebar-fg-faint);
   }
 
   .admin-sidebar-badge {
     @apply min-w-[1.1rem] h-[1.1rem] px-1 flex items-center justify-center text-[9px] font-bold rounded-full text-white;
-    background: #ef4444;
+    background: var(--admin-accent);
   }
 
   .admin-sidebar-footer {
@@ -817,7 +865,7 @@ body {
   .admin-command-hero {
     @apply rounded-2xl border p-6 sm:p-8;
     border-color: var(--admin-border);
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.04) 0%, #ffffff 100%);
+    background: var(--admin-hero-gradient);
     box-shadow: var(--admin-card-shadow);
   }
 
@@ -828,12 +876,14 @@ body {
     color: var(--admin-accent);
   }
   .admin-live-dot {
-    @apply relative flex h-2 w-2 rounded-full bg-red-500;
+    @apply relative flex h-2 w-2 rounded-full;
+    background: var(--admin-accent);
   }
 
   .admin-live-dot::before {
     content: '';
-    @apply absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75;
+    @apply absolute inset-0 rounded-full animate-ping opacity-75;
+    background: var(--admin-accent);
   }
 
   .admin-pulse-strip {
@@ -848,14 +898,14 @@ body {
   }
 
   .admin-pulse-metric:hover {
-    border-color: rgba(239, 68, 68, 0.25);
+    border-color: var(--admin-accent-border);
     background: var(--admin-bg-hover);
     transform: translateY(-1px);
   }
 
   .admin-pulse-metric--alert {
-    border-color: rgba(239, 68, 68, 0.3);
-    background: rgba(239, 68, 68, 0.08);
+    border-color: var(--admin-accent-border);
+    background: var(--admin-accent-soft);
   }
 
   .admin-module-card {
@@ -1012,10 +1062,6 @@ body {
   }
 
   /* Admin içerik — hardcoded Tailwind renklerini temaya bağla */
-  .admin-content-root {
-    color: var(--admin-text);
-    background: var(--admin-bg);
-  }
 
   .admin-content-root .text-white {
     color: var(--admin-text);

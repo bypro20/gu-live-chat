@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -64,7 +63,6 @@ export function AdminSidebar({
   showCustomerLink = true,
 }: AdminSidebarProps) {
   const pathname = usePathname() || ''
-  const [filter, setFilter] = useState('')
 
   const badges: Record<AdminBadgeKey, number> = {
     inbox: inboxUnread,
@@ -72,17 +70,7 @@ export function AdminSidebar({
     visitors: liveVisitorCount,
   }
 
-  const groups = useMemo(() => {
-    const q = filter.trim().toLowerCase()
-    if (!q) return ADMIN_NAV_GROUPS
-    return ADMIN_NAV_GROUPS.map((g) => ({
-      ...g,
-      items: g.items.filter((item) => {
-        const hay = [item.label, item.description, ...(item.keywords || [])].join(' ').toLowerCase()
-        return hay.includes(q)
-      }),
-    })).filter((g) => g.items.length > 0)
-  }, [filter])
+  const groups = ADMIN_NAV_GROUPS
 
   const userInitial = admin.name?.charAt(0)?.toUpperCase() || 'A'
 
@@ -103,18 +91,9 @@ export function AdminSidebar({
           <span className="flex-1 text-left text-sm admin-sidebar-desc">Ara veya git…</span>
           <kbd className="hidden xl:inline text-[10px] admin-sidebar-muted border rounded px-1.5 py-0.5" style={{ borderColor: 'var(--sidebar-border)' }}>⌘K</kbd>
         </button>
-        <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-sidebar-icon pointer-events-none" />
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Menüde filtrele…"
-            className="admin-sidebar-filter w-full pl-9 pr-3 py-2 text-xs rounded-xl border outline-none focus:ring-1"
-          />
-        </div>
       </div>
 
-      <nav className="admin-sidebar-nav flex-1 overflow-y-auto px-3 pb-4 space-y-5">
+      <nav className="admin-sidebar-nav flex-1 overflow-y-auto px-3 pb-4 space-y-4">
         {groups.map((group) => (
           <div key={group.id}>
             <p className="admin-sidebar-group-label">{group.label}</p>
@@ -130,7 +109,7 @@ export function AdminSidebar({
                     onClick={onNavigate}
                     className={`admin-sidebar-item ${active ? 'admin-sidebar-item--active' : ''}`}
                   >
-                    <span className={`admin-sidebar-item-icon ${active ? 'text-red-400' : ''}`}>
+                    <span className={`admin-sidebar-item-icon ${active ? 'text-[var(--admin-accent)]' : ''}`}>
                       <Icon className="w-[18px] h-[18px]" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -139,9 +118,6 @@ export function AdminSidebar({
                         {badge != null && (
                           <span className="admin-sidebar-badge">{badge > 99 ? '99+' : badge}</span>
                         )}
-                      </span>
-                      <span className="block text-[10px] admin-sidebar-desc truncate leading-tight mt-0.5">
-                        {item.description}
                       </span>
                     </span>
                   </Link>
@@ -161,7 +137,7 @@ export function AdminSidebar({
           <Link
             href="/dashboard"
             onClick={onNavigate}
-            className="admin-sidebar-item mb-2 text-red-600 hover:text-red-700"
+            className="admin-sidebar-item mb-2"
           >
             <span className="admin-sidebar-item-icon">
               <ArrowLeft className="w-[18px] h-[18px]" />
@@ -170,7 +146,7 @@ export function AdminSidebar({
           </Link>
         )}
         <div className="flex items-center gap-2.5 p-2 rounded-xl transition-colors group hover:bg-[var(--sidebar-surface-hover)]">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-red-600 text-white">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white bg-gradient-to-br from-indigo-500 to-violet-600">
             {userInitial}
           </div>
           <div className="flex-1 min-w-0">
@@ -180,7 +156,7 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={onSignOut}
-            className="p-1.5 rounded-lg admin-sidebar-muted hover:text-red-400 hover:bg-red-500/10 transition-colors hidden lg:block"
+            className="p-1.5 rounded-lg admin-sidebar-muted hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent-soft)] transition-colors hidden lg:block"
             title="Çıkış Yap"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,7 +167,8 @@ export function AdminSidebar({
         <button
           type="button"
           onClick={onSignOut}
-          className="lg:hidden w-full mt-2 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[13px] font-semibold text-white bg-red-500/90 hover:bg-red-500 transition-all"
+          className="lg:hidden w-full mt-2 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[13px] font-semibold text-white transition-all"
+          style={{ background: 'var(--admin-accent)' }}
         >
           Çıkış Yap
         </button>

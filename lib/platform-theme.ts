@@ -30,29 +30,29 @@ export type PlatformThemes = {
 }
 
 export const DEFAULT_ADMIN_THEME: PanelTheme = {
-  background: '#ffffff',
-  foreground: '#000000',
+  background: '#f8fafc',
+  foreground: '#0f172a',
   card: '#ffffff',
-  cardForeground: '#000000',
-  muted: '#f5f5f5',
-  mutedForeground: '#404040',
-  border: '#e5e5e5',
-  accent: '#dc2626',
+  cardForeground: '#0f172a',
+  muted: '#f1f5f9',
+  mutedForeground: '#64748b',
+  border: '#e2e8f0',
+  accent: '#4f46e5',
   accentForeground: '#ffffff',
-  hover: '#f5f5f5',
+  hover: '#f1f5f9',
 }
 
 export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = {
-  background: '#000000',
-  foreground: '#ffffff',
-  card: '#0a0a0a',
-  cardForeground: '#ffffff',
-  muted: '#171717',
-  mutedForeground: '#a3a3a3',
-  border: '#262626',
-  accent: '#dc2626',
+  background: '#0b1120',
+  foreground: '#f8fafc',
+  card: '#111827',
+  cardForeground: '#f8fafc',
+  muted: '#1e293b',
+  mutedForeground: '#94a3b8',
+  border: '#334155',
+  accent: '#818cf8',
   accentForeground: '#ffffff',
-  hover: '#1f1f1f',
+  hover: '#1e293b',
 }
 
 export const DEFAULT_CUSTOMER_THEME: PanelTheme = {

@@ -35,7 +35,7 @@ export function AdminTopBar({
     <header className="admin-top-bar hidden lg:flex shrink-0 items-center gap-4 px-6 h-14 border-b sticky top-0 z-20">
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] admin-accent-label mb-0.5">
-          Platform Yönetimi
+          Operasyon
         </p>
         <h1 className="text-lg font-bold admin-text truncate tracking-tight">
           {pageTitle || 'Admin Panel'}
@@ -93,7 +93,7 @@ export function AdminTopBar({
         >
           <Eye className="w-4 h-4" />
           {liveVisitorCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full">
+            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold text-white rounded-full" style={{ background: 'var(--admin-accent)' }}>
               {liveVisitorCount > 99 ? '99+' : liveVisitorCount}
             </span>
           )}
@@ -106,7 +106,7 @@ export function AdminTopBar({
         >
           <Bell className="w-4 h-4" />
           {inboxUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full">
+            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold text-white rounded-full" style={{ background: 'var(--admin-accent)' }}>
               {inboxUnread > 99 ? '99+' : inboxUnread}
             </span>
           )}

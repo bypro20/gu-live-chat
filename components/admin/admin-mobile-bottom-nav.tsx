@@ -78,7 +78,7 @@ export function AdminMobileBottomNav({
               <span className="relative mobile-web-tab-icon">
                 {tab.icon}
                 {tab.badge != null && tab.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full">
+                  <span className="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 flex items-center justify-center text-[9px] font-bold text-white rounded-full" style={{ background: 'var(--admin-accent)' }}>
                     {tab.badge > 99 ? '99+' : tab.badge}
                   </span>
                 )}

@@ -43,14 +43,14 @@ export function AppLogo({
           >
             Gu Live{' '}
             <span
-              className={!isSidebar ? 'text-primary' : isAdmin ? 'text-red-500' : undefined}
+              className={!isSidebar ? 'text-primary' : isAdmin ? 'text-indigo-500' : undefined}
               style={isSidebar && !isAdmin ? { color: 'var(--primary)' } : undefined}
             >
               Chat
             </span>
           </span>
           {isAdmin && (
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-600/20 text-white border border-red-500/40">
+            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 dark:text-indigo-300">
               Admin
             </span>
           )}
@@ -66,7 +66,7 @@ export function AppLogo({
             className={cn(s.tag, 'mt-1 tracking-wide truncate', !isSidebar && 'text-muted-foreground')}
             style={isSidebar ? { color: 'var(--sidebar-foreground)' } : undefined}
           >
-            {isAdmin ? 'Platform Yönetimi' : 'Canlı Destek Platformu'}
+            {isAdmin ? 'Operasyon Merkezi' : 'Canlı Destek Platformu'}
           </p>
         )}
       </div>
