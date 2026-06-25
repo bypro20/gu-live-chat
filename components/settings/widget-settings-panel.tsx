@@ -3,8 +3,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
 import { WidgetLivePreview } from '@/components/widget/widget-live-preview'
-import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import type { SettingsMessages } from '@/lib/settings-i18n'
+import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { PlatformInstallPanel } from '@/components/settings/platform-install-panel'
 
 export type WidgetConfigState = {
   primaryColor: string
@@ -96,9 +97,10 @@ export function WidgetSettingsPanel({
 }: WidgetSettingsPanelProps) {
   const i18n = useSettingsI18n()
   const { widget: w, common: c, locale } = i18n
-  const quickLabels: [string, string, string] = locale === 'en'
-    ? ['💬 Chat', '💰 Pricing', '🛟 Support']
-    : ['💬 Sohbet', '💰 Fiyat', '🛟 Destek']
+  const quickLabels: [string, string, string] =
+    locale === 'en'
+      ? ['💬 Chat', '💰 Pricing', '🛟 Support']
+      : ['💬 Sohbet', '💰 Fiyat', '🛟 Destek']
   const defaultConfig = useMemo(() => getDefaultConfig(w), [w])
   const [config, setConfig] = useState<WidgetConfigState>(defaultConfig)
   const [saved, setSaved] = useState(false)
@@ -314,6 +316,15 @@ export function WidgetSettingsPanel({
               <pre className="text-sm text-green-400 whitespace-pre">{installSnippet}</pre>
             </div>
           </div>
+        </div>
+      )}
+
+      {showInstallSnippet && (
+        <div className="surface p-5 sm:p-6">
+          <PlatformInstallPanel
+            websiteId={website.websiteId}
+            locale={locale === 'en' ? 'en' : 'tr'}
+          />
         </div>
       )}
 

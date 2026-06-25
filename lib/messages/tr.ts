@@ -2,6 +2,7 @@ export const tr = {
   nav: {
     products: 'Ürünler',
     features: 'Özellikler',
+    platforms: 'Platformlar',
     pricing: 'Fiyatlandırma',
     blog: 'Blog',
     mobile: 'Mobil',
@@ -49,6 +50,7 @@ export type MessageTree = {
   nav: {
     products: string
     features: string
+    platforms: string
     pricing: string
     blog: string
     mobile: string

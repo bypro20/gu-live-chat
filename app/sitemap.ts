@@ -19,6 +19,7 @@ const STATIC_ROUTES: Array<{
   { path: '/features', priority: 0.88, changeFrequency: 'monthly' },
   { path: '/ai', priority: 0.85, changeFrequency: 'monthly' },
   { path: '/integrations', priority: 0.85, changeFrequency: 'monthly' },
+  { path: '/platformlar', priority: 0.88, changeFrequency: 'monthly' },
   { path: '/demo', priority: 0.84, changeFrequency: 'monthly' },
   { path: '/mobil-indir', priority: 0.82, changeFrequency: 'monthly' },
   { path: '/apps', priority: 0.78, changeFrequency: 'monthly' },

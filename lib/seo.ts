@@ -172,6 +172,21 @@ export const PAGE_SEO = {
     ],
     keywordFirst: true,
   },
+  platformlar: {
+    title: 'Platform Kurulum Rehberleri — E-ticaret & Site',
+    description:
+      `${SITE_NAME} widget kurulumu: Shopify, WordPress, Wix, WooCommerce, IdeaSoft, Ticimax, ikas, T-Soft, Magento ve 30+ platform için adım adım rehber.`,
+    path: '/platformlar',
+    keywords: [
+      'shopify canlı destek kurulumu',
+      'wordpress live chat eklentisi',
+      'wix widget kurulumu',
+      'ticimax canlı destek',
+      'ikas widget entegrasyonu',
+      'e-ticaret canlı sohbet',
+    ],
+    keywordFirst: true,
+  },
   blog: {
     title: 'Blog — Canlı Destek & Müşteri Deneyimi Rehberleri',
     description:

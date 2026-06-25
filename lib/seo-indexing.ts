@@ -16,6 +16,7 @@ export const PRIORITY_URLS = [
   `${SITE_URL}/features`,
   `${SITE_URL}/ai`,
   `${SITE_URL}/integrations`,
+  `${SITE_URL}/platformlar`,
   `${SITE_URL}/demo`,
   `${SITE_URL}/register`,
   `${SITE_URL}/mobil-indir`,

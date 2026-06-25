@@ -222,6 +222,7 @@ export const footerEn = {
         { label: 'WhatsApp Support', href: '/whatsapp-destek' },
         { label: 'Features', href: '/features' },
         { label: 'Integrations', href: '/integrations' },
+        { label: 'Platform Setup Guides', href: '/platformlar' },
         { label: 'Pricing', href: '/pricing' },
         { label: 'Apps & Add-ons', href: '/apps' },
         { label: 'Artificial Intelligence', href: '/ai' },

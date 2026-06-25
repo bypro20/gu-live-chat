@@ -59,6 +59,15 @@ const EN_SEO: Partial<Record<PageSeoKey, PageMeta>> = {
     keywordFirst: true,
     locale: 'en',
   },
+  platformlar: {
+    title: 'Platform Setup Guides — E-commerce & Websites',
+    description:
+      `${SITE_NAME} widget setup for Shopify, WordPress, Wix, WooCommerce, Magento, Squarespace, and 30+ platforms — step-by-step install guides.`,
+    path: '/platformlar',
+    keywords: ['shopify live chat setup', 'wordpress chat widget', 'wix live chat', 'ecommerce support widget'],
+    keywordFirst: true,
+    locale: 'en',
+  },
   blog: {
     title: 'Blog — Live Chat & Customer Experience',
     description:

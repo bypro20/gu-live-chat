@@ -17,6 +17,7 @@ export function MarketingNav() {
   const navLinks = [
     { label: t.nav.products, href: '/urunler' },
     { label: t.nav.features, href: '/features' },
+    { label: t.nav.platforms, href: '/platformlar' },
     { label: t.nav.pricing, href: '/pricing' },
     { label: t.nav.blog, href: '/blog' },
   ]

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { PLATFORM_INSTALL_GUIDES } from '@/lib/platform-install-guides'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useT } from '@/components/marketing/locale-provider'
 
@@ -59,18 +60,17 @@ export function IntegrationsPageContent() {
       ))}
 
       <section className="mb-14">
-        <h2 className="text-xl font-bold mb-1">{p.ecommerceTitle}</h2>
-        <p className="text-sm text-muted-foreground mb-5">{p.ecommerceSubtitle}</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {p.ecommerce.map((item) => (
-            <div key={item.name} className="surface p-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-semibold text-sm">{item.name}</h3>
-                <StatusBadge status={item.status} />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
+        <div className="surface p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="max-w-xl">
+            <h2 className="text-xl font-bold mb-1">{p.ecommerceTitle}</h2>
+            <p className="text-sm text-muted-foreground">{p.ecommerceSubtitle}</p>
+            <p className="text-sm font-medium text-foreground mt-3">
+              {PLATFORM_INSTALL_GUIDES.length}+ Shopify · WordPress · Wix · WooCommerce · IdeaSoft · Ticimax · ikas…
+            </p>
+          </div>
+          <Link href="/platformlar" className="btn-primary shrink-0">
+            {t.nav.platforms} <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 

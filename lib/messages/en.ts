@@ -4,6 +4,7 @@ export const en: MessageTree = {
   nav: {
     products: 'Products',
     features: 'Features',
+    platforms: 'Platforms',
     pricing: 'Pricing',
     blog: 'Blog',
     mobile: 'Mobile',

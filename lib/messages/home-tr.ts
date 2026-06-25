@@ -223,6 +223,7 @@ export const footerTr = {
         { label: 'WhatsApp Destek', href: '/whatsapp-destek' },
         { label: 'Özellikler', href: '/features' },
         { label: 'Entegrasyonlar', href: '/integrations' },
+        { label: 'Platform Kurulumları', href: '/platformlar' },
         { label: 'Fiyatlandırma', href: '/pricing' },
         { label: 'Uygulamalar ve Eklentiler', href: '/apps' },
         { label: 'Yapay Zeka', href: '/ai' },
