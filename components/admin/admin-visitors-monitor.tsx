@@ -14,6 +14,7 @@ import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo, getBrowserLabel, getDeviceLabel } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
+import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
 import { formatVisitorGeoLine } from '@/lib/visitor-session-enrich'
 import {
   Eye, Users, Search, X, Monitor, Smartphone, Tablet,

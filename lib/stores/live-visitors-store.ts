@@ -11,8 +11,8 @@ export interface LiveVisitor {
   city?: string | null
   currentPage: string
   currentTitle?: string
-  landingPage?: string
-  referrer?: string
+  landingPage?: string | null
+  referrer?: string | null
   startedAt?: string
   lastActiveAt?: string
   isLive: boolean
