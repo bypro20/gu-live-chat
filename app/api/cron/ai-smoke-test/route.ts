@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       dbConfig,
     })
 
-    const fallbackMarkers = ['Mesajınızı aldım', 'Kısa süre içinde size dönüş']
+    const fallbackMarkers = ['Mesajınızı aldım', 'Kısa süre içinde size dönüş', 'yardımcı olurum']
     const usedFallback = fallbackMarkers.some((m) => reply.includes(m))
     const llmAvailable = isAiLlmAvailable(dbConfig)
     const ok = geminiProbe.ok && llmAvailable && reply.length > 20 && !usedFallback

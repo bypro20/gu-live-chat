@@ -92,6 +92,8 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
       data: {
         name: MARKETING_NAME,
         domain: MARKETING_DOMAIN,
+        welcomeMessage:
+          'Merhaba! 👋 Gu Live Chat hakkında fiyat, kurulum ve özelliklerle ilgili sorularınızı yanıtlayabilirim.',
         showPreChatForm: true,
         requireName: true,
         requireEmail: true,
@@ -149,7 +151,8 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
         domain: MARKETING_DOMAIN,
         websiteId: generateWebsiteId(),
         ownerId: ownerUserId,
-        welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
+        welcomeMessage:
+          'Merhaba! 👋 Gu Live Chat hakkında fiyat, kurulum ve özelliklerle ilgili sorularınızı yanıtlayabilirim.',
         offlineMessage: 'Şu an çevrimdışıyız. Mesaj bırakın, size dönelim.',
         showPreChatForm: true,
         requireName: true,

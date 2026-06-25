@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { PlanType } from '@/lib/constants'
 import { DEFAULT_MODEL } from './models'
 import { clampModelToPlan } from './plan-models'
+import { selectRelevantKnowledge } from './knowledge'
 import {
   buildGeminiFallbackRuntime,
   canUsePlatformFallback,
@@ -355,6 +356,16 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
   }
 
   if (knowledge && knowledge.length > 0) {
+    const relevant = selectRelevantKnowledge(lastUser, knowledge, 3)
+    if (relevant.length > 0) {
+      const top = relevant[0]
+      const snippet = truncate(top.content, 480)
+      if (relevant.length === 1) {
+        return snippet
+      }
+      return `${snippet}\n\nİsterseniz ${relevant.slice(1, 3).map((k) => k.title.toLowerCase()).join(' veya ')} hakkında da bilgi verebilirim.`
+    }
+
     const queryTokens = new Set(tokenize(lastUser))
     if (queryTokens.size > 0) {
       let best: { entry: KnowledgeEntry; score: number } | null = null
@@ -364,13 +375,13 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
         for (const t of entryTokens) if (queryTokens.has(t)) score++
         if (!best || score > best.score) best = { entry, score }
       }
-      if (best && best.score >= 2) {
-        return `${best.entry.title} hakkında: ${truncate(best.entry.content, 450)}\n\nBaşka sorunuz varsa yazabilirsiniz.`
+      if (best && best.score >= 1) {
+        return truncate(best.entry.content, 480)
       }
     }
   }
 
-  return `Mesajınızı aldım. Kısa süre içinde size dönüş yapacağız — bu arada başka bir konuda yardımcı olmamı ister misiniz?`
+  return `${siteName} hakkında fiyat, kurulum, WhatsApp entegrasyonu veya paketlerle ilgili sorunuzu yazarsanız yardımcı olurum.`
 }
 
 // ─── Provider calls ─────────────────────────────────────────────────

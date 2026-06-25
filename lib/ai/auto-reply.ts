@@ -9,9 +9,26 @@ import { websiteHasAiAssistant } from '../plan-features'
 import { isAdminOwnedWebsite } from '../admin-website'
 import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
+import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
+import { isPlatformMarketingWebsiteId } from '../marketing-website'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 20
+let marketingAiReadyPromise: Promise<void> | null = null
+
+async function ensureMarketingAiBeforeReply(
+  websiteDbId: string,
+  websitePublicId: string
+): Promise<void> {
+  if (!(await isPlatformMarketingWebsiteId(websitePublicId))) return
+  if (!marketingAiReadyPromise) {
+    marketingAiReadyPromise = ensureMarketingSiteAiReady(websiteDbId).catch((e) => {
+      marketingAiReadyPromise = null
+      console.error('[AI auto-reply] marketing AI bootstrap failed:', e)
+    })
+  }
+  await marketingAiReadyPromise
+}
 
 interface AutoReplyParams {
   websiteDbId: string
@@ -87,6 +104,8 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       (await websiteHasAiAssistant(params.websiteDbId, conversation.website.plan))
     if (!hasAi) return
 
+    await ensureMarketingAiBeforeReply(params.websiteDbId, params.websitePublicId)
+
     if (conversation.chatbotId && !conversation.chatbotCompleted && !conversation.chatbotHandedToAi) {
       return
     }
@@ -115,6 +134,8 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     const relevantKnowledge = selectRelevantKnowledge(last.content, knowledge, 12)
     const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge
     const siteName = (conversation.website.name || 'Destek').trim()
+    const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
+    const botDisplayName = isMarketing ? 'Gu Live Chat Asistanı' : siteName
 
     const dbConfig = {
       provider: aiConfig.provider,
@@ -128,7 +149,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (!llmReady) {
       const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
       if (faqHit && faqHit.confidence >= 0.5) {
-        await sendBotReply(params, faqHit.answer, siteName)
+        await sendBotReply(params, faqHit.answer, botDisplayName)
         return
       }
     }
@@ -156,7 +177,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     const content = reply?.trim()
     if (!content) return
 
-    await sendBotReply(params, content, siteName)
+    await sendBotReply(params, content, botDisplayName)
   } catch {
     console.error('[AI auto-reply] failed for conversation', params.conversationId)
   }
