@@ -23,7 +23,8 @@
     "db:seed-admin": "npx tsx prisma/seed-admin.ts",
     "myqr:ensure": "npx tsx scripts/ensure-myqr-site.ts",
     "ai:push-env": "node scripts/push-ai-env.mjs",
-    "ai:bootstrap-keys": "node scripts/bootstrap-ai-keys.mjs"
+    "ai:bootstrap-keys": "node scripts/bootstrap-ai-keys.mjs",
+    "deploy:prod": "node scripts/trigger-vercel-deploy.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

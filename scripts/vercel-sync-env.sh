@@ -64,7 +64,7 @@ done < "$ENV_FILE"
 echo ""
 read -r -p "Production deploy başlatılsın mı? [y/N] " deploy
 if [[ "${deploy,,}" == "y" ]]; then
-  cd "$ROOT" && npx vercel --prod
+  cd "$ROOT" && npm run deploy:prod
 else
-  echo "Bitti. Deploy: cd $ROOT && npx vercel --prod"
+  echo "Bitti. Deploy: npm run deploy:prod"
 fi

@@ -9,18 +9,19 @@
  */
 import { readFileSync, existsSync } from 'fs'
 import { homedir } from 'os'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { execSync } from 'child_process'
+import { fileURLToPath } from 'url'
+import {
+  loadVercelToken,
+  triggerGitProductionDeploy,
+  waitForDeployment,
+  VERCEL_TEAM_ID as TEAM,
+  VERCEL_PROJECT_ID as PROJECT,
+} from './lib/vercel-git-deploy.mjs'
 
-const TEAM = process.env.VERCEL_TEAM_ID || 'team_5gbzCiGoSSKTC6ONZjWLZigV'
-const PROJECT = process.env.VERCEL_PROJECT_ID || 'prj_3GcTWiE87xsGrdbFMNkm0FMDvuA4'
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const VERCEL_ENV_FILE = process.env.VERCEL_ENV_FILE || '/tmp/gu-vercel.env'
-
-function loadVercelToken() {
-  if (process.env.VERCEL_TOKEN?.trim()) return process.env.VERCEL_TOKEN.trim()
-  const p = join(homedir(), '.local/share/com.vercel.cli/auth.json')
-  return JSON.parse(readFileSync(p, 'utf8')).token
-}
 
 function loadEnvFile(path) {
   const out = {}
@@ -80,7 +81,7 @@ async function main() {
   if (!existsSync(VERCEL_ENV_FILE)) {
     execSync(`npx vercel env pull ${VERCEL_ENV_FILE} --environment=production --yes`, {
       stdio: 'inherit',
-      cwd: join(homedir(), 'Projects/gu-live-chat'),
+      cwd: ROOT,
     })
   }
   const pulled = loadEnvFile(VERCEL_ENV_FILE)
@@ -101,16 +102,15 @@ async function main() {
   await upsertEnv(token, 'WIDGET_TOKEN_SECRET', signingSecret)
   await upsertEnv(token, 'SOCKET_INTERNAL_SECRET', internalSecret)
 
-  console.log('\n3) Vercel production deploy...')
-  execSync('npx vercel deploy --prod --yes', {
-    stdio: 'inherit',
-    cwd: join(homedir(), 'Projects/gu-live-chat'),
-  })
+  console.log('\n3) Vercel production deploy (GitHub master)...')
+  const dep = await triggerGitProductionDeploy({ token })
+  await waitForDeployment(token, dep.id)
+  console.log('  ✓ deploy ready:', dep.url || dep.id)
 
   console.log('\n4) Railway env + redeploy...')
   execSync('node scripts/set-railway-socket-env.mjs', {
     stdio: 'inherit',
-    cwd: join(homedir(), 'Projects/gu-live-chat'),
+    cwd: ROOT,
     env: {
       ...process.env,
       AUTH_SECRET: signingSecret,

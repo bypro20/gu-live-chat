@@ -56,4 +56,4 @@ for (const [key, value] of Object.entries(VARS)) {
 }
 
 console.log(`\n${ok}/${Object.keys(VARS).length} değişken Production'a eklendi.`)
-console.log('Sonraki adım: npx vercel --prod')
+console.log('Sonraki adım: npm run deploy:prod')

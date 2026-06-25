@@ -52,3 +52,13 @@ next-env.d.ts
 .railway/
 mobile-admin/node_modules/
 /tools/android-build/
+/pion-ai/
+/components/pool/
+/lib/pool/
+/lib/pool-engine/
+/lib/pool-socket.ts
+/lib/hooks/use-pool-socket.ts
+/mobile-pool/
+/public/pool-manifest.json
+/tools/node22/
+*.mp4

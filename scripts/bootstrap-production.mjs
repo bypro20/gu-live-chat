@@ -4,11 +4,23 @@
  *
  *   VERCEL_TOKEN=... CRON_SECRET=... node scripts/bootstrap-production.mjs
  */
+import {
+  loadVercelToken,
+  triggerGitProductionDeploy,
+  VERCEL_TEAM_ID as team,
+  VERCEL_PROJECT_ID as project,
+} from './lib/vercel-git-deploy.mjs'
+
 const BASE = process.env.BASE_URL || 'https://gulivechat.com'
 const cronSecret = process.env.CRON_SECRET
-const vercelToken = process.env.VERCEL_TOKEN
-const team = process.env.VERCEL_TEAM_ID || 'team_5gbzCiGoSSKTC6ONZjWLZigV'
-const project = process.env.VERCEL_PROJECT_ID || 'prj_3GcTWiE87xsGrdbFMNkm0FMDvuA4'
+let vercelToken = process.env.VERCEL_TOKEN
+if (!vercelToken) {
+  try {
+    vercelToken = loadVercelToken()
+  } catch {
+    vercelToken = null
+  }
+}
 
 if (!cronSecret) {
   console.error('CRON_SECRET gerekli')
@@ -89,16 +101,8 @@ async function main() {
     await upsertEnv('EMAIL_FROM', process.env.EMAIL_FROM || 'Gu Live Chat <noreply@gulivechat.com>')
   }
 
-  console.log('3) redeploy...')
-  const dep = await vercelApi(`/v13/deployments?teamId=${team}`, {
-    method: 'POST',
-    body: JSON.stringify({
-      name: 'gu-live-chat',
-      project,
-      target: 'production',
-      gitSource: { type: 'github', repoId: 1260043940, ref: 'master' },
-    }),
-  })
+  console.log('3) redeploy (GitHub master)...')
+  const dep = await triggerGitProductionDeploy({ token: vercelToken })
   console.log('   deploy:', dep.url || dep.id)
   console.log('Bootstrap tamam.')
 }

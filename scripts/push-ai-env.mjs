@@ -74,5 +74,5 @@ for (const key of AI_KEYS) {
 
 console.log(`\n${pushed} anahtar Vercel'e gönderildi.`)
 if (pushed > 0) {
-  console.log('Son adım: npx vercel --prod')
+  console.log('Son adım: npm run deploy:prod')
 }

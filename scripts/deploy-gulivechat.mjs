@@ -3,13 +3,14 @@
  * gulivechat.com — Vercel env, domain, deploy, seed, SEO ping
  * Token: VERCEL_TOKEN env veya ~/.local/share/com.vercel.cli/auth.json
  */
-import { readFileSync } from 'fs'
-import { homedir } from 'os'
-import { join } from 'path'
-import { execSync } from 'child_process'
+import {
+  loadVercelToken,
+  triggerGitProductionDeploy,
+  waitForDeployment,
+  VERCEL_TEAM_ID as TEAM,
+  VERCEL_PROJECT_ID as PROJECT,
+} from './lib/vercel-git-deploy.mjs'
 
-const TEAM = process.env.VERCEL_TEAM_ID || 'team_5gbzCiGoSSKTC6ONZjWLZigV'
-const PROJECT = process.env.VERCEL_PROJECT_ID || 'prj_3GcTWiE87xsGrdbFMNkm0FMDvuA4'
 const DOMAIN = 'gulivechat.com'
 const BASE = 'https://www.gulivechat.com'
 const SOCKET = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://gu-live-chat-socket-production.up.railway.app'
@@ -18,18 +19,7 @@ if (!CRON) {
   throw new Error('CRON_SECRET ortam değişkeni gerekli (deploy iptal)')
 }
 const MARKETING_ID = process.env.NEXT_PUBLIC_MARKETING_WEBSITE_ID || 'HA0wSGsbImQ39YDJ4UI5UpY8'
-
-function loadToken() {
-  if (process.env.VERCEL_TOKEN) return process.env.VERCEL_TOKEN
-  try {
-    const auth = JSON.parse(readFileSync(join(homedir(), '.local/share/com.vercel.cli/auth.json'), 'utf8'))
-    return auth.token
-  } catch {
-    throw new Error('VERCEL_TOKEN bulunamadı')
-  }
-}
-
-const TOKEN = loadToken()
+const TOKEN = loadVercelToken()
 
 async function vercelApi(path, opts = {}) {
   const res = await fetch(`https://api.vercel.com${path}`, {
@@ -113,12 +103,11 @@ async function main() {
   console.log('\n2) Custom domain...')
   await ensureDomain()
 
-  console.log('\n3) Production deploy (local)...')
-  execSync('npx vercel deploy --prod --yes --token ' + TOKEN, {
-    stdio: 'inherit',
-    cwd: join(homedir(), 'gu-live-chat'),
-    env: { ...process.env, VERCEL_ORG_ID: TEAM, VERCEL_PROJECT_ID: PROJECT },
-  })
+  console.log('\n3) Production deploy (GitHub master)...')
+  const dep = await triggerGitProductionDeploy({ token: TOKEN })
+  console.log('  started:', dep.url || dep.id)
+  await waitForDeployment(TOKEN, dep.id)
+  console.log('  ✓ deploy ready')
 
   console.log('\n4) seed-admin (marketing site + DB)...')
   const seedRes = await fetch(`${BASE}/api/cron/seed-admin`, {
