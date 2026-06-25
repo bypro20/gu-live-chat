@@ -35,7 +35,7 @@ jobs:
           NEXTAUTH_URL: https://www.gulivechat.com
           NEXT_PUBLIC_APP_URL: https://www.gulivechat.com
 
-  deploy:
+  production:
     needs: verify
     runs-on: ubuntu-latest
     steps:
@@ -46,31 +46,18 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Deploy to Vercel production
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
+      # secrets.* if koşulunda kullanılamaz — shell ile kontrol edilir
+      - name: Vercel production deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: node scripts/trigger-vercel-deploy.mjs
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            node scripts/trigger-vercel-deploy.mjs
+          else
+            echo "::notice::VERCEL_TOKEN yok — Vercel Git push deploy bekleniyor."
+          fi
 
-      - name: Wait for production health
-        if: ${{ secrets.VERCEL_TOKEN == '' }}
-        env:
-          PRODUCTION_URL: https://www.gulivechat.com
-          DEPLOY_HEALTH_ATTEMPTS: '42'
-        run: node scripts/post-deploy.mjs
-
-  post-deploy:
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: ${{ secrets.CRON_SECRET != '' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Schema sync + health
+      - name: Production health + schema sync
         env:
           PRODUCTION_URL: https://www.gulivechat.com
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
