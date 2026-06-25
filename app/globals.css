@@ -522,6 +522,9 @@ body {
     background: var(--admin-bg);
     color: var(--admin-text);
     color-scheme: light;
+    --primary: var(--admin-accent);
+    --primary-foreground: var(--admin-accent-fg);
+    --ring: var(--admin-accent);
   }
 
   .admin-shell .app-main .inbox-shell .text-foreground {
@@ -1323,8 +1326,8 @@ body {
   .admin-form-input:focus,
   .admin-form-select:focus,
   .admin-form-textarea:focus {
-    border-color: rgba(239, 68, 68, 0.45);
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+    border-color: var(--admin-accent-border);
+    box-shadow: 0 0 0 2px var(--admin-accent-ring);
   }
 
   .admin-form-input::placeholder,
@@ -1348,8 +1351,10 @@ body {
     --border: #e5e5e5;
     --border-strong: #d4d4d4;
     --input: #ffffff;
-    --ring: #dc2626;
-    --primary-light: rgba(220, 38, 38, 0.08);
+    --primary: var(--admin-accent);
+    --primary-foreground: var(--admin-accent-fg);
+    --ring: var(--admin-accent);
+    --primary-light: var(--admin-accent-soft);
     background: var(--admin-bg);
     color: var(--admin-text);
   }
@@ -1495,8 +1500,8 @@ body {
   }
 
   .admin-split-list-item--active {
-    background: rgba(239, 68, 68, 0.1);
-    box-shadow: inset 3px 0 0 #ef4444;
+    background: var(--admin-accent-soft);
+    box-shadow: inset 3px 0 0 var(--admin-accent);
   }
 
   .admin-stat-card {
@@ -1587,14 +1592,22 @@ body {
 
   .admin-shell-v2 .admin-screen-watch-btn,
   .admin-overlay-host .admin-screen-watch-btn {
-    background: linear-gradient(to right, #dc2626, #ef4444) !important;
-    color: #ffffff !important;
-    border-color: rgba(239, 68, 68, 0.35) !important;
+    background: linear-gradient(
+      to right,
+      var(--admin-accent-hover, var(--admin-accent)),
+      var(--admin-accent)
+    ) !important;
+    color: var(--admin-accent-fg) !important;
+    border-color: var(--admin-accent-border) !important;
   }
 
   .admin-shell-v2 .admin-screen-watch-btn:hover,
   .admin-overlay-host .admin-screen-watch-btn:hover {
-    background: linear-gradient(to right, #ef4444, #f87171) !important;
+    background: linear-gradient(
+      to right,
+      var(--admin-accent),
+      color-mix(in srgb, var(--admin-accent) 82%, #fff 18%)
+    ) !important;
   }
 
   .admin-shell-v2 .admin-sidebar .admin-sidebar-title,

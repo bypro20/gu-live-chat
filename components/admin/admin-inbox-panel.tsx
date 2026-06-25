@@ -124,7 +124,7 @@ export function AdminInboxPanel() {
   }, [loadSetup])
 
   const websiteId = marketingSite?.websiteId
-  const inboxPrimary = '#ef4444'
+  const inboxPrimary = resolveInboxPrimary(marketingSite?.primaryColor)
   const { conversations, isLoading, error, mutate: mutateConversations } =
     useAdminInboxConversations(!!marketingSite)
   const { messages, sendMessage, sending, isLoading: messagesLoading, mutate: mutateMessages } =
