@@ -17,7 +17,7 @@ export const ADDON_FEATURE_MAP: Record<string, PlanFeature> = {
   'linkedin-channel': 'multiChannel',
   'sms-channel': 'multiChannel',
   'voice-ai-agent': 'aiAssistant',
-  'ai-rag-pro': 'knowledgeBase',
+  'ai-rag-pro': 'aiRag',
   'ai-sohbet-asistani': 'aiAssistant',
   'ai-copilot': 'aiAssistant',
   'live-translate-pro': 'autoTranslate',

@@ -166,7 +166,7 @@ export function getPricingFeatureGroups(
       rows: [
         { label: en ? 'Monthly price' : 'Aylık fiyat', free: prices.free, starter: prices.starter, pro: prices.pro, business: prices.business },
         { label: en ? 'Included agents' : 'Dahil temsilci', free: '2', starter: '5', pro: '25', business: unlimited },
-        { label: en ? 'Monthly chat limit' : 'Aylık sohbet limiti', free: '100', starter: '1.000', pro: unlimited, business: unlimited },
+        { label: en ? 'Monthly chat limit' : 'Aylık sohbet limiti', free: '300', starter: '1.000', pro: unlimited, business: unlimited },
       ],
     },
     {
@@ -186,19 +186,26 @@ export function getPricingFeatureGroups(
       rows: [
         { label: en ? 'Website widget' : "Web sitesi widget'ı", free: true, starter: true, pro: true, business: true },
         { label: 'Email', free: false, starter: true, pro: true, business: true },
-        { label: 'WhatsApp Business', free: false, starter: false, pro: true, business: true },
-        { label: 'Messenger', free: false, starter: false, pro: true, business: true },
-        { label: 'Instagram DM', free: false, starter: false, pro: true, business: true },
-        { label: 'Telegram', free: false, starter: false, pro: true, business: true },
+        { label: 'WhatsApp Business', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: 'Twilio SMS', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: 'LinkedIn Messaging', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: 'Messenger', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: 'Instagram DM', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: 'Telegram', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
       ],
     },
     {
       group: en ? 'Artificial Intelligence' : 'Yapay Zeka',
       rows: [
-        { label: en ? 'AI auto-reply' : 'AI otomatik yanıt', free: false, starter: false, pro: true, business: true },
-        { label: en ? 'AI agent assistant' : 'AI temsilci asistanı', free: false, starter: false, pro: true, business: true },
-        { label: en ? '50+ language auto-translate' : '50+ dil otomatik çeviri', free: false, starter: false, pro: true, business: true },
-        { label: en ? 'Knowledge base AI training' : 'Bilgi bankası AI eğitimi', free: false, starter: true, pro: true, business: true },
+        { label: en ? 'AI auto-reply' : 'AI otomatik yanıt', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: en ? 'AI Copilot (inbox)' : 'AI Copilot (inbox)', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: en ? 'Voice AI agent' : 'Sesli AI asistan', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: en ? 'Knowledge base (articles)' : 'Bilgi bankası (makale)', free: false, starter: true, pro: true, business: true },
+        { label: en ? 'AI knowledge training (RAG)' : 'AI bilgi eğitimi (RAG)', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: en ? 'Web search & multimodal AI' : 'Web araması & görsel AI', free: false, starter: false, pro: true, business: true },
+        { label: en ? 'AI analytics & sentiment' : 'AI analitik & duygu analizi', free: false, starter: false, pro: true, business: true },
+        { label: en ? '50+ language auto-translate' : '50+ dil otomatik çeviri', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
+        { label: en ? 'Chatbot builder' : 'Chatbot oluşturucu', free: false, starter: en ? 'Add-on' : 'Eklenti', pro: true, business: true },
       ],
     },
     {

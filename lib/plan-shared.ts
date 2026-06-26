@@ -15,6 +15,7 @@ export const MIN_PLAN_FOR_FEATURE: Partial<Record<PlanFeature, PlanType>> = {
   proactiveMessages: 'STARTER',
   overlayAI: 'PRO',
   aiAssistant: 'PRO',
+  aiRag: 'PRO',
   campaigns: 'PRO',
   multiChannel: 'PRO',
   workflows: 'PRO',
@@ -30,6 +31,7 @@ export const MIN_PLAN_FOR_FEATURE: Partial<Record<PlanFeature, PlanType>> = {
 export const FEATURE_ADDON_SLUG: Partial<Record<PlanFeature, string>> = {
   multiChannel: 'whatsapp-channel',
   aiAssistant: 'ai-sohbet-asistani',
+  aiRag: 'ai-rag-pro',
   autoTranslate: 'live-translate-pro',
   chatbot: 'ai-chatbot',
   knowledgeBase: 'knowledge-base',

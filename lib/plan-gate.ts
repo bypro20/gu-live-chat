@@ -25,6 +25,7 @@ const FEATURE_LABELS: Partial<Record<PlanFeature, string>> = {
   apiAccess: 'API erişimi',
   visitorTracking: 'Ziyaretçi takibi',
   aiAssistant: 'AI Sohbet Asistanı',
+  aiRag: 'AI Bilgi Eğitimi (RAG)',
   overlayAI: 'Ekran izleme',
   multiChannel: 'Çoklu kanal',
   autoTranslate: 'Otomatik çeviri',

@@ -4,6 +4,7 @@ import { resolveWebsite } from '@/lib/website-resolve'
 import { prisma } from '@/lib/db'
 import { extractPdfText } from '@/lib/ai/pdf-extract'
 import { createKnowledgeSource } from '@/lib/ai/rag/ingest'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 /** POST /api/knowledge/rag/upload — PDF dosyası ile RAG eğitimi */
 export async function POST(req: NextRequest) {
@@ -33,6 +34,9 @@ export async function POST(req: NextRequest) {
       where: { websiteId: website.id, userId: session.user.id },
     })
     if (!member) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'aiRag')
+    if (planDenied) return planDenied
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const text = extractPdfText(buffer)

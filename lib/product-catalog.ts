@@ -30,7 +30,7 @@ export const SUBSCRIPTION_PRODUCTS: SubscriptionProduct[] = [
     description: 'Canlı destek deneyimi için temel dijital abonelik paketi.',
     monthlyPrice: 0,
     yearlyMonthlyPrice: 0,
-    features: ['2 temsilci', '300 sohbet/ay', 'Canlı sohbet widget', 'E-posta bildirimleri'],
+    features: ['2 temsilci', '300 sohbet/ay', 'Canlı sohbet widget', 'E-posta bildirimleri', 'Temel analitik'],
     detailHref: '/canli-destek',
   },
   {
@@ -39,7 +39,13 @@ export const SUBSCRIPTION_PRODUCTS: SubscriptionProduct[] = [
     description: 'Büyüyen işletmeler için aylık dijital abonelik — ziyaretçi takibi ve bilgi bankası.',
     monthlyPrice: 490,
     yearlyMonthlyPrice: 392,
-    features: ['5 temsilci', '1.000 sohbet/ay', 'Ziyaretçi takibi', 'Bilgi bankası & bilet', 'Hazır cevaplar'],
+    features: [
+      '5 temsilci',
+      '1.000 sohbet/ay',
+      'Ziyaretçi takibi & bilgi bankası',
+      'Bilet sistemi & hazır cevaplar',
+      'AI/RAG/kanal eklentileri ayrı satın alınabilir',
+    ],
     detailHref: '/canli-destek',
   },
   {
@@ -50,7 +56,13 @@ export const SUBSCRIPTION_PRODUCTS: SubscriptionProduct[] = [
     yearlyMonthlyPrice: 792,
     badge: 'En çok tercih edilen',
     highlighted: true,
-    features: ['25 temsilci', 'Sınırsız sohbet', 'AI + RAG + Copilot', 'WhatsApp & SMS & LinkedIn', 'Sesli AI & analitik'],
+    features: [
+      '25 temsilci',
+      'Sınırsız sohbet',
+      'AI + RAG + Copilot + Sesli AI',
+      'WhatsApp, SMS, LinkedIn & tüm kanallar',
+      'AI analitik & akıllı yönlendirme',
+    ],
     detailHref: '/chatbot',
   },
   {
@@ -59,7 +71,13 @@ export const SUBSCRIPTION_PRODUCTS: SubscriptionProduct[] = [
     description: 'White-label, SLA ve özel entegrasyon içeren kurumsal dijital abonelik.',
     monthlyPrice: 2490,
     yearlyMonthlyPrice: 1992,
-    features: ['Sınırsız temsilci', 'White-label', 'SLA %99.9', '7/24 öncelikli destek', 'Özel entegrasyon'],
+    features: [
+      'Sınırsız temsilci & sohbet',
+      'Profesyonel AI platformu dahil',
+      'White-label & SLA %99.9',
+      '7/24 öncelikli destek',
+      'Özel entegrasyon',
+    ],
     detailHref: '/contact?konu=kurumsal',
   },
 ]

@@ -45,6 +45,7 @@ export default function KnowledgeBasePage() {
   const { knowledge: k, common: c } = i18n
   const statusLabels = knowledgeStatusLabels(i18n)
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('knowledgeBase')
+  const { allowed: ragAllowed, isLoading: ragLoading } = usePlanFeature('aiRag')
   const { website } = useWebsite()
   const { activeWebsite } = useActiveWebsite()
   const router = useRouter()
@@ -118,9 +119,32 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
 
-      {activeWebsite?.websiteId && (
+      {activeWebsite?.websiteId && !ragLoading && ragAllowed && (
         <div className="mb-8">
           <KnowledgeRagPanel websitePublicId={activeWebsite.websiteId} />
+        </div>
+      )}
+      {activeWebsite?.websiteId && !ragLoading && !ragAllowed && (
+        <div className="mb-8 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5">
+          <h3 className="text-sm font-semibold text-foreground">AI Bilgi Eğitimi (RAG)</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            PDF, URL ve metinlerden semantik bilgi bankası eğitimi Profesyonel pakette dahildir. Başlangıç paketinde
+            eklenti mağazasından açılabilir.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/settings/plans?plan=PRO"
+              className="inline-flex items-center rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+            >
+              Profesyonel pakete geç
+            </Link>
+            <Link
+              href="/settings/addons"
+              className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+            >
+              RAG eklentisini al
+            </Link>
+          </div>
         </div>
       )}
 

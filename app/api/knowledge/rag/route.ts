@@ -10,6 +10,7 @@ import {
   listKnowledgeSources,
 } from '@/lib/ai/rag/db'
 import { createKnowledgeSource, indexKnowledgeSource, reindexAllArticles } from '@/lib/ai/rag/ingest'
+import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 
 async function assertMember(websitePublicId: string, userId: string) {
   const website = await resolveWebsite(websitePublicId)
@@ -34,6 +35,9 @@ export async function GET(req: NextRequest) {
   const website = await assertMember(websiteId, session.user.id)
   if (!website) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'aiRag')
+  if (planDenied) return planDenied
+
   const [sources, chunkCount, articleChunks] = await Promise.all([
     listKnowledgeSources(website.id),
     countKnowledgeChunks(website.id),
@@ -57,6 +61,9 @@ export async function POST(req: NextRequest) {
 
     const website = await assertMember(websiteId, session.user.id)
     if (!website) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'aiRag')
+    if (planDenied) return planDenied
 
     if (body.action === 'reindex-articles') {
       const result = await reindexAllArticles(website.id)
@@ -114,6 +121,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
   }
 
+  const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'aiRag')
+  if (planDenied) return planDenied
+
   await deleteKnowledgeSourceRow(sourceId)
   return NextResponse.json({ success: true })
 }
@@ -135,6 +145,9 @@ export async function PATCH(req: NextRequest) {
     const pub = await prisma.website.findUnique({ where: { id: source.websiteId }, select: { websiteId: true } })
     const website = pub ? await assertMember(pub.websiteId, session.user.id) : null
     if (!website) return NextResponse.json({ error: 'Erişim reddedildi' }, { status: 403 })
+
+    const planDenied = await planFeatureDeniedAsync(website.id, website.plan, 'aiRag')
+    if (planDenied) return planDenied
 
     const result = await indexKnowledgeSource(sourceId)
     return NextResponse.json({ success: true, ...result })
