@@ -5,7 +5,7 @@ import { findWebsiteForWidget } from '@/lib/website-widget-safe'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
 import { loadWebsiteAgentFields } from '@/lib/website-agent-fields'
-import { generateAiReplyStream } from '@/lib/ai/provider'
+import { generateAiReply } from '@/lib/ai/provider'
 import { toChatMessages } from '@/lib/ai/knowledge'
 import { buildMarketingSystemPrompt, getMarketingKnowledgeCache } from '@/lib/marketing-ai-setup'
 import { MARKETING_WIDGET_DISPLAY_NAME } from '@/lib/marketing-demo-agents'
@@ -133,42 +133,53 @@ export async function POST(req: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const enc = new TextEncoder()
-      let full = ''
       try {
         if (messages.length === 0) {
           controller.close()
           return
         }
 
-        for await (const chunk of generateAiReplyStream({
-          siteName: identity.replyName,
-          messages,
-          knowledge,
-          systemPrompt: buildMarketingSystemPrompt(agentFields.agentDisplayName),
-          webSearchEnabled: false,
-          smartRoutingEnabled: false,
-          dbConfig: {
-            provider: 'GEMINI',
-            model: PLATFORM_AI_MODEL,
-            apiKey: '',
-            temperature: 0.85,
-          },
-          plan: 'BUSINESS',
-          websiteId: website.id,
-          conversationId: conversation.id,
-          maxTokens: MARKETING_MAX_TOKENS,
-          brandName: MARKETING_WIDGET_DISPLAY_NAME,
-        })) {
-          if (!chunk) continue
-          full += chunk
-          controller.enqueue(enc.encode(sse({ delta: chunk })))
-        }
+        // Free-tier Gemini'de canlı SSE parça parça kesilebildiği için tam
+        // yanıtı tek seferde (model zinciri + 429 yedeği ile) alıp istemciye
+        // parça parça yazdırıyoruz → cevap asla yarım kalmaz, typewriter hissi korunur.
+        const content = (
+          await generateAiReply({
+            siteName: identity.replyName,
+            messages,
+            knowledge,
+            systemPrompt: buildMarketingSystemPrompt(agentFields.agentDisplayName),
+            webSearchEnabled: false,
+            smartRoutingEnabled: false,
+            dbConfig: {
+              provider: 'GEMINI',
+              model: PLATFORM_AI_MODEL,
+              apiKey: '',
+              temperature: 0.85,
+            },
+            plan: 'BUSINESS',
+            websiteId: website.id,
+            conversationId: conversation.id,
+            maxTokens: MARKETING_MAX_TOKENS,
+            brandName: MARKETING_WIDGET_DISPLAY_NAME,
+          })
+        ).trim()
 
-        const content = full.trim()
         if (!content) {
           controller.close()
           return
         }
+
+        // Kelime kelime gönder (typewriter etkisi için küçük gruplar).
+        let buf = ''
+        for (const token of content.split(/(\s+)/)) {
+          buf += token
+          if (buf.length >= 16) {
+            controller.enqueue(enc.encode(sse({ delta: buf })))
+            buf = ''
+            await new Promise((r) => setTimeout(r, 35))
+          }
+        }
+        if (buf) controller.enqueue(enc.encode(sse({ delta: buf })))
 
         const botMessage = await prisma.message.create({
           data: {
