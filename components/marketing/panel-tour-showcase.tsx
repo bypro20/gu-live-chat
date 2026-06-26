@@ -243,9 +243,17 @@ export function PanelTourShowcase({ className = '' }: { className?: string }) {
   const active = items[step]
   const hint = HINTS[active.href]
   const activeRef = useRef<HTMLButtonElement>(null)
+  const asideRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    const el = activeRef.current
+    const aside = asideRef.current
+    if (!el || !aside) return
+    const asideRect = aside.getBoundingClientRect()
+    const elRect = el.getBoundingClientRect()
+    const relativeTop = elRect.top - asideRect.top + aside.scrollTop
+    const target = relativeTop - aside.clientHeight / 2 + el.offsetHeight / 2
+    aside.scrollTo({ top: Math.max(0, target), behavior: 'smooth' })
   }, [step])
 
   return (
@@ -254,7 +262,8 @@ export function PanelTourShowcase({ className = '' }: { className?: string }) {
         <div className="flex min-h-[380px] sm:min-h-[420px]">
           {/* Sidebar — tüm menü */}
           <aside
-            className="w-[148px] sm:w-[168px] shrink-0 bg-[#0b1120] border-r border-white/5 overflow-y-auto max-h-[420px] scrollbar-thin"
+            ref={asideRef}
+            className="w-[148px] sm:w-[168px] shrink-0 bg-[#0b1120] border-r border-white/5 overflow-y-auto max-h-[420px] scrollbar-thin overscroll-contain"
           >
             <div className="p-2.5 border-b border-white/5">
               <p className="text-[10px] font-bold text-violet-300 truncate">Gu Live Chat</p>
