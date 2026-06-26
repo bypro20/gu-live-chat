@@ -4,9 +4,10 @@ import { useEffect, useRef } from 'react'
 
 type Particle = { x: number; y: number; vx: number; vy: number; size: number }
 
-/** Technoai #500533 — particles.js + floating blobs/cubes/rings */
+/** Technoai #500533 — hero-bg + particles.js + floating blobs/cubes/rings */
 export function TechnoaiHeroFx() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const robotRef = useRef<HTMLDivElement>(null)
   const repulseRef = useRef<HTMLDivElement>(null)
   const mouseRef = useRef({ x: -9999, y: -9999 })
 
@@ -16,10 +17,14 @@ export function TechnoaiHeroFx() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const hero = canvas.closest('.technoai-hero') as HTMLElement | null
+
     let animId = 0
     let particles: Particle[] = []
     const linkDist = 150
-    const count = window.innerWidth < 768 ? 55 : 110
+    const speed = 2.8
+
+    const particleCount = () => (window.innerWidth < 768 ? 70 : 150)
 
     const resize = () => {
       const parent = canvas.parentElement
@@ -29,13 +34,32 @@ export function TechnoaiHeroFx() {
     }
 
     const init = () => {
+      const count = particleCount()
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 1.4,
-        vy: (Math.random() - 0.5) * 1.4,
-        size: Math.random() * 2.5 + 1.5,
+        vx: (Math.random() - 0.5) * speed * 2,
+        vy: (Math.random() - 0.5) * speed * 2,
+        size: Math.random() * 3 + 2,
       }))
+    }
+
+    const setRobotParallax = (x: number, y: number, w: number, h: number) => {
+      if (!robotRef.current) return
+      const nx = (x / w - 0.5) * 2
+      const ny = (y / h - 0.5) * 2
+      robotRef.current.style.setProperty('--robot-px', `${nx * 22}px`)
+      robotRef.current.style.setProperty('--robot-py', `${ny * 14}px`)
+      robotRef.current.style.setProperty('--robot-tilt-y', `${nx * 3.5}deg`)
+      robotRef.current.style.setProperty('--robot-tilt-x', `${-ny * 2.5}deg`)
+    }
+
+    const resetRobotParallax = () => {
+      if (!robotRef.current) return
+      robotRef.current.style.setProperty('--robot-px', '0px')
+      robotRef.current.style.setProperty('--robot-py', '0px')
+      robotRef.current.style.setProperty('--robot-tilt-x', '0deg')
+      robotRef.current.style.setProperty('--robot-tilt-y', '0deg')
     }
 
     const draw = () => {
@@ -56,12 +80,12 @@ export function TechnoaiHeroFx() {
           const dy = p.y - p2.y
           const dist = Math.hypot(dx, dy)
           if (dist < linkDist) {
-            const alpha = 0.38 * (1 - dist / linkDist)
+            const alpha = 0.4 * (1 - dist / linkDist)
             ctx.beginPath()
             ctx.moveTo(p.x, p.y)
             ctx.lineTo(p2.x, p2.y)
             ctx.strokeStyle = `rgba(255,255,255,${alpha})`
-            ctx.lineWidth = 0.9
+            ctx.lineWidth = 1
             ctx.stroke()
           }
         }
@@ -70,11 +94,11 @@ export function TechnoaiHeroFx() {
           const dx = p.x - mx
           const dy = p.y - my
           const dist = Math.hypot(dx, dy)
-          if (dist < 190) {
+          if (dist < 140) {
             ctx.beginPath()
             ctx.moveTo(p.x, p.y)
             ctx.lineTo(mx, my)
-            ctx.strokeStyle = `rgba(0, 212, 255, ${0.55 * (1 - dist / 190)})`
+            ctx.strokeStyle = `rgba(255,255,255,${0.6 * (1 - dist / 140)})`
             ctx.lineWidth = 1
             ctx.stroke()
           }
@@ -82,7 +106,7 @@ export function TechnoaiHeroFx() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(200, 230, 255, 0.5)'
+        ctx.fillStyle = 'rgba(204, 204, 204, 0.45)'
         ctx.fill()
       }
 
@@ -98,38 +122,45 @@ export function TechnoaiHeroFx() {
       init()
     }
 
-    const layer = canvas.parentElement
     const onMove = (e: MouseEvent) => {
+      const layer = hero ?? canvas.parentElement
       if (!layer) return
       const rect = layer.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
       mouseRef.current = { x, y }
+      setRobotParallax(x, y, rect.width, rect.height)
       if (repulseRef.current) {
         repulseRef.current.style.left = `${x}px`
         repulseRef.current.style.top = `${y}px`
         repulseRef.current.style.opacity = '1'
       }
     }
+
     const onLeave = () => {
       mouseRef.current = { x: -9999, y: -9999 }
+      resetRobotParallax()
       if (repulseRef.current) repulseRef.current.style.opacity = '0'
     }
 
     window.addEventListener('resize', onResize)
-    layer?.addEventListener('mousemove', onMove)
-    layer?.addEventListener('mouseleave', onLeave)
+    hero?.addEventListener('mousemove', onMove)
+    hero?.addEventListener('mouseleave', onLeave)
 
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', onResize)
-      layer?.removeEventListener('mousemove', onMove)
-      layer?.removeEventListener('mouseleave', onLeave)
+      hero?.removeEventListener('mousemove', onMove)
+      hero?.removeEventListener('mouseleave', onLeave)
     }
   }, [])
 
   return (
     <div className="technoai-fx-layer" aria-hidden>
+      <div className="technoai-hero-robot-wrap">
+        <div ref={robotRef} className="technoai-hero-robot-inner" />
+        <div className="technoai-hero-robot-glow" />
+      </div>
       <canvas ref={canvasRef} className="technoai-particles-canvas" />
       <div ref={repulseRef} className="technoai-repulse-circle" />
       <div className="technoai-floating-blob technoai-floating-blob-1" />

@@ -91,14 +91,13 @@ export function HomeHero() {
   const lang = locale === 'en' ? 'en' : 'tr'
 
   return (
-    <section className="technoai-hero technoai-hero--robot pt-28 pb-6 sm:pt-36 sm:pb-8 lg:pt-44 px-4 sm:px-6 lg:px-8">
+    <section className="technoai-hero technoai-hero--robot pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-44 px-4 sm:px-6 lg:px-8">
       <TechnoaiHeroFx />
-      <div className="technoai-hero-robot-bg" aria-hidden />
       <div className="technoai-hero-overlay" aria-hidden />
+      <HeroRobotOverlays />
 
-      <div className="relative max-w-7xl mx-auto w-full z-[1]">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center min-h-[420px] lg:min-h-[560px]">
-          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
+      <div className="relative max-w-7xl mx-auto w-full z-[2]">
+        <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0 min-h-[420px] lg:min-h-[520px] flex flex-col justify-center">
             <FadeIn>
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-[#029b9b]/40 bg-[#029b9b]/10 text-[#67E8F9]">
                 {lang === 'en' ? 'AI-Powered Live Chat' : 'AI Destekli Canlı Sohbet'}
@@ -141,11 +140,6 @@ export function HomeHero() {
                 {locale === 'tr' ? trialHeroLine() : t.hero.trial}
               </p>
             </FadeIn>
-          </div>
-
-          <FadeIn delay={0.12} className="relative hidden lg:block">
-            <HeroRobotOverlays />
-          </FadeIn>
         </div>
       </div>
     </section>
