@@ -33,6 +33,7 @@ import { recordWidgetPageview, requestWidgetDeviceGeo, resolveWidgetEmbedContext
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
+  MARKETING_WIDGET_WELCOME,
 } from '@/lib/marketing-demo-agents'
 import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
 
@@ -43,6 +44,37 @@ function isMarketingWidgetSite(websiteId: string, cfg: WidgetConfig | null | und
     process.env.NEXT_PUBLIC_WIDGET_WEBSITE_ID?.trim(),
   ].filter(Boolean) as string[]
   return ids.includes(websiteId)
+}
+
+function buildEmbedBootstrapConfig(websiteId: string): WidgetConfig {
+  if (isMarketingWidgetSite(websiteId, null)) {
+    const persona = getMarketingWidgetPersona()
+    return {
+      primaryColor: '#146356',
+      position: 'BOTTOM_RIGHT',
+      welcomeMessage: MARKETING_WIDGET_WELCOME,
+      offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
+      avatarUrl: persona.avatarUrl,
+      websiteName: persona.displayName,
+      agentDisplayName: persona.botName,
+      agentTitle: persona.agentTitle,
+      agentsOnline: 1,
+      aiAssistant: true,
+    }
+  }
+  return {
+    primaryColor: '#1972F5',
+    position: 'BOTTOM_RIGHT',
+    welcomeMessage: 'Merhaba! 👋 Size nasıl yardımcı olabiliriz?',
+    offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
+    avatarUrl: null,
+    websiteName: null,
+    agentsOnline: 1,
+  }
+}
+
+function isWidgetEmbedded(): boolean {
+  return typeof window !== 'undefined' && window.parent !== window
 }
 
 interface WidgetConfig {
@@ -343,9 +375,12 @@ export default function WidgetPage() {
   const websiteId = params.websiteId as string
 
   const [isOpen, setIsOpen] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(() => isWidgetEmbedded())
+  const [initPending, setInitPending] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
-  const [config, setConfig] = useState<WidgetConfig | null>(null)
+  const [config, setConfig] = useState<WidgetConfig | null>(() =>
+    isWidgetEmbedded() ? buildEmbedBootstrapConfig(websiteId) : null,
+  )
   const [socketConnected, setSocketConnected] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isEmbedded, setIsEmbedded] = useState(
@@ -502,6 +537,7 @@ export default function WidgetPage() {
             agentsOnline: 1,
           })
           setIsInitialized(true)
+          setInitPending(false)
           return
         }
 
@@ -530,6 +566,7 @@ export default function WidgetPage() {
           : true
         setIdentityComplete(complete)
         setIsInitialized(true)
+        setInitPending(false)
 
         visitorTokenRef.current = data.visitorToken
         visitorIdRef.current = data.visitorId ?? null
@@ -560,6 +597,7 @@ export default function WidgetPage() {
           agentsOnline: 1,
         })
         setIsInitialized(true)
+        setInitPending(false)
       }
     }
 
@@ -1180,6 +1218,7 @@ export default function WidgetPage() {
   }, [config, visitorInfo, websiteId])
 
   const sendChatMessage = useCallback(async (rawContent: string) => {
+    if (initPending) return
     if (!identityComplete) {
       setIdentityError(t.preChatRequired)
       return
@@ -1279,7 +1318,7 @@ export default function WidgetPage() {
       setAwaitingReply(false)
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config])
+  }, [websiteId, conversationId, visitorInfo, lang, identityComplete, initPending, t.preChatRequired, config])
 
   useEffect(() => {
     if (!awaitingReply || !isTyping) return

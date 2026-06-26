@@ -1,6 +1,6 @@
 /** Shared widget design — embed launcher, iframe panel, dashboard preview. */
 
-export const WIDGET_ASSET_VERSION = '2026.06.26b'
+export const WIDGET_ASSET_VERSION = '2026.06.23a'
 
 export function adjustColor(hex: string, amount: number): string {
   let h = hex.replace('#', '')

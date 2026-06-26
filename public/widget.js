@@ -256,7 +256,7 @@
     if (isMobileViewport) {
       iframe.classList.remove('gu-iframe-mobile-full');
     }
-    setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 260);
+    setTimeout(function() { if (!chatOpen) iframe.style.display = 'none'; }, 160);
   }
 
   var greetingDismissed = sessionStorage.getItem('gu_greeting_dismissed') === '1';
@@ -337,7 +337,7 @@
       if (!chatOpen || !iframe.contentWindow) return;
       iframe.contentWindow.postMessage({ type: 'gu:open' }, '*');
       attempts += 1;
-      if (attempts < 20) setTimeout(sendOpen, 250);
+      if (attempts < 6) setTimeout(sendOpen, 120);
     })();
   }
 
@@ -384,7 +384,8 @@
     + '&embedTitle=' + encodeURIComponent(document.title || '');
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(20,99,86,0.18),0 0 120px rgba(45,155,131,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(20,99,86,0.18),0 0 120px rgba(45,155,131,0.1);display:none;opacity:0;transform:translateY(16px) scale(0.97);transform-origin:bottom right;transition:opacity 0.15s cubic-bezier(0.16,1,0.3,1),transform 0.15s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
+  iframe.loading = 'eager';
   iframe.allow = 'microphone; camera';
   iframe.title = 'Canlı Sohbet';
   document.body.appendChild(iframe);

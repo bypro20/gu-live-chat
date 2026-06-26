@@ -14,7 +14,11 @@ import { withWidgetIdentityDefaults } from '@/lib/widget-platform-defaults'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { createVisitorToken } from '@/lib/secure-tokens'
 import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embed-url'
-import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visitor-session-enrich'
+import {
+  buildVisitorGeoUpdate,
+  buildVisitorSessionMetadataFast,
+  enrichVisitorSessionGeoInBackground,
+} from '@/lib/visitor-session-enrich'
 import { parseUtmFromUrl } from '@/lib/entry-source'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
@@ -51,7 +55,7 @@ function extractPageTitle(url: string | null): string | null {
 
 export async function POST(req: Request) {
   try {
-    await syncProductionSchema().catch(() => {})
+    void syncProductionSchema().catch(() => {})
 
     const limited = rateLimitByIp(req, 'widget-init', 60, 60_000)
     if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
     }
 
-    const sessionMetadata = await buildVisitorSessionMetadata({
+    const sessionMetadata = buildVisitorSessionMetadataFast({
       userAgent: validated.userAgent,
       clientIp,
       entry: {
@@ -240,33 +244,29 @@ export async function POST(req: Request) {
       sessionId: session.sessionId,
     })
 
+    enrichVisitorSessionGeoInBackground(session.sessionId, visitor.id, clientIp)
+
     // Resolve plan limits for this website
     const planLimits = PLAN_LIMITS[website.plan]
     const fileUpload = planLimits.fileUpload
-
-    // Determine whether live message translation can be offered. Checks the
-    // plan limit first, then verifies an AI/Google key is actually configured.
-    // Never throws — translation simply stays disabled when unavailable.
-    let aiTranslate = false
-    let translateAllowed = false
-    try {
-      translateAllowed = await websiteHasAutoTranslate(website.id, website.plan)
-    } catch (translateErr) {
-      console.warn('[widget/init] translate check skipped:', translateErr)
-    }
-    aiTranslate = translateAllowed && isTranslationAvailable(null)
-
-    const agentsOnline = await resolveAgentsOnline(website.websiteId, website.id)
-    const aiAssistant = await isPlatformMarketingWebsiteId(website.websiteId)
-
     const identityPolicy = withWidgetIdentityDefaults(website)
+    const origin = new URL(req.url).origin
 
     void extendTrialForActivation(website.websiteId, 'widget').catch((err) => {
       console.warn('[widget/init] trial widget bonus skipped:', err)
     })
 
-    const origin = new URL(req.url).origin
-    const agentFields = await loadWebsiteAgentFields(website.id)
+    const [translateAllowed, agentsOnline, aiAssistant, agentFields] = await Promise.all([
+      websiteHasAutoTranslate(website.id, website.plan).catch((translateErr) => {
+        console.warn('[widget/init] translate check skipped:', translateErr)
+        return false
+      }),
+      resolveAgentsOnline(website.websiteId, website.id),
+      isPlatformMarketingWebsiteId(website.websiteId),
+      loadWebsiteAgentFields(website.id),
+    ])
+    const aiTranslate = translateAllowed && isTranslationAvailable(null)
+
     const branding = await resolveMarketingWidgetBranding(
       website.websiteId,
       {
@@ -280,16 +280,18 @@ export async function POST(req: Request) {
     )
 
     if (isNewVisitor) {
-      try {
-        const { runWorkflows } = await import('@/lib/workflow-runner')
-        await runWorkflows('VISITOR_CREATED', {
-          websiteDbId: website.id,
-          websitePublicId: website.websiteId,
-          visitorId: visitor.id,
-        })
-      } catch (wfErr) {
-        console.warn('[widget/init] workflow skipped:', wfErr)
-      }
+      void (async () => {
+        try {
+          const { runWorkflows } = await import('@/lib/workflow-runner')
+          await runWorkflows('VISITOR_CREATED', {
+            websiteDbId: website.id,
+            websitePublicId: website.websiteId,
+            visitorId: visitor.id,
+          })
+        } catch (wfErr) {
+          console.warn('[widget/init] workflow skipped:', wfErr)
+        }
+      })()
     }
 
     return NextResponse.json({
