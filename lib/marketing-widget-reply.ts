@@ -7,6 +7,7 @@ import { isPlatformMarketingWebsiteId } from './marketing-website'
 import { resolveWidgetAgentIdentity } from './widget-bot-identity'
 import { loadWebsiteAgentFields } from './website-agent-fields'
 import { toChatMessages } from './ai/knowledge'
+import { MARKETING_WIDGET_DISPLAY_NAME } from './marketing-demo-agents'
 
 const MARKETING_HISTORY_LIMIT = 8
 const MARKETING_MAX_TOKENS = 380
@@ -34,7 +35,7 @@ function buildInstantReply(agentName: string, userMessage: string): string {
   const messages: ChatMessage[] = userMessage
     ? [{ role: 'user', content: userMessage }]
     : []
-  return fallbackReply(agentName, messages, knowledge)
+  return fallbackReply(agentName, messages, knowledge, MARKETING_WIDGET_DISPLAY_NAME)
 }
 
 async function loadAgentIdentity(websiteDbId: string) {
@@ -131,6 +132,7 @@ async function generateMarketingLlmReply(
     websiteId: params.websiteDbId,
     conversationId: params.conversationId,
     maxTokens: MARKETING_MAX_TOKENS,
+    brandName: MARKETING_WIDGET_DISPLAY_NAME,
   })
 
   const timed = await Promise.race([

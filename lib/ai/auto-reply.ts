@@ -12,6 +12,7 @@ import { resolveEffectivePlan, websiteHasUnlimitedAccess } from '../platform-adm
 import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady, buildMarketingSystemPrompt, getMarketingKnowledgeCache } from '../marketing-ai-setup'
+import { MARKETING_WIDGET_DISPLAY_NAME } from '../marketing-demo-agents'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
 import { resolveWidgetAgentIdentity } from '../widget-bot-identity'
 import { loadWebsiteAgentFields } from '../website-agent-fields'
@@ -118,7 +119,7 @@ function buildMarketingFallbackContent(
   const messages: ChatMessage[] = userMessage
     ? [{ role: 'user', content: userMessage }]
     : []
-  return fallbackReply(botDisplayName, messages, knowledge)
+  return fallbackReply(botDisplayName, messages, knowledge, MARKETING_WIDGET_DISPLAY_NAME)
 }
 
 async function clearMarketingChatbotBlock(conversationId: string): Promise<void> {
@@ -372,6 +373,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         websiteId: params.websiteDbId,
         conversationId: params.conversationId,
         maxTokens: isMarketing ? MARKETING_MAX_TOKENS : WIDGET_MAX_TOKENS,
+        brandName: isMarketing ? MARKETING_WIDGET_DISPLAY_NAME : undefined,
       })
 
       const content = reply?.trim()

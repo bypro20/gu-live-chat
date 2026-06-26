@@ -8,6 +8,7 @@ import { loadWebsiteAgentFields } from '@/lib/website-agent-fields'
 import { generateAiReplyStream } from '@/lib/ai/provider'
 import { toChatMessages } from '@/lib/ai/knowledge'
 import { buildMarketingSystemPrompt, getMarketingKnowledgeCache } from '@/lib/marketing-ai-setup'
+import { MARKETING_WIDGET_DISPLAY_NAME } from '@/lib/marketing-demo-agents'
 import { PLATFORM_AI_MODEL } from '@/lib/ai/platform-config'
 import { emitBotMessage } from '@/lib/socket-events'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
@@ -156,6 +157,7 @@ export async function POST(req: Request) {
           websiteId: website.id,
           conversationId: conversation.id,
           maxTokens: MARKETING_MAX_TOKENS,
+          brandName: MARKETING_WIDGET_DISPLAY_NAME,
         })) {
           if (!chunk) continue
           full += chunk

@@ -64,6 +64,8 @@ export interface GenerateAiReplyParams {
   smartRoutingEnabled?: boolean
   /** Yanıt uzunluğu sınırı — widget auto-reply için düşük tutulabilir */
   maxTokens?: number
+  /** Fallback metinlerinde "<marka> ekibinden" demek için (örn. "Gu Live Chat"). */
+  brandName?: string
 }
 
 const MAX_TOKENS = 1024
@@ -350,19 +352,44 @@ function tokenize(s: string): string[] {
 const GREETING_RE = /\b(merhaba|selam|selamlar|iyi günler|günaydın|iyi akşamlar|hello|hi|hey)\b/i
 const THANKS_RE = /\b(teşekkür|teşekkürler|sağ ?ol|eyvallah|thanks|thank you)\b/i
 
-export function fallbackReply(siteName: string, messages: ChatMessage[], knowledge?: KnowledgeEntry[]): string {
+export function fallbackReply(
+  siteName: string,
+  messages: ChatMessage[],
+  knowledge?: KnowledgeEntry[],
+  brandName?: string,
+): string {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim() || ''
+  const agent = (siteName || 'Destek').trim().split(/\s+/)[0] || 'Destek'
+  const brand = brandName?.trim() || ''
+  const teamSuffix = brand ? `${brand} ekibinden` : 'destek ekibinden'
+  // Aynı cümlenin sürekli tekrarını azaltmak için konuşma uzunluğuna göre döndür.
+  const variantIdx = Math.max(0, messages.length) % 3
 
   if (!lastUser) {
-    return `Merhaba! ${siteName} destek ekibine hoş geldiniz. Size nasıl yardımcı olabilirim?`
+    const welcomes = [
+      `Merhaba! Ben ${agent}, ${teamSuffix}. Size nasıl yardımcı olabilirim?`,
+      `Selam, hoş geldiniz! Ben ${agent}, ${teamSuffix}. Aklınıza takılan ne varsa sorabilirsiniz.`,
+      `Merhaba 👋 Ben ${agent}, ${teamSuffix}. Bugün nasıl yardımcı olayım?`,
+    ]
+    return welcomes[variantIdx]
   }
 
   if (GREETING_RE.test(lastUser) && lastUser.length < 40) {
-    return `Merhaba, hoş geldiniz! ${siteName} destek ekibi olarak buradayız — size nasıl yardımcı olabilirim?`
+    const greets = [
+      `Merhaba! Ben ${agent}, ${teamSuffix}. Nasıl yardımcı olabilirim?`,
+      `Selam, hoş geldiniz! Ben ${agent}, ${teamSuffix} — ne sormak istersiniz?`,
+      `Merhaba 👋 ${brand ? brand + ' ' : ''}için buradayım. Size nasıl yardımcı olayım?`,
+    ]
+    return greets[variantIdx]
   }
 
   if (THANKS_RE.test(lastUser) && lastUser.length < 40) {
-    return `Rica ederim! Başka bir sorunuz olursa buradayım.`
+    const thanks = [
+      `Rica ederim! Başka bir sorunuz olursa buradayım.`,
+      `Ne demek, her zaman! Yardımcı olabileceğim başka bir şey var mı?`,
+      `Rica ederim 🙂 Aklınıza başka bir şey takılırsa çekinmeden yazın.`,
+    ]
+    return thanks[variantIdx]
   }
 
   if (knowledge && knowledge.length > 0) {
@@ -391,7 +418,8 @@ export function fallbackReply(siteName: string, messages: ChatMessage[], knowled
     }
   }
 
-  return `${siteName} hakkında fiyat, kurulum, WhatsApp entegrasyonu veya paketlerle ilgili sorunuzu yazarsanız yardımcı olurum.`
+  const topic = brand || siteName
+  return `${topic} hakkında fiyat, kurulum, WhatsApp entegrasyonu veya paketlerle ilgili merak ettiğinizi yazın, hemen yardımcı olayım.`
 }
 
 // ─── Provider calls ─────────────────────────────────────────────────
@@ -551,13 +579,13 @@ export async function* generateAiReplyStream(
   const { siteName, messages, knowledge } = params
 
   if (!messages || messages.length === 0) {
-    yield fallbackReply(siteName, [], knowledge)
+    yield fallbackReply(siteName, [], knowledge, params.brandName)
     return
   }
 
   const runtime = resolveAiConfig(params.dbConfig, params.plan)
   if (!runtime) {
-    yield fallbackReply(siteName, messages, knowledge)
+    yield fallbackReply(siteName, messages, knowledge, params.brandName)
     return
   }
 
@@ -590,15 +618,15 @@ export async function* generateAiReplyStream(
           yield chunk
         }
       }
-      if (!emitted) yield fallbackReply(siteName, messages, knowledge)
+      if (!emitted) yield fallbackReply(siteName, messages, knowledge, params.brandName)
       return
     }
 
     const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
-    yield text || fallbackReply(siteName, messages, knowledge)
+    yield text || fallbackReply(siteName, messages, knowledge, params.brandName)
   } catch (err) {
     console.error(`[AI] ${activeRuntime.provider} stream failed:`, err instanceof Error ? err.message : err)
-    yield fallbackReply(siteName, messages, knowledge)
+    yield fallbackReply(siteName, messages, knowledge, params.brandName)
   }
 }
 
@@ -608,12 +636,12 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
   const { siteName, messages, knowledge } = params
 
   if (!messages || messages.length === 0) {
-    return fallbackReply(siteName, [], knowledge)
+    return fallbackReply(siteName, [], knowledge, params.brandName)
   }
 
   const runtime = resolveAiConfig(params.dbConfig, params.plan)
   if (!runtime) {
-    return fallbackReply(siteName, messages, knowledge)
+    return fallbackReply(siteName, messages, knowledge, params.brandName)
   }
 
   const routedModel =
@@ -638,9 +666,9 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
   try {
     const maxTokens = params.maxTokens ?? MAX_TOKENS
     const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
-    return text || fallbackReply(siteName, messages, knowledge)
+    return text || fallbackReply(siteName, messages, knowledge, params.brandName)
   } catch (err) {
     console.error(`[AI] ${runtime.provider} call failed:`, err instanceof Error ? err.message : err)
-    return fallbackReply(siteName, messages, knowledge)
+    return fallbackReply(siteName, messages, knowledge, params.brandName)
   }
 }
