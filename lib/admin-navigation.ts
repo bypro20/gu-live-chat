@@ -68,11 +68,19 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       {
         href: '/admin/inbox',
         label: 'Gelen Kutusu',
-        description: 'Widget mesajları, yanıtla',
+        description: 'Widget mesajları, Copilot AI yanıt',
         icon: 'inbox',
         badge: 'inbox',
-        keywords: ['mesaj', 'sohbet', 'inbox', 'chat'],
+        keywords: ['mesaj', 'sohbet', 'inbox', 'chat', 'copilot', 'ai'],
         match: (p) => p.startsWith('/admin/inbox'),
+      },
+      {
+        href: '/admin/ai',
+        label: 'AI Platform',
+        description: 'Chatbot, RAG, sesli AI, analitik — sınırsız',
+        icon: 'ai',
+        keywords: ['ai', 'chatbot', 'rag', 'copilot', 'gemini', 'gpt', 'sesli'],
+        match: (p) => p.startsWith('/admin/ai'),
       },
       {
         href: '/admin/visitors',
@@ -194,7 +202,8 @@ export const ADMIN_MODULES: AdminModule[] = [
     icon: 'activity',
     links: [
       { href: '/admin/mail', label: 'E-posta Merkezi', description: 'İletişim ve pazarlama mailleri' },
-      { href: '/admin/inbox', label: 'Gelen Kutusu', description: 'Okunmamış widget mesajları' },
+      { href: '/admin/inbox', label: 'Gelen Kutusu', description: 'Copilot + widget AI sohbet' },
+      { href: '/admin/ai', label: 'AI Platform', description: 'Chatbot, RAG, sesli AI' },
       { href: '/admin/visitors', label: 'Ziyaretçi Takibi', description: 'Konum, tarayıcı, ekran' },
       { href: '/admin/conversations', label: 'Tüm Sohbetler', description: 'Arşiv ve filtreleme' },
     ],
@@ -231,6 +240,7 @@ export const ADMIN_MODULES: AdminModule[] = [
     icon: 'widget',
     links: [
       { href: '/admin/widget', label: 'Widget Önizleme', description: 'Platform chat widget' },
+      { href: '/admin/ai', label: 'AI Platform', description: 'Sınırsız AI ayarları' },
       { href: '/admin/marketing', label: 'Pazarlama', description: 'Site içeriği ve kampanya' },
       { href: '/dashboard', label: 'Müşteri Paneli', description: 'Müşteri görünümüne geç' },
     ],

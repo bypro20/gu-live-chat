@@ -36,6 +36,7 @@ export interface AdminMessage {
   senderId: string | null
   createdAt: string
   readAt: string | null
+  sentiment?: string | null
   attachments: Array<{ id: string; url: string; filename: string; mimetype: string; size: number }>
 }
 

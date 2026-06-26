@@ -165,7 +165,7 @@ async function checkMarketingSite(): Promise<HealthCheck> {
       id: 'marketing_site',
       ok: false,
       severity: 'warn',
-      message: `Marketing site planı ${site.plan} — PRO bekleniyor`,
+      message: `Marketing site planı ${site.plan} — PRO/BUSINESS bekleniyor`,
     }
   }
   return {

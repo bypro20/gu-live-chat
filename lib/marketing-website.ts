@@ -77,13 +77,13 @@ async function ensureTeamOwner(websiteInternalId: string, userId: string) {
   }
 }
 
-/** Platform marketing sitesi tüm PRO özelliklerle çalışsın. */
+/** Platform marketing sitesi tüm özelliklerle (BUSINESS) çalışsın. */
 async function ensureMarketingSiteProPlan(websiteInternalId: string) {
   try {
     await prisma.website.update({
       where: { id: websiteInternalId },
       data: {
-        plan: 'PRO',
+        plan: 'BUSINESS',
         subscriptionStatus: 'ACTIVE',
       },
     })

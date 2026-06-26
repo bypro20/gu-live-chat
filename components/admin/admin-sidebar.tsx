@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, Inbox, Eye, MessageSquare, Users, Globe,
-  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft, Mail as MailIcon,
+  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft, Mail as MailIcon, Sparkles,
 } from 'lucide-react'
 import { AppLogo } from '@/components/brand/app-logo'
 import NotificationBell from '@/components/dashboard/notification-bell'
@@ -28,6 +28,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   widget: Monitor,
   marketing: Megaphone,
   mail: MailIcon,
+  ai: Sparkles,
   ipbans: ShieldBan,
   settings: Settings,
 }

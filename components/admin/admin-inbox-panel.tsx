@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
-import { Volume2, VolumeX, MessageSquare, Search } from 'lucide-react'
+import { Volume2, VolumeX, MessageSquare, Search, AlertTriangle } from 'lucide-react'
 import { useInboxMessageScroll } from '@/lib/hooks/use-inbox-message-scroll'
 import { useInboxMobileChat, INBOX_CHAT_PANEL_MOBILE } from '@/lib/hooks/use-inbox-mobile-chat'
 import {
@@ -83,6 +83,14 @@ export function AdminInboxPanel() {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null)
+  const [aiSuggestEnabled, setAiSuggestEnabled] = useState(true)
+  const [aiSuggesting, setAiSuggesting] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [handoffSummary, setHandoffSummary] = useState<string | null>(null)
+  const [cannedResponses, setCannedResponses] = useState<
+    Array<{ id: string; title: string; content: string; shortcut: string | null }>
+  >([])
+  const [showCannedPicker, setShowCannedPicker] = useState(false)
   const { deleting, deleteConversation, deleteConversations, deleteMessage } = useInboxDelete('admin')
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
@@ -227,6 +235,44 @@ export function AdminInboxPanel() {
   useEffect(() => {
     setDetectedVisitorLang(null)
     setPendingUpload(null)
+    setAiError(null)
+  }, [selectedId])
+
+  useEffect(() => {
+    if (!websiteId) {
+      setAiSuggestEnabled(false)
+      return
+    }
+    fetch(`/api/ai/config?websiteId=${websiteId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { aiConfig?: { isActive?: boolean; autoSuggest?: boolean } } | null) => {
+        setAiSuggestEnabled(!!data?.aiConfig?.isActive && data?.aiConfig?.autoSuggest !== false)
+      })
+      .catch(() => setAiSuggestEnabled(true))
+  }, [websiteId])
+
+  useEffect(() => {
+    if (!websiteId) {
+      setCannedResponses([])
+      return
+    }
+    fetch(`/api/canned-responses?websiteId=${websiteId}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setCannedResponses(Array.isArray(data) ? data : []))
+      .catch(() => setCannedResponses([]))
+  }, [websiteId])
+
+  useEffect(() => {
+    if (!selectedId) {
+      setHandoffSummary(null)
+      return
+    }
+    fetch(`/api/conversations/${selectedId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { aiHandoffSummary?: string | null } | null) => {
+        setHandoffSummary(data?.aiHandoffSummary?.trim() || null)
+      })
+      .catch(() => setHandoffSummary(null))
   }, [selectedId])
 
   const selected = filteredConversations.find((c) => c.id === selectedId)
@@ -495,6 +541,40 @@ export function AdminInboxPanel() {
     setPendingUpload(null)
   }
 
+  const handleMessageChange = (value: string) => {
+    setMessageText(value)
+    setShowCannedPicker(value.startsWith('/'))
+  }
+
+  const runCopilot = async (mode: string) => {
+    if (!selectedId || aiSuggesting) return
+    setAiSuggesting(true)
+    setAiError(null)
+    try {
+      const res = await fetch('/api/ai/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: selectedId,
+          mode,
+          draft: messageText,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || i.aiSuggestFailed)
+      if (data.suggestion) setMessageText(data.suggestion)
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : i.aiSuggestFailed)
+    } finally {
+      setAiSuggesting(false)
+    }
+  }
+
+  const handleAiSuggest = async () => {
+    if (!selectedId || aiSuggesting) return
+    await runCopilot('suggest')
+  }
+
   const handleFileSelect = async (file: File) => {
     const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
     setPendingUpload({ file, previewUrl })
@@ -561,6 +641,8 @@ export function AdminInboxPanel() {
     }
   }
 
+  const lastVisitorSentiment = messages.filter((m) => m.senderType === 'VISITOR').slice(-1)[0]?.sentiment
+
   const mappedMessages = useMemo(
     () =>
       messages.map((m) => ({
@@ -569,6 +651,7 @@ export function AdminInboxPanel() {
         type: m.type,
         senderType: m.senderType,
         createdAt: m.createdAt,
+        sentiment: m.sentiment,
         attachments: m.attachments?.map((a) => ({
           id: a.id,
           url: a.url,
@@ -818,6 +901,13 @@ export function AdminInboxPanel() {
               canTranslate
             />
 
+            {handoffSummary && (
+              <div className="mx-4 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
+                <span className="font-semibold">{i.aiHandoffSummary}: </span>
+                {handoffSummary}
+              </div>
+            )}
+
             <InboxMessageArea ref={messageScrollRef} onAreaScroll={onMessageScroll}>
               {messagesLoading ? (
                 <div className="space-y-3">
@@ -839,11 +929,18 @@ export function AdminInboxPanel() {
                   deletingMessageId={deletingMessageId}
                 />
               )}
+              {lastVisitorSentiment === 'NEGATIVE' && (
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-destructive py-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {i.negativeSentiment}
+                </div>
+              )}
+              {aiError && <p className="text-xs text-destructive text-center">{aiError}</p>}
             </InboxMessageArea>
 
             <MessageComposer
               value={messageText}
-              onChange={setMessageText}
+              onChange={handleMessageChange}
               onSend={handleSend}
               onFileSelect={handleFileSelect}
               pendingUpload={pendingUpload}
@@ -852,6 +949,18 @@ export function AdminInboxPanel() {
               translating={translatingOutgoing}
               uploading={uploading}
               canUpload
+              canCanned
+              canAi
+              aiEnabled={aiSuggestEnabled}
+              onAiSuggest={handleAiSuggest}
+              onAiCopilot={(mode) => void runCopilot(mode)}
+              aiSuggesting={aiSuggesting}
+              cannedResponses={cannedResponses}
+              showCannedPicker={showCannedPicker}
+              onSelectCanned={(c) => {
+                setMessageText(c)
+                setShowCannedPicker(false)
+              }}
               autoTranslate={autoTranslate}
               detectedLang={normalizedVisitorLang}
               agentLang={agentLang}
@@ -860,7 +969,7 @@ export function AdminInboxPanel() {
               placeholder={
                 translationPairActive && normalizedVisitorLang
                   ? `${languageLabel(agentLang)} yazın — ${languageLabel(normalizedVisitorLang)}'ye çevrilir`
-                  : 'Yanıt yazın…'
+                  : 'Yanıt yazın… (/ hazır cevap, AI öneri üstte)'
               }
             />
           </>
