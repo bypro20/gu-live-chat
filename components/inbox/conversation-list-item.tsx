@@ -21,11 +21,17 @@ export const ConversationListItem = memo(function ConversationListItem({
   selected,
   onClick,
   variant = 'default',
+  selectionMode = false,
+  checked = false,
+  onToggleCheck,
 }: {
   conversation: InboxConversation
   selected: boolean
   onClick: () => void
   variant?: 'default' | 'admin'
+  selectionMode?: boolean
+  checked?: boolean
+  onToggleCheck?: () => void
 }) {
   const d = useDashboardI18n()
   const i = d.inbox
@@ -38,7 +44,13 @@ export const ConversationListItem = memo(function ConversationListItem({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => {
+        if (selectionMode) {
+          onToggleCheck?.()
+          return
+        }
+        onClick()
+      }}
       className={cn(
         'w-full px-3 py-3.5 flex items-start gap-3 border-b transition-all duration-150 text-left touch-manipulation min-h-[56px]',
         isAdmin
@@ -54,6 +66,20 @@ export const ConversationListItem = memo(function ConversationListItem({
             )
       )}
     >
+      {selectionMode && (
+        <span
+          className={cn(
+            'shrink-0 w-5 h-5 rounded border flex items-center justify-center mt-1',
+            checked ? 'bg-primary border-primary text-primary-foreground' : 'border-border bg-background'
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleCheck?.()
+          }}
+        >
+          {checked && <span className="text-[10px] font-bold">✓</span>}
+        </span>
+      )}
       <div className="relative shrink-0">
         <Avatar
           src={conversation.visitor.avatarUrl}

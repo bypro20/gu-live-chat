@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Languages, UserCheck, CheckCircle2, RotateCcw, User, Monitor } from 'lucide-react'
+import { ArrowLeft, Languages, UserCheck, CheckCircle2, RotateCcw, User, Monitor, Trash2 } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,7 @@ type ChatHeaderProps = {
   onAssignToMe?: () => void
   onResolve?: () => void
   onReopen?: () => void
+  onDeleteConversation?: () => void
   updating?: boolean
   extra?: React.ReactNode
   visitorId?: string
@@ -44,6 +45,7 @@ export function ChatHeader({
   onAssignToMe,
   onResolve,
   onReopen,
+  onDeleteConversation,
   updating,
   extra,
   visitorId,
@@ -130,6 +132,21 @@ export function ChatHeader({
             <span className="hidden sm:inline">{i.reopen}</span>
           </Button>
         ) : null}
+
+        {onDeleteConversation && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs bg-red-500/15 text-white border-red-300/30 hover:bg-red-500/25"
+            disabled={updating}
+            onClick={onDeleteConversation}
+            title={i.deleteConversation}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{i.deleteConversation}</span>
+          </Button>
+        )}
 
         {canTranslate && onToggleTranslate && (
           <Button

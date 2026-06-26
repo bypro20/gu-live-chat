@@ -14,6 +14,8 @@ type MessageThreadProps = {
   websiteId?: string
   agentLang?: string
   primaryColor?: string | null
+  onDeleteMessage?: (messageId: string) => void
+  deletingMessageId?: string | null
 }
 
 export const MessageThread = memo(function MessageThread({
@@ -23,6 +25,8 @@ export const MessageThread = memo(function MessageThread({
   websiteId,
   agentLang,
   primaryColor,
+  onDeleteMessage,
+  deletingMessageId,
 }: MessageThreadProps) {
   const d = useDashboardI18n()
   const { locale } = useLocale()
@@ -76,6 +80,15 @@ export const MessageThread = memo(function MessageThread({
               animateIn={isLatest}
               senderName={msg.senderName}
               senderImage={msg.senderImage}
+              onDelete={
+                onDeleteMessage &&
+                msg.senderType !== 'SYSTEM' &&
+                msg.type !== 'SYSTEM' &&
+                !msg.id.startsWith('opt_')
+                  ? () => onDeleteMessage(msg.id)
+                  : undefined
+              }
+              deleting={deletingMessageId === msg.id}
             />
           </div>
         )

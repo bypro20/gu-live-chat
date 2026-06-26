@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useCallback, useEffect, useState } from 'react'
-import { Bot, Languages, Loader2, AlertTriangle } from 'lucide-react'
+import { Bot, Languages, Loader2, AlertTriangle, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -25,6 +25,8 @@ type MessageBubbleProps = {
   animateIn?: boolean
   senderName?: string | null
   senderImage?: string | null
+  onDelete?: () => void
+  deleting?: boolean
 }
 
 export const MessageBubble = memo(function MessageBubble({
@@ -39,6 +41,8 @@ export const MessageBubble = memo(function MessageBubble({
   animateIn = false,
   senderName,
   senderImage,
+  onDelete,
+  deleting,
 }: MessageBubbleProps) {
   const inbox = useDashboardI18n().inbox
   const { locale } = useLocale()
@@ -130,7 +134,7 @@ export const MessageBubble = memo(function MessageBubble({
 
   return (
     <div
-      className={`flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${
+      className={`group flex gap-2.5 ${isVisitor ? 'justify-start' : 'justify-end'} ${
         grouped ? 'mt-0.5' : 'mt-3'
       } ${animateIn ? 'inbox-message-enter' : ''}`}
     >
@@ -213,6 +217,19 @@ export const MessageBubble = memo(function MessageBubble({
               ) : (
                 <Languages className="w-3 h-3" />
               )}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={onDelete}
+              disabled={deleting}
+              title={inbox.deleteMessage}
+            >
+              <Trash2 className="w-3 h-3" />
             </Button>
           )}
         </div>

@@ -48,9 +48,13 @@ import { translateClient } from '@/lib/translate-client'
 import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
 import { INBOX_CHANNEL_FILTERS } from '@/lib/conversation-channels'
 import { resolveInboxPrimary } from '@/lib/inbox-theme'
+import { InboxBulkActionsBar } from '@/components/inbox/inbox-bulk-actions'
+import { useInboxDelete } from '@/lib/hooks/use-inbox-delete'
+import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import type { InboxConversation } from '@/components/inbox/types'
 
 export function AdminInboxPanel() {
+  const i = useDashboardI18n().inbox
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const [marketingSite, setMarketingSite] = useState<{
@@ -76,6 +80,10 @@ export function AdminInboxPanel() {
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
   const [uploading, setUploading] = useState(false)
   const [persistentAlerts, setPersistentAlerts] = useState<PersistentInboxAlert[]>([])
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null)
+  const { deleting, deleteConversation, deleteConversations, deleteMessage } = useInboxDelete('admin')
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
@@ -295,6 +303,66 @@ export function AdminInboxPanel() {
       console.error(e)
     } finally {
       setUpdatingConversation(false)
+    }
+  }
+
+  const toggleConversationSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleDeleteConversation = async () => {
+    if (!selectedId) return
+    if (!window.confirm(i.confirmDeleteConversation)) return
+    try {
+      await deleteConversation(selectedId)
+      setSelectedId(null)
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds]
+    if (ids.length === 0) return
+    if (!window.confirm(i.confirmBulkDelete(ids.length))) return
+    try {
+      await deleteConversations(ids)
+      if (selectedId && ids.includes(selectedId)) setSelectedId(null)
+      setSelectedIds(new Set())
+      setSelectionMode(false)
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    }
+  }
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!selectedId) return
+    if (!window.confirm(i.confirmDeleteMessage)) return
+    setDeletingMessageId(messageId)
+    try {
+      await deleteMessage(selectedId, messageId)
+      await mutateMessages(
+        (current) => {
+          if (!current) return current
+          return { ...current, messages: current.messages.filter((m) => m.id !== messageId) }
+        },
+        { revalidate: true }
+      )
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    } finally {
+      setDeletingMessageId(null)
     }
   }
 
@@ -553,19 +621,36 @@ export function AdminInboxPanel() {
                 <span className="text-xs font-medium text-primary tabular-nums">{inboxUnread}</span>
               )}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              title={soundOn ? 'Ses açık' : 'Ses kapalı'}
-              onClick={() => {
-                setSoundOn((v) => !v)
-                if (!soundOn) unlockInboxAudio()
-              }}
-            >
-              {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center gap-1 shrink-0">
+              <InboxBulkActionsBar
+                selectionMode={selectionMode}
+                selectedCount={selectedIds.size}
+                totalVisible={filteredConversations.length}
+                deleting={deleting}
+                onToggleSelectionMode={() => {
+                  setSelectionMode((v) => {
+                    if (v) setSelectedIds(new Set())
+                    return !v
+                  })
+                }}
+                onSelectAll={() => setSelectedIds(new Set(filteredConversations.map((c) => c.id)))}
+                onClearSelection={() => setSelectedIds(new Set())}
+                onBulkDelete={() => void handleBulkDelete()}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                title={soundOn ? 'Ses açık' : 'Ses kapalı'}
+                onClick={() => {
+                  setSoundOn((v) => !v)
+                  if (!soundOn) unlockInboxAudio()
+                }}
+              >
+                {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
 
           {marketingSite.name && (
@@ -668,6 +753,10 @@ export function AdminInboxPanel() {
                 }}
                 selected={selectedId === c.id}
                 onClick={() => setSelectedId(c.id)}
+                variant="admin"
+                selectionMode={selectionMode}
+                checked={selectedIds.has(c.id)}
+                onToggleCheck={() => toggleConversationSelection(c.id)}
               />
             ))
           )}
@@ -715,7 +804,8 @@ export function AdminInboxPanel() {
                   ? () => updateConversation({ status: 'OPEN' })
                   : undefined
               }
-              updating={updatingConversation}
+              updating={updatingConversation || deleting}
+              onDeleteConversation={() => void handleDeleteConversation()}
               showVisitorLinks
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
@@ -745,6 +835,8 @@ export function AdminInboxPanel() {
                   websiteId={websiteId}
                   agentLang={agentLang}
                   primaryColor={inboxPrimary}
+                  onDeleteMessage={(messageId) => void handleDeleteMessage(messageId)}
+                  deletingMessageId={deletingMessageId}
                 />
               )}
             </InboxMessageArea>

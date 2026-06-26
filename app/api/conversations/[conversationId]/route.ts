@@ -8,6 +8,10 @@ import {
 } from '@/lib/notifications'
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { runWorkflows } from '@/lib/workflow-runner'
+import {
+  assertConversationMemberAccess,
+  deleteConversationById,
+} from '@/lib/inbox-delete'
 
 export async function GET(
   req: Request,
@@ -163,5 +167,30 @@ export async function PATCH(
     }
     console.error('Update conversation error:', error)
     return NextResponse.json({ error: 'Sohbet güncellenemedi' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ conversationId: string }> }
+) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
+  }
+
+  const { conversationId } = await params
+
+  try {
+    const access = await assertConversationMemberAccess(session.user.id, conversationId)
+    if (!access) {
+      return NextResponse.json({ error: 'Sohbet bulunamadı veya erişim reddedildi' }, { status: 404 })
+    }
+
+    await deleteConversationById(conversationId)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('Delete conversation error:', error)
+    return NextResponse.json({ error: 'Sohbet silinemedi' }, { status: 500 })
   }
 }

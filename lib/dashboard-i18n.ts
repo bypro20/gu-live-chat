@@ -213,6 +213,18 @@ export type DashboardMessages = {
     editContactHint: string
     nameLabel: string
     contactSaved: string
+    deleteConversation: string
+    deleteMessage: string
+    selectMode: string
+    cancelSelect: string
+    selectAll: string
+    clearSelection: string
+    selectedCount: (n: number) => string
+    bulkDelete: (n: number) => string
+    confirmDeleteConversation: string
+    confirmDeleteMessage: string
+    confirmBulkDelete: (n: number) => string
+    deleteFailed: string
   }
   growth: {
     title: string
@@ -491,6 +503,18 @@ const tr: DashboardMessages = {
     editContactHint: 'İsteğe bağlı — ziyaretçi adı ve e-postasını siz girebilirsiniz',
     nameLabel: 'İsim',
     contactSaved: 'Kaydedildi',
+    deleteConversation: 'Sohbeti sil',
+    deleteMessage: 'Mesajı sil',
+    selectMode: 'Seç',
+    cancelSelect: 'İptal',
+    selectAll: 'Tümünü seç',
+    clearSelection: 'Seçimi kaldır',
+    selectedCount: (n) => `${n} seçili`,
+    bulkDelete: (n) => `${n} sohbeti sil`,
+    confirmDeleteConversation: 'Bu sohbet ve tüm mesajları kalıcı olarak silinsin mi?',
+    confirmDeleteMessage: 'Bu mesaj kalıcı olarak silinsin mi?',
+    confirmBulkDelete: (n) => `${n} sohbet ve içindeki tüm mesajlar kalıcı olarak silinsin mi?`,
+    deleteFailed: 'Silinemedi',
   },
   growth: {
     title: 'İşletmeniz için fırsatlar',
@@ -800,6 +824,18 @@ const en: DashboardMessages = {
     editContactHint: 'Optional — you can set the visitor name and email',
     nameLabel: 'Name',
     contactSaved: 'Saved',
+    deleteConversation: 'Delete chat',
+    deleteMessage: 'Delete message',
+    selectMode: 'Select',
+    cancelSelect: 'Cancel',
+    selectAll: 'Select all',
+    clearSelection: 'Clear selection',
+    selectedCount: (n) => `${n} selected`,
+    bulkDelete: (n) => `Delete ${n} chats`,
+    confirmDeleteConversation: 'Permanently delete this chat and all its messages?',
+    confirmDeleteMessage: 'Permanently delete this message?',
+    confirmBulkDelete: (n) => `Permanently delete ${n} chats and all their messages?`,
+    deleteFailed: 'Could not delete',
   },
   growth: {
     title: 'Growth opportunities',

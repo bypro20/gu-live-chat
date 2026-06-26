@@ -40,6 +40,8 @@ import { translateClient } from '@/lib/translate-client'
 import { languagesDiffer, languageLabel, normalizeLangCode } from '@/lib/translate-languages'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { resolveInboxPrimary } from '@/lib/inbox-theme'
+import { InboxBulkActionsBar } from '@/components/inbox/inbox-bulk-actions'
+import { useInboxDelete } from '@/lib/hooks/use-inbox-delete'
 
 function InboxPageContent() {
   const d = useDashboardI18n()
@@ -81,6 +83,10 @@ function InboxPageContent() {
   const [uploading, setUploading] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [liveConnected, setLiveConnected] = useState(false)
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null)
+  const { deleting, deleteConversation, deleteConversations, deleteMessage } = useInboxDelete('dashboard')
   const selectedIdRef = useRef<string | null>(null)
   const soundOnRef = useRef(soundOn)
   selectedIdRef.current = selectedId
@@ -345,6 +351,66 @@ function InboxPageContent() {
 
   const lastVisitorSentiment = messages.filter((m) => m.senderType === 'VISITOR').slice(-1)[0]?.sentiment
 
+  const toggleConversationSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleDeleteConversation = async () => {
+    if (!selectedId) return
+    if (!window.confirm(i.confirmDeleteConversation)) return
+    try {
+      await deleteConversation(selectedId)
+      setSelectedId(null)
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds]
+    if (ids.length === 0) return
+    if (!window.confirm(i.confirmBulkDelete(ids.length))) return
+    try {
+      await deleteConversations(ids)
+      if (selectedId && ids.includes(selectedId)) setSelectedId(null)
+      setSelectedIds(new Set())
+      setSelectionMode(false)
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    }
+  }
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!selectedId) return
+    if (!window.confirm(i.confirmDeleteMessage)) return
+    setDeletingMessageId(messageId)
+    try {
+      await deleteMessage(selectedId, messageId)
+      await mutateMessages(
+        (current) => {
+          if (!current) return current
+          return { ...current, messages: current.messages.filter((m) => m.id !== messageId) }
+        },
+        { revalidate: true }
+      )
+      await mutateConversations()
+    } catch (e) {
+      console.error(e)
+      setSendError(i.deleteFailed)
+    } finally {
+      setDeletingMessageId(null)
+    }
+  }
+
   const handleMessageChange = (value: string) => {
     setMessageText(value)
     setShowCannedPicker(canCannedResponses && value.startsWith('/'))
@@ -486,6 +552,21 @@ function InboxPageContent() {
               {total > 0 && (
                 <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">{total}</span>
               )}
+              <InboxBulkActionsBar
+                selectionMode={selectionMode}
+                selectedCount={selectedIds.size}
+                totalVisible={conversations.length}
+                deleting={deleting}
+                onToggleSelectionMode={() => {
+                  setSelectionMode((v) => {
+                    if (v) setSelectedIds(new Set())
+                    return !v
+                  })
+                }}
+                onSelectAll={() => setSelectedIds(new Set(conversations.map((c) => c.id)))}
+                onClearSelection={() => setSelectedIds(new Set())}
+                onBulkDelete={() => void handleBulkDelete()}
+              />
               <Button
                 type="button"
                 variant="ghost"
@@ -631,6 +712,9 @@ function InboxPageContent() {
                 conversation={conv}
                 selected={selectedId === conv.id}
                 onClick={() => setSelectedId(conv.id)}
+                selectionMode={selectionMode}
+                checked={selectedIds.has(conv.id)}
+                onToggleCheck={() => toggleConversationSelection(conv.id)}
               />
             ))
           )}
@@ -678,7 +762,8 @@ function InboxPageContent() {
                   ? () => updateConversation({ status: 'OPEN' })
                   : undefined
               }
-              updating={updatingConversation}
+              updating={updatingConversation || deleting}
+              onDeleteConversation={() => void handleDeleteConversation()}
               showVisitorLinks
               visitorId={selectedConversation.visitorId || selectedConversation.visitor?.id}
             />
@@ -708,6 +793,8 @@ function InboxPageContent() {
                   websiteId={activeWebsite?.websiteId}
                   agentLang={agentLang}
                   primaryColor={inboxPrimary}
+                  onDeleteMessage={(messageId) => void handleDeleteMessage(messageId)}
+                  deletingMessageId={deletingMessageId}
                 />
               )}
               {typingPreview && typingPreview.conversationId === selectedId && (
