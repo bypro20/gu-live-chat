@@ -1,18 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Download, Menu, X } from 'lucide-react'
+import { ArrowRight, Download, Mail, Menu, Phone, X } from 'lucide-react'
 import { Logo } from '@/components/marketing/logo'
 import { LanguageSwitcher } from '@/components/marketing/language-switcher'
-import { useT } from '@/components/marketing/locale-provider'
+import { useLocale, useT } from '@/components/marketing/locale-provider'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useEffect, useState } from 'react'
 
 export function MarketingNav() {
   const t = useT()
+  const { locale } = useLocale()
   const { common } = useMarketingPages()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const lang = locale === 'en' ? 'en' : 'tr'
 
   const navLinks = [
     { label: t.nav.products, href: '/urunler' },
@@ -30,13 +32,29 @@ export function MarketingNav() {
   }, [])
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-        scrolled
-          ? 'glass-nav glass-nav-scrolled bg-white/90 border-border/80'
-          : 'bg-background/80 backdrop-blur-md border-transparent'
-      }`}
-    >
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <div className="hidden lg:block bg-primary text-primary-foreground text-xs border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
+          <span className="font-medium opacity-90">
+            {lang === 'en' ? '7/24 support · KVKK compliant · Turkish infrastructure' : '7/24 destek · KVKK uyumlu · Türk altyapısı'}
+          </span>
+          <div className="flex items-center gap-5">
+            <a href="mailto:destek@gulivechat.com" className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+              <Mail className="w-3.5 h-3.5" /> destek@gulivechat.com
+            </a>
+            <Link href="/contact" className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+              <Phone className="w-3.5 h-3.5" /> {lang === 'en' ? 'Contact' : 'İletişim'}
+            </Link>
+          </div>
+        </div>
+      </div>
+      <nav
+        className={`transition-all duration-300 border-b ${
+          scrolled
+            ? 'glass-nav glass-nav-scrolled bg-white/90 border-border/80'
+            : 'bg-background/80 backdrop-blur-md border-transparent'
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-[4.25rem]">
           <Logo boyut="default" linkOlsun animasyonlu={false} />
@@ -107,6 +125,7 @@ export function MarketingNav() {
           </Link>
         </div>
       )}
-    </nav>
+      </nav>
+    </header>
   )
 }

@@ -349,6 +349,117 @@ body {
     transform: translateY(-1px);
   }
 
+  /* ECall-inspired marketing blocks — Gu Meridian renkleri */
+  .ecall-section-tag {
+    @apply inline-block text-sm font-bold tracking-wide mb-3;
+    color: var(--marketing-accent, #c9922e);
+  }
+
+  .ecall-hero-shape {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 90% 60% at 100% 0%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, color-mix(in srgb, var(--marketing-accent) 8%, transparent), transparent 50%);
+  }
+
+  .ecall-hero-pill {
+    @apply rounded-2xl border border-border bg-card p-5 sm:p-6 text-center shadow-md transition-all duration-300;
+  }
+
+  .ecall-hero-pill:hover {
+    @apply border-primary/25 shadow-lg;
+    transform: translateY(-4px);
+  }
+
+  .ecall-hero-pill-icon {
+    @apply w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-primary;
+    background: color-mix(in srgb, var(--primary) 12%, white);
+  }
+
+  .ecall-service-card {
+    @apply relative rounded-2xl border border-border bg-card p-7 h-full overflow-hidden transition-all duration-300;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ecall-service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--marketing-accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+  }
+
+  .ecall-service-card:hover {
+    @apply border-primary/20 shadow-lg;
+    transform: translateY(-6px);
+  }
+
+  .ecall-service-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .ecall-step-card {
+    @apply relative text-center p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm;
+  }
+
+  .ecall-step-num {
+    @apply w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center text-lg font-bold text-white;
+    background: linear-gradient(135deg, var(--primary), var(--success, #2d9b83));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+
+  .ecall-pricing-featured {
+    transform: scale(1.03);
+    z-index: 2;
+    box-shadow: var(--shadow-brand-lg);
+  }
+
+  @media (max-width: 1023px) {
+    .ecall-pricing-featured {
+      transform: none;
+    }
+  }
+
+  .ecall-cta-banner {
+    background:
+      linear-gradient(115deg, color-mix(in srgb, var(--primary) 92%, black) 0%, var(--primary) 42%, var(--marketing-navy) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ecall-cta-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 85% 50%, color-mix(in srgb, var(--marketing-accent) 25%, transparent), transparent 45%);
+    pointer-events: none;
+  }
+
+  .ecall-testimonial-card {
+    @apply relative rounded-2xl border border-border bg-card p-8 h-full;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ecall-testimonial-card::after {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 4rem;
+    line-height: 1;
+    font-family: Georgia, serif;
+    color: color-mix(in srgb, var(--primary) 15%, transparent);
+    pointer-events: none;
+  }
+
   @media (max-width: 1023px) {
     body:has(.marketing-site) #gu-chat-dock {
       bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;

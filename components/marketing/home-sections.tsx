@@ -7,11 +7,11 @@ import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta } from '@/lib/plan-cta'
 import {
   ArrowRight, Bot, BookOpen, BarChart3, MessageCircle, Users,
-  Workflow, Mail, Smartphone, MessageSquare, Sparkles, Inbox, Zap,
+  Workflow, Mail, Smartphone, MessageSquare, Inbox, Zap,
   Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
-import { HeroShowcase, HeroTrustPills } from '@/components/marketing/hero-showcase'
+import { HeroShowcase } from '@/components/marketing/hero-showcase'
 import {
   AiReplyShowcase,
   AutomationShowcase,
@@ -55,6 +55,7 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
         description={planMeta.desc}
         highlighted={plan.highlighted}
         badge={plan.highlighted ? t.pricing.popular : null}
+        className={plan.highlighted ? 'ecall-pricing-featured border-primary/30' : ''}
         price={
           plan.monthly === 0 ? (
             <span className="text-3xl font-bold tracking-tight">{t.pricing.free}</span>
@@ -86,17 +87,13 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
 export function HomeHero() {
   const t = useT()
   const { locale } = useLocale()
+  const tag =
+    locale === 'tr' ? 'En İyi Müşteri Deneyimi' : 'Best Customer Experience'
   return (
-    <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden marketing-hero-bg">
+    <section className="relative pt-28 pb-8 sm:pt-36 sm:pb-10 lg:pt-40 px-4 sm:px-6 lg:px-8 overflow-hidden marketing-hero-bg">
+      <div className="ecall-hero-shape" />
       <div
-        className="absolute inset-0 opacity-40 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(circle at 20% 20%, ${GU_BRAND.marketingHeroGlow} 0%, transparent 42%),
-            radial-gradient(circle at 80% 0%, rgba(201, 146, 46, 0.05) 0%, transparent 38%)`,
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-[0.25] pointer-events-none"
+        className="absolute inset-0 opacity-[0.2] pointer-events-none"
         style={{
           backgroundImage: `
             linear-gradient(to right, ${GU_BRAND.marketingHeroGrid} 1px, transparent 1px),
@@ -107,16 +104,13 @@ export function HomeHero() {
       />
 
       <div className="relative max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[1fr_1.08fr] gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.08fr] gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
             <FadeIn>
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 bg-white/90 text-primary border border-primary/15 shadow-sm backdrop-blur-sm">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t.hero.badge}
-              </span>
+              <span className="ecall-section-tag"># {tag}</span>
             </FadeIn>
             <FadeIn delay={0.05}>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08] text-foreground">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.35rem] font-bold tracking-tight leading-[1.08] text-foreground">
                 {locale === 'tr' ? (
                   <>
                     Müşterilerinize{' '}
@@ -132,26 +126,25 @@ export function HomeHero() {
               </h1>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <p className="mt-5 text-lg sm:text-xl text-slate-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
+              <p className="mt-5 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {t.hero.subtitle}
               </p>
             </FadeIn>
             <FadeIn delay={0.14}>
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link href="/register" className="btn-primary px-7 py-3.5 rounded-xl text-base shadow-brand">
+                <Link href="/register" className="btn-primary px-8 py-3.5 rounded-xl text-base shadow-brand">
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/demo"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-foreground bg-white border border-border hover:border-primary/30 hover:bg-primary-light transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold text-foreground bg-white border-2 border-border hover:border-primary/30 hover:bg-primary-light transition-all shadow-sm"
                 >
                   {t.hero.demo}
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-muted-foreground">
                 {locale === 'tr' ? trialHeroLine() : t.hero.trial}
               </p>
-              <HeroTrustPills />
             </FadeIn>
           </div>
 
@@ -568,14 +561,14 @@ export function PricingSection() {
   const { locale } = useLocale()
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-violet-50/80 via-fuchsia-50/40 to-orange-50/30 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-fuchsia-300/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-violet-300/20 rounded-full blur-3xl pointer-events-none" />
+    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-muted/30 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none opacity-40" style={{ background: `radial-gradient(circle, ${GU_BRAND.primaryGlow}, transparent 70%)` }} />
       <div className="max-w-6xl mx-auto relative">
         <FadeIn>
           <div className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 text-white shadow-lg shadow-fuchsia-500/25">
-              🚀 {locale === 'tr' ? 'PRO sadece ₺990/ay — 14 gün ücretsiz' : 'PRO from $49/mo — 14-day free trial'}
+            <span className="ecall-section-tag"># {t.pricing.title}</span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-primary text-primary-foreground shadow-brand">
+              {locale === 'tr' ? 'PRO sadece ₺990/ay — 14 gün ücretsiz' : 'PRO from $49/mo — 14-day free trial'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">{t.pricing.title}</h2>
             <p className="mt-3 text-muted-foreground">{t.pricing.subtitle}</p>
@@ -604,25 +597,29 @@ export function PricingSection() {
 export function TestimonialsSection() {
   const h = useT().home.testimonials
   return (
-    <section className="py-20 px-4 sm:px-6">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 bg-background">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">
+            <span className="ecall-section-tag"># {h.title}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{h.title}</h2>
           </div>
         </FadeIn>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-3 gap-6">
           {h.items.map((item, i) => (
             <FadeIn key={item.author} delay={i * 0.08}>
-              <div className="surface p-6 h-full flex flex-col hover:border-primary/20 transition-colors duration-200">
+              <div className="ecall-testimonial-card flex flex-col hover:border-primary/20 transition-colors duration-200">
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 text-warning fill-warning" />
+                    <Star key={j} className="w-3.5 h-3.5 text-[#C9922E] fill-[#C9922E]" />
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground flex-1 leading-relaxed">&ldquo;{item.quote}&rdquo;</p>
-                <div className="mt-5 pt-4 border-t border-border flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-700 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                <p className="text-sm text-muted-foreground flex-1 leading-relaxed relative z-10">&ldquo;{item.quote}&rdquo;</p>
+                <div className="mt-5 pt-4 border-t border-border flex items-center gap-3 relative z-10">
+                  <div
+                    className="w-10 h-10 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
+                    style={{ background: GU_BRAND.gradientBrand }}
+                  >
                     {item.initials}
                   </div>
                   <div>

@@ -3,11 +3,17 @@ import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
 import {
-  HomeHero, TrustStrip, FeatureGrid, AiShowcase, LiveTranslateSection, SharedInbox,
-  KnowledgeBaseSection, AiAutomationSection, ProductDeepDive,
-  UseCasesTabs, PricingSection, TestimonialsSection, FaqSection, FooterCta,
+  HomeHero, TrustStrip, FeatureGrid, AiShowcase,
+  PricingSection, TestimonialsSection, FaqSection,
 } from '@/components/marketing/home-sections'
-import { WidgetInstallStrip, AnalyticsStrip, PaymentFlowStrip } from '@/components/marketing/feature-micro-showcases'
+import {
+  HeroFeaturePills,
+  ServicesOfferGrid,
+  AboutSplitSection,
+  HowItWorksSteps,
+  DarkFeatureGrid,
+  FullWidthCtaBanner,
+} from '@/components/marketing/ecall-home-blocks'
 import { getHomeFaqs } from '@/lib/home-faqs'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { marketingMetadata } from '@/lib/marketing-pages/metadata'
@@ -27,22 +33,18 @@ export default async function HomePage() {
       <JsonLd data={[softwareApplicationJsonLd(contentLocale), faqJsonLd(faqs)]} />
       <MarketingNav />
       <HomeHero />
+      <HeroFeaturePills />
+      <AboutSplitSection />
+      <ServicesOfferGrid />
       <TrustStrip />
       <FeatureGrid />
-      <WidgetInstallStrip />
+      <HowItWorksSteps />
+      <DarkFeatureGrid />
       <AiShowcase />
-      <LiveTranslateSection />
-      <SharedInbox />
-      <KnowledgeBaseSection />
-      <AiAutomationSection />
-      <ProductDeepDive />
-      <AnalyticsStrip />
-      <UseCasesTabs />
       <PricingSection />
-      <PaymentFlowStrip reverse />
       <TestimonialsSection />
       <FaqSection />
-      <FooterCta />
+      <FullWidthCtaBanner />
       <MarketingFooter />
     </div>
   )

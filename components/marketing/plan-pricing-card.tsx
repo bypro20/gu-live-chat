@@ -8,24 +8,24 @@ const TIER_STYLES: Record<
   { accent: string; ring: string; badge: string }
 > = {
   FREE: {
-    accent: 'bg-gradient-to-r from-slate-400 to-slate-300',
+    accent: 'bg-gradient-to-r from-[#D4CFC6] to-[#E8E4DE]',
     ring: 'border-border hover:border-border-strong',
     badge: 'bg-muted text-muted-foreground',
   },
   STARTER: {
-    accent: 'bg-gradient-to-r from-violet-500 to-purple-500',
-    ring: 'border-border hover:border-violet-200 dark:hover:border-violet-800',
-    badge: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+    accent: 'bg-gradient-to-r from-[#146356] to-[#2D9B83]',
+    ring: 'border-border hover:border-primary/25',
+    badge: 'bg-primary/10 text-primary',
   },
   PRO: {
-    accent: 'bg-gradient-to-r from-fuchsia-500 via-purple-600 to-orange-500',
-    ring: 'border-fuchsia-400 ring-2 ring-fuchsia-300/40 shadow-brand-lg',
-    badge: 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white',
+    accent: 'bg-gradient-to-r from-[#146356] via-[#2D9B83] to-[#C9922E]',
+    ring: 'border-primary/40 ring-2 ring-primary/15',
+    badge: 'bg-primary text-primary-foreground',
   },
   BUSINESS: {
-    accent: 'bg-gradient-to-r from-purple-700 to-fuchsia-700',
-    ring: 'border-border hover:border-purple-400 dark:hover:border-purple-600',
-    badge: 'bg-purple-900 text-white dark:bg-purple-100 dark:text-purple-900',
+    accent: 'bg-gradient-to-r from-[#141210] to-[#146356]',
+    ring: 'border-border hover:border-primary/30',
+    badge: 'bg-[#141210] text-white',
   },
 }
 
