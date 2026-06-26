@@ -11,10 +11,34 @@
   }
 
   function safeCssColor(color) {
-    var c = String(color || '#6366F1').trim();
+    var c = String(color || '#146356').trim();
     if (/^#[0-9A-Fa-f]{3,8}$/.test(c)) return c;
     if (/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(c)) return c;
-    return '#6366F1';
+    return '#146356';
+  }
+
+  function hexChannel(hex, shift) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(function(c) { return c + c; }).join('');
+    var num = parseInt(h, 16);
+    var r = Math.min(255, Math.max(0, (num >> 16) + shift));
+    var g = Math.min(255, Math.max(0, ((num >> 8) & 255) + shift));
+    var b = Math.min(255, Math.max(0, (num & 255) + shift));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  function hexToRgba(hex, alpha) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(function(c) { return c + c; }).join('');
+    var num = parseInt(h, 16);
+    var r = (num >> 16) & 255;
+    var g = (num >> 8) & 255;
+    var b = num & 255;
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+
+  function brandGradient(color) {
+    return 'linear-gradient(135deg,' + hexChannel(color, 35) + ' 0%,' + color + ' 42%,#2D9B83 100%)';
   }
 
   function safeAvatarUrl(url) {
@@ -86,14 +110,14 @@
     '#gu-chat-dock{position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:14px!important;pointer-events:none!important;filter:none!important;}' +
     '@media(max-width:768px){#gu-chat-dock{bottom:0!important;right:0!important;left:0!important;padding:0 12px max(12px,env(safe-area-inset-bottom,12px)) 12px!important;gap:10px!important;align-items:flex-end!important;}#gu-chat-button{width:60px!important;height:60px!important;border-radius:20px!important;}#gu-teaser-card{width:min(300px,calc(100vw - 24px))!important;border-radius:20px!important;}}' +
     '#gu-teaser-card{pointer-events:auto!important;max-width:calc(100vw - 40px)!important;animation:gu-slide-up 0.55s cubic-bezier(0.16,1,0.3,1)!important;}' +
-    '#gu-teaser-top{height:5px!important;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA)!important;background-size:200% 100%!important;animation:gu-shimmer 3s ease infinite!important;}' +
+    '#gu-teaser-top{height:5px!important;background:linear-gradient(90deg,#146356,#2D9B83,#3DBDA5,#146356)!important;background-size:200% 100%!important;animation:gu-shimmer 3s ease infinite!important;}' +
     '#gu-launcher-row{display:flex!important;align-items:center!important;gap:12px!important;pointer-events:none!important;}' +
     '#gu-status-pill{pointer-events:none!important;display:none!important;}' +
     '#gu-launcher-wrap{position:relative!important;pointer-events:auto!important;}' +
     '#gu-launcher-ring,#gu-launcher-ring2{position:absolute!important;inset:-4px!important;border-radius:28px!important;pointer-events:none!important;}' +
-    '#gu-launcher-ring{animation:gu-ring 2s ease-out infinite!important;border:2px solid rgba(99,102,241,0.55)!important;}' +
-    '#gu-launcher-ring2{animation:gu-ring 2s ease-out 1s infinite!important;border:2px solid rgba(59,130,246,0.35)!important;}' +
-    '#gu-chat-button{position:relative!important;width:76px!important;height:76px!important;border-radius:24px!important;z-index:1!important;visibility:visible!important;pointer-events:auto!important;background:linear-gradient(135deg,#60A5FA 0%,#6366F1 35%,#8B5CF6 70%,#3B82F6 100%)!important;background-size:200% 200%!important;animation:gu-float 2.8s ease-in-out infinite,gu-shimmer 5s ease infinite!important;box-shadow:0 20px 56px rgba(99,102,241,0.5),0 0 0 2px rgba(255,255,255,0.35) inset,0 0 48px rgba(99,102,241,0.35)!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1)!important;}' +
+    '#gu-launcher-ring{animation:gu-ring 2s ease-out infinite!important;border:2px solid rgba(20,99,86,0.55)!important;}' +
+    '#gu-launcher-ring2{animation:gu-ring 2s ease-out 1s infinite!important;border:2px solid rgba(45,155,131,0.35)!important;}' +
+    '#gu-chat-button{position:relative!important;width:76px!important;height:76px!important;border-radius:24px!important;z-index:1!important;visibility:visible!important;pointer-events:auto!important;background:linear-gradient(135deg,#146356 0%,#2D9B83 55%,#3DBDA5 100%)!important;background-size:200% 200%!important;animation:gu-float 2.8s ease-in-out infinite,gu-shimmer 5s ease infinite!important;box-shadow:0 20px 56px rgba(20,99,86,0.45),0 0 0 2px rgba(255,255,255,0.35) inset,0 0 48px rgba(45,155,131,0.3)!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1)!important;}' +
     '#gu-widget-iframe{position:fixed!important;bottom:112px!important;right:20px!important;z-index:2147483647!important;visibility:visible!important;pointer-events:auto!important;filter:none!important;}' +
     '@media(max-width:768px){#gu-widget-iframe.gu-iframe-mobile-full{top:0!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;box-shadow:none!important;transform:none!important;}}' +
     'html,body{transform:none!important;filter:none!important;}' +
@@ -109,8 +133,8 @@
   (document.head || document.documentElement).appendChild(forceStyle);
 
   var appearance = {
-    primaryColor: '#6366F1',
-    welcomeMessage: 'Merhaba! 👋 Sorularınız mı var? Hemen yazın, anında yardımcı olalım.',
+    primaryColor: '#146356',
+    welcomeMessage: 'Merhaba! 👋 Fiyat, kurulum ve özellikler hakkında sorularınızı yanıtlayabilirim.',
     avatarUrl: null,
     websiteName: 'Canlı Destek',
     agentsOnline: true,
@@ -137,11 +161,18 @@
   }
 
   function applyPrimaryColor(color) {
-    if (!color || color.charAt(0) !== '#') return;
+    color = safeCssColor(color);
     var ring = document.getElementById('gu-launcher-ring');
-    if (ring) ring.style.borderColor = color + '88';
+    if (ring) ring.style.borderColor = hexToRgba(color, 0.55);
+    var ring2 = document.getElementById('gu-launcher-ring2');
+    if (ring2) ring2.style.borderColor = hexToRgba(color, 0.28);
     var top = document.getElementById('gu-teaser-top');
-    if (top) top.style.background = 'linear-gradient(90deg,' + color + ',#818CF8,#A78BFA,' + color + ')';
+    if (top) top.style.background = 'linear-gradient(90deg,' + color + ',#2D9B83,#3DBDA5,' + color + ')';
+    var btn = document.getElementById('gu-chat-button');
+    if (btn) {
+      btn.style.setProperty('background', brandGradient(color), 'important');
+      btn.style.setProperty('box-shadow', '0 20px 56px ' + hexToRgba(color, 0.45) + ', 0 0 0 2px rgba(255,255,255,0.35) inset, 0 0 48px ' + hexToRgba(color, 0.28), 'important');
+    }
   }
 
   var CHAT_ICON = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h6"/><path d="M9 14h4"/></svg>';
@@ -152,11 +183,11 @@
 
   var teaserCard = document.createElement('div');
   teaserCard.id = 'gu-teaser-card';
-  teaserCard.style.cssText = 'display:none;width:340px;max-width:calc(100vw - 40px);border-radius:24px;background:rgba(255,255,255,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:2px solid rgba(99,102,241,0.22);box-shadow:0 32px 64px -16px rgba(15,23,42,0.28),0 0 60px rgba(99,102,241,0.15);overflow:hidden;cursor:pointer;';
+  teaserCard.style.cssText = 'display:none;width:340px;max-width:calc(100vw - 40px);border-radius:24px;background:rgba(255,255,255,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:2px solid rgba(20,99,86,0.18);box-shadow:0 32px 64px -16px rgba(15,23,42,0.28),0 0 60px rgba(20,99,86,0.12);overflow:hidden;cursor:pointer;';
 
   var teaserTop = document.createElement('div');
   teaserTop.id = 'gu-teaser-top';
-  teaserTop.style.cssText = 'height:5px;background:linear-gradient(90deg,#60A5FA,#818CF8,#A78BFA,#60A5FA);background-size:200% 100%;';
+  teaserTop.style.cssText = 'height:5px;background:linear-gradient(90deg,#146356,#2D9B83,#3DBDA5,#146356);background-size:200% 100%;';
 
   var teaserBody = document.createElement('div');
   teaserBody.style.cssText = 'padding:18px 20px 20px;';
@@ -247,17 +278,17 @@
     teaserBody.innerHTML =
       '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">' +
         '<div style="position:relative;flex-shrink:0;">' +
-          '<div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,' + color + ',#818CF8);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 28px rgba(99,102,241,0.35);border:2px solid rgba(255,255,255,0.5);">' + avatarHtml + '</div>' +
-          '<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#10B981;border:3px solid #fff;box-shadow:0 0 10px rgba(16,185,129,0.8);"></span>' +
+          '<div style="width:56px;height:56px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 28px ' + hexToRgba(color, 0.22) + ';border:2px solid ' + hexToRgba(color, 0.28) + ';">' + avatarHtml + '</div>' +
+          '<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#2D9B83;border:3px solid #fff;box-shadow:0 0 10px rgba(45,155,131,0.7);"></span>' +
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
-          '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#0F172A;letter-spacing:-0.03em;">' + siteName + '</p>' +
-          '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#10B981;">🟢 Çevrimiçi</p>' +
+          '<p style="margin:0;font:800 16px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;color:#121110;letter-spacing:-0.03em;">' + siteName + '</p>' +
+          '<p style="margin:4px 0 0;font:600 12px/1.4 -apple-system,sans-serif;color:#2D9B83;">🟢 Çevrimiçi</p>' +
         '</div>' +
-        '<button type="button" id="gu-teaser-close" aria-label="Kapat" style="width:28px;height:28px;border:none;border-radius:10px;background:#F1F5F9;color:#64748B;font:700 16px/1 sans-serif;cursor:pointer;flex-shrink:0;">×</button>' +
+        '<button type="button" id="gu-teaser-close" aria-label="Kapat" style="width:28px;height:28px;border:none;border-radius:10px;background:#F4F1EC;color:#635E58;font:700 16px/1 sans-serif;cursor:pointer;flex-shrink:0;">×</button>' +
       '</div>' +
-      '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#334155;">' + welcome + '</p>' +
-      '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:linear-gradient(135deg,' + color + ',#818CF8);color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>';
+      '<p style="margin:0 0 16px;font:500 14px/1.6 -apple-system,sans-serif;color:#3D3A36;">' + welcome + '</p>' +
+      '<button type="button" id="gu-teaser-cta" style="width:100%;padding:14px 18px;border:none;border-radius:16px;background:#121110;color:#fff;font:700 15px/1.2 -apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 28px rgba(18,17,16,0.35);display:flex;align-items:center;justify-content:center;gap:8px;">💬 Hemen sohbet et →</button>';
 
     var closeBtn = document.getElementById('gu-teaser-close');
     if (closeBtn) {
@@ -353,7 +384,7 @@
     + '&embedTitle=' + encodeURIComponent(document.title || '');
   iframe.src = iframeSrc;
   iframe.id = 'gu-widget-iframe';
-  iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(99,102,241,0.2),0 0 120px rgba(99,102,241,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
+  iframe.style.cssText = 'border:none;position:fixed;bottom:' + (isMobileViewport ? '88px' : '112px') + ';right:' + (isMobileViewport ? '12px' : '20px') + ';left:' + (isMobileViewport ? '12px' : 'auto') + ';z-index:2147483647;width:' + (isMobileViewport ? 'auto' : '440px') + ';height:min(' + (isMobileViewport ? 'min(560px,calc(100vh - 108px))' : '680px,calc(100vh - 132px)') + ');max-height:calc(100vh - ' + (isMobileViewport ? '108px' : '132px') + ');border-radius:' + (isMobileViewport ? '22px' : '30px') + ';box-shadow:0 50px 100px -28px rgba(15,23,42,0.42),0 0 80px rgba(20,99,86,0.18),0 0 120px rgba(45,155,131,0.1);display:none;opacity:0;transform:translateY(28px) scale(0.92);transform-origin:bottom right;transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),transform 0.4s cubic-bezier(0.16,1,0.3,1);pointer-events:auto;background:transparent;filter:none;overflow:hidden;';
   iframe.allow = 'microphone; camera';
   iframe.title = 'Canlı Sohbet';
   document.body.appendChild(iframe);
@@ -1374,7 +1405,7 @@
 
     var acceptBtn = document.createElement('button');
     acceptBtn.textContent = 'Kabul Et';
-    acceptBtn.style.cssText = 'padding:8px 20px;border:none;border-radius:10px;background:#1972F5;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;';
+    acceptBtn.style.cssText = 'padding:8px 20px;border:none;border-radius:10px;background:#146356;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s;';
     acceptBtn.addEventListener('mouseenter', function() { acceptBtn.style.opacity = '0.9'; });
     acceptBtn.addEventListener('mouseleave', function() { acceptBtn.style.opacity = '1'; });
     acceptBtn.addEventListener('click', function() {

@@ -1,6 +1,6 @@
 /** Shared widget design — embed launcher, iframe panel, dashboard preview. */
 
-export const WIDGET_ASSET_VERSION = '2026.06.26a'
+export const WIDGET_ASSET_VERSION = '2026.06.26b'
 
 export function adjustColor(hex: string, amount: number): string {
   let h = hex.replace('#', '')
@@ -34,7 +34,7 @@ export function heroGradient(primary: string): string {
 }
 
 export function auroraGradient(primary: string): string {
-  return `linear-gradient(135deg, ${adjustColor(primary, 60)} 0%, ${primary} 25%, #8B5CF6 55%, ${adjustColor(primary, -30)} 100%)`
+  return `linear-gradient(135deg, ${adjustColor(primary, 45)} 0%, ${primary} 38%, #2D9B83 72%, ${adjustColor(primary, -35)} 100%)`
 }
 
 export function getWidgetGlobalCss(): string {
@@ -70,8 +70,8 @@ export function getWidgetGlobalCss(): string {
       50%      { transform: translateY(-6px); }
     }
     @keyframes gwGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.4), 0 0 60px rgba(25,114,245,0.25); }
-      50%      { box-shadow: 0 0 30px rgba(139,92,246,0.55), 0 0 80px rgba(25,114,245,0.35); }
+      0%, 100% { box-shadow: 0 0 20px rgba(20,99,86,0.35), 0 0 60px rgba(45,155,131,0.2); }
+      50%      { box-shadow: 0 0 30px rgba(45,155,131,0.45), 0 0 80px rgba(20,99,86,0.28); }
     }
     @keyframes gwShimmer {
       0%   { background-position: 0% 50%; }
@@ -93,10 +93,10 @@ export function getWidgetGlobalCss(): string {
     .gw-input::placeholder { color: #94A3B8 !important; opacity: 1; }
     .gw-msg-btn:hover { opacity: 1 !important; }
     .gw-dot-bg {
-      background-color: #EEF2FF;
+      background-color: #FAF8F5;
       background-image:
-        radial-gradient(rgba(99,102,241,0.12) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(238,242,255,0.3) 100%);
+        radial-gradient(rgba(20,99,86,0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(244,241,236,0.35) 100%);
       background-size: 20px 20px, 100% 100%;
     }
     .gw-panel-glow {
@@ -107,7 +107,7 @@ export function getWidgetGlobalCss(): string {
       position: absolute;
       inset: -2px;
       border-radius: 30px;
-      background: linear-gradient(135deg, #60A5FA, #818CF8, #A78BFA, #60A5FA);
+      background: linear-gradient(135deg, #146356, #2D9B83, #3DBDA5, #146356);
       background-size: 300% 300%;
       animation: gwShimmer 4s ease infinite;
       z-index: -1;
@@ -205,8 +205,8 @@ export function getMessagesAreaStyle(): Record<string, string | number> {
 export function getComposerShellStyle(): Record<string, string | number> {
   return {
     padding: '12px 16px max(16px, env(safe-area-inset-bottom, 16px))',
-    borderTop: '1px solid rgba(99,102,241,0.1)',
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.95) 100%)',
+    borderTop: '1px solid rgba(20,99,86,0.1)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,241,236,0.96) 100%)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     flexShrink: 0,
@@ -268,8 +268,8 @@ export function agentBubbleStyle(): Record<string, string | number> {
     fontSize: '14px',
     lineHeight: 1.65,
     color: '#0F172A',
-    border: '1px solid rgba(99,102,241,0.12)',
-    boxShadow: '0 6px 20px rgba(99,102,241,0.08)',
+    border: '1px solid rgba(20,99,86,0.12)',
+    boxShadow: '0 6px 20px rgba(20,99,86,0.08)',
   }
 }
 
