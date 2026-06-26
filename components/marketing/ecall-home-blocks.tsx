@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { useLocale } from '@/components/marketing/locale-provider'
-import { PanelTourShowcase } from '@/components/marketing/panel-tour-showcase'
+import { PanelDemoVideo } from '@/components/marketing/panel-demo-video'
 import { GU_BRAND } from '@/lib/brand-theme'
 
 export function HeroFeaturePills() {
@@ -186,7 +186,7 @@ export function AboutSplitSection() {
     <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 premium-section-light">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <FadeIn>
-          <PanelTourShowcase className="max-w-none" />
+          <PanelDemoVideo />
         </FadeIn>
         <FadeIn delay={0.08}>
           <span className="premium-section-tag mb-4 inline-block">

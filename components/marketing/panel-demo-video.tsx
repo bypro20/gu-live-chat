@@ -17,6 +17,7 @@ export function PanelDemoVideo({ className = '' }: { className?: string }) {
         className="w-full aspect-video object-contain bg-[#0a0a09]"
         controls
         playsInline
+        muted
         preload="metadata"
         aria-label={lang === 'en' ? 'Gu Live Chat panel tour video' : 'Gu Live Chat panel turu videosu'}
       >
