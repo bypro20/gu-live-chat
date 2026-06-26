@@ -1,6 +1,6 @@
 import { prisma } from '../db'
 import { emitBotMessage, emitBotTyping, emitVisitorMessagesRead } from '../socket-events'
-import { generateAiReply, isAiLlmAvailable } from './provider'
+import { generateAiReply, isAiLlmAvailable, fallbackReply, type ChatMessage } from './provider'
 import { loadRelevantKnowledge, loadKnowledge, toChatMessages } from './knowledge'
 import { getAiFeatureFlags } from './feature-flags'
 import { describeImageUrl } from './vision'
@@ -110,14 +110,92 @@ async function sendBotReply(
   await deliverChannelReply(params.conversationId, content)
 }
 
+function buildMarketingFallbackContent(
+  botDisplayName: string,
+  userMessage: string,
+  knowledge: ReturnType<typeof getMarketingKnowledgeCache>
+): string {
+  const messages: ChatMessage[] = userMessage
+    ? [{ role: 'user', content: userMessage }]
+    : []
+  return fallbackReply(botDisplayName, messages, knowledge)
+}
+
+async function clearMarketingChatbotBlock(conversationId: string): Promise<void> {
+  await prisma.conversation.updateMany({
+    where: { id: conversationId, chatbotCompleted: false },
+    data: { chatbotCompleted: true, chatbotHandedToAi: true },
+  })
+}
+
+/** Marketing widget — Gemini başarısız olsa bile ziyaretçiye yanıt garantisi. */
+export async function sendMarketingFallbackReply(
+  params: AutoReplyParams,
+  userMessage = '',
+): Promise<void> {
+  const website = await prisma.website.findUnique({
+    where: { id: params.websiteDbId },
+    select: { name: true, avatarUrl: true },
+  })
+  const agentFields = await loadWebsiteAgentFields(params.websiteDbId)
+  const botIdentity = resolveWidgetAgentIdentity({
+    websiteName: website?.name || 'Destek',
+    agentDisplayName: agentFields.agentDisplayName,
+    agentTitle: agentFields.agentTitle,
+    avatarUrl: website?.avatarUrl,
+    isMarketing: true,
+  })
+
+  const content = buildMarketingFallbackContent(
+    botIdentity.replyName,
+    userMessage,
+    getMarketingKnowledgeCache()
+  )
+
+  await sendBotReply(params, content, botIdentity.replyName, botIdentity.avatarUrl)
+}
+
+export async function ensureMarketingWidgetReply(
+  params: AutoReplyParams,
+  since?: Date,
+): Promise<boolean> {
+  await maybeRunAiAutoReply(params)
+
+  const botMessage = await prisma.message.findFirst({
+    where: {
+      conversationId: params.conversationId,
+      senderType: 'BOT',
+      ...(since ? { createdAt: { gte: since } } : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
+  })
+
+  if (botMessage) return true
+
+  const lastVisitor = await prisma.message.findFirst({
+    where: { conversationId: params.conversationId, senderType: 'VISITOR' },
+    orderBy: { createdAt: 'desc' },
+    select: { content: true },
+  })
+
+  await sendMarketingFallbackReply(params, lastVisitor?.content?.trim() || '')
+  return true
+}
+
 /**
  * Hibrit AI Agent: önce bilgi bankası SSS eşleşmesi, sonra LLM.
  * Temsilci atanmadığı sürece standart talepleri otomatik yanıtlar.
  */
 export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void> {
+  const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
+  let botDisplayName = 'Asistan'
+
   try {
-    const waiting = await isChatbotWaitingForInput(params.conversationId)
-    if (waiting) return
+    if (!isMarketing) {
+      const waiting = await isChatbotWaitingForInput(params.conversationId)
+      if (waiting) return
+    }
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: params.conversationId },
@@ -135,15 +213,20 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (!conversation) return
     if (conversation.assignedToId) return
 
-    const hasAi =
-      (await websiteHasUnlimitedAccess(params.websiteDbId)) ||
-      (await websiteHasAiAssistant(params.websiteDbId, conversation.website.plan))
-    if (!hasAi) return
+    if (isMarketing) {
+      await ensureMarketingAiBeforeReply(params.websiteDbId, params.websitePublicId)
+      await clearMarketingChatbotBlock(params.conversationId)
+    } else {
+      const hasAi =
+        (await websiteHasUnlimitedAccess(params.websiteDbId)) ||
+        (await websiteHasAiAssistant(params.websiteDbId, conversation.website.plan))
+      if (!hasAi) return
 
-    await ensureMarketingAiBeforeReply(params.websiteDbId, params.websitePublicId)
+      await ensureMarketingAiBeforeReply(params.websiteDbId, params.websitePublicId)
 
-    if (conversation.chatbotId && !conversation.chatbotCompleted && !conversation.chatbotHandedToAi) {
-      return
+      if (conversation.chatbotId && !conversation.chatbotCompleted && !conversation.chatbotHandedToAi) {
+        return
+      }
     }
 
     let aiConfig = await prisma.aIConfig.findUnique({
@@ -153,9 +236,13 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       aiConfig = await ensureAiConfig(params.websiteDbId)
     }
 
-    if (!aiConfig || !aiConfig.isActive || !aiConfig.autoReply) return
+    if (!isMarketing && (!aiConfig || !aiConfig.isActive || !aiConfig.autoReply)) return
 
-    const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
+    if (isMarketing && (!aiConfig || !aiConfig.isActive || !aiConfig.autoReply)) {
+      await ensureMarketingSiteAiReady(params.websiteDbId)
+      aiConfig =
+        (await prisma.aIConfig.findUnique({ where: { websiteId: params.websiteDbId } })) ?? aiConfig
+    }
 
     const recent = await prisma.message.findMany({
       where: { conversationId: params.conversationId },
@@ -194,14 +281,16 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       avatarUrl: conversation.website.avatarUrl,
       isMarketing,
     })
-    const botDisplayName = botIdentity.replyName
+    botDisplayName = botIdentity.replyName
     const botAvatar = botIdentity.avatarUrl
 
-    emitBotTyping({
-      conversationId: params.conversationId,
-      agentName: botDisplayName,
-      start: true,
-    })
+    if (!isMarketing) {
+      emitBotTyping({
+        conversationId: params.conversationId,
+        agentName: botDisplayName,
+        start: true,
+      })
+    }
 
     const readIds = isMarketing ? [] : await markVisitorMessagesRead(params.conversationId)
     if (readIds.length > 0) {
@@ -216,25 +305,38 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
           temperature: 0.82,
         }
       : {
-          provider: aiConfig.provider,
-          model: aiConfig.model,
-          apiKey: aiConfig.apiKey,
-          temperature: aiConfig.temperature,
+          provider: aiConfig!.provider,
+          model: aiConfig!.model,
+          apiKey: aiConfig!.apiKey,
+          temperature: aiConfig!.temperature,
         }
     const llmReady = isAiLlmAvailable(dbConfig)
+    let replied = false
 
     try {
-      // LLM varken kelime eşleşmesiyle aynı metni yapıştırma — model bilgi bankasından doğal yanıt üretsin
       if (!llmReady) {
         const faqHit = matchFaqFromKnowledge(last.content, knowledgeForReply)
         if (faqHit && faqHit.confidence >= 0.5) {
           await sendBotReply(params, faqHit.answer, botDisplayName, botAvatar)
+          replied = true
+          return
+        }
+        if (isMarketing) {
+          const fallback = buildMarketingFallbackContent(botDisplayName, last.content, knowledgeForReply)
+          await sendBotReply(params, fallback, botDisplayName, botAvatar)
+          replied = true
           return
         }
       }
 
       const messages = toChatMessages(ordered)
-      if (messages.length === 0) return
+      if (messages.length === 0) {
+        if (isMarketing) {
+          const fallback = buildMarketingFallbackContent(botDisplayName, last.content, knowledgeForReply)
+          await sendBotReply(params, fallback, botDisplayName, botAvatar)
+        }
+        return
+      }
 
       const visitorContext = isMarketing
         ? undefined
@@ -258,7 +360,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         knowledge: knowledgeForReply,
         systemPrompt: isMarketing
           ? buildMarketingSystemPrompt(agentFields.agentDisplayName)
-          : aiConfig.systemPrompt || undefined,
+          : aiConfig?.systemPrompt || undefined,
         visitorContext: [visitorContext, visionContext].filter(Boolean).join('\n\n') || undefined,
         webSearchEnabled: isMarketing ? false : flags.webSearchEnabled,
         smartRoutingEnabled: isMarketing ? false : flags.smartRoutingEnabled,
@@ -273,24 +375,51 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       })
 
       const content = reply?.trim()
-      if (!content) return
+      if (!content) {
+        if (isMarketing) {
+          const fallback = buildMarketingFallbackContent(botDisplayName, last.content, knowledgeForReply)
+          await sendBotReply(params, fallback, botDisplayName, botAvatar)
+          replied = true
+        }
+        return
+      }
 
       await sendBotReply(params, content, botDisplayName, botAvatar)
+      replied = true
     } finally {
+      if (!isMarketing) {
+        emitBotTyping({
+          conversationId: params.conversationId,
+          agentName: botDisplayName,
+          start: false,
+        })
+      }
+    }
+
+    if (isMarketing && !replied) {
+      const fallback = buildMarketingFallbackContent(botDisplayName, last.content, knowledgeForReply)
+      await sendBotReply(params, fallback, botDisplayName, botAvatar)
+    }
+  } catch (err) {
+    console.error('[AI auto-reply] failed for conversation', params.conversationId, err)
+    if (!isMarketing) {
       emitBotTyping({
         conversationId: params.conversationId,
         agentName: botDisplayName,
         start: false,
       })
+      return
     }
-  } catch {
-    console.error('[AI auto-reply] failed for conversation', params.conversationId)
-    if (!(await isPlatformMarketingWebsiteId(params.websitePublicId))) {
-      emitBotTyping({
-        conversationId: params.conversationId,
-        agentName: 'Asistan',
-        start: false,
+
+    try {
+      const lastVisitor = await prisma.message.findFirst({
+        where: { conversationId: params.conversationId, senderType: 'VISITOR' },
+        orderBy: { createdAt: 'desc' },
+        select: { content: true },
       })
+      await sendMarketingFallbackReply(params, lastVisitor?.content?.trim() || '')
+    } catch (fallbackErr) {
+      console.error('[AI auto-reply] marketing fallback failed:', fallbackErr)
     }
   }
 }

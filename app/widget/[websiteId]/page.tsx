@@ -29,6 +29,7 @@ import {
   validateVisitorIdentityInput,
   widgetIdentityRequired,
 } from '@/lib/widget-identity'
+import { withWidgetIdentityDefaults } from '@/lib/widget-platform-defaults'
 import { recordWidgetPageview, requestWidgetDeviceGeo, resolveWidgetEmbedContext } from '@/lib/widget-embed-context'
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
@@ -211,12 +212,14 @@ const WIDGET_STRINGS = {
     quickChat: '💬 Sohbet başlat',
     quickPricing: '💰 Fiyatlandırma',
     quickSupport: '🛠️ Destek talebi',
-    preChatHi: 'Sohbete başlamadan önce',
-    preChatSub: 'Size daha iyi yardımcı olabilmemiz için adınızı ve e-posta adresinizi girin.',
-    preChatRequired: 'İsim ve e-posta zorunludur — anonim sohbet kabul edilmez.',
+    preChatHi: 'Tanışalım',
+    preChatSub: 'Size daha iyi yardımcı olabilmemiz için birkaç bilgi rica ediyoruz.',
+    preChatRequired: 'Bilgileriniz yalnızca destek sürecinde kullanılır.',
     skipPreChat: 'Atla, doğrudan yaz',
-    namePlaceholder: 'Adınız',
-    emailPlaceholder: 'E-posta adresiniz',
+    nameLabel: 'Adınız',
+    emailLabel: 'E-posta adresiniz',
+    namePlaceholder: 'Örn. Ayşe Yılmaz',
+    emailPlaceholder: 'ornek@firma.com',
     startChat: 'Sohbete Başla',
     sslNote: '256-bit SSL ile korunmaktadır',
     inputPlaceholder: 'Mesajınızı yazın...',
@@ -262,12 +265,14 @@ const WIDGET_STRINGS = {
     quickChat: '💬 Start chat',
     quickPricing: '💰 Pricing',
     quickSupport: '🛠️ Support request',
-    preChatHi: 'Before we chat',
-    preChatSub: 'Please enter your name and email so we can assist you properly.',
-    preChatRequired: 'Name and email are required — anonymous chat is not available.',
+    preChatHi: 'Let\'s get started',
+    preChatSub: 'Share a few details so we can assist you better.',
+    preChatRequired: 'Your information is used only for support.',
     skipPreChat: 'Skip, start typing',
-    namePlaceholder: 'Your name',
-    emailPlaceholder: 'Your email address',
+    nameLabel: 'Your name',
+    emailLabel: 'Email address',
+    namePlaceholder: 'e.g. Jane Smith',
+    emailPlaceholder: 'you@company.com',
     startChat: 'Start Chat',
     sslNote: 'Protected with 256-bit SSL',
     inputPlaceholder: 'Type your message...',
@@ -1307,10 +1312,42 @@ export default function WidgetPage() {
           createdAt: data.aiReply.createdAt || new Date().toISOString(),
         }
         setMessages((prev) => (prev.some((m) => m.id === botMsg.id) ? prev : [...prev, botMsg]))
-        setIsTyping(false)
-        setAwaitingReply(false)
         setRevealedText((prev) => ({ ...prev, [botMsg.id]: botMsg.content }))
+      } else if (isMarketingWidgetSite(websiteId, config)) {
+        const pollBotReply = async (attempt = 0) => {
+          if (attempt >= 8) return
+          await new Promise((r) => setTimeout(r, attempt === 0 ? 400 : 700))
+          try {
+            const params = new URLSearchParams({
+              websiteId,
+              fingerprint: getFingerprint(),
+            })
+            if (conversationId || data.conversationId) {
+              params.set('conversationId', conversationId || data.conversationId)
+            }
+            const pollRes = await fetch(`/api/widget/messages?${params.toString()}`)
+            if (!pollRes.ok) {
+              void pollBotReply(attempt + 1)
+              return
+            }
+            const pollData = await pollRes.json()
+            const bot = [...(pollData.messages || [])]
+              .reverse()
+              .find((m: Message) => m.senderType === 'BOT' || m.senderType === 'AGENT')
+            if (bot?.content) {
+              setMessages((prev) => (prev.some((m) => m.id === bot.id) ? prev : [...prev, bot]))
+              setRevealedText((prev) => ({ ...prev, [bot.id]: bot.content }))
+              return
+            }
+            void pollBotReply(attempt + 1)
+          } catch {
+            void pollBotReply(attempt + 1)
+          }
+        }
+        void pollBotReply()
       }
+      setIsTyping(false)
+      setAwaitingReply(false)
     } catch (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       setSendError('Bağlantı hatası — mesaj gönderilemedi')
@@ -1325,7 +1362,7 @@ export default function WidgetPage() {
     const timeout = window.setTimeout(() => {
       setIsTyping(false)
       setAwaitingReply(false)
-    }, 45000)
+    }, 20000)
     return () => window.clearTimeout(timeout)
   }, [awaitingReply, isTyping])
 
@@ -1549,6 +1586,9 @@ export default function WidgetPage() {
   }
 
   const identityGate = !!config && needsIdentityGate(config) && !identityComplete
+  const identityPolicy = withWidgetIdentityDefaults(config)
+  const showNameField = identityPolicy.requireName
+  const showEmailField = identityPolicy.requireEmail
 
   const mainWidget = (
     <div style={{
@@ -1773,78 +1813,187 @@ export default function WidgetPage() {
               flex: 1,
               minHeight: 0,
               overflowY: 'auto',
-              padding: '24px 20px',
+              padding: '20px 18px 24px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              gap: '12px',
             }}>
-              <p style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>{t.preChatHi}</p>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748B', lineHeight: 1.55 }}>{t.preChatSub}</p>
-              <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#94A3B8', fontWeight: 600 }}>{t.preChatRequired}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
-                {config?.requireName === true && (
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <input type="text" placeholder={t.namePlaceholder} value={visitorInfo.name} autoComplete="name"
-                    onChange={(e) => { setVisitorInfo(prev => ({ ...prev, name: e.target.value })); setIdentityError(null) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
-                    style={{
-                      width: '100%', padding: '12px 14px 12px 38px',
-                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
-                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
-                  />
+              <div style={{
+                width: '100%',
+                maxWidth: '360px',
+                margin: '0 auto',
+                background: '#FFFFFF',
+                border: '1px solid #E8EDF5',
+                borderRadius: '20px',
+                padding: '22px 20px 20px',
+                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.08)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '14px',
+                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -18)} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    boxShadow: `0 10px 24px ${hexToRgba(primaryColor, 0.28)}`,
+                  }}>
+                    {avatarEl(44)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>
+                      {t.preChatHi}
+                    </p>
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748B', lineHeight: 1.45 }}>
+                      {headerName} · {t.typicalReply}
+                    </p>
+                  </div>
                 </div>
-                )}
-                {config?.requireEmail === true && (
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <input type="email" placeholder={t.emailPlaceholder} value={visitorInfo.email} autoComplete="email"
-                    onChange={(e) => { setVisitorInfo(prev => ({ ...prev, email: e.target.value })); setIdentityError(null) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
+
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#475569', lineHeight: 1.6 }}>
+                  {t.preChatSub}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {showNameField && (
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', letterSpacing: '0.01em' }}>
+                        {t.nameLabel}
+                      </span>
+                      <div style={{ position: 'relative' }}>
+                        <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <input
+                          type="text"
+                          placeholder={t.namePlaceholder}
+                          value={visitorInfo.name}
+                          autoComplete="name"
+                          autoFocus
+                          onChange={(e) => { setVisitorInfo(prev => ({ ...prev, name: e.target.value })); setIdentityError(null) }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
+                          style={{
+                            width: '100%',
+                            padding: '13px 14px 13px 42px',
+                            border: '1.5px solid #D9E2EC',
+                            borderRadius: '14px',
+                            fontSize: '14px',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            boxSizing: 'border-box',
+                            background: '#FFFFFF',
+                            color: '#0F172A',
+                            transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = primaryColor
+                            e.currentTarget.style.boxShadow = `0 0 0 4px ${hexToRgba(primaryColor, 0.12)}`
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = '#D9E2EC'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        />
+                      </div>
+                    </label>
+                  )}
+
+                  {showEmailField && (
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', letterSpacing: '0.01em' }}>
+                        {t.emailLabel}
+                      </span>
+                      <div style={{ position: 'relative' }}>
+                        <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <input
+                          type="email"
+                          placeholder={t.emailPlaceholder}
+                          value={visitorInfo.email}
+                          autoComplete="email"
+                          onChange={(e) => { setVisitorInfo(prev => ({ ...prev, email: e.target.value })); setIdentityError(null) }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmitIdentity() }}
+                          style={{
+                            width: '100%',
+                            padding: '13px 14px 13px 42px',
+                            border: '1.5px solid #D9E2EC',
+                            borderRadius: '14px',
+                            fontSize: '14px',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            boxSizing: 'border-box',
+                            background: '#FFFFFF',
+                            color: '#0F172A',
+                            transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = primaryColor
+                            e.currentTarget.style.boxShadow = `0 0 0 4px ${hexToRgba(primaryColor, 0.12)}`
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = '#D9E2EC'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        />
+                      </div>
+                    </label>
+                  )}
+
+                  {identityError && (
+                    <div style={{
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      background: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                    }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#DC2626', fontWeight: 600, lineHeight: 1.45 }}>
+                        {identityError}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => void handleSubmitIdentity()}
+                    disabled={identitySubmitting}
                     style={{
-                      width: '100%', padding: '12px 14px 12px 38px',
-                      border: '1.5px solid #E2E8F0', borderRadius: '12px',
-                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
-                      boxSizing: 'border-box', background: '#F8FAFC', color: '#0F172A',
+                      width: '100%',
+                      padding: '14px 16px',
+                      marginTop: '2px',
+                      background: identitySubmitting ? '#94A3B8' : `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -14)} 100%)`,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '14px',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      cursor: identitySubmitting ? 'wait' : 'pointer',
+                      fontFamily: 'inherit',
+                      boxShadow: identitySubmitting ? 'none' : `0 10px 24px ${hexToRgba(primaryColor, 0.28)}`,
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = primaryColor; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = `0 0 0 3px ${primaryColor}18` }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.boxShadow = 'none' }}
-                  />
+                  >
+                    {identitySubmitting ? t.sending : t.startChat}
+                  </button>
                 </div>
-                )}
-                {identityError && (
-                  <p style={{ margin: 0, fontSize: '12px', color: '#EF4444', fontWeight: 600 }}>{identityError}</p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleSubmitIdentity()}
-                  disabled={identitySubmitting}
-                  style={{
-                    width: '100%', padding: '13px',
-                    background: identitySubmitting ? '#94A3B8' : primaryColor,
-                    color: '#fff',
-                    border: 'none', borderRadius: '12px',
-                    fontSize: '14px', fontWeight: 700, cursor: identitySubmitting ? 'wait' : 'pointer',
-                    fontFamily: 'inherit',
-                    boxShadow: identitySubmitting ? 'none' : `0 4px 14px ${primaryColor}35`,
-                  }}
-                >
-                  {identitySubmitting ? t.sending : t.startChat}
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '4px' }}>
-                  <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#CBD5E1" strokeWidth="2">
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginTop: '16px',
+                  paddingTop: '14px',
+                  borderTop: '1px solid #EEF2F7',
+                }}>
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94A3B8" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#CBD5E1', fontWeight: 500 }}>{t.sslNote}</p>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>
+                    {t.sslNote} · {t.preChatRequired}
+                  </p>
                 </div>
               </div>
             </div>

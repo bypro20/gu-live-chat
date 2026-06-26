@@ -6,7 +6,7 @@ import { notifyNewConversation, notifyWebsiteMembers } from '@/lib/notifications
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
-import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
+import { maybeRunAiAutoReply, ensureMarketingWidgetReply } from '@/lib/ai/auto-reply'
 import { maybeAutoResolveOnSatisfaction } from '@/lib/ai/satisfaction-detect'
 import { analyzeSentiment, refineSentimentLater } from '@/lib/ai/sentiment'
 import { getClientIp } from '@/lib/ip-utils'
@@ -341,7 +341,15 @@ export async function POST(req: Request) {
 
     if (isMarketing) {
       try {
-        await runAiPipeline()
+        await ensureMarketingWidgetReply(
+          {
+            websiteDbId: website.id,
+            websitePublicId: website.websiteId,
+            conversationId,
+            visitorId: visitor.id,
+          },
+          message.createdAt,
+        )
         const botMessage = await prisma.message.findFirst({
           where: {
             conversationId,
