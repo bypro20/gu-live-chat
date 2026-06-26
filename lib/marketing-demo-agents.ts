@@ -10,9 +10,9 @@ export type MarketingDemoAgent = {
 
 export const MARKETING_DEMO_AGENTS: MarketingDemoAgent[] = [
   {
-    name: 'Deniz',
-    fullName: 'Deniz Arslan',
-    image: '/marketing/agents/deniz.jpg',
+    name: 'Merve',
+    fullName: 'Merve Yılmaz',
+    image: '/marketing/agents/selin.jpg',
   },
   {
     name: 'Emre',
@@ -20,9 +20,9 @@ export const MARKETING_DEMO_AGENTS: MarketingDemoAgent[] = [
     image: '/marketing/agents/emre.jpg',
   },
   {
-    name: 'Selin',
-    fullName: 'Selin Demir',
-    image: '/marketing/agents/selin.jpg',
+    name: 'Deniz',
+    fullName: 'Deniz Arslan',
+    image: '/marketing/agents/deniz.jpg',
   },
 ]
 
@@ -38,7 +38,7 @@ export const MARKETING_AGENT_TITLE = 'Müşteri Destek Uzmanı · Genellikle bir
 export const MARKETING_AI_BRAND_NAME = MARKETING_PRIMARY_AGENT.fullName
 
 export const MARKETING_WIDGET_WELCOME =
-  'Merhaba! 👋 Ben Deniz, Gu Live Chat ekibinden. Canlı destek widget\'ı, AI asistan ve fiyat paketleri hakkında sorularınızı yanıtlayabilirim — ne merak ediyorsunuz?'
+  'Merhaba! 👋 Ben Merve, Gu Live Chat ekibinden. Canlı destek widget\'ı, AI asistan ve fiyat paketleri dahil aklınıza takılan her şeyi sorabilirsiniz — nasıl yardımcı olayım?'
 
 export function toPublicAssetUrl(path: string | null | undefined, origin?: string): string | null {
   if (!path) return null

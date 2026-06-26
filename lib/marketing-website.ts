@@ -5,10 +5,28 @@ import { ensureMarketingSiteAiReady } from './marketing-ai-setup'
 import { loadWebsiteAgentFields, saveWebsiteAgentFields } from './website-agent-fields'
 import {
   MARKETING_AGENT_TITLE,
+  MARKETING_DEMO_AGENTS,
   MARKETING_PRIMARY_AGENT,
   MARKETING_WIDGET_DISPLAY_NAME,
   MARKETING_WIDGET_WELCOME,
 } from './marketing-demo-agents'
+
+/** Eski/otomatik atanmış demo asistan isimleri — yeni birincil asistana taşınır. */
+const LEGACY_MARKETING_AGENT_NAMES = new Set(
+  ['Deniz Arslan', 'Selin Demir', 'Emre Kaya', ...MARKETING_DEMO_AGENTS.map((a) => a.fullName)]
+    .map((n) => n.toLowerCase()),
+)
+
+/** Eski/otomatik atanmış demo asistan görselleri — yeni birincil görsele taşınır. */
+const LEGACY_MARKETING_AGENT_IMAGES = new Set([
+  '/marketing/agents/deniz.jpg',
+  '/marketing/agents/selin.jpg',
+  '/marketing/agents/emre.jpg',
+  ...MARKETING_DEMO_AGENTS.map((a) => a.image),
+])
+
+/** Otomatik üretilmiş "Ben <isim>, Gu Live Chat ekibinden" karşılamalarını yakalar. */
+const AUTO_MARKETING_WELCOME_RE = /ben\s+\w+,?\s+gu live chat ekibinden/i
 
 const MARKETING_DOMAIN = (
   process.env.MARKETING_WEBSITE_DOMAIN || SITE_DOMAIN
@@ -128,10 +146,12 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
     if (legacyName) {
       patch.name = MARKETING_WIDGET_DISPLAY_NAME
     }
-    if (!current.avatarUrl?.trim()) {
+    const currentAvatar = current.avatarUrl?.trim() || ''
+    if (!currentAvatar || LEGACY_MARKETING_AGENT_IMAGES.has(currentAvatar)) {
       patch.avatarUrl = MARKETING_PRIMARY_AGENT.image
     }
-    if (!current.welcomeMessage?.trim()) {
+    const currentWelcome = current.welcomeMessage?.trim() || ''
+    if (!currentWelcome || AUTO_MARKETING_WELCOME_RE.test(currentWelcome)) {
       patch.welcomeMessage = MARKETING_WIDGET_WELCOME
     }
 
@@ -141,9 +161,11 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
     })
 
     const agentFields = await loadWebsiteAgentFields(websiteInternalId)
+    const storedAgentName = agentFields.agentDisplayName?.trim() || ''
+    const isCustomAgentName =
+      storedAgentName.length > 0 && !LEGACY_MARKETING_AGENT_NAMES.has(storedAgentName.toLowerCase())
     await saveWebsiteAgentFields(websiteInternalId, {
-      agentDisplayName:
-        agentFields.agentDisplayName?.trim() || MARKETING_PRIMARY_AGENT.fullName,
+      agentDisplayName: isCustomAgentName ? storedAgentName : MARKETING_PRIMARY_AGENT.fullName,
       agentTitle: agentFields.agentTitle?.trim() || MARKETING_AGENT_TITLE,
     })
   } catch (e) {
