@@ -17,8 +17,8 @@ import { isValidCustomerEmbedUrl, normalizeExternalUrl } from '@/lib/widget-embe
 import {
   buildVisitorGeoUpdate,
   buildVisitorSessionMetadataFast,
-  enrichVisitorSessionGeoInBackground,
 } from '@/lib/visitor-session-enrich'
+import { enrichVisitorSessionGeoInBackground } from '@/lib/visitor-session-enrich-server'
 import { parseUtmFromUrl } from '@/lib/entry-source'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { Plan } from '@/app/generated/prisma/client'
 import { canPerformAction } from '@/lib/subscription'
 import { websiteHasFeature } from '@/lib/addon-features'
-import { websiteHasUnlimitedAccess } from '@/lib/platform-admin-shared'
+import { websiteHasUnlimitedAccess } from '@/lib/platform-admin-server'
 import {
   FEATURE_ADDON_SLUG,
   MIN_PLAN_FOR_FEATURE,

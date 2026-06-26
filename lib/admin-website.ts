@@ -1,9 +1,9 @@
 import { prisma } from './db'
-import {
-  isPlatformAdminRole,
-} from './platform-admin-shared'
+import { ADMIN_UNLIMITED_LIMITS, isPlatformAdminRole } from './platform-admin-shared'
+import { websiteHasUnlimitedAccess } from './platform-admin-server'
 
-export { isPlatformAdminRole, ADMIN_UNLIMITED_LIMITS, websiteHasUnlimitedAccess } from './platform-admin-shared'
+export { isPlatformAdminRole, ADMIN_UNLIMITED_LIMITS } from './platform-admin-shared'
+export { websiteHasUnlimitedAccess } from './platform-admin-server'
 
 /** Platform yöneticisine (ADMIN rolü) ait siteler — tüm özellikler ücretsiz. */
 export async function isAdminOwnedWebsite(websiteDbId: string): Promise<boolean> {

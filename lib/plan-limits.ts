@@ -2,11 +2,8 @@ import { prisma } from './db'
 import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, PlanType } from './constants'
 import { Plan } from '../app/generated/prisma/client'
-import {
-  ADMIN_UNLIMITED_LIMITS,
-  unlimitedLimitsForDisplay,
-  websiteHasUnlimitedAccess,
-} from './platform-admin-shared'
+import { ADMIN_UNLIMITED_LIMITS, unlimitedLimitsForDisplay } from './platform-admin-shared'
+import { websiteHasUnlimitedAccess } from './platform-admin-server'
 
 // ─── Plan Feature Checks ────────────────────────────────────────────
 

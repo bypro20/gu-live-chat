@@ -3,7 +3,7 @@ import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, type PlanType } from './constants'
 import type { PlanFeature } from './plan-shared'
 import type { Plan } from '@/app/generated/prisma/client'
-import { websiteHasUnlimitedAccess } from './platform-admin-shared'
+import { websiteHasUnlimitedAccess } from './platform-admin-server'
 
 export { FEATURE_ADDON_SLUG } from './plan-shared'
 
