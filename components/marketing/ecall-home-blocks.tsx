@@ -71,11 +71,11 @@ export function HeroFeaturePills() {
 export function ServicesOfferGrid() {
   const { locale } = useLocale()
   const lang = locale === 'en' ? 'en' : 'tr'
-  const title = lang === 'en' ? 'What We Offer' : 'Neler Sunuyoruz'
+  const title = lang === 'en' ? 'Services We Offer' : 'Sunduğumuz Hizmetler'
   const subtitle =
     lang === 'en'
-      ? 'Everything you need for modern customer support — in one platform.'
-      : 'Modern müşteri desteği için ihtiyacınız olan her şey — tek platformda.'
+      ? 'Explore our creative solutions that make a real difference for your customers.'
+      : 'Müşterileriniz için gerçek fark yaratan çözümlerimizi keşfedin.'
 
   const services = [
     {
@@ -139,7 +139,6 @@ export function ServicesOfferGrid() {
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-14">
-            <span className="ecall-section-tag"># {title}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto">{subtitle}</p>
           </div>
@@ -147,14 +146,14 @@ export function ServicesOfferGrid() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {services.map((s, i) => (
             <FadeIn key={s.title} delay={i * 0.04}>
-              <Link href={s.href} className="ecall-service-card group block">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-                  <s.icon className="w-7 h-7" />
+              <Link href={s.href} className="ecall-service-card technoai-service-card group block text-center">
+                <div className="technoai-service-icon-wrap">
+                  <s.icon className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">{s.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-5">{s.desc}</p>
                 <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                  {lang === 'en' ? 'Read More' : 'Detaylar'} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  {lang === 'en' ? 'Explore' : 'Keşfet'} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </span>
               </Link>
             </FadeIn>

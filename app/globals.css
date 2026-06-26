@@ -460,6 +460,221 @@ body {
     pointer-events: none;
   }
 
+  /* Technoai-inspired hero — koyu tech + animasyonlar */
+  .technoai-hero {
+    position: relative;
+    min-height: min(92vh, 900px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, color-mix(in srgb, var(--marketing-accent) 12%, transparent), transparent 50%),
+      linear-gradient(160deg, #0a0a09 0%, var(--marketing-navy, #141210) 45%, #0f2a26 100%);
+    color: #f5f3ef;
+  }
+
+  .technoai-hero-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--primary) 12%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--primary) 12%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black, transparent);
+  }
+
+  .technoai-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: technoai-blob-drift 14s ease-in-out infinite;
+  }
+
+  .technoai-blob-1 {
+    width: 320px;
+    height: 320px;
+    top: -8%;
+    right: -5%;
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+
+  .technoai-blob-2 {
+    width: 240px;
+    height: 240px;
+    bottom: 5%;
+    left: -8%;
+    background: color-mix(in srgb, var(--marketing-accent) 20%, transparent);
+    animation-delay: -5s;
+  }
+
+  .technoai-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: technoai-orb-float 8s ease-in-out infinite;
+  }
+
+  .technoai-orb-1 {
+    width: 12px;
+    height: 12px;
+    top: 22%;
+    left: 18%;
+    background: var(--marketing-accent);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--marketing-accent) 80%, transparent);
+  }
+
+  .technoai-orb-2 {
+    width: 8px;
+    height: 8px;
+    top: 55%;
+    right: 22%;
+    background: #3dbda5;
+    box-shadow: 0 0 20px rgba(61, 189, 165, 0.6);
+    animation-delay: -3s;
+  }
+
+  .technoai-cube {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 2px solid color-mix(in srgb, var(--primary) 40%, transparent);
+    border-radius: 8px;
+    pointer-events: none;
+    animation: technoai-cube-spin 18s linear infinite;
+  }
+
+  .technoai-cube-1 { top: 28%; right: 12%; }
+  .technoai-cube-2 { bottom: 30%; left: 10%; animation-duration: 22s; animation-direction: reverse; }
+
+  .technoai-pulse-ring {
+    animation: technoai-ring-pulse 3s ease-in-out infinite;
+  }
+
+  .technoai-headline-dot {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    margin-left: 0.1em;
+    border-radius: 50%;
+    background: var(--marketing-accent);
+    vertical-align: baseline;
+    animation: technoai-dot-pulse 2s ease-in-out infinite;
+  }
+
+  .technoai-robot-float {
+    animation: technoai-robot-bob 5s ease-in-out infinite;
+  }
+
+  .technoai-robot-glow {
+    animation: technoai-glow-pulse 4s ease-in-out infinite;
+  }
+
+  .technoai-arm-left {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: technoai-arm-swing 4s ease-in-out infinite;
+  }
+
+  .technoai-arm-right {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: technoai-arm-swing 4s ease-in-out infinite reverse;
+  }
+
+  .technoai-antenna-pulse {
+    animation: technoai-antenna-blink 2s ease-in-out infinite;
+  }
+
+  .technoai-typing-dot {
+    animation: technoai-typing 1.2s ease-in-out infinite;
+  }
+
+  .technoai-float {
+    animation: technoai-float-y 6s ease-in-out infinite;
+  }
+
+  .technoai-float-reverse {
+    animation: technoai-float-y 7s ease-in-out infinite reverse;
+  }
+
+  .animation-delay-700 {
+    animation-delay: 0.7s;
+  }
+
+  @keyframes technoai-blob-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(20px, -30px) scale(1.08); }
+  }
+
+  @keyframes technoai-orb-float {
+    0%, 100% { transform: translateY(0); opacity: 0.8; }
+    50% { transform: translateY(-16px); opacity: 1; }
+  }
+
+  @keyframes technoai-cube-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes technoai-ring-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.15); opacity: 0.75; }
+  }
+
+  @keyframes technoai-dot-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+  }
+
+  @keyframes technoai-robot-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  @keyframes technoai-glow-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.05); }
+  }
+
+  @keyframes technoai-arm-swing {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(8deg); }
+  }
+
+  @keyframes technoai-antenna-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  @keyframes technoai-typing {
+    0%, 100% { opacity: 0.35; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  @keyframes technoai-float-y {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .technoai-robot-blink {
+    opacity: 0.15;
+    transition: opacity 0.12s ease;
+  }
+
+  .technoai-service-icon-wrap {
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center mb-5 mx-auto;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, white), color-mix(in srgb, var(--marketing-accent) 8%, white));
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .technoai-service-card:hover .technoai-service-icon-wrap {
+    transform: scale(1.08) rotate(-3deg);
+    box-shadow: var(--shadow-brand);
+  }
+
   @media (max-width: 1023px) {
     body:has(.marketing-site) #gu-chat-dock {
       bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;

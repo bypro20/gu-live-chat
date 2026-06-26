@@ -11,7 +11,7 @@ import {
   Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
-import { HeroShowcase } from '@/components/marketing/hero-showcase'
+import { HeroRobot } from '@/components/marketing/hero-robot'
 import {
   AiReplyShowcase,
   AutomationShowcase,
@@ -87,69 +87,78 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
 export function HomeHero() {
   const t = useT()
   const { locale } = useLocale()
-  const tag =
-    locale === 'tr' ? 'En İyi Müşteri Deneyimi' : 'Best Customer Experience'
-  return (
-    <section className="relative pt-28 pb-8 sm:pt-36 sm:pb-10 lg:pt-40 px-4 sm:px-6 lg:px-8 overflow-hidden marketing-hero-bg">
-      <div className="ecall-hero-shape" />
-      <div
-        className="absolute inset-0 opacity-[0.2] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, ${GU_BRAND.marketingHeroGrid} 1px, transparent 1px),
-            linear-gradient(to bottom, ${GU_BRAND.marketingHeroGrid} 1px, transparent 1px)
-          `,
-          backgroundSize: '56px 56px',
-        }}
-      />
+  const lang = locale === 'en' ? 'en' : 'tr'
 
-      <div className="relative max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[1fr_1.08fr] gap-12 lg:gap-16 items-center">
-          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
+  return (
+    <section className="technoai-hero pt-28 pb-6 sm:pt-36 sm:pb-8 lg:pt-44 px-4 sm:px-6 lg:px-8">
+      <div className="technoai-hero-grid" aria-hidden />
+      <div className="technoai-blob technoai-blob-1" aria-hidden />
+      <div className="technoai-blob technoai-blob-2" aria-hidden />
+      <div className="technoai-orb technoai-orb-1" aria-hidden />
+      <div className="technoai-orb technoai-orb-2" aria-hidden />
+      <div className="technoai-cube technoai-cube-1" aria-hidden />
+      <div className="technoai-cube technoai-cube-2" aria-hidden />
+
+      <div className="relative max-w-7xl mx-auto w-full">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center">
+          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0 z-10">
             <FadeIn>
-              <span className="ecall-section-tag"># {tag}</span>
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-white/10 bg-white/5 text-[#D4A853]">
+                {lang === 'en' ? 'AI-Powered Live Chat' : 'AI Destekli Canlı Sohbet'}
+              </span>
             </FadeIn>
             <FadeIn delay={0.05}>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.35rem] font-bold tracking-tight leading-[1.08] text-foreground">
-                {locale === 'tr' ? (
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.1] text-white">
+                {lang === 'tr' ? (
                   <>
-                    Müşterilerinize{' '}
-                    <span className="text-gradient-brand">anlık destek</span>
-                    {' '}— tek inbox, tüm kanallar
+                    Üstün{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3DBDA5] via-[#146356] to-[#C9922E]">
+                      canlı destek
+                    </span>
+                    <br />
+                    çözümleri
+                    <span className="technoai-headline-dot" aria-hidden />
                   </>
                 ) : (
                   <>
-                    <span className="text-gradient-brand">Instant support</span>
-                    {' '}for every visitor — one inbox, every channel
+                    Delivering{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3DBDA5] via-[#146356] to-[#C9922E]">
+                      superior live support
+                    </span>
+                    <span className="technoai-headline-dot" aria-hidden />
                   </>
                 )}
               </h1>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <p className="mt-5 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0">
+              <p className="mt-6 text-lg sm:text-xl text-white/65 leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {t.hero.subtitle}
               </p>
             </FadeIn>
             <FadeIn delay={0.14}>
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link href="/register" className="btn-primary px-8 py-3.5 rounded-xl text-base shadow-brand">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-white shadow-lg transition-all hover:scale-[1.02]"
+                  style={{ background: GU_BRAND.gradientBrand, boxShadow: GU_BRAND.shadowBrandLg }}
+                >
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/demo"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold text-foreground bg-white border-2 border-border hover:border-primary/30 hover:bg-primary-light transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold text-white border-2 border-white/20 hover:bg-white/10 transition-all"
                 >
                   {t.hero.demo}
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-white/45">
                 {locale === 'tr' ? trialHeroLine() : t.hero.trial}
               </p>
             </FadeIn>
           </div>
 
-          <FadeIn delay={0.12} className="relative pt-4 lg:pt-0">
-            <HeroShowcase />
+          <FadeIn delay={0.12} className="relative z-10">
+            <HeroRobot />
           </FadeIn>
         </div>
       </div>
