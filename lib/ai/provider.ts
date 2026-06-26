@@ -510,7 +510,9 @@ async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messag
   const data = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
   }
-  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+  // Yanıt birden fazla part'a bölünebilir; hepsini birleştir (yoksa cevap yarım kalır).
+  const parts = data.candidates?.[0]?.content?.parts ?? []
+  return parts.map((p) => p.text || '').join('').trim()
 }
 
 async function callLlm(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
