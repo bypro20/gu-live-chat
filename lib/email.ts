@@ -304,6 +304,62 @@ export function paymentSuccessEmail(data: {
   }
 }
 
+export function siteHealthProblemEmail(data: {
+  siteUrl: string
+  problems: string[]
+  autoFixInMinutes: number
+}): EmailOptions {
+  const list = data.problems.map((p) => `<li style="margin:6px 0;color:#374151;">${p}</li>`).join('')
+  return {
+    to: '',
+    subject: `⚠️ Sitede sorun var — ${data.siteUrl}`,
+    html: `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9fafb;">
+        <div style="background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <div style="background:#fee2e2;border:1px solid #f87171;border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
+            <p style="color:#991b1b;font-size:16px;font-weight:600;margin:0;">Sitede sorun tespit edildi</p>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;">
+            <strong>${data.siteUrl}</strong> için sağlık kontrolünde kritik hata bulundu.
+            Sistem <strong>${data.autoFixInMinutes} dakika</strong> içinde otomatik onarım deneyecek.
+          </p>
+          <ul style="font-size:14px;padding-left:20px;">${list}</ul>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;">Gu Live Chat site sağlık botu</p>
+        </div>
+      </div>
+    `,
+    text: `Sitede sorun var — ${data.siteUrl}\n\n${data.problems.join('\n')}\n\nOtomatik onarım ${data.autoFixInMinutes} dk içinde denenecek.`,
+  }
+}
+
+export function siteHealthRecoveryEmail(data: {
+  siteUrl: string
+  fixedActions: string[]
+}): EmailOptions {
+  const list = data.fixedActions.length
+    ? data.fixedActions.map((a) => `<li style="margin:6px 0;color:#374151;">${a}</li>`).join('')
+    : '<li style="margin:6px 0;color:#374151;">Kontroller tekrar geçti</li>'
+  return {
+    to: '',
+    subject: `✅ Site düzeldi — ${data.siteUrl}`,
+    html: `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9fafb;">
+        <div style="background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <div style="background:#d1fae5;border:1px solid #34d399;border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
+            <p style="color:#065f46;font-size:16px;font-weight:600;margin:0;">Site tekrar sağlıklı</p>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;">
+            <strong>${data.siteUrl}</strong> otomatik onarım sonrası normale döndü.
+          </p>
+          <ul style="font-size:14px;padding-left:20px;">${list}</ul>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;">Gu Live Chat site sağlık botu</p>
+        </div>
+      </div>
+    `,
+    text: `Site düzeldi — ${data.siteUrl}\n\n${data.fixedActions.join('\n') || 'Kontroller tekrar geçti'}`,
+  }
+}
+
 export function paymentFailedEmail(data: {
   websiteName: string
   billingUrl: string

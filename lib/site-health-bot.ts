@@ -1,17 +1,21 @@
 import { prisma } from './db'
 import { syncProductionSchema } from './db-schema-sync'
-import { isEmailConfigured } from './email'
+import { isEmailConfigured, sendEmail, siteHealthProblemEmail, siteHealthRecoveryEmail } from './email'
 import { isFileStorageConfigured } from './file-upload'
 import {
   ensureAdminMarketingAccess,
   resolveMarketingWebsiteId,
 } from './marketing-website'
+import { getSiteHealthAlertEmail, getSiteUrl } from './site-config'
 import { findWebsiteForWidget } from './website-widget-safe'
 
 const BOT_STATE_KEY = 'site_health_bot_last_run'
 const BOT_ALERT_KEY = 'site_health_bot_last_alert'
+const BOT_INCIDENT_KEY = 'site_health_bot_incident'
 /** Aynı hata için tekrar bildirim minimum aralığı (ms) */
 const ALERT_COOLDOWN_MS = 6 * 60 * 60 * 1000
+/** Sorun tespitinden sonra otomatik onarım gecikmesi (ms) */
+const REMEDIATION_DELAY_MS = 5 * 60 * 1000
 
 export type HealthCheck = {
   id: string
@@ -33,6 +37,19 @@ export type SiteHealthBotReport = {
   checks: HealthCheck[]
   remediations: Remediation[]
   fixedCount: number
+  incident?: {
+    active: boolean
+    firstSeenAt?: string
+    remediationDueAt?: string
+    autoFixPending?: boolean
+  }
+}
+
+type IncidentState = {
+  fingerprint: string
+  firstSeenAt: string
+  alertSentAt: string | null
+  recoveryEmailSentAt: string | null
 }
 
 function socketBaseUrl(): string | null {
@@ -57,6 +74,34 @@ async function checkDatabase(): Promise<HealthCheck> {
       ok: false,
       severity: 'critical',
       message: `DB hatası: ${e instanceof Error ? e.message : 'unknown'}`,
+    }
+  }
+}
+
+async function checkPublicHealth(): Promise<HealthCheck> {
+  const base = getSiteUrl()
+  try {
+    const res = await fetch(`${base}/api/health`, {
+      signal: AbortSignal.timeout(10000),
+      headers: { 'User-Agent': 'GuLiveChat-HealthBot/1' },
+      cache: 'no-store',
+    })
+    const data = (await res.json()) as { ok?: boolean; db?: boolean }
+    if (res.ok && data.ok && data.db) {
+      return { id: 'public_health', ok: true, severity: 'info', message: 'Public /api/health OK' }
+    }
+    return {
+      id: 'public_health',
+      ok: false,
+      severity: 'critical',
+      message: `Public health başarısız (${res.status}): ${JSON.stringify(data).slice(0, 120)}`,
+    }
+  } catch (e) {
+    return {
+      id: 'public_health',
+      ok: false,
+      severity: 'critical',
+      message: `Public health erişilemiyor: ${e instanceof Error ? e.message : 'unknown'}`,
     }
   }
 }
@@ -170,12 +215,54 @@ function checkIntegrations(): HealthCheck[] {
   ]
 }
 
+async function runAllChecks(): Promise<HealthCheck[]> {
+  const checks: HealthCheck[] = []
+  checks.push(await checkDatabase())
+  checks.push(await checkPublicHealth())
+  checks.push(await checkSocketServer())
+  checks.push(await checkMarketingSite())
+
+  const marketingId = await resolveMarketingWebsiteId()
+  if (marketingId) {
+    checks.push(await checkWidgetInit(marketingId))
+  }
+  checks.push(...checkIntegrations())
+  return checks
+}
+
 function criticalFingerprint(checks: HealthCheck[]): string {
   return checks
     .filter((c) => !c.ok && c.severity === 'critical')
     .map((c) => `${c.id}:${c.message}`)
     .sort()
     .join('|')
+}
+
+async function loadIncident(): Promise<IncidentState | null> {
+  try {
+    const row = await prisma.platformSetting.findUnique({ where: { key: BOT_INCIDENT_KEY } })
+    if (!row?.value) return null
+    return JSON.parse(row.value) as IncidentState
+  } catch {
+    return null
+  }
+}
+
+async function saveIncident(incident: IncidentState | null): Promise<void> {
+  try {
+    if (!incident) {
+      await prisma.platformSetting.deleteMany({ where: { key: BOT_INCIDENT_KEY } })
+      return
+    }
+    const value = JSON.stringify(incident)
+    await prisma.platformSetting.upsert({
+      where: { key: BOT_INCIDENT_KEY },
+      create: { key: BOT_INCIDENT_KEY, value },
+      update: { value },
+    })
+  } catch {
+    /* ignore */
+  }
 }
 
 async function shouldSendAlert(fingerprint: string): Promise<boolean> {
@@ -202,6 +289,41 @@ async function markAlertSent(fingerprint: string): Promise<void> {
     })
   } catch {
     /* ignore */
+  }
+}
+
+async function sendProblemEmail(checks: HealthCheck[]): Promise<void> {
+  const problems = checks
+    .filter((c) => !c.ok && c.severity === 'critical')
+    .map((c) => `${c.id}: ${c.message}`)
+  if (problems.length === 0) return
+
+  const template = siteHealthProblemEmail({
+    siteUrl: getSiteUrl(),
+    problems,
+    autoFixInMinutes: REMEDIATION_DELAY_MS / 60_000,
+  })
+  const result = await sendEmail({
+    ...template,
+    to: getSiteHealthAlertEmail(),
+  })
+  if (!result.success) {
+    console.warn('[site-health-bot] problem email failed:', result.error)
+  }
+}
+
+async function sendRecoveryEmail(remediations: Remediation[]): Promise<void> {
+  const fixedActions = remediations.filter((r) => r.success).map((r) => r.message)
+  const template = siteHealthRecoveryEmail({
+    siteUrl: getSiteUrl(),
+    fixedActions,
+  })
+  const result = await sendEmail({
+    ...template,
+    to: getSiteHealthAlertEmail(),
+  })
+  if (!result.success) {
+    console.warn('[site-health-bot] recovery email failed:', result.error)
   }
 }
 
@@ -298,6 +420,48 @@ async function remediateSchema(): Promise<Remediation> {
   }
 }
 
+async function runAutoRemediations(checks: HealthCheck[]): Promise<{
+  checks: HealthCheck[]
+  remediations: Remediation[]
+}> {
+  const remediations: Remediation[] = []
+
+  const replaceCheck = async (id: string, next: HealthCheck) => {
+    const idx = checks.findIndex((c) => c.id === id)
+    if (idx >= 0) checks[idx] = next
+    else checks.push(next)
+  }
+
+  const dbOk = checks.find((c) => c.id === 'database')?.ok
+  const marketingCheck = checks.find((c) => c.id === 'marketing_site')
+  if (marketingCheck && !marketingCheck.ok && dbOk) {
+    remediations.push(await remediateSchema())
+    remediations.push(await remediateMarketingSite())
+    await replaceCheck('marketing_site', await checkMarketingSite())
+    const wid = await resolveMarketingWebsiteId()
+    if (wid) await replaceCheck('widget_init', await checkWidgetInit(wid))
+  }
+
+  let widgetCheck = checks.find((c) => c.id === 'widget_init')
+  const widAfter = await resolveMarketingWebsiteId()
+  if (dbOk && widAfter && (!widgetCheck || !widgetCheck.ok)) {
+    if (!remediations.some((r) => r.id === 'schema_sync')) {
+      remediations.push(await remediateSchema())
+    }
+    await replaceCheck('widget_init', await checkWidgetInit(widAfter))
+  }
+
+  const publicCheck = checks.find((c) => c.id === 'public_health')
+  if (publicCheck && !publicCheck.ok && dbOk) {
+    if (!remediations.some((r) => r.id === 'schema_sync')) {
+      remediations.push(await remediateSchema())
+    }
+    await replaceCheck('public_health', await checkPublicHealth())
+  }
+
+  return { checks, remediations }
+}
+
 export async function saveBotReport(report: SiteHealthBotReport): Promise<void> {
   try {
     await prisma.platformSetting.upsert({
@@ -320,51 +484,58 @@ export async function loadBotReport(): Promise<SiteHealthBotReport | null> {
   }
 }
 
-/** Otomatik kontrol + güvenli onarım (şema, marketing site, PRO plan). */
+/** Otomatik kontrol — sorun anında e-posta, 5 dk sonra güvenli onarım. */
 export async function runSiteHealthBot(): Promise<SiteHealthBotReport> {
-  const checks: HealthCheck[] = []
-  const remediations: Remediation[] = []
+  let checks = await runAllChecks()
+  let remediations: Remediation[] = []
+  const fingerprint = criticalFingerprint(checks)
+  let criticalFails = checks.filter((c) => !c.ok && c.severity === 'critical')
+  let incident = await loadIncident()
 
-  checks.push(await checkDatabase())
-  checks.push(await checkSocketServer())
-  checks.push(await checkMarketingSite())
-
-  const marketingId = await resolveMarketingWebsiteId()
-  if (marketingId) {
-    checks.push(await checkWidgetInit(marketingId))
-  }
-  checks.push(...checkIntegrations())
-
-  const replaceCheck = async (id: string, next: HealthCheck) => {
-    const idx = checks.findIndex((c) => c.id === id)
-    if (idx >= 0) checks[idx] = next
-    else checks.push(next)
-  }
-
-  const dbOk = checks.find((c) => c.id === 'database')?.ok
-
-  const marketingCheck = checks.find((c) => c.id === 'marketing_site')
-  if (marketingCheck && !marketingCheck.ok && dbOk) {
-    remediations.push(await remediateSchema())
-    remediations.push(await remediateMarketingSite())
-    await replaceCheck('marketing_site', await checkMarketingSite())
-    const wid = await resolveMarketingWebsiteId()
-    if (wid) await replaceCheck('widget_init', await checkWidgetInit(wid))
-  }
-
-  let widgetCheck = checks.find((c) => c.id === 'widget_init')
-  const widAfter = await resolveMarketingWebsiteId()
-  if (dbOk && widAfter && (!widgetCheck || !widgetCheck.ok)) {
-    if (!remediations.some((r) => r.id === 'schema_sync')) {
-      remediations.push(await remediateSchema())
+  if (criticalFails.length === 0) {
+    if (incident && !incident.recoveryEmailSentAt) {
+      await sendRecoveryEmail(remediations).catch(() => {})
     }
-    await replaceCheck('widget_init', await checkWidgetInit(widAfter))
-    widgetCheck = checks.find((c) => c.id === 'widget_init')
+    await saveIncident(null)
+  } else {
+    const now = Date.now()
+
+    if (!incident || incident.fingerprint !== fingerprint) {
+      incident = {
+        fingerprint,
+        firstSeenAt: new Date().toISOString(),
+        alertSentAt: null,
+        recoveryEmailSentAt: null,
+      }
+      await sendProblemEmail(checks).catch(() => {})
+      incident.alertSentAt = new Date().toISOString()
+      await saveIncident(incident)
+    }
+
+    const elapsed = now - new Date(incident.firstSeenAt).getTime()
+    const remediationDue = elapsed >= REMEDIATION_DELAY_MS
+
+    if (remediationDue) {
+      const result = await runAutoRemediations([...checks])
+      checks = result.checks
+      remediations = result.remediations
+      criticalFails = checks.filter((c) => !c.ok && c.severity === 'critical')
+
+      if (criticalFails.length === 0) {
+        await sendRecoveryEmail(remediations).catch(() => {})
+        incident.recoveryEmailSentAt = new Date().toISOString()
+        await saveIncident(null)
+      } else {
+        await saveIncident(incident)
+      }
+    } else {
+      await saveIncident(incident)
+    }
   }
 
   const fixedCount = remediations.filter((r) => r.success).length
-  const criticalFails = checks.filter((c) => !c.ok && c.severity === 'critical')
   const ok = criticalFails.length === 0
+  const activeIncident = await loadIncident()
 
   const report: SiteHealthBotReport = {
     ok,
@@ -372,6 +543,16 @@ export async function runSiteHealthBot(): Promise<SiteHealthBotReport> {
     checks,
     remediations,
     fixedCount,
+    incident: activeIncident
+      ? {
+          active: true,
+          firstSeenAt: activeIncident.firstSeenAt,
+          remediationDueAt: new Date(
+            new Date(activeIncident.firstSeenAt).getTime() + REMEDIATION_DELAY_MS
+          ).toISOString(),
+          autoFixPending: Date.now() - new Date(activeIncident.firstSeenAt).getTime() < REMEDIATION_DELAY_MS,
+        }
+      : { active: false },
   }
 
   await saveBotReport(report)

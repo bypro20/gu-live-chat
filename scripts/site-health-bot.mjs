@@ -5,7 +5,7 @@
  *   CRON_SECRET=... node scripts/site-health-bot.mjs
  *   BASE_URL=https://gulivechat.com (varsayılan)
  *
- * Production cron: her 15 dk (vercel.json). Aynı kritik hata için admin bildirimi en fazla 6 saatte bir.
+ * Production cron: her 5 dk (vercel.json). Sorun anında e-posta; 5 dk sonra otomatik onarım.
  */
 const BASE = (process.env.BASE_URL || 'https://gulivechat.com').replace(/\/$/, '')
 const secret = process.env.CRON_SECRET

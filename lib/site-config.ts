@@ -59,6 +59,15 @@ export function getTransactionalFrom(): string {
  * Gerçek e-posta bildirimi alacak adres (Gmail vb.).
  * @gulivechat.com adreslerine gönderim MX olmadan bounce verir — atlanır.
  */
+/** Site sağlık botu kritik uyarıları — varsayılan operasyon e-postası */
+export function getSiteHealthAlertEmail(): string {
+  const explicit = process.env.SITE_HEALTH_ALERT_EMAIL?.trim()
+  if (explicit) return explicit
+  const notify = getMailNotifyTo()
+  if (notify) return notify
+  return 'bypro1988@gmail.com'
+}
+
 export function getMailNotifyTo(): string | null {
   if (process.env.MAIL_DELIVER_TO_OWN_DOMAIN === 'true') {
     const own = process.env.MAIL_NOTIFY_TO?.trim() || process.env.ADMIN_EMAIL?.trim() || getSupportEmail()
