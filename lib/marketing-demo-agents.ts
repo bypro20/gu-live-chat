@@ -50,6 +50,11 @@ export function toPublicAssetUrl(path: string | null | undefined, origin?: strin
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
 }
 
+export function buildMarketingWelcomeReply(agentName: string): string {
+  const firstName = agentName.split(/\s+/)[0] || agentName
+  return `Merhaba! 👋 Ben ${firstName}, Gu Live Chat ekibinden. Canlı destek, AI asistan ve fiyat paketleri hakkında sorularınızı yanıtlayabilirim — ne merak ediyorsunuz?`
+}
+
 export function getMarketingWidgetPersona(origin?: string) {
   const agent = MARKETING_PRIMARY_AGENT
   return {

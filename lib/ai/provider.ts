@@ -475,6 +475,133 @@ async function callLlm(runtime: AiRuntimeConfig, systemPrompt: string, messages:
   }
 }
 
+// ─── Streaming provider calls ───────────────────────────────────────
+
+/** Gemini token akışı (SSE). Her parça ham metin olarak yield edilir. */
+async function* callGeminiStream(
+  runtime: AiRuntimeConfig,
+  systemPrompt: string,
+  messages: ChatMessage[],
+  maxTokens = MAX_TOKENS,
+): AsyncGenerator<string, void, unknown> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(runtime.model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(runtime.apiKey)}`
+
+  const contents = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }))
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      generationConfig: {
+        temperature: runtime.temperature,
+        maxOutputTokens: maxTokens,
+      },
+    }),
+  })
+
+  if (!res.ok || !res.body) {
+    const err = await res.text().catch(() => '')
+    throw new Error(`Gemini stream error: ${res.status} ${err.slice(0, 200)}`)
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let nl: number
+    while ((nl = buffer.indexOf('\n')) >= 0) {
+      const line = buffer.slice(0, nl).trim()
+      buffer = buffer.slice(nl + 1)
+      if (!line.startsWith('data:')) continue
+      const payload = line.slice(5).trim()
+      if (!payload || payload === '[DONE]') continue
+      try {
+        const json = JSON.parse(payload) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+        }
+        const text = (json.candidates?.[0]?.content?.parts ?? [])
+          .map((p) => p.text || '')
+          .join('')
+        if (text) yield text
+      } catch {
+        // kısmi/eksik JSON satırı — atla
+      }
+    }
+  }
+}
+
+/**
+ * Gerçek token akışı ile yanıt üretir. Gemini SSE ile parça parça gelir;
+ * diğer sağlayıcılarda tek seferde tam metin yield edilir. Hata/anahtar
+ * yoksa kural tabanlı fallback metni yield edilir (her zaman bir yanıt döner).
+ */
+export async function* generateAiReplyStream(
+  params: GenerateAiReplyParams,
+): AsyncGenerator<string, void, unknown> {
+  const { siteName, messages, knowledge } = params
+
+  if (!messages || messages.length === 0) {
+    yield fallbackReply(siteName, [], knowledge)
+    return
+  }
+
+  const runtime = resolveAiConfig(params.dbConfig, params.plan)
+  if (!runtime) {
+    yield fallbackReply(siteName, messages, knowledge)
+    return
+  }
+
+  const routedModel =
+    params.smartRoutingEnabled === false
+      ? runtime.model
+      : pickRoutedModel(runtime.provider, runtime.model, messages)
+  const activeRuntime = routedModel === runtime.model ? runtime : { ...runtime, model: routedModel }
+
+  let enrichedContext = params.visitorContext
+  if (params.webSearchEnabled) {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || ''
+    const web = await fetchWebContext(lastUser)
+    if (web) {
+      enrichedContext = [enrichedContext, `Güncel web bilgisi (doğrula, uydurma):\n${web}`]
+        .filter(Boolean)
+        .join('\n\n')
+    }
+  }
+
+  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, enrichedContext)
+  const maxTokens = params.maxTokens ?? MAX_TOKENS
+
+  try {
+    if (activeRuntime.provider === 'GEMINI') {
+      let emitted = false
+      for await (const chunk of callGeminiStream(activeRuntime, systemPrompt, messages, maxTokens)) {
+        if (chunk) {
+          emitted = true
+          yield chunk
+        }
+      }
+      if (!emitted) yield fallbackReply(siteName, messages, knowledge)
+      return
+    }
+
+    const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
+    yield text || fallbackReply(siteName, messages, knowledge)
+  } catch (err) {
+    console.error(`[AI] ${activeRuntime.provider} stream failed:`, err instanceof Error ? err.message : err)
+    yield fallbackReply(siteName, messages, knowledge)
+  }
+}
+
 // ─── Main entry point ───────────────────────────────────────────────
 
 export async function generateAiReply(params: GenerateAiReplyParams): Promise<string> {

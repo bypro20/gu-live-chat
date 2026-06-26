@@ -35,6 +35,7 @@ import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
   MARKETING_WIDGET_WELCOME,
+  buildMarketingWelcomeReply,
 } from '@/lib/marketing-demo-agents'
 import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
 
@@ -374,6 +375,15 @@ function getInitials(name: string): string {
     .join('')
 }
 
+function getFingerprint(): string {
+  let fp = localStorage.getItem('gu_vid')
+  if (!fp) {
+    fp = crypto.randomUUID()
+    localStorage.setItem('gu_vid', fp)
+  }
+  return fp
+}
+
 export default function WidgetPage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -381,7 +391,7 @@ export default function WidgetPage() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [isInitialized, setIsInitialized] = useState(() => isWidgetEmbedded())
-  const [initPending, setInitPending] = useState(true)
+  const [initPending, setInitPending] = useState(() => !isWidgetEmbedded())
   const [initError, setInitError] = useState<string | null>(null)
   const [config, setConfig] = useState<WidgetConfig | null>(() =>
     isWidgetEmbedded() ? buildEmbedBootstrapConfig(websiteId) : null,
@@ -471,6 +481,221 @@ export default function WidgetPage() {
     }, 22)
     typewriterTimersRef.current.set(id, timer)
   }, [])
+
+  const welcomeSeededRef = useRef(false)
+
+  const appendBotReply = useCallback((reply: {
+    id: string
+    content: string
+    senderName?: string
+    senderImage?: string | null
+    createdAt?: string
+  }) => {
+    const botMsg: Message = {
+      id: reply.id,
+      content: reply.content,
+      type: 'TEXT',
+      senderType: 'BOT',
+      senderName: reply.senderName,
+      senderImage: reply.senderImage ?? null,
+      createdAt: reply.createdAt || new Date().toISOString(),
+    }
+    setMessages((prev) => (prev.some((m) => m.id === botMsg.id) ? prev : [...prev, botMsg]))
+    setRevealedText((prev) => ({ ...prev, [botMsg.id]: botMsg.content }))
+    setIsTyping(false)
+    setAwaitingReply(false)
+  }, [])
+
+  /**
+   * Pazarlama widget'ı: yanıtı /api/widget/reply/stream üzerinden token token
+   * canlı akıtır (gerçek insan yazıyormuş hissi + düşük gecikme). Akış
+   * başarısız olursa garantili /api/widget/reply fallback'ine, o da olmazsa
+   * kısa polling'e düşer.
+   */
+  const streamMarketingReply = useCallback(async (convId: string) => {
+    if (!convId) return
+    const tempBotId = `bot-stream-${Date.now()}`
+    const identity = resolveWidgetAgentIdentity({
+      websiteName: config?.websiteName,
+      agentDisplayName: config?.agentDisplayName,
+      agentTitle: config?.agentTitle,
+      avatarUrl: config?.avatarUrl,
+      isMarketing: true,
+    })
+    let acc = ''
+    let started = false
+    let finalized = false
+
+    const ensureBubble = () => {
+      if (started) return
+      started = true
+      setIsTyping(false)
+      setStreamingId(tempBotId)
+      animatedMsgIdsRef.current.add(tempBotId)
+      setMessages((prev) =>
+        prev.some((m) => m.id === tempBotId)
+          ? prev
+          : [
+              ...prev,
+              {
+                id: tempBotId,
+                content: '',
+                type: 'TEXT',
+                senderType: 'BOT',
+                senderName: identity.replyName,
+                senderImage: identity.avatarUrl,
+                createdAt: new Date().toISOString(),
+              } as Message,
+            ]
+      )
+    }
+
+    const finalize = (realId: string, text: string, createdAt?: string) => {
+      finalized = true
+      animatedMsgIdsRef.current.add(realId)
+      setMessages((prev) => {
+        const withoutTemp = prev.filter((m) => m.id !== tempBotId)
+        if (withoutTemp.some((m) => m.id === realId)) {
+          return withoutTemp.map((m) => (m.id === realId ? { ...m, content: text } : m))
+        }
+        return [
+          ...withoutTemp,
+          {
+            id: realId,
+            content: text,
+            type: 'TEXT',
+            senderType: 'BOT',
+            senderName: identity.replyName,
+            senderImage: identity.avatarUrl,
+            createdAt: createdAt || new Date().toISOString(),
+          } as Message,
+        ]
+      })
+      setRevealedText((prev) => {
+        const next = { ...prev }
+        if (realId !== tempBotId) delete next[tempBotId]
+        next[realId] = text
+        return next
+      })
+      setStreamingId((cur) => (cur === tempBotId || cur === realId ? null : cur))
+      setIsTyping(false)
+      setAwaitingReply(false)
+    }
+
+    const runFallback = async () => {
+      setMessages((prev) => prev.filter((m) => m.id !== tempBotId))
+      setRevealedText((prev) => {
+        const n = { ...prev }
+        delete n[tempBotId]
+        return n
+      })
+      setStreamingId((cur) => (cur === tempBotId ? null : cur))
+      try {
+        const r = await fetch('/api/widget/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ websiteId, conversationId: convId, fingerprint: getFingerprint() }),
+        })
+        if (r.ok) {
+          const d = await r.json()
+          if (d.aiReply?.content) {
+            appendBotReply(d.aiReply)
+            return
+          }
+        }
+      } catch {
+        /* polling'e geç */
+      }
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise((res) => setTimeout(res, attempt === 0 ? 600 : 900))
+        try {
+          const params = new URLSearchParams({
+            websiteId,
+            fingerprint: getFingerprint(),
+            conversationId: convId,
+          })
+          const token = visitorTokenRef.current
+          if (token) params.set('visitorToken', token)
+          const pollRes = await fetch(`/api/widget/messages?${params.toString()}`)
+          if (!pollRes.ok) continue
+          const pollData = await pollRes.json()
+          const bot = [...(pollData.messages || [])]
+            .reverse()
+            .find((m: Message) => m.senderType === 'BOT' || m.senderType === 'AGENT')
+          if (bot?.content) {
+            appendBotReply({
+              id: bot.id,
+              content: bot.content,
+              senderName: bot.senderName,
+              senderImage: bot.senderImage,
+              createdAt: bot.createdAt,
+            })
+            return
+          }
+        } catch {
+          /* retry */
+        }
+      }
+      setIsTyping(false)
+      setAwaitingReply(false)
+    }
+
+    const handleEvent = (raw: string) => {
+      const line = raw.split('\n').find((l) => l.startsWith('data:'))
+      if (!line) return
+      let data: { delta?: string; done?: boolean; id?: string; content?: string; createdAt?: string; error?: boolean }
+      try {
+        data = JSON.parse(line.slice(5).trim())
+      } catch {
+        return
+      }
+      if (data.delta) {
+        ensureBubble()
+        acc += data.delta
+        setRevealedText((prev) => ({ ...prev, [tempBotId]: acc }))
+      } else if (data.done) {
+        finalize(data.id || tempBotId, data.content ?? acc, data.createdAt)
+      }
+    }
+
+    try {
+      const res = await fetch('/api/widget/reply/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId, conversationId: convId, fingerprint: getFingerprint() }),
+      })
+      if (!res.ok || !res.body) {
+        await runFallback()
+        return
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        let idx: number
+        while ((idx = buffer.indexOf('\n\n')) >= 0) {
+          const evt = buffer.slice(0, idx)
+          buffer = buffer.slice(idx + 2)
+          handleEvent(evt)
+        }
+      }
+      if (buffer.trim()) handleEvent(buffer)
+
+      if (!finalized) {
+        if (started && acc.trim()) {
+          finalize(tempBotId, acc)
+        } else {
+          await runFallback()
+        }
+      }
+    } catch {
+      if (!finalized) await runFallback()
+    }
+  }, [websiteId, config, appendBotReply])
 
   const queueIncomingBotMessage = useCallback((msg: Message) => {
     if (msg.senderType !== 'AGENT' && msg.senderType !== 'BOT') return
@@ -608,6 +833,33 @@ export default function WidgetPage() {
 
     initWidget()
   }, [websiteId, searchParams.toString()])
+
+  useEffect(() => {
+    if (!isInitialized || !config || !identityComplete || welcomeSeededRef.current) return
+    if (!isMarketingWidgetSite(websiteId, config)) return
+    if (messages.length > 0) return
+
+    const identity = resolveWidgetAgentIdentity({
+      websiteName: config.websiteName,
+      agentDisplayName: config.agentDisplayName,
+      agentTitle: config.agentTitle,
+      avatarUrl: config.avatarUrl,
+      isMarketing: true,
+    })
+    const welcomeId = `welcome_${websiteId}`
+    const welcomeContent = config.welcomeMessage?.trim() || buildMarketingWelcomeReply(identity.headerName)
+    welcomeSeededRef.current = true
+    setMessages([{
+      id: welcomeId,
+      content: welcomeContent,
+      type: 'TEXT',
+      senderType: 'BOT',
+      senderName: identity.replyName,
+      senderImage: identity.avatarUrl,
+      createdAt: new Date().toISOString(),
+    }])
+    setRevealedText({ [welcomeId]: welcomeContent })
+  }, [isInitialized, config, identityComplete, messages.length, websiteId])
 
   useEffect(() => {
     if (!isOpen || !websiteId || !isInitialized) return
@@ -1110,15 +1362,6 @@ export default function WidgetPage() {
     window.parent.postMessage({ type: 'gu:resize', open }, '*')
   }
 
-  const getFingerprint = (): string => {
-    let fp = localStorage.getItem('gu_vid')
-    if (!fp) {
-      fp = crypto.randomUUID()
-      localStorage.setItem('gu_vid', fp)
-    }
-    return fp
-  }
-
   const EMOJIS = ['😀','😃','😄','😁','😅','😂','🤣','😊','😍','🥰','😘','😗','😋','😛','😜','🤪','😎','🤓','🥳','🥺','😢','😭','😤','😡','🥶','🤯','😴','🤔','🙄','😏','😒','😌','😉','🙂','😇','🤗','👍','🔥','💜','✨']
 
   const GIF_LABELS = ['Merhaba 👋', 'Teşekkürler 🙏', 'Harika! 🎉', 'Anladım 👍', 'Üzgünüm 😔', 'Tamam ✅']
@@ -1223,7 +1466,6 @@ export default function WidgetPage() {
   }, [config, visitorInfo, websiteId])
 
   const sendChatMessage = useCallback(async (rawContent: string) => {
-    if (initPending) return
     if (!identityComplete) {
       setIdentityError(t.preChatRequired)
       return
@@ -1263,6 +1505,7 @@ export default function WidgetPage() {
     }
 
     setSendError(null)
+    const isMarketing = isMarketingWidgetSite(websiteId, config)
     try {
       const res = await fetch('/api/widget/message', {
         method: 'POST',
@@ -1276,6 +1519,9 @@ export default function WidgetPage() {
           visitorEmail: visitorInfo.email,
           fingerprint: getFingerprint(),
           visitorLang: lang,
+          // Pazarlama widget'ında yanıtı ayrı streaming endpoint'inden alacağız;
+          // sunucu burada LLM'i bekletmesin (mesaj anında kaydolsun).
+          defer: isMarketing,
         }),
       })
 
@@ -1302,49 +1548,10 @@ export default function WidgetPage() {
       }
 
       if (data.aiReply?.content) {
-        const botMsg: Message = {
-          id: data.aiReply.id,
-          content: data.aiReply.content,
-          type: 'TEXT',
-          senderType: 'BOT',
-          senderName: data.aiReply.senderName,
-          senderImage: data.aiReply.senderImage ?? null,
-          createdAt: data.aiReply.createdAt || new Date().toISOString(),
-        }
-        setMessages((prev) => (prev.some((m) => m.id === botMsg.id) ? prev : [...prev, botMsg]))
-        setRevealedText((prev) => ({ ...prev, [botMsg.id]: botMsg.content }))
-      } else if (isMarketingWidgetSite(websiteId, config)) {
-        const pollBotReply = async (attempt = 0) => {
-          if (attempt >= 8) return
-          await new Promise((r) => setTimeout(r, attempt === 0 ? 400 : 700))
-          try {
-            const params = new URLSearchParams({
-              websiteId,
-              fingerprint: getFingerprint(),
-            })
-            if (conversationId || data.conversationId) {
-              params.set('conversationId', conversationId || data.conversationId)
-            }
-            const pollRes = await fetch(`/api/widget/messages?${params.toString()}`)
-            if (!pollRes.ok) {
-              void pollBotReply(attempt + 1)
-              return
-            }
-            const pollData = await pollRes.json()
-            const bot = [...(pollData.messages || [])]
-              .reverse()
-              .find((m: Message) => m.senderType === 'BOT' || m.senderType === 'AGENT')
-            if (bot?.content) {
-              setMessages((prev) => (prev.some((m) => m.id === bot.id) ? prev : [...prev, bot]))
-              setRevealedText((prev) => ({ ...prev, [bot.id]: bot.content }))
-              return
-            }
-            void pollBotReply(attempt + 1)
-          } catch {
-            void pollBotReply(attempt + 1)
-          }
-        }
-        void pollBotReply()
+        appendBotReply(data.aiReply)
+      } else if (isMarketing) {
+        void streamMarketingReply(data.conversationId || conversationId || '')
+        return
       }
       setIsTyping(false)
       setAwaitingReply(false)
@@ -1355,7 +1562,7 @@ export default function WidgetPage() {
       setAwaitingReply(false)
       console.error('[Gu Widget] Send message failed:', error)
     }
-  }, [websiteId, conversationId, visitorInfo, lang, identityComplete, initPending, t.preChatRequired, config])
+  }, [websiteId, conversationId, visitorInfo, lang, identityComplete, t.preChatRequired, config, appendBotReply, streamMarketingReply])
 
   useEffect(() => {
     if (!awaitingReply || !isTyping) return
@@ -2154,7 +2361,9 @@ export default function WidgetPage() {
                               const isBotLike = msg.senderType === 'BOT' || msg.senderType === 'AGENT'
                               const typed = revealedText[msg.id]
                               const displayPrimary =
-                                isBotLike && typed !== undefined ? typed : getDisplayText(msg.id, msg.content).primary
+                                isBotLike && typed !== undefined && typed.length > 0
+                                  ? typed
+                                  : (getDisplayText(msg.id, msg.content).primary || msg.content)
                               const showCursor = streamingId === msg.id
                               const { secondary, mode } = getDisplayText(msg.id, msg.content)
                               return (

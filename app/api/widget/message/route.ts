@@ -6,7 +6,8 @@ import { notifyNewConversation, notifyWebsiteMembers } from '@/lib/notifications
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
 import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
-import { maybeRunAiAutoReply, ensureMarketingWidgetReply } from '@/lib/ai/auto-reply'
+import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
+import { runMarketingWidgetReply } from '@/lib/marketing-widget-reply'
 import { maybeAutoResolveOnSatisfaction } from '@/lib/ai/satisfaction-detect'
 import { analyzeSentiment, refineSentimentLater } from '@/lib/ai/sentiment'
 import { getClientIp } from '@/lib/ip-utils'
@@ -20,6 +21,8 @@ import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
+
+export const maxDuration = 30
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -38,6 +41,8 @@ const widgetMessageSchema = z.object({
   fingerprint: z.string().min(8).max(128),
   visitorLang: z.string().min(2).max(8).optional(),
   attachment: widgetAttachmentSchema.optional(),
+  /** İstemci yanıtı ayrı streaming endpoint'inden alacaksa LLM'i burada bekletme. */
+  defer: z.boolean().optional(),
 })
 
 export async function POST(req: Request) {
@@ -340,42 +345,23 @@ export async function POST(req: Request) {
     })
 
     if (isMarketing) {
-      try {
-        await ensureMarketingWidgetReply(
-          {
+      // defer=true: istemci yanıtı /api/widget/reply/stream üzerinden canlı
+      // akış olarak alacak. Burada LLM'i bekletmeyiz → mesaj anında kaydolur,
+      // ziyaretçi yazısı gecikmeden görünür ve yanıt token token akar.
+      if (!validated.defer) {
+        try {
+          const aiReply = await runMarketingWidgetReply({
             websiteDbId: website.id,
             websitePublicId: website.websiteId,
             conversationId,
             visitorId: visitor.id,
-          },
-          message.createdAt,
-        )
-        const botMessage = await prisma.message.findFirst({
-          where: {
-            conversationId,
-            senderType: 'BOT',
-            createdAt: { gte: message.createdAt },
-          },
-          orderBy: { createdAt: 'desc' },
-        })
-        if (botMessage?.content?.trim()) {
-          const botIdentity = resolveWidgetAgentIdentity({
-            websiteName: website.name,
-            agentDisplayName: website.agentDisplayName,
-            agentTitle: website.agentTitle,
-            avatarUrl: website.avatarUrl,
-            isMarketing: true,
+            visitorMessage: validated.content,
+            since: message.createdAt,
           })
-          responseBody.aiReply = {
-            id: botMessage.id,
-            content: botMessage.content,
-            senderName: botIdentity.replyName,
-            senderImage: botIdentity.avatarUrl,
-            createdAt: botMessage.createdAt.toISOString(),
-          }
+          responseBody.aiReply = aiReply
+        } catch (aiErr) {
+          console.error('[widget/message] marketing AI sync failed:', aiErr)
         }
-      } catch (aiErr) {
-        console.error('[widget/message] marketing AI sync failed:', aiErr)
       }
       void runSideEffects().catch((err) => {
         console.error('[widget/message] side effects failed:', err)
