@@ -481,6 +481,27 @@ async function callAnthropic(runtime: AiRuntimeConfig, systemPrompt: string, mes
   return textBlock && 'text' in textBlock ? textBlock.text.trim() : ''
 }
 
+/**
+ * Gemini generationConfig. 2.5 modellerinde "thinking" varsayılan açık ve
+ * çıktı token bütçesini yiyip cevabı yarım bırakabiliyor → thinkingBudget=0
+ * ile kapatıyoruz (daha hızlı + tam cevap). 2.0 modelleri thinkingConfig'i
+ * desteklemediğinden onlara eklemiyoruz.
+ */
+function geminiGenerationConfig(model: string, temperature: number, maxTokens: number) {
+  const cfg: {
+    temperature: number
+    maxOutputTokens: number
+    thinkingConfig?: { thinkingBudget: number }
+  } = {
+    temperature,
+    maxOutputTokens: maxTokens,
+  }
+  if (model.includes('2.5')) {
+    cfg.thinkingConfig = { thinkingBudget: 0 }
+  }
+  return cfg
+}
+
 async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(runtime.model)}:generateContent?key=${encodeURIComponent(runtime.apiKey)}`
 
@@ -495,10 +516,7 @@ async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messag
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents,
-      generationConfig: {
-        temperature: runtime.temperature,
-        maxOutputTokens: maxTokens,
-      },
+      generationConfig: geminiGenerationConfig(runtime.model, runtime.temperature, maxTokens),
     }),
   })
 
@@ -553,10 +571,7 @@ async function* callGeminiStream(
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents,
-      generationConfig: {
-        temperature: runtime.temperature,
-        maxOutputTokens: maxTokens,
-      },
+      generationConfig: geminiGenerationConfig(runtime.model, runtime.temperature, maxTokens),
     }),
   })
 
