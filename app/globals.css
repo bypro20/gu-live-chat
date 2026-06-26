@@ -297,7 +297,10 @@ body {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-card text-foreground font-semibold text-sm rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer;
   }
   .section-label {
-    @apply inline-flex items-center px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full;
+    @apply inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full;
+    color: #146356;
+    background: #E6F2EF;
+    border: 1px solid rgba(20, 99, 86, 0.12);
   }
 
   /* gulivechat.com — Gu Meridian premium */
@@ -335,13 +338,47 @@ body {
   }
 
   .marketing-site .btn-primary {
-    background: var(--primary);
-    box-shadow: var(--shadow-brand);
+    background: var(--marketing-cta, #121110);
+    color: var(--marketing-cta-foreground, #fff);
+    box-shadow: 0 10px 28px -8px rgba(18, 17, 16, 0.35);
   }
 
   .marketing-site .btn-primary:hover {
-    background: var(--primary-hover, #0f5247);
-    box-shadow: var(--shadow-brand-lg);
+    background: var(--marketing-cta-hover, #2a2724);
+    box-shadow: 0 14px 32px -8px rgba(18, 17, 16, 0.4);
+  }
+
+  .marketing-site .btn-hero-light {
+    @apply inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all;
+    background: #fff;
+    color: var(--marketing-cta, #121110);
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.25);
+  }
+
+  .marketing-site .btn-hero-light:hover {
+    background: #f5f3ef;
+    transform: scale(1.02);
+  }
+
+  .marketing-site .btn-hero-outline {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl border-2 transition-all;
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+  }
+
+  .marketing-site .btn-hero-outline:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .premium-section-tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide;
+    color: #8A6A1E;
+    background: #FBF5E8;
+    border: 1px solid rgba(201, 146, 46, 0.22);
+  }
+
+  .premium-section-light {
+    background: var(--marketing-surface, #f4f1ec);
   }
 
   .marketing-site .surface-hover:hover {
@@ -467,11 +504,47 @@ body {
     display: flex;
     align-items: center;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 80% 60% at 70% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 55%),
-      radial-gradient(ellipse 50% 40% at 10% 80%, color-mix(in srgb, var(--marketing-accent) 12%, transparent), transparent 50%),
-      linear-gradient(160deg, #0a0a09 0%, var(--marketing-navy, #141210) 45%, #0f2a26 100%);
     color: #f5f3ef;
+  }
+
+  .technoai-hero--robot {
+    background: #050607;
+  }
+
+  .technoai-hero-robot-bg {
+    position: absolute;
+    inset: 0;
+    background: url('/marketing/hero-ai-robot.png') center right / cover no-repeat;
+    pointer-events: none;
+  }
+
+  .technoai-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(5, 6, 7, 0.96) 0%,
+      rgba(5, 6, 7, 0.9) 36%,
+      rgba(5, 6, 7, 0.55) 58%,
+      rgba(5, 6, 7, 0.12) 100%
+    );
+    pointer-events: none;
+  }
+
+  @media (max-width: 1023px) {
+    .technoai-hero-robot-bg {
+      background-position: 72% center;
+      opacity: 0.55;
+    }
+
+    .technoai-hero-overlay {
+      background: linear-gradient(
+        180deg,
+        rgba(5, 6, 7, 0.94) 0%,
+        rgba(5, 6, 7, 0.88) 55%,
+        rgba(5, 6, 7, 0.72) 100%
+      );
+    }
   }
 
   .technoai-hero-grid {
@@ -498,7 +571,7 @@ body {
     height: 320px;
     top: -8%;
     right: -5%;
-    background: color-mix(in srgb, var(--primary) 35%, transparent);
+    background: color-mix(in srgb, #00d4ff 18%, transparent);
   }
 
   .technoai-blob-2 {
@@ -506,7 +579,7 @@ body {
     height: 240px;
     bottom: 5%;
     left: -8%;
-    background: color-mix(in srgb, var(--marketing-accent) 20%, transparent);
+    background: color-mix(in srgb, #00d4ff 10%, transparent);
     animation-delay: -5s;
   }
 
@@ -522,8 +595,8 @@ body {
     height: 12px;
     top: 22%;
     left: 18%;
-    background: var(--marketing-accent);
-    box-shadow: 0 0 24px color-mix(in srgb, var(--marketing-accent) 80%, transparent);
+    background: #00d4ff;
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.7);
   }
 
   .technoai-orb-2 {
@@ -531,8 +604,8 @@ body {
     height: 8px;
     top: 55%;
     right: 22%;
-    background: #3dbda5;
-    box-shadow: 0 0 20px rgba(61, 189, 165, 0.6);
+    background: #67e8f9;
+    box-shadow: 0 0 20px rgba(103, 232, 249, 0.55);
     animation-delay: -3s;
   }
 
@@ -559,7 +632,7 @@ body {
     height: 0.55em;
     margin-left: 0.1em;
     border-radius: 50%;
-    background: var(--marketing-accent);
+    background: #00d4ff;
     vertical-align: baseline;
     animation: technoai-dot-pulse 2s ease-in-out infinite;
   }

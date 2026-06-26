@@ -53,6 +53,13 @@ export const GU_BRAND = {
 
   /** Widget / kanal varsayılanı */
   widgetDefault: '#146356',
+
+  /** Marketing CTA — butonlar yeşil değil, koyu mürekkep */
+  marketingCta: '#121110',
+  marketingCtaHover: '#2A2724',
+  marketingCtaForeground: '#FFFFFF',
+  marketingSurface: '#F4F1EC',
+  marketingSurfaceAlt: '#EDEAE4',
 } as const
 
 export type GuBrandKey = keyof typeof GU_BRAND
@@ -76,6 +83,10 @@ export function guBrandMarketingStyle(): Record<string, string> {
     '--marketing-hero': GU_BRAND.marketingHero,
     '--marketing-accent': GU_BRAND.accent,
     '--marketing-navy': GU_BRAND.marketingDark,
+    '--marketing-cta': GU_BRAND.marketingCta,
+    '--marketing-cta-hover': GU_BRAND.marketingCtaHover,
+    '--marketing-cta-foreground': GU_BRAND.marketingCtaForeground,
+    '--marketing-surface': GU_BRAND.marketingSurface,
     '--shadow-brand': GU_BRAND.shadowBrand,
     '--shadow-brand-lg': GU_BRAND.shadowBrandLg,
   }

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { useLocale } from '@/components/marketing/locale-provider'
+import { PanelDemoVideo } from '@/components/marketing/panel-demo-video'
 import { GU_BRAND } from '@/lib/brand-theme'
 
 export function HeroFeaturePills() {
@@ -135,12 +136,13 @@ export function ServicesOfferGrid() {
   ]
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-muted/40">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
-            <p className="mt-3 text-muted-foreground max-w-xl mx-auto">{subtitle}</p>
+            <span className="premium-section-tag mb-4 inline-block">{title}</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#121110]">{title}</h2>
+            <p className="mt-3 text-[#635E58] max-w-xl mx-auto">{subtitle}</p>
           </div>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
@@ -181,47 +183,36 @@ export function AboutSplitSection() {
         ]
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 premium-section-light">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <FadeIn>
-          <div className="relative rounded-3xl overflow-hidden border border-border shadow-xl aspect-[4/3] bg-gradient-to-br from-primary/10 via-card to-accent/10">
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-              <div className="w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl p-4 space-y-3">
-                <div className="h-8 rounded-lg" style={{ background: GU_BRAND.primary }} />
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className={`flex gap-2 ${n % 2 ? '' : 'justify-end'}`}>
-                    <div className={`h-10 rounded-xl max-w-[75%] ${n % 2 ? 'bg-muted' : ''}`} style={n % 2 ? undefined : { background: GU_BRAND.primary, opacity: 0.85 }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <PanelDemoVideo />
         </FadeIn>
         <FadeIn delay={0.08}>
-          <span className="ecall-section-tag">
-            # {lang === 'en' ? 'Best Customer Experience' : 'En İyi Müşteri Deneyimi'}
+          <span className="premium-section-tag mb-4 inline-block">
+            {lang === 'en' ? 'Best Customer Experience' : 'En İyi Müşteri Deneyimi'}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-[#121110]">
             {lang === 'en'
               ? 'The best live chat & customer support for your business'
               : 'İşletmeniz için en iyi canlı destek ve müşteri hizmetleri'}
           </h2>
-          <p className="mt-4 text-muted-foreground leading-relaxed">
+          <p className="mt-4 text-[#635E58] leading-relaxed">
             {lang === 'en'
               ? 'Gu Live Chat helps Turkish and global businesses convert visitors into loyal customers with professional support tools — without enterprise complexity.'
               : 'Gu Live Chat, Türk ve global işletmelerin ziyaretçilerini profesyonel destek araçlarıyla sadık müşterilere dönüştürmesine yardımcı olur — kurumsal karmaşıklık olmadan.'}
           </p>
           <ul className="mt-6 space-y-3">
             {bullets.map((b) => (
-              <li key={b} className="flex items-start gap-3 text-sm text-foreground">
-                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center mt-0.5">
+              <li key={b} className="flex items-start gap-3 text-sm text-[#3D3A36]">
+                <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ background: GU_BRAND.accentLight, color: GU_BRAND.accent }}>
                   <Check className="w-3 h-3" strokeWidth={3} />
                 </span>
                 {b}
               </li>
             ))}
           </ul>
-          <Link href="/register" className="btn-primary mt-8 px-6 py-3 rounded-xl inline-flex">
+          <Link href="/register" className="btn-primary mt-8 px-7 py-3.5 rounded-xl inline-flex text-base">
             {lang === 'en' ? 'Get Started' : 'Hemen Başla'} <ArrowRight className="w-4 h-4" />
           </Link>
         </FadeIn>

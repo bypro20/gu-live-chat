@@ -6,6 +6,7 @@ import { Logo } from '@/components/marketing/logo'
 import { LanguageSwitcher } from '@/components/marketing/language-switcher'
 import { useLocale, useT } from '@/components/marketing/locale-provider'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
+import { GU_BRAND } from '@/lib/brand-theme'
 import { useEffect, useState } from 'react'
 
 export function MarketingNav() {
@@ -33,7 +34,7 @@ export function MarketingNav() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="hidden lg:block bg-primary text-primary-foreground text-xs border-b border-white/10">
+      <div className="hidden lg:block text-[#F5F3EF] text-xs border-b border-white/10" style={{ background: GU_BRAND.marketingCta }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
           <span className="font-medium opacity-90">
             {lang === 'en' ? '7/24 support · KVKK compliant · Turkish infrastructure' : '7/24 destek · KVKK uyumlu · Türk altyapısı'}
