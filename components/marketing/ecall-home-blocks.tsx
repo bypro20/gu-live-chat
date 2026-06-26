@@ -51,7 +51,7 @@ export function HeroFeaturePills() {
   ]
 
   return (
-    <div className="relative z-10 -mt-8 sm:-mt-14 pb-16 sm:pb-20 max-w-6xl mx-auto px-4 sm:px-6">
+    <div className="relative z-10 -mt-8 sm:-mt-14 pb-16 sm:pb-20 max-w-6xl mx-auto px-4 sm:px-6 marketing-section-light">
       <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
         {items.map((item, i) => (
           <FadeIn key={item.title} delay={0.08 + i * 0.05}>
@@ -204,7 +204,7 @@ export function AboutSplitSection() {
           </p>
           <ul className="mt-6 space-y-3">
             {bullets.map((b) => (
-              <li key={b} className="flex items-start gap-3 text-sm text-[#3D3A36]">
+              <li key={b} className="flex items-start gap-3 text-sm premium-body">
                 <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ background: GU_BRAND.accentLight, color: GU_BRAND.accent }}>
                   <Check className="w-3 h-3" strokeWidth={3} />
                 </span>
@@ -249,7 +249,7 @@ export function HowItWorksSteps() {
       <div className="max-w-6xl mx-auto relative">
         <FadeIn>
           <div className="text-center mb-14">
-            <span className="ecall-section-tag text-[#D4A853]"># {lang === 'en' ? 'How It Works' : 'Nasıl Çalışır'}</span>
+            <span className="ecall-section-tag"># {lang === 'en' ? 'How It Works' : 'Nasıl Çalışır'}</span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
               {lang === 'en' ? 'How It Works' : 'Nasıl Çalışır'}
             </h2>
@@ -297,7 +297,7 @@ export function DarkFeatureGrid() {
           {features.map((f, i) => (
             <FadeIn key={f.label} delay={i * 0.03}>
               <div className="text-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors">
-                <f.icon className="w-6 h-6 mx-auto mb-2 text-[#3DBDA5]" />
+                <f.icon className="w-6 h-6 mx-auto mb-2 text-[var(--premium-gold,#c9922e)]" />
                 <p className="text-xs font-semibold text-white/90">{f.label}</p>
               </div>
             </FadeIn>
@@ -318,7 +318,7 @@ export function FullWidthCtaBanner() {
         <FadeIn>
           <div className="ecall-cta-banner rounded-3xl px-8 py-16 sm:py-20 text-center text-white relative">
             <div className="relative z-10 max-w-2xl mx-auto">
-              <span className="inline-block text-sm font-bold text-[#D4A853] mb-3 tracking-wide">
+              <span className="inline-block text-sm font-bold text-[var(--premium-gold,#c9922e)] mb-3 tracking-wide">
                 # Gu Live Chat
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
@@ -332,7 +332,7 @@ export function FullWidthCtaBanner() {
                   : 'Bugün ücretsiz başlayın. Widget, AI, WhatsApp ve birleşik inbox — dakikalar içinde hazır.'}
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link href="/register" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold bg-white hover:bg-white/95 transition-colors shadow-lg" style={{ color: GU_BRAND.primary }}>
+                <Link href="/register" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold bg-white hover:bg-white/95 transition-colors shadow-lg text-[var(--marketing-cta,#121110)]">
                   {lang === 'en' ? 'Start Free' : 'Ücretsiz Başla'} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/demo" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border-2 border-white/30 hover:bg-white/10 transition-colors">

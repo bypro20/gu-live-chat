@@ -65,7 +65,7 @@ export function MarketingNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors duration-150"
+                className="px-3.5 py-2 text-sm font-medium text-[var(--premium-body)] hover:text-[var(--premium-heading)] rounded-lg hover:bg-muted transition-colors duration-150"
               >
                 {item.label}
               </Link>
@@ -76,12 +76,12 @@ export function MarketingNav() {
             <LanguageSwitcher compact />
             <Link
               href="/mobil-indir"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[var(--premium-body)] hover:text-[var(--premium-heading)] transition-colors"
             >
               <Download className="w-4 h-4 shrink-0" />
               {t.nav.mobile}
             </Link>
-            <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">
+            <Link href="/login" className="text-sm font-medium text-[var(--premium-body)] hover:text-[var(--premium-heading)] px-3 py-2 transition-colors">
               {t.nav.login}
             </Link>
             <Link href="/register" className="btn-primary rounded-xl px-5 py-2.5 shadow-brand">

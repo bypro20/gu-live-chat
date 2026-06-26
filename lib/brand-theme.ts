@@ -60,6 +60,15 @@ export const GU_BRAND = {
   marketingCtaForeground: '#FFFFFF',
   marketingSurface: '#F4F1EC',
   marketingSurfaceAlt: '#EDEAE4',
+
+  /** Marketing tipografi — mürekkep + altın + sıcak gri (yeşil metin yok) */
+  marketingHeading: '#121110',
+  marketingBody: '#635E58',
+  marketingMuted: '#8B8580',
+  marketingLink: '#121110',
+  marketingLinkHover: '#A87620',
+  marketingAccentGold: '#C9922E',
+  marketingAccentGoldSoft: '#8A6A1E',
 } as const
 
 export type GuBrandKey = keyof typeof GU_BRAND
@@ -68,29 +77,33 @@ export type GuBrandKey = keyof typeof GU_BRAND
 export function guBrandMarketingStyle(): Record<string, string> {
   return {
     background: GU_BRAND.background,
-    color: GU_BRAND.foreground,
-    '--foreground': GU_BRAND.foreground,
+    color: GU_BRAND.marketingBody,
+    '--foreground': GU_BRAND.marketingHeading,
     '--background': GU_BRAND.background,
     '--card': GU_BRAND.card,
-    '--card-foreground': GU_BRAND.cardForeground,
+    '--card-foreground': GU_BRAND.marketingHeading,
     '--muted': GU_BRAND.muted,
-    '--muted-foreground': GU_BRAND.mutedForeground,
+    '--muted-foreground': GU_BRAND.marketingMuted,
     '--border': GU_BRAND.border,
-    '--primary': GU_BRAND.primary,
-    '--primary-hover': GU_BRAND.primaryHover,
+    /* Marketing: altın vurgu, yeşil metin/icon değil */
+    '--primary': GU_BRAND.marketingAccentGold,
+    '--primary-hover': GU_BRAND.marketingLinkHover,
     '--primary-foreground': GU_BRAND.primaryForeground,
-    '--primary-light': GU_BRAND.primaryLight,
+    '--primary-light': GU_BRAND.accentLight,
     '--marketing-hero': GU_BRAND.marketingHero,
-    '--marketing-accent': GU_BRAND.accent,
+    '--marketing-accent': GU_BRAND.marketingAccentGold,
     '--marketing-navy': GU_BRAND.marketingDark,
     '--marketing-cta': GU_BRAND.marketingCta,
     '--marketing-cta-hover': GU_BRAND.marketingCtaHover,
     '--marketing-cta-foreground': GU_BRAND.marketingCtaForeground,
     '--marketing-surface': GU_BRAND.marketingSurface,
-    '--premium-heading': '#0A1018',
-    '--premium-body': '#5C6570',
-    '--premium-accent': '#00C9E0',
-    '--shadow-brand': GU_BRAND.shadowBrand,
-    '--shadow-brand-lg': GU_BRAND.shadowBrandLg,
+    '--premium-heading': GU_BRAND.marketingHeading,
+    '--premium-body': GU_BRAND.marketingBody,
+    '--premium-muted': GU_BRAND.marketingMuted,
+    '--premium-gold': GU_BRAND.marketingAccentGold,
+    '--premium-link': GU_BRAND.marketingLink,
+    '--premium-link-hover': GU_BRAND.marketingLinkHover,
+    '--shadow-brand': '0 8px 24px -6px rgba(18, 17, 16, 0.18)',
+    '--shadow-brand-lg': '0 12px 32px -8px rgba(18, 17, 16, 0.22)',
   }
 }

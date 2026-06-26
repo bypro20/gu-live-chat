@@ -72,7 +72,7 @@ function PricingCard({ plan, billing, discount, idx, isLoggedIn }: {
             href={cta.href}
             className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition-colors ${
               plan.highlighted
-                ? 'bg-primary text-white hover:bg-primary-hover'
+                ? 'btn-primary text-white'
                 : 'bg-muted text-foreground hover:bg-muted/80 border border-border'
             }`}
           >
@@ -151,14 +151,14 @@ export function TrustStrip() {
   return (
     <section className="py-14 marketing-section-dark border-y border-white/5">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <p className="text-center text-xs font-semibold text-slate-400 uppercase tracking-[0.2em] mb-10">
+        <p className="text-center text-xs font-semibold text-white/55 uppercase tracking-[0.2em] mb-10">
           {h.trustStrip.title}
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {h.trustStrip.stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-3xl sm:text-4xl font-bold text-white tracking-tight tabular-nums">{stat.value}</p>
-              <p className="mt-2 text-sm text-slate-400 font-medium">{stat.label}</p>
+              <p className="mt-2 text-sm text-white/55 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -231,7 +231,7 @@ export function MobileAppSection() {
 export function FeatureGrid() {
   const h = useT().home.features
   return (
-    <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+    <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 marketing-section-light">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-14">
@@ -271,7 +271,7 @@ export function AiShowcase() {
   const h = useT().home.ai
 
   return (
-    <section id="ai" className="py-20 px-4 sm:px-6 bg-muted/30">
+    <section id="ai" className="py-20 px-4 sm:px-6 marketing-section-light bg-[var(--marketing-surface-alt,#edeae4)]">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center">
           <FadeIn>
@@ -550,7 +550,7 @@ export function PricingSection() {
   const { locale } = useLocale()
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-muted/30 relative overflow-hidden">
+    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 marketing-section-light bg-[var(--marketing-surface,#f4f1ec)] relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none opacity-40" style={{ background: `radial-gradient(circle, ${GU_BRAND.primaryGlow}, transparent 70%)` }} />
       <div className="max-w-6xl mx-auto relative">
         <FadeIn>
@@ -586,7 +586,7 @@ export function PricingSection() {
 export function TestimonialsSection() {
   const h = useT().home.testimonials
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 bg-background">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 marketing-section-light bg-background">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">
@@ -630,7 +630,7 @@ export function FaqSection() {
   const h = useT().home.faq
 
   return (
-    <section id="faq" className="py-20 px-4 sm:px-6 bg-muted/30">
+    <section id="faq" className="py-20 px-4 sm:px-6 marketing-section-light bg-[var(--marketing-surface-alt,#edeae4)]">
       <div className="max-w-2xl mx-auto">
         <FadeIn>
           <div className="text-center mb-10">

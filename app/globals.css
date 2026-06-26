@@ -309,9 +309,14 @@ body {
     max-width: 100vw;
     width: 100%;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    --premium-heading: #0a1018;
-    --premium-body: #5c6570;
-    --premium-muted: #8b949e;
+    color: var(--premium-body, #635e58);
+    --premium-heading: #121110;
+    --premium-body: #635e58;
+    --premium-muted: #8b8580;
+    --premium-gold: #c9922e;
+    --premium-gold-soft: #8a6a1e;
+    --premium-link: #121110;
+    --premium-link-hover: #a87620;
     --premium-accent: #00c9e0;
     --premium-accent-soft: #029b9b;
     --shadow-xs: 0 1px 2px 0 rgba(26, 24, 20, 0.04);
@@ -320,8 +325,74 @@ body {
     --shadow-lg: 0 16px 40px -12px rgba(26, 24, 20, 0.1);
     --shadow-xl: 0 24px 48px -16px rgba(26, 24, 20, 0.12);
     --shadow-2xl: 0 32px 64px -20px rgba(26, 24, 20, 0.14);
-    --shadow-brand: 0 8px 24px -6px rgba(20, 99, 86, 0.28);
-    --shadow-brand-lg: 0 12px 32px -8px rgba(20, 99, 86, 0.32);
+    --shadow-brand: 0 8px 24px -6px rgba(18, 17, 16, 0.18);
+    --shadow-brand-lg: 0 12px 32px -8px rgba(18, 17, 16, 0.22);
+  }
+
+  /* Premium tipografi — açık bölümler */
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) h1,
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) h2,
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) h3,
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) h4 {
+    color: var(--premium-heading);
+  }
+
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) .text-foreground {
+    color: var(--premium-heading);
+  }
+
+  .marketing-site section:not(.technoai-hero):not(.marketing-section-dark) .text-muted-foreground {
+    color: var(--premium-body);
+  }
+
+  .marketing-site .section-label {
+    color: var(--premium-gold-soft);
+    background: #fbf5e8;
+    border: 1px solid rgba(201, 146, 46, 0.22);
+  }
+
+  .marketing-site a.text-primary,
+  .marketing-site .text-primary.hover\:text-primary-hover:hover,
+  .marketing-site a.hover\:text-primary-hover:hover {
+    color: var(--premium-link);
+  }
+
+  .marketing-site a.text-primary:hover,
+  .marketing-site a.hover\:text-primary-hover:hover {
+    color: var(--premium-link-hover);
+  }
+
+  .marketing-site .text-primary:not(a) {
+    color: var(--premium-gold);
+  }
+
+  .marketing-site .bg-primary\/10 {
+    background-color: #fbf5e8;
+  }
+
+  .marketing-site .bg-primary.text-white,
+  .marketing-site .bg-primary.text-primary-foreground {
+    background: var(--marketing-cta, #121110);
+    color: #fff;
+  }
+
+  .marketing-site .bg-primary.text-white:hover,
+  .marketing-site .bg-primary-hover:hover {
+    background: var(--marketing-cta-hover, #2a2724);
+  }
+
+  .marketing-site .border-primary\/30 {
+    border-color: rgba(201, 146, 46, 0.35);
+  }
+
+  .marketing-site .marketing-section-dark h2,
+  .marketing-site .marketing-section-dark h3 {
+    color: #fff;
+  }
+
+  .marketing-site .marketing-section-dark .premium-muted,
+  .marketing-site .marketing-section-dark .text-slate-400 {
+    color: rgba(245, 243, 239, 0.55);
   }
 
   .marketing-site .marketing-hero-bg {
@@ -377,8 +448,8 @@ body {
 
   .premium-section-tag {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide;
-    color: #8A6A1E;
-    background: #FBF5E8;
+    color: var(--premium-gold-soft, #8a6a1e);
+    background: #fbf5e8;
     border: 1px solid rgba(201, 146, 46, 0.22);
   }
 
@@ -624,7 +695,7 @@ body {
   /* ECall-inspired marketing blocks — Gu Meridian renkleri */
   .ecall-section-tag {
     @apply inline-block text-sm font-bold tracking-wide mb-3;
-    color: var(--marketing-accent, #c9922e);
+    color: var(--premium-gold, #c9922e);
   }
 
   .ecall-hero-shape {
