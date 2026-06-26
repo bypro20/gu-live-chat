@@ -89,6 +89,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ articl
       include: { category: { select: { id: true, name: true } } },
     })
 
+    if (article.status === 'PUBLISHED') {
+      const { indexKnowledgeArticle } = await import('@/lib/ai/rag/ingest')
+      void indexKnowledgeArticle(existing.websiteId, articleId).catch((err) => {
+        console.warn('[RAG article index]', err)
+      })
+    }
+
     return NextResponse.json(article)
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {

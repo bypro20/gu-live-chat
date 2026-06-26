@@ -8,6 +8,8 @@ import { knowledgeStatusLabels } from '@/lib/settings-i18n'
 import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { KnowledgeRagPanel } from '@/components/settings/knowledge-rag-panel'
+import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 
 interface Category {
   id: string
@@ -44,6 +46,7 @@ export default function KnowledgeBasePage() {
   const statusLabels = knowledgeStatusLabels(i18n)
   const { allowed: planAllowed, isLoading: planLoading } = usePlanFeature('knowledgeBase')
   const { website } = useWebsite()
+  const { activeWebsite } = useActiveWebsite()
   const router = useRouter()
   const [articles, setArticles] = useState<Article[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -114,6 +117,12 @@ export default function KnowledgeBasePage() {
           </Link>
         </div>
       </div>
+
+      {activeWebsite?.websiteId && (
+        <div className="mb-8">
+          <KnowledgeRagPanel websitePublicId={activeWebsite.websiteId} />
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-64 shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 lg:content-start">

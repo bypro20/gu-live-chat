@@ -3,7 +3,7 @@ import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
 import {
-  HomeHero, TrustStrip, FeatureGrid, AiShowcase,
+  HomeHero, TrustStrip, FeatureGrid, AiShowcase, AiPlatformSection, SharedInbox,
   PricingSection, TestimonialsSection, FaqSection,
 } from '@/components/marketing/home-sections'
 import {
@@ -41,6 +41,8 @@ export default async function HomePage() {
       <HowItWorksSteps />
       <DarkFeatureGrid />
       <AiShowcase />
+      <AiPlatformSection />
+      <SharedInbox />
       <PricingSection />
       <TestimonialsSection />
       <FaqSection />

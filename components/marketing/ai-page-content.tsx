@@ -1,11 +1,32 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Bot, Sparkles, BookOpen, Workflow, MessageCircle, Check } from 'lucide-react'
+import {
+  ArrowRight,
+  Bot,
+  Sparkles,
+  BookOpen,
+  Workflow,
+  MessageCircle,
+  Check,
+  Mic,
+  Search,
+  BarChart3,
+  Users,
+} from 'lucide-react'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useT } from '@/components/marketing/locale-provider'
 
-const CAP_ICONS = [MessageCircle, BookOpen, Workflow, Sparkles] as const
+const CAP_ICONS = [
+  BookOpen,
+  Mic,
+  MessageCircle,
+  Search,
+  Sparkles,
+  Users,
+  BarChart3,
+  Workflow,
+] as const
 
 export function AiPageContent() {
   const { ai } = useMarketingPages()
@@ -19,7 +40,7 @@ export function AiPageContent() {
         <p className="mt-4 text-lg text-muted-foreground leading-relaxed max-w-2xl">{ai.subtitle}</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-5 mb-12">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
         {ai.capabilities.map((c, i) => {
           const Icon = CAP_ICONS[i] ?? Sparkles
           return (
@@ -32,6 +53,18 @@ export function AiPageContent() {
             </div>
           )
         })}
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3 mb-12">
+        <Link href="/sesli-ai" className="surface p-4 hover:border-primary/40 transition text-sm font-medium">
+          Sesli AI →
+        </Link>
+        <Link href="/linkedin-destek" className="surface p-4 hover:border-primary/40 transition text-sm font-medium">
+          LinkedIn →
+        </Link>
+        <Link href="/sms-destek" className="surface p-4 hover:border-primary/40 transition text-sm font-medium">
+          SMS (Twilio) →
+        </Link>
       </div>
 
       <div className="surface p-8 mb-12">

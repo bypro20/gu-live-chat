@@ -123,11 +123,63 @@ function buildMarketingKnowledgeArticles(): SeedArticle[] {
   articles.push({
     title: 'WhatsApp ve Çok Kanallı Inbox',
     content: [
-      'Profesyonel pakette WhatsApp Business, e-posta, Messenger, Instagram ve Telegram tek gelen kutusunda birleşir.',
+      'Profesyonel pakette WhatsApp Business, e-posta, Messenger, Instagram, Telegram, LinkedIn ve SMS tek gelen kutusunda birleşir.',
       'Tüm kanallardan gelen mesajlara aynı panelden yanıt verilir.',
       'Mobil Android uygulaması ile bildirim alıp telefondan yanıtlayabilirsiniz.',
     ].join('\n'),
-    excerpt: 'WhatsApp ve diğer kanallar — birleşik inbox.',
+    excerpt: 'WhatsApp, LinkedIn, SMS ve diğer kanallar — birleşik inbox.',
+  })
+
+  articles.push({
+    title: 'AI Bilgi Eğitimi (RAG)',
+    content: [
+      'Ayarlar > Bilgi Bankası > AI Bilgi Eğitimi bölümünden PDF, URL ve metin yükleyerek AI\'yı eğitebilirsiniz.',
+      'Semantik arama ile ziyaretçi sorusuna en ilgili parçalar bulunur ve AI yanıtına eklenir.',
+      'Yayınlanmış makaleler tek tıkla yeniden indekslenebilir.',
+      'ai-rag-pro eklentisi alt paketlerde de açılabilir.',
+    ].join('\n'),
+    excerpt: 'PDF/URL RAG eğitimi ve semantik bilgi araması.',
+  })
+
+  articles.push({
+    title: 'Sesli AI Asistan',
+    content: [
+      'Ayarlar > Sesli AI bölümünden sesli asistanı etkinleştirin.',
+      'Embed link: gulivechat.com/voice/SITE_ID — sitenize iframe veya yeni sekme olarak ekleyin.',
+      'Tarayıcı mikrofonu ile konuşulur; AI bilgi bankası ve web araması kullanarak sesli yanıt verir.',
+      'Telefon hattı (PSTN) gerektirmez; Web Speech API kullanılır.',
+    ].join('\n'),
+    excerpt: 'Tarayıcıda sesli AI — RAG ve web araması destekli.',
+  })
+
+  articles.push({
+    title: 'Inbox AI Copilot',
+    content: [
+      'Gelen kutusunda mesaj yazarken AI Copilot ile yanıt önerisi, kısaltma, düzeltme ve çeviri alabilirsiniz.',
+      'Modlar: profesyonel, samimi, kısalt, genişlet, Türkçe düzelt, İngilizce çevir.',
+      'Profesyonel pakette AI asistan ile birlikte; ai-copilot eklentisi ile de açılabilir.',
+    ].join('\n'),
+    excerpt: 'Temsilci inbox copilot — yanıt önerisi ve düzenleme.',
+  })
+
+  articles.push({
+    title: 'LinkedIn ve SMS Kanalları',
+    content: [
+      'LinkedIn: Eklenti mağazası > linkedin-channel, Ayarlar > Kanallar, webhook /api/webhooks/linkedin',
+      'SMS (Twilio): Eklenti mağazası > sms-channel, Twilio Account SID + token, webhook /api/webhooks/sms',
+      'Her iki kanalda gelen mesajlar inbox\'a düşer; temsilci yanıtları kanala geri iletilir.',
+    ].join('\n'),
+    excerpt: 'LinkedIn B2B ve Twilio SMS iki yönlü inbox.',
+  })
+
+  articles.push({
+    title: 'AI Analitik ve Duygu',
+    content: [
+      'Analitik panelinde AI Öngörüleri: bot yanıt sayısı, temsilci devri, RAG parça sayısı, duygu dağılımı.',
+      'Olumsuz ziyaretçi mesajları otomatik işaretlenir.',
+      'Sık sorulan mesajlar 30 günlük özet olarak listelenir.',
+    ].join('\n'),
+    excerpt: 'AI metrikleri, sentiment ve sık mesajlar.',
   })
 
   articles.push({

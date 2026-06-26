@@ -3,7 +3,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { PlanType } from '@/lib/constants'
 import { DEFAULT_MODEL } from './models'
 import { clampModelToPlan } from './plan-models'
-import { selectRelevantKnowledge } from './knowledge'
+import { selectRelevantKnowledge } from './knowledge-legacy'
+import { pickRoutedModel } from './smart-routing'
+import { fetchWebContext } from './web-search'
 import {
   buildGeminiFallbackRuntime,
   canUsePlatformFallback,
@@ -56,6 +58,10 @@ export interface GenerateAiReplyParams {
   websiteId?: string
   conversationId?: string
   visitorContext?: string
+  /** DuckDuckGo ile güncel web bağlamı ekle */
+  webSearchEnabled?: boolean
+  /** Karmaşık sorularda economy → standard model seçimi */
+  smartRoutingEnabled?: boolean
   /** Yanıt uzunluğu sınırı — widget auto-reply için düşük tutulabilir */
   maxTokens?: number
 }
@@ -483,11 +489,28 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
     return fallbackReply(siteName, messages, knowledge)
   }
 
-  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, params.visitorContext)
+  const routedModel =
+    params.smartRoutingEnabled === false
+      ? runtime.model
+      : pickRoutedModel(runtime.provider, runtime.model, messages)
+  const activeRuntime = routedModel === runtime.model ? runtime : { ...runtime, model: routedModel }
+
+  let enrichedContext = params.visitorContext
+  if (params.webSearchEnabled) {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || ''
+    const web = await fetchWebContext(lastUser)
+    if (web) {
+      enrichedContext = [enrichedContext, `Güncel web bilgisi (doğrula, uydurma):\n${web}`]
+        .filter(Boolean)
+        .join('\n\n')
+    }
+  }
+
+  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, enrichedContext)
 
   try {
     const maxTokens = params.maxTokens ?? MAX_TOKENS
-    const text = await callLlm(runtime, systemPrompt, messages, maxTokens)
+    const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
     return text || fallbackReply(siteName, messages, knowledge)
   } catch (err) {
     console.error(`[AI] ${runtime.provider} call failed:`, err instanceof Error ? err.message : err)

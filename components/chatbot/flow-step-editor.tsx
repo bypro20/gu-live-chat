@@ -7,6 +7,7 @@ export interface BotStep {
   type: string
   message: string
   options?: Array<{ label: string; nextStepId?: string }>
+  webhookUrl?: string
   order: number
 }
 
@@ -16,6 +17,7 @@ const STEP_ICONS: Record<string, string> = {
   COLLECT_EMAIL: '📧',
   COLLECT_NAME: '👤',
   ASSIGN_AGENT: '👥',
+  WEBHOOK: '🔗',
   END: '✅',
 }
 
@@ -134,7 +136,8 @@ export default function FlowStepEditor({
                   {(step.type === 'MESSAGE' ||
                     step.type === 'COLLECT_EMAIL' ||
                     step.type === 'COLLECT_NAME' ||
-                    step.type === 'ASSIGN_AGENT') && (
+                    step.type === 'ASSIGN_AGENT' ||
+                    step.type === 'WEBHOOK') && (
                     <input
                       type="text"
                       value={step.message}
@@ -145,8 +148,24 @@ export default function FlowStepEditor({
                           ? labels.messagePlaceholder
                           : step.type === 'ASSIGN_AGENT'
                             ? labels.transferPlaceholder
-                            : labels.promptPlaceholder
+                            : step.type === 'WEBHOOK'
+                              ? 'API yanıtı öncesi mesaj (opsiyonel)'
+                              : labels.promptPlaceholder
                       }
+                    />
+                  )}
+
+                  {step.type === 'WEBHOOK' && (
+                    <input
+                      type="url"
+                      value={step.webhookUrl || ''}
+                      onChange={(e) => {
+                        const updated = [...steps]
+                        updated[index] = { ...updated[index], webhookUrl: e.target.value }
+                        onChange(updated)
+                      }}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      placeholder="https://api.example.com/status"
                     />
                   )}
 

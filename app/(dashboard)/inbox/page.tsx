@@ -73,6 +73,7 @@ function InboxPageContent() {
   const [translatingOutgoing, setTranslatingOutgoing] = useState(false)
   const [aiSuggesting, setAiSuggesting] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [handoffSummary, setHandoffSummary] = useState<string | null>(null)
   const [cannedResponses, setCannedResponses] = useState<
     Array<{ id: string; title: string; content: string; shortcut: string | null }>
   >([])
@@ -297,6 +298,19 @@ function InboxPageContent() {
       .catch(() => setCannedResponses([]))
   }, [activeWebsite?.websiteId, canCannedResponses])
 
+  useEffect(() => {
+    if (!selectedId) {
+      setHandoffSummary(null)
+      return
+    }
+    fetch(`/api/conversations/${selectedId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { aiHandoffSummary?: string | null } | null) => {
+        setHandoffSummary(data?.aiHandoffSummary?.trim() || null)
+      })
+      .catch(() => setHandoffSummary(null))
+  }, [selectedId])
+
   const selectedConversation = conversations.find((c) => c.id === selectedId)
   const visitorLang =
     selectedConversation?.visitorLang ||
@@ -491,12 +505,22 @@ function InboxPageContent() {
 
   const handleAiSuggest = async () => {
     if (!selectedId || aiSuggesting) return
+    await runCopilot('suggest')
+  }
+
+  const runCopilot = async (mode: string) => {
+    if (!selectedId || aiSuggesting) return
     setAiSuggesting(true)
     setAiError(null)
     try {
-      const res = await fetch(`/api/conversations/${selectedId}/ai-suggest`, {
+      const res = await fetch('/api/ai/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: selectedId,
+          mode,
+          draft: messageText,
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || i.aiSuggestFailed)
@@ -776,6 +800,13 @@ function InboxPageContent() {
               canTranslate={canTranslate}
             />
 
+            {handoffSummary && (
+              <div className="mx-4 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
+                <span className="font-semibold">{i.aiHandoffSummary}: </span>
+                {handoffSummary}
+              </div>
+            )}
+
             <InboxMessageArea ref={messageScrollRef} onAreaScroll={onMessageScroll}>
               {messagesLoading ? (
                 <div className="space-y-3">
@@ -824,6 +855,7 @@ function InboxPageContent() {
               canAi={canAiAssistant}
               aiEnabled={aiSuggestEnabled}
               onAiSuggest={handleAiSuggest}
+              onAiCopilot={(mode) => void runCopilot(mode)}
               aiSuggesting={aiSuggesting}
               cannedResponses={cannedResponses}
               showCannedPicker={showCannedPicker}

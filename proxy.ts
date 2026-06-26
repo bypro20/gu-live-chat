@@ -116,7 +116,12 @@ const PROTECTED_API_PREFIXES = [
   '/api/upload',
   '/api/ai/config',
   '/api/ai/suggest',
+  '/api/ai/copilot',
+  '/api/ai/insights',
   '/api/ai/test',
+  '/api/knowledge/rag',
+  '/api/voice/chat',
+  '/api/voice/config',
   '/api/translate',
   '/api/contacts',
   '/api/visitors',
@@ -156,6 +161,8 @@ function isPublicApiRoute(pathname: string): boolean {
   if (pathname === '/api/team/invite') return true
   if (pathname === '/api/socket/verify-agent-token') return true
   if (pathname === '/api/socket/verify-visitor-token') return true
+  if (pathname === '/api/voice/chat') return true
+  if (pathname === '/api/voice/public') return true
   return false
 }
 
@@ -230,6 +237,13 @@ export async function proxy(req: NextRequest) {
     if (pathname.startsWith('/admin') || pathname === '/admin-login' || pathname === '/panel-giris') {
       return withSecurityHeaders(NextResponse.redirect(new URL('/inbox', req.url)))
     }
+  }
+
+  // Sesli asistan embed sayfası — oturum gerektirmez
+  if (pathname.startsWith('/voice/')) {
+    const res = NextResponse.next()
+    res.headers.set('Cross-Origin-Resource-Policy', 'cross-origin')
+    return res
   }
 
   // Embed widget + public API — müşteri sitelerinden cross-origin erişim

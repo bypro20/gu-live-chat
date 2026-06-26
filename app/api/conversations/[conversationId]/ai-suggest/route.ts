@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateAiReply } from '@/lib/ai/provider'
-import { loadKnowledge, toChatMessages } from '@/lib/ai/knowledge'
+import { loadRelevantKnowledge, toChatMessages } from '@/lib/ai/knowledge'
 import { loadVisitorContext } from '@/lib/ai/visitor-context'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
 import { sessionIsPlatformAdmin } from '@/lib/platform-admin'
@@ -79,7 +79,10 @@ export async function POST(
       return NextResponse.json({ error: 'AI öneri özelliği kapalı' }, { status: 403 })
     }
 
-    const knowledge = await loadKnowledge(conversation.websiteId)
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || ''
+    const knowledge = lastUser
+      ? await loadRelevantKnowledge(conversation.websiteId, lastUser, 8)
+      : []
     const visitorContext = await loadVisitorContext(conversation.visitorId)
 
     const suggestion = await generateAiReply({

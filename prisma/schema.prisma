@@ -136,6 +136,8 @@ model Website {
   notifications   Notification[]
   knowledgeCategories KnowledgeCategory[]
   knowledgeArticles   KnowledgeArticle[]
+  knowledgeSources    KnowledgeSource[]
+  knowledgeChunks     KnowledgeChunk[]
   tickets             Ticket[]
   statusPage          StatusPage?
   campaigns           Campaign[]
@@ -146,6 +148,7 @@ model Website {
   proactiveMessages   ProactiveMessage[]
   gdprConsents        GDPRConsent[]
   dataRetentionPolicy DataRetentionPolicy?
+  voiceAgent          VoiceAgent?
 
   // PayTR
   paytrMerchantOid      String?            @unique
@@ -393,6 +396,7 @@ model Conversation {
   chatbotStepIndex  Int       @default(0)
   chatbotCompleted  Boolean   @default(false)
   chatbotHandedToAi Boolean   @default(false)
+  aiHandoffSummary  String?
   visitorLang       String?
 
   createdAt DateTime  @default(now())
@@ -421,6 +425,7 @@ enum ConversationSource {
   EMAIL
   SMS
   SLACK
+  LINKEDIN
   API
   IMPORT
 }
@@ -624,6 +629,7 @@ enum ChatbotStepType {
   COLLECT_EMAIL
   COLLECT_NAME
   ASSIGN_AGENT
+  WEBHOOK
   END
 }
 
@@ -688,6 +694,10 @@ model AIConfig {
   systemPrompt  String?
   autoSuggest   Boolean  @default(true)
   autoReply     Boolean  @default(false)
+  webSearchEnabled   Boolean  @default(true)
+  multimodalEnabled  Boolean  @default(true)
+  voiceAgentEnabled  Boolean  @default(false)
+  smartRoutingEnabled Boolean @default(true)
 
   website       Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
@@ -827,6 +837,81 @@ model KnowledgeArticle {
   @@unique([websiteId, slug])
   @@index([websiteId, status])
   @@map("knowledge_articles")
+}
+
+enum KnowledgeSourceType {
+  URL
+  FILE
+  TEXT
+  ARTICLE
+}
+
+enum KnowledgeSourceStatus {
+  PENDING
+  INDEXING
+  READY
+  ERROR
+}
+
+model KnowledgeSource {
+  id            String                @id @default(cuid())
+  websiteId     String
+  type          KnowledgeSourceType
+  name          String
+  url           String?
+  textContent   String?
+  fileName      String?
+  status        KnowledgeSourceStatus @default(PENDING)
+  errorMessage  String?
+  chunkCount    Int                   @default(0)
+  lastIndexedAt DateTime?
+
+  website Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  chunks  KnowledgeChunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([websiteId, status])
+  @@map("knowledge_sources")
+}
+
+model KnowledgeChunk {
+  id            String  @id @default(cuid())
+  websiteId     String
+  sourceId      String?
+  articleId     String?
+  title         String
+  content       String
+  embedding     String
+  tokenEstimate Int     @default(0)
+
+  website Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  source  KnowledgeSource? @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([websiteId])
+  @@index([sourceId])
+  @@map("knowledge_chunks")
+}
+
+model VoiceAgent {
+  id           String   @id @default(cuid())
+  websiteId    String   @unique
+  isActive     Boolean  @default(false)
+  name         String   @default("Sesli Asistan")
+  greeting     String   @default("Merhaba, size nasıl yardımcı olabilirim?")
+  systemPrompt String?
+  language     String   @default("tr-TR")
+  voiceStyle   String   @default("friendly")
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("voice_agents")
 }
 
 // ─── TICKETING SYSTEM ────────────────────────────────────────────
@@ -1037,6 +1122,7 @@ enum CampaignType {
   EMAIL
   IN_APP
   BROADCAST
+  WHATSAPP
 }
 
 enum CampaignTarget {
@@ -1094,6 +1180,7 @@ enum ChannelType {
   TELEGRAM
   SLACK
   SMS
+  LINKEDIN
 }
 
 model ChannelIntegration {

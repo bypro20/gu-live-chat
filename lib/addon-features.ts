@@ -14,7 +14,10 @@ export const ADDON_FEATURE_MAP: Record<string, PlanFeature> = {
   'messenger-channel': 'multiChannel',
   'instagram-channel': 'multiChannel',
   'email-channel': 'multiChannel',
-  'ai-agent-pro': 'aiAssistant',
+  'linkedin-channel': 'multiChannel',
+  'sms-channel': 'multiChannel',
+  'voice-ai-agent': 'aiAssistant',
+  'ai-rag-pro': 'knowledgeBase',
   'ai-sohbet-asistani': 'aiAssistant',
   'ai-copilot': 'aiAssistant',
   'live-translate-pro': 'autoTranslate',
@@ -45,6 +48,8 @@ const CHANNEL_ADDON_SLUGS = new Set([
   'messenger-channel',
   'instagram-channel',
   'email-channel',
+  'linkedin-channel',
+  'sms-channel',
 ])
 
 export function addonUnlocksFeature(slug: string, feature: PlanFeature): boolean {

@@ -608,6 +608,12 @@ export type SettingsMessages = {
     planModelsHint: (label: string) => string
     modelLocked: string
     platformFallbackHint: string
+    webSearch: string
+    webSearchHint: string
+    multimodal: string
+    multimodalHint: string
+    smartRouting: string
+    smartRoutingHint: string
     providers: Record<AiProvider, string>
   }
   channels: {
@@ -620,6 +626,24 @@ export type SettingsMessages = {
     addFailed: string
     channelDefs: Record<string, { label: string; description: string }>
     configFields: Record<string, ChannelConfigField[]>
+  }
+  voiceAgent: {
+    title: string
+    subtitle: string
+    selectSiteFirst: string
+    enable: string
+    enableHint: string
+    active: string
+    name: string
+    greeting: string
+    systemPrompt: string
+    language: string
+    voiceStyle: string
+    embedTitle: string
+    embedHint: string
+    openEmbed: string
+    saveSuccess: string
+    saveFailed: string
   }
   proactive: {
     title: string
@@ -1319,7 +1343,8 @@ const tr: SettingsMessages = {
       CHOICE: { label: 'Seçenek', description: 'Tıklanabilir seçenekler sun' },
       COLLECT_EMAIL: { label: 'E-posta Topla', description: 'Ziyaretçiden e-posta al' },
       COLLECT_NAME: { label: 'İsim Topla', description: 'Ziyaretçiden isim al' },
-      ASSIGN_AGENT: { label: 'Temsilciye Aktar', description: 'Sohbeti temsilciye aktar' },
+      ASSIGN_AGENT: { label: 'Temsilciye Aktar', description: 'Sohbeti temsilciye aktar + AI özet' },
+      WEBHOOK: { label: 'API Çağrısı', description: 'Harici HTTP servisine istek at' },
       END: { label: 'Bitir', description: 'Sohbeti sonlandır' },
     },
     triggers: {
@@ -1368,6 +1393,12 @@ const tr: SettingsMessages = {
     modelLocked: ' — üst paket gerekli',
     platformFallbackHint:
       'Tüm sağlayıcılar platform Gemini anahtarı ile çalışır. Kendi OpenAI/Groq anahtarınızı eklerseniz doğrudan o sağlayıcı kullanılır.',
+    webSearch: 'Web araması (canlı bilgi)',
+    webSearchHint: 'Güncel bilgi gerektiren sorularda DuckDuckGo ile bağlam ekler.',
+    multimodal: 'Görsel anlama',
+    multimodalHint: 'Ziyaretçi resim gönderdiğinde Gemini Vision ile analiz eder.',
+    smartRouting: 'Akıllı model yönlendirme',
+    smartRoutingHint: 'Basit sorularda ekonomik model, karmaşık sorularda güçlü model kullanır.',
     providers: {
       OPENAI: 'OpenAI (GPT)',
       ANTHROPIC: 'Anthropic (Claude)',
@@ -1393,6 +1424,7 @@ const tr: SettingsMessages = {
       TELEGRAM: { label: 'Telegram', description: 'Telegram Bot entegrasyonu' },
       SLACK: { label: 'Slack', description: 'Slack entegrasyonu' },
       SMS: { label: 'SMS', description: 'Twilio SMS entegrasyonu' },
+      LINKEDIN: { label: 'LinkedIn', description: 'LinkedIn mesaj entegrasyonu' },
     },
     configFields: {
       WHATSAPP: [
@@ -1424,8 +1456,32 @@ const tr: SettingsMessages = {
         { key: 'accountSid', label: 'Twilio Account SID', type: 'text', placeholder: 'ACxxxxxxxxxxxx' },
         { key: 'authToken', label: 'Auth Token', type: 'password', placeholder: 'Twilio Auth Token' },
         { key: 'phoneNumber', label: 'Telefon Numarası', type: 'text', placeholder: '+901234567890' },
+        { key: 'webhookSecret', label: 'Webhook Sırrı', type: 'password', placeholder: 'X-Gu-Webhook-Secret header' },
+      ],
+      LINKEDIN: [
+        { key: 'organizationId', label: 'Organizasyon ID', type: 'text', placeholder: 'LinkedIn Organization ID' },
+        { key: 'accessToken', label: 'Erişim Tokeni', type: 'password', placeholder: 'LinkedIn Access Token' },
+        { key: 'webhookSecret', label: 'Webhook Sırrı', type: 'password', placeholder: 'X-Gu-Webhook-Secret header' },
       ],
     },
+  },
+  voiceAgent: {
+    title: 'Sesli AI Asistan',
+    subtitle: 'Web Speech API ile tarayıcıda konuşmalı AI — bilgi bankası ve web araması destekli.',
+    selectSiteFirst: 'Önce bir site seçin.',
+    enable: 'Sesli asistanı pakete ekle',
+    enableHint: 'Açıldığında /voice/SITE_ID embed sayfası ziyaretçilere sunulur.',
+    active: 'Sesli asistan aktif',
+    name: 'Asistan adı',
+    greeting: 'Karşılama mesajı',
+    systemPrompt: 'Sesli asistan talimatı',
+    language: 'Dil (BCP-47)',
+    voiceStyle: 'Konuşma stili',
+    embedTitle: 'Embed bağlantısı',
+    embedHint: 'Bu linki sitenize iframe veya yeni sekme olarak ekleyin.',
+    openEmbed: 'Önizleme aç',
+    saveSuccess: 'Sesli asistan kaydedildi.',
+    saveFailed: 'Kaydedilemedi',
   },
   proactive: {
     title: 'Hedefli Mesajlar',
@@ -1520,6 +1576,7 @@ const tr: SettingsMessages = {
       EMAIL: 'E-posta',
       IN_APP: 'Uygulama İçi',
       BROADCAST: 'Toplu Mesaj',
+      WHATSAPP: 'WhatsApp',
     },
   },
 }
@@ -2147,7 +2204,8 @@ const en: SettingsMessages = {
       CHOICE: { label: 'Choice', description: 'Offer clickable options' },
       COLLECT_EMAIL: { label: 'Collect Email', description: 'Ask the visitor for email' },
       COLLECT_NAME: { label: 'Collect Name', description: 'Ask the visitor for name' },
-      ASSIGN_AGENT: { label: 'Transfer to Agent', description: 'Hand off chat to an agent' },
+      ASSIGN_AGENT: { label: 'Transfer to Agent', description: 'Hand off chat to an agent + AI summary' },
+      WEBHOOK: { label: 'API Call', description: 'Call an external HTTP endpoint' },
       END: { label: 'End', description: 'End the conversation' },
     },
     triggers: {
@@ -2196,6 +2254,12 @@ const en: SettingsMessages = {
     modelLocked: ' — upgrade required',
     platformFallbackHint:
       'All providers run via the platform Gemini key. Add your own OpenAI/Groq keys to use those providers directly.',
+    webSearch: 'Web search (live info)',
+    webSearchHint: 'Adds DuckDuckGo context when visitors ask about current topics.',
+    multimodal: 'Image understanding',
+    multimodalHint: 'Analyzes visitor images with Gemini Vision.',
+    smartRouting: 'Smart model routing',
+    smartRoutingHint: 'Uses economy models for simple questions and stronger models for complex ones.',
     providers: {
       OPENAI: 'OpenAI (GPT)',
       ANTHROPIC: 'Anthropic (Claude)',
@@ -2221,6 +2285,7 @@ const en: SettingsMessages = {
       TELEGRAM: { label: 'Telegram', description: 'Telegram Bot integration' },
       SLACK: { label: 'Slack', description: 'Slack integration' },
       SMS: { label: 'SMS', description: 'Twilio SMS integration' },
+      LINKEDIN: { label: 'LinkedIn', description: 'LinkedIn messaging integration' },
     },
     configFields: {
       WHATSAPP: [
@@ -2252,8 +2317,32 @@ const en: SettingsMessages = {
         { key: 'accountSid', label: 'Twilio Account SID', type: 'text', placeholder: 'ACxxxxxxxxxxxx' },
         { key: 'authToken', label: 'Auth Token', type: 'password', placeholder: 'Twilio Auth Token' },
         { key: 'phoneNumber', label: 'Phone Number', type: 'text', placeholder: '+1234567890' },
+        { key: 'webhookSecret', label: 'Webhook Secret', type: 'password', placeholder: 'X-Gu-Webhook-Secret header' },
+      ],
+      LINKEDIN: [
+        { key: 'organizationId', label: 'Organization ID', type: 'text', placeholder: 'LinkedIn Organization ID' },
+        { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'LinkedIn Access Token' },
+        { key: 'webhookSecret', label: 'Webhook Secret', type: 'password', placeholder: 'X-Gu-Webhook-Secret header' },
       ],
     },
+  },
+  voiceAgent: {
+    title: 'Voice AI Assistant',
+    subtitle: 'Browser voice AI via Web Speech API — powered by knowledge base and web search.',
+    selectSiteFirst: 'Select a site first.',
+    enable: 'Enable voice assistant on plan',
+    enableHint: 'When enabled, visitors can use /voice/SITE_ID.',
+    active: 'Voice assistant active',
+    name: 'Assistant name',
+    greeting: 'Greeting message',
+    systemPrompt: 'Voice assistant instructions',
+    language: 'Language (BCP-47)',
+    voiceStyle: 'Voice style',
+    embedTitle: 'Embed link',
+    embedHint: 'Add this URL to your site as iframe or new tab.',
+    openEmbed: 'Open preview',
+    saveSuccess: 'Voice assistant saved.',
+    saveFailed: 'Could not save',
   },
   proactive: {
     title: 'Proactive Messages',
@@ -2348,6 +2437,7 @@ const en: SettingsMessages = {
       EMAIL: 'Email',
       IN_APP: 'In-App',
       BROADCAST: 'Broadcast',
+      WHATSAPP: 'WhatsApp',
     },
   },
 }

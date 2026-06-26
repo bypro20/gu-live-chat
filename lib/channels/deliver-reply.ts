@@ -1,6 +1,8 @@
 import { deliverWhatsAppReply } from './whatsapp-delivery'
 import { deliverTelegramReply } from './telegram-delivery'
 import { deliverMetaReply } from './meta-delivery'
+import { deliverLinkedInReply } from './linkedin-delivery'
+import { deliverSmsReply } from './sms-delivery'
 
 /** Route agent/bot reply to the visitor's channel when applicable. */
 export async function deliverChannelReply(
@@ -12,5 +14,7 @@ export async function deliverChannelReply(
     deliverTelegramReply(conversationId, text),
     deliverMetaReply(conversationId, text, 'MESSENGER'),
     deliverMetaReply(conversationId, text, 'INSTAGRAM'),
+    deliverLinkedInReply(conversationId, text),
+    deliverSmsReply(conversationId, text),
   ])
 }

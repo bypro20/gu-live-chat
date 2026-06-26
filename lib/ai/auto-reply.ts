@@ -1,7 +1,9 @@
 import { prisma } from '../db'
 import { emitBotMessage, emitBotTyping, emitVisitorMessagesRead } from '../socket-events'
 import { generateAiReply, isAiLlmAvailable } from './provider'
-import { loadKnowledge, selectRelevantKnowledge, toChatMessages } from './knowledge'
+import { loadRelevantKnowledge, loadKnowledge, toChatMessages } from './knowledge'
+import { getAiFeatureFlags } from './feature-flags'
+import { describeImageUrl } from './vision'
 import { loadVisitorContext } from './visitor-context'
 import { isChatbotWaitingForInput } from '../chatbot-runner'
 import { deliverChannelReply } from '../channels/deliver-reply'
@@ -146,16 +148,25 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       where: { conversationId: params.conversationId },
       orderBy: { createdAt: 'desc' },
       take: HISTORY_LIMIT,
-      select: { content: true, senderType: true },
+      select: {
+        id: true,
+        content: true,
+        senderType: true,
+        attachments: { select: { url: true, mimeType: true } },
+      },
     })
     const ordered = recent.reverse()
 
     const last = ordered[ordered.length - 1]
     if (!last || last.senderType !== 'VISITOR') return
 
-    const knowledge = await loadKnowledge(params.websiteDbId)
-    const relevantKnowledge = selectRelevantKnowledge(last.content, knowledge, KNOWLEDGE_LIMIT)
-    const knowledgeForReply = relevantKnowledge.length > 0 ? relevantKnowledge : knowledge.slice(0, KNOWLEDGE_LIMIT)
+    const flags = await getAiFeatureFlags(params.websiteDbId)
+
+    let knowledgeForReply = await loadRelevantKnowledge(params.websiteDbId, last.content, KNOWLEDGE_LIMIT)
+    if (knowledgeForReply.length === 0) {
+      const all = await loadKnowledge(params.websiteDbId)
+      knowledgeForReply = all.slice(0, KNOWLEDGE_LIMIT)
+    }
     const siteName = (conversation.website.name || 'Destek').trim()
     const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
     const botDisplayName = isMarketing ? MARKETING_PRIMARY_AGENT.fullName : siteName
@@ -202,12 +213,23 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         params.conversationId
       )
 
+      let visionContext = ''
+      if (flags.multimodalEnabled) {
+        const image = last.attachments?.find((a) => a.mimeType?.startsWith('image/') && a.url)
+        if (image?.url) {
+          const desc = await describeImageUrl(image.url, last.content)
+          if (desc) visionContext = `Ziyaretçi görseli: ${desc}`
+        }
+      }
+
       const reply = await generateAiReply({
         siteName: isMarketing ? MARKETING_AI_BRAND_NAME : conversation.website.name,
         messages,
         knowledge: knowledgeForReply,
         systemPrompt: aiConfig.systemPrompt || undefined,
-        visitorContext,
+        visitorContext: [visitorContext, visionContext].filter(Boolean).join('\n\n') || undefined,
+        webSearchEnabled: flags.webSearchEnabled,
+        smartRoutingEnabled: flags.smartRoutingEnabled,
         dbConfig,
         plan: conversation.website.plan as PlanType,
         websiteId: params.websiteDbId,

@@ -9,6 +9,7 @@ import {
   ArrowRight, Bot, BookOpen, BarChart3, MessageCircle, Users,
   Workflow, Mail, Smartphone, MessageSquare, Inbox, Zap,
   Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
+  Mic, FileText, Sparkles, Link2,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroRobotOverlays } from '@/components/marketing/hero-robot'
@@ -312,6 +313,48 @@ export function AiShowcase() {
               <AiReplyShowcase />
             </div>
           </FadeIn>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const AI_PLATFORM_ICONS = [FileText, Mic, Sparkles, Link2, Smartphone, BarChart3] as const
+
+export function AiPlatformSection() {
+  const p = useT().home.aiPlatform
+
+  return (
+    <section id="ai-platform" className="py-20 px-4 sm:px-6 bg-background border-y border-border">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <span className="section-label mb-4">{p.label}</span>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4 max-w-2xl">{p.title}</h2>
+          <p className="mt-3 text-muted-foreground leading-relaxed max-w-2xl">{p.desc}</p>
+        </FadeIn>
+        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {p.items.map((item, i) => {
+            const Icon = AI_PLATFORM_ICONS[i] ?? Sparkles
+            return (
+              <FadeIn key={item.title} delay={i * 0.05}>
+                <Link
+                  href={item.href}
+                  className="surface surface-hover block h-full p-5 group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center mb-3">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
+                </Link>
+              </FadeIn>
+            )
+          })}
+        </div>
+        <div className="mt-8">
+          <Link href="/ai" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover">
+            {p.cta} <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
     </section>

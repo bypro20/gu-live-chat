@@ -44,7 +44,12 @@ export default function ChatbotPage() {
           type: s.type,
           message: s.message || undefined,
           order: i,
-          options: s.options?.length ? s.options : undefined,
+          options:
+            s.type === 'WEBHOOK' && s.webhookUrl
+              ? JSON.stringify({ url: s.webhookUrl })
+              : s.options?.length
+                ? JSON.stringify(s.options)
+                : undefined,
         })),
       })
       setShowBuilder(false)

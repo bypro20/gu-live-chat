@@ -23,6 +23,13 @@ export type HomeMessages = {
     steps: { title: string; desc: string }[]
     cta: string
   }
+  aiPlatform: {
+    label: string
+    title: string
+    desc: string
+    items: { title: string; desc: string; href: string }[]
+    cta: string
+  }
   translate: {
     label: string
     title: string

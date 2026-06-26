@@ -226,7 +226,13 @@ export type SeoLandingChrome = {
   relatedTitle: string
 }
 
-export type SeoLandingKey = 'canliDestek' | 'chatbot' | 'whatsappDestek'
+export type SeoLandingKey =
+  | 'canliDestek'
+  | 'chatbot'
+  | 'whatsappDestek'
+  | 'sesliAi'
+  | 'linkedinDestek'
+  | 'smsDestek'
 
 export type MarketingPages = {
   common: MarketingCommon

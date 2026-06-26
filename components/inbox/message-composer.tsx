@@ -40,6 +40,7 @@ type MessageComposerProps = {
   canAi?: boolean
   aiEnabled?: boolean
   onAiSuggest?: () => void
+  onAiCopilot?: (mode: string) => void
   aiSuggesting?: boolean
   cannedResponses?: CannedItem[]
   showCannedPicker?: boolean
@@ -69,6 +70,7 @@ export function MessageComposer({
   canAi,
   aiEnabled,
   onAiSuggest,
+  onAiCopilot,
   aiSuggesting,
   cannedResponses = [],
   showCannedPicker,
@@ -178,22 +180,44 @@ export function MessageComposer({
             </Button>
           </>
         )}
-        {canAi && aiEnabled && onAiSuggest && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="text-xs h-8"
-            disabled={aiSuggesting || disabled}
-            onClick={onAiSuggest}
-          >
-            {aiSuggesting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5" />
+        {canAi && aiEnabled && (onAiSuggest || onAiCopilot) && (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs h-8"
+              disabled={aiSuggesting || disabled}
+              onClick={onAiSuggest}
+            >
+              {aiSuggesting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5" />
+              )}
+              {inbox.aiSuggest}
+            </Button>
+            {onAiCopilot && (
+              <select
+                className="h-8 max-w-[108px] rounded-md border border-border bg-background px-1.5 text-[11px] text-foreground"
+                disabled={aiSuggesting || disabled}
+                defaultValue=""
+                onChange={(e) => {
+                  const mode = e.target.value
+                  if (!mode) return
+                  onAiCopilot(mode)
+                  e.target.value = ''
+                }}
+              >
+                <option value="">{inbox.aiCopilotMenu}</option>
+                <option value="professional">{inbox.aiCopilotProfessional}</option>
+                <option value="friendly">{inbox.aiCopilotFriendly}</option>
+                <option value="shorten">{inbox.aiCopilotShorten}</option>
+                <option value="expand">{inbox.aiCopilotExpand}</option>
+                <option value="grammar">{inbox.aiCopilotGrammar}</option>
+              </select>
             )}
-            {inbox.aiSuggest}
-          </Button>
+          </div>
         )}
       </div>
 

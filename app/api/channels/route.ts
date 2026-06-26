@@ -4,10 +4,11 @@ import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
+import type { ChannelType } from '@/app/generated/prisma/client'
 
 const channelSchema = z.object({
   websiteId: z.string(),
-  type: z.enum(['WHATSAPP', 'EMAIL', 'MESSENGER', 'INSTAGRAM', 'TELEGRAM', 'SLACK', 'SMS']),
+  type: z.enum(['WHATSAPP', 'EMAIL', 'MESSENGER', 'INSTAGRAM', 'TELEGRAM', 'SLACK', 'SMS', 'LINKEDIN']),
   name: z.string().min(1, 'Kanal adı gerekli'),
   config: z.string().optional(),
   isActive: z.boolean().default(false),
@@ -69,12 +70,12 @@ export async function POST(req: Request) {
     if (planDenied) return planDenied
 
     const existing = await prisma.channelIntegration.findUnique({
-      where: { websiteId_type: { websiteId: website.id, type: validated.type } },
+      where: { websiteId_type: { websiteId: website.id, type: validated.type as ChannelType } },
     })
     if (existing) return NextResponse.json({ error: 'Bu kanal zaten mevcut' }, { status: 409 })
 
     const channel = await prisma.channelIntegration.create({
-      data: { ...validated, websiteId: website.id },
+      data: { ...validated, type: validated.type as ChannelType, websiteId: website.id },
     })
 
     return NextResponse.json(channel, { status: 201 })

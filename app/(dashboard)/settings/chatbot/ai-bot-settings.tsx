@@ -21,6 +21,10 @@ interface AiConfig {
   systemPrompt: string
   autoSuggest: boolean
   autoReply: boolean
+  webSearchEnabled: boolean
+  multimodalEnabled: boolean
+  voiceAgentEnabled: boolean
+  smartRoutingEnabled: boolean
   _hasApiKey?: boolean
 }
 
@@ -49,6 +53,10 @@ const DEFAULT_CONFIG: AiConfig = {
   systemPrompt: '',
   autoSuggest: true,
   autoReply: false,
+  webSearchEnabled: true,
+  multimodalEnabled: true,
+  voiceAgentEnabled: false,
+  smartRoutingEnabled: true,
 }
 
 export default function AiBotSettings() {
@@ -146,6 +154,10 @@ export default function AiBotSettings() {
         systemPrompt: config.systemPrompt,
         autoSuggest: config.autoSuggest,
         autoReply: config.autoReply,
+        webSearchEnabled: config.webSearchEnabled,
+        multimodalEnabled: config.multimodalEnabled,
+        voiceAgentEnabled: config.voiceAgentEnabled,
+        smartRoutingEnabled: config.smartRoutingEnabled,
       }
       if (config.apiKey.trim()) payload.apiKey = config.apiKey.trim()
 
@@ -184,7 +196,13 @@ export default function AiBotSettings() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || ai.testFailed)
       setTestReply(data.reply)
-      setTestMode(data.mode === 'llm' ? ai.testModeLlm : ai.testModeFallback)
+      setTestMode(
+        data.routedModel
+          ? `${data.mode === 'llm' ? ai.testModeLlm : ai.testModeFallback} · ${data.routedModel}`
+          : data.mode === 'llm'
+            ? ai.testModeLlm
+            : ai.testModeFallback
+      )
     } catch (err) {
       setTestReply(err instanceof Error ? err.message : ai.testFailed)
       setTestMode(null)
@@ -310,6 +328,48 @@ export default function AiBotSettings() {
               <span>
                 <span className="block text-sm font-medium text-foreground">{ai.autoSuggest}</span>
                 <span className="block text-xs text-muted-foreground">{ai.autoSuggestHint}</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.webSearchEnabled}
+                onChange={(e) => update('webSearchEnabled', e.target.checked)}
+                disabled={!config.isActive}
+                className="mt-0.5 w-4 h-4 accent-primary rounded border-border disabled:opacity-50"
+              />
+              <span>
+                <span className="block text-sm font-medium text-foreground">{ai.webSearch}</span>
+                <span className="block text-xs text-muted-foreground">{ai.webSearchHint}</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.multimodalEnabled}
+                onChange={(e) => update('multimodalEnabled', e.target.checked)}
+                disabled={!config.isActive}
+                className="mt-0.5 w-4 h-4 accent-primary rounded border-border disabled:opacity-50"
+              />
+              <span>
+                <span className="block text-sm font-medium text-foreground">{ai.multimodal}</span>
+                <span className="block text-xs text-muted-foreground">{ai.multimodalHint}</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.smartRoutingEnabled}
+                onChange={(e) => update('smartRoutingEnabled', e.target.checked)}
+                disabled={!config.isActive}
+                className="mt-0.5 w-4 h-4 accent-primary rounded border-border disabled:opacity-50"
+              />
+              <span>
+                <span className="block text-sm font-medium text-foreground">{ai.smartRouting}</span>
+                <span className="block text-xs text-muted-foreground">{ai.smartRoutingHint}</span>
               </span>
             </label>
           </div>

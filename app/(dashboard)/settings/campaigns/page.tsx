@@ -10,7 +10,7 @@ interface Campaign {
   id: string
   name: string
   description: string | null
-  type: 'EMAIL' | 'IN_APP' | 'BROADCAST'
+  type: 'EMAIL' | 'IN_APP' | 'BROADCAST' | 'WHATSAPP'
   status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED'
   target: string
   subject: string | null
@@ -43,6 +43,7 @@ const TYPE_COLORS: Record<string, string> = {
   EMAIL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   IN_APP: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   BROADCAST: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  WHATSAPP: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 }
 
 export default function CampaignsPage() {
@@ -176,6 +177,7 @@ export default function CampaignsPage() {
                   <option value="EMAIL">{camp.types.EMAIL}</option>
                   <option value="IN_APP">{camp.types.IN_APP}</option>
                   <option value="BROADCAST">{camp.types.BROADCAST}</option>
+                  <option value="WHATSAPP">{camp.types.WHATSAPP || 'WhatsApp'}</option>
                 </select>
               </div>
             </div>
@@ -348,7 +350,7 @@ export default function CampaignsPage() {
                           {campaign.status === 'DRAFT' && (
                             <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition">{camp.activate}</button>
                           )}
-                          {campaign.status === 'ACTIVE' && campaign.type === 'EMAIL' && (
+                          {campaign.status === 'ACTIVE' && (campaign.type === 'EMAIL' || campaign.type === 'WHATSAPP') && (
                             <button
                               onClick={() => sendCampaign(campaign.id)}
                               disabled={sendingId === campaign.id}
@@ -409,7 +411,7 @@ export default function CampaignsPage() {
                       {campaign.status === 'DRAFT' && (
                         <button onClick={() => updateStatus(campaign.id, 'ACTIVE')} className="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg transition">{camp.activate}</button>
                       )}
-                      {campaign.status === 'ACTIVE' && campaign.type === 'EMAIL' && (
+                      {campaign.status === 'ACTIVE' && (campaign.type === 'EMAIL' || campaign.type === 'WHATSAPP') && (
                         <button
                           onClick={() => sendCampaign(campaign.id)}
                           disabled={sendingId === campaign.id}

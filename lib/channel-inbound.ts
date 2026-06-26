@@ -3,9 +3,10 @@ import { emitVisitorMessage } from './socket-events'
 import { processChatbotOnVisitorMessage } from './chatbot-runner'
 import { maybeRunAiAutoReply } from './ai/auto-reply'
 import { maybeAutoResolveOnSatisfaction } from './ai/satisfaction-detect'
-import { analyzeSentiment } from './ai/sentiment'
+import { analyzeSentiment, refineSentimentLater } from './ai/sentiment'
 import { resolveAgentsOnline } from './agents-online'
 import type { ConversationChannel } from './conversation-channels'
+import type { ConversationSource } from '@/app/generated/prisma/client'
 
 export interface InboundChannelMessage {
   websiteDbId: string
@@ -55,7 +56,7 @@ export async function handleInboundChannelMessage(
         websiteId: websiteDbId,
         visitorId: visitor.id,
         status: 'OPEN',
-        source,
+        source: source as ConversationSource,
         lastMessageAt: new Date(),
         lastMessagePreview: content.substring(0, 100),
       },
@@ -75,6 +76,8 @@ export async function handleInboundChannelMessage(
       sentiment,
     },
   })
+
+  void refineSentimentLater(message.id, content).catch(() => {})
 
   await prisma.conversation.update({
     where: { id: conversation.id },

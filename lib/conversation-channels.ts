@@ -7,6 +7,7 @@ export type ConversationChannel =
   | 'EMAIL'
   | 'SMS'
   | 'SLACK'
+  | 'LINKEDIN'
   | 'API'
   | 'IMPORT'
 
@@ -22,6 +23,7 @@ export const CHANNEL_META: Record<
   EMAIL: { label: 'E-posta', color: '#6366F1', short: 'Mail' },
   SMS: { label: 'SMS', color: '#F97316', short: 'SMS' },
   SLACK: { label: 'Slack', color: '#4A154B', short: 'Slack' },
+  LINKEDIN: { label: 'LinkedIn', color: '#0A66C2', short: 'LI' },
   API: { label: 'API', color: '#64748B', short: 'API' },
   IMPORT: { label: 'İçe aktarım', color: '#94A3B8', short: 'Import' },
 }
@@ -33,6 +35,7 @@ export const INBOX_CHANNEL_FILTERS: { key: string; label: string }[] = [
   { key: 'INSTAGRAM', label: 'Instagram' },
   { key: 'MESSENGER', label: 'Messenger' },
   { key: 'TELEGRAM', label: 'Telegram' },
+  { key: 'LINKEDIN', label: 'LinkedIn' },
   { key: 'EMAIL', label: 'E-posta' },
 ]
 

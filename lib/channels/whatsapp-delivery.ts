@@ -1,7 +1,7 @@
 import { prisma } from '../db'
 import { sendWhatsAppMessage, type WhatsAppConfig } from './whatsapp'
 
-async function getWhatsAppConfig(websiteDbId: string): Promise<WhatsAppConfig | null> {
+export async function getWhatsAppConfig(websiteDbId: string): Promise<WhatsAppConfig | null> {
   const integration = await prisma.channelIntegration.findFirst({
     where: { websiteId: websiteDbId, type: 'WHATSAPP', isActive: true },
     select: { config: true },

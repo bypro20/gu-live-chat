@@ -151,17 +151,17 @@ export const PAGE_SEO = {
     keywordFirst: true,
   },
   ai: {
-    title: 'AI Müşteri Desteği & Yapay Zeka Chatbot',
+    title: 'AI Müşteri Desteği — RAG, Sesli AI & Copilot',
     description:
-      `${SITE_NAME} AI asistanı tekrarlayan müşteri sorularını 7/24 yanıtlar. GPT/Gemini destekli chatbot, bilgi bankası entegrasyonu ve akıllı temsilci yönlendirme.`,
+      `${SITE_NAME} AI platformu: PDF/URL ile RAG eğitimi, sesli AI asistan, inbox copilot, web araması, duygu analizi ve akıllı temsilci yönlendirme. GPT/Gemini destekli.`,
     path: '/ai',
-    keywords: ['AI müşteri hizmetleri', 'yapay zeka chatbot', 'otomatik müşteri desteği'],
+    keywords: ['AI müşteri hizmetleri', 'RAG chatbot', 'sesli AI destek', 'AI copilot'],
     keywordFirst: true,
   },
   integrations: {
-    title: 'Entegrasyonlar — WhatsApp, E-ticaret, API',
+    title: 'Entegrasyonlar — WhatsApp, SMS, LinkedIn, API',
     description:
-      `${SITE_NAME} entegrasyonları: Shopify, WooCommerce, İkas, Ticimax, IdeaSoft, WhatsApp, Messenger, Telegram, Slack, Zapier, REST API ve webhook.`,
+      `${SITE_NAME} entegrasyonları: WhatsApp, Twilio SMS, LinkedIn, Messenger, Telegram, Shopify, WooCommerce, Zapier, REST API ve webhook.`,
     path: '/integrations',
     keywords: [
       'whatsapp entegrasyonu',
@@ -223,6 +223,30 @@ export const PAGE_SEO = {
       `${SITE_NAME} WhatsApp Business entegrasyonu ile mesajları tek gelen kutusunda yönetin. Canlı destek, chatbot ve ekip ataması.`,
     path: '/whatsapp-destek',
     keywords: ['whatsapp canlı destek', 'whatsapp müşteri hizmetleri', 'whatsapp business destek'],
+    keywordFirst: true,
+  },
+  sesliAi: {
+    title: 'Sesli AI Asistan — Tarayıcıda Konuşmalı Destek',
+    description:
+      `${SITE_NAME} sesli AI asistanı Web Speech ile çalışır. RAG bilgi eğitimi, web araması ve akıllı model yönlendirme dahil.`,
+    path: '/sesli-ai',
+    keywords: ['sesli AI destek', 'voice chatbot', 'konuşmalı yapay zeka'],
+    keywordFirst: true,
+  },
+  linkedinDestek: {
+    title: 'LinkedIn Mesajlaşma — B2B Inbox Entegrasyonu',
+    description:
+      `${SITE_NAME} ile LinkedIn mesajlarını tek gelen kutusunda yönetin. AI otomatik yanıt ve temsilci devri.`,
+    path: '/linkedin-destek',
+    keywords: ['linkedin müşteri hizmetleri', 'linkedin inbox', 'B2B destek'],
+    keywordFirst: true,
+  },
+  smsDestek: {
+    title: 'Twilio SMS Destek — İki Yönlü SMS Inbox',
+    description:
+      `${SITE_NAME} Twilio SMS entegrasyonu — gelen SMS inbox\'a düşer, yanıtlar SMS olarak gider. AI destekli.`,
+    path: '/sms-destek',
+    keywords: ['twilio sms destek', 'sms canlı destek', 'iki yönlü sms'],
     keywordFirst: true,
   },
   basla: {

@@ -8,7 +8,7 @@ import PlanUpgradePrompt from '@/components/dashboard/plan-upgrade-prompt'
 
 interface ChannelIntegration {
   id: string
-  type: 'WHATSAPP' | 'EMAIL' | 'MESSENGER' | 'INSTAGRAM' | 'TELEGRAM' | 'SLACK' | 'SMS'
+  type: 'WHATSAPP' | 'EMAIL' | 'MESSENGER' | 'INSTAGRAM' | 'TELEGRAM' | 'SLACK' | 'SMS' | 'LINKEDIN'
   name: string
   isActive: boolean
   config: string | null
@@ -23,6 +23,7 @@ const CHANNEL_META: Record<string, { icon: string; color: string }> = {
   TELEGRAM: { icon: '✈️', color: '#0088CC' },
   SLACK: { icon: '#️⃣', color: '#4A154B' },
   SMS: { icon: '📱', color: '#F97316' },
+  LINKEDIN: { icon: '💼', color: '#0A66C2' },
 }
 
 export default function ChannelsPage() {

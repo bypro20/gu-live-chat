@@ -88,11 +88,11 @@ export const marketingTr: MarketingPages = {
       },
       {
         title: 'Telefon ve SMS',
-        desc: 'Twilio SMS entegrasyonu ile otomatik SMS bildirimleri (Profesyonel paket ve üzeri).',
+        desc: 'Twilio ile iki yönlü SMS — gelen mesajlar inbox\'a düşer, yanıtlar SMS olarak gider.',
       },
       {
-        title: 'Bilgi Bankası',
-        desc: 'SSS ve makaleler - AI Agent ve chatbot için bağlam kaynağı.',
+        title: 'Bilgi Bankası & AI Eğitimi (RAG)',
+        desc: 'PDF, URL ve metinlerden semantik bilgi eğitimi — AI doğru ve güncel yanıt verir.',
       },
       {
         title: 'Workflow Otomasyonu',
@@ -136,7 +136,7 @@ export const marketingTr: MarketingPages = {
         name: 'Canlı Sohbet Widget',
         desc: 'Web sitenize tek satır kod ile canlı destek. Tüm platformlarda çalışır.',
         status: 'active',
-        href: '/canlı-destek',
+        href: '/canli-destek',
       },
       {
         name: 'WhatsApp Business',
@@ -166,8 +166,21 @@ export const marketingTr: MarketingPages = {
       },
       {
         name: 'SMS (Twilio)',
-        desc: 'SMS bildirimleri ve iki yönlü mesajlaşma.',
+        desc: 'Twilio ile iki yönlü SMS — gelen kutusunda yanıtlayın.',
+        status: 'addon',
+        href: '/sms-destek',
+      },
+      {
+        name: 'LinkedIn Mesajlaşma',
+        desc: 'B2B LinkedIn mesajlarını tek inbox\'ta yönetin.',
+        status: 'addon',
+        href: '/linkedin-destek',
+      },
+      {
+        name: 'Sesli AI Asistan',
+        desc: 'Tarayıcıda konuşmalı AI — bilgi bankası ve web araması destekli.',
         status: 'active',
+        href: '/sesli-ai',
       },
       {
         name: 'Slack',
@@ -221,34 +234,51 @@ export const marketingTr: MarketingPages = {
     badge: 'Yapay Zeka',
     title: 'Akıllı destek, gerçek sonuçlar',
     subtitle:
-      'Gu Live Chat AI asistanı tekrarlayan soruları otomatik yanıtlar, ekibinize zaman kazandırır ve müşterilerinize 7/24 kesintisiz destek sunar.',
+      'RAG bilgi eğitimi, sesli AI, inbox copilot, web araması ve akıllı temsilci yönlendirme — Gu Live Chat AI platformu 7/24 destek sunar.',
     howTitle: 'Nasıl başlanır?',
-    howSubtitle: '4 adımda AI asistanınızı devreye alın',
+    howSubtitle: '5 adımda AI platformunuzu devreye alın',
     steps: [
-      'Bilgi bankanızı oluşturun veya mevcut makaleleri ıçe aktarın',
-      'Chatbot akışlarını görsel editörde tanımlayın',
-      'AI asistanı etkinleştirin ve test edin',
-      'Performansı analitik panelden takip edin',
+      'PDF, URL veya metin ile bilgi bankanızı eğitin (RAG)',
+      'AI asistanı, web araması ve copilot ayarlarını açın',
+      'Chatbot akışlarını ve kanalları (WhatsApp, SMS, LinkedIn) bağlayın',
+      'Sesli AI embed linkini sitenize ekleyin (isteğe bağlı)',
+      'Analitikten bot yanıtları, duygu ve AI metriklerini takip edin',
     ],
-    stats: ['%40 daha az tekrarlayan soru', '7/24 otomatik yanıt', 'Tek tıkla temsilciye devret'],
-    ctaTitle: 'AI asistanını deneyin',
-    ctaSubtitle: 'Profesyonel planda AI özellikleri dahildir.',
+    stats: ['PDF & URL ile RAG eğitimi', 'Sesli AI + inbox copilot', 'Akıllı temsilci yönlendirme'],
+    ctaTitle: 'AI platformunu deneyin',
+    ctaSubtitle: 'Profesyonel planda AI özellikleri dahildir; alt paketlerde eklenti mağazasından açılır.',
     capabilities: [
       {
-        title: 'Bağlama duyarlı yanıtlar',
-        desc: 'Müşterinin sorusunu anlayarak bilgi bankasından en uygun cevabı sunar.',
+        title: 'RAG bilgi eğitimi',
+        desc: 'PDF, URL ve metin yükleyin; semantik arama ile AI şirket bilginize dayanır.',
       },
       {
-        title: 'Bilgi bankası entegrasyonu',
-        desc: "Makalelerinizi AI'a öğretin, güncel bilgilerle yanıt verin.",
+        title: 'Sesli AI asistan',
+        desc: 'Tarayıcıda konuşmalı destek — Web Speech + bilgi bankası + web araması.',
       },
       {
-        title: 'Akıllı eskalasyon',
-        desc: 'Karmaşık talepleri otomatik olarak canlı temsilciye aktarır.',
+        title: 'Inbox AI Copilot',
+        desc: 'Temsilcilere tek tıkla yanıt önerisi, kısaltma, düzeltme ve çeviri.',
       },
       {
-        title: 'Öneri sistemi',
-        desc: 'Temsilcilere yanıt önerileri sunarak yanıt süresini kısaltır.',
+        title: 'Web araması & görsel AI',
+        desc: 'Güncel konularda DuckDuckGo bağlamı; ziyaretçi resimlerini Gemini Vision ile okur.',
+      },
+      {
+        title: 'Akıllı model yönlendirme',
+        desc: 'Basit sorularda ekonomik, karmaşık sorularda güçlü LLM modeli otomatik seçilir.',
+      },
+      {
+        title: 'Akıllı temsilci devri',
+        desc: 'Bot karmaşık talepleri en az yüklü çevrimiçi temsilciye özetle devreder.',
+      },
+      {
+        title: 'Duygu analizi',
+        desc: 'Olumsuz mesajlar işaretlenir; analitikte duygu dağılımını görürsünüz.',
+      },
+      {
+        title: 'AI analitik',
+        desc: 'Bot yanıt sayısı, devir, RAG parça sayısı ve sık sorulan mesajlar.',
       },
     ],
   },
@@ -670,7 +700,7 @@ export const marketingTr: MarketingPages = {
         },
       ],
       relatedLinks: [
-        { label: 'Canlı Destek', href: '/canlı-destek' },
+        { label: 'Canlı Destek', href: '/canli-destek' },
         { label: 'Yapay Zeka', href: '/ai' },
         { label: 'Blog: Chatbot Kurulum', href: '/blog/chatbot-kurulum-rehberi' },
         { label: 'Fiyatlandırma', href: '/pricing' },
@@ -745,9 +775,95 @@ export const marketingTr: MarketingPages = {
         },
       ],
       relatedLinks: [
-        { label: 'Canlı Destek', href: '/canlı-destek' },
+        { label: 'Canlı Destek', href: '/canli-destek' },
         { label: 'Entegrasyonlar', href: '/integrations' },
         { label: 'Blog: WhatsApp Desteği', href: '/blog/whatsapp-ile-musteri-destegi' },
+        { label: 'Fiyatlandırma', href: '/pricing' },
+      ],
+    },
+    sesliAi: {
+      badge: 'Sesli AI Asistan',
+      h1: 'Sesli yapay zeka ile 7/24 müşteri desteği',
+      subtitle:
+        'Gu Live Chat sesli AI asistanı tarayıcıda konuşma ile çalışır. Bilgi bankası (RAG), web araması ve akıllı model yönlendirme dahildir.',
+      cta: { label: 'Sesli AI\'yı Dene', href: '/register' },
+      benefits: [
+        { title: 'Web Speech', desc: 'Mikrofon ile konuşun; AI sesli yanıt verir — uygulama indirmeye gerek yok.' },
+        { title: 'RAG destekli', desc: 'PDF ve URL ile eğittiğiniz bilgi bankası sesli yanıtlara yansır.' },
+        { title: 'Embed link', desc: '/voice/SITE_ID linkini sitenize iframe veya yeni sekme olarak ekleyin.' },
+        { title: 'Akıllı routing', desc: 'Karmaşık sorularda güçlü model, basit sorularda hızlı model.' },
+      ],
+      sections: [
+        {
+          title: 'Kimler için?',
+          paragraphs: [
+            'E-ticaret, SaaS ve hizmet sitelerinde ziyaretçiler yazmak yerine konuşarak destek alabilir.',
+            'Telefon hattı kurmadan sesli AI deneyimi sunmak isteyen ekipler için ideal başlangıç.',
+          ],
+        },
+      ],
+      faqs: [
+        { q: 'Telefon hattı gerekir mi?', a: 'Hayır. Tarayıcı Web Speech API kullanılır; ziyaretçi mikrofon izni verir.' },
+        { q: 'Hangi pakette?', a: 'Profesyonel planda AI asistan ile birlikte; Sesli AI eklentisi ile de açılabilir.' },
+      ],
+      relatedLinks: [
+        { label: 'AI Platformu', href: '/ai' },
+        { label: 'Fiyatlandırma', href: '/pricing' },
+      ],
+    },
+    linkedinDestek: {
+      badge: 'LinkedIn Mesajlaşma',
+      h1: 'LinkedIn mesajlarını tek inbox\'ta yönetin',
+      subtitle:
+        'B2B müşterileriniz LinkedIn\'den yazsın; ekibiniz Gu Live Chat panelinden yanıtlasın. AI otomatik yanıt ve temsilci devri desteklenir.',
+      cta: { label: 'LinkedIn Kanalını Aç', href: '/register' },
+      benefits: [
+        { title: 'Birleşik inbox', desc: 'LinkedIn, widget, WhatsApp ve e-posta aynı gelen kutusunda.' },
+        { title: 'AI yanıt', desc: 'Tekrarlayan B2B sorularını AI yanıtlar; karmaşık talepler temsilciye devredilir.' },
+        { title: 'Webhook', desc: '/api/webhooks/linkedin ile mesajlar otomatik senkronize edilir.' },
+      ],
+      sections: [
+        {
+          title: 'Kurulum',
+          paragraphs: [
+            'Eklenti mağazasından LinkedIn kanalını satın alın, Ayarlar > Kanallar bölümünden access token girin.',
+            'Webhook URL ve güvenlik secret değerini LinkedIn veya middleware tarafında yapılandırın.',
+          ],
+        },
+      ],
+      faqs: [
+        { q: 'Resmi LinkedIn API gerekir mi?', a: 'Evet, LinkedIn Developer uygulaması ve geçerli access token gereklidir.' },
+      ],
+      relatedLinks: [
+        { label: 'Entegrasyonlar', href: '/integrations' },
+        { label: 'WhatsApp Destek', href: '/whatsapp-destek' },
+      ],
+    },
+    smsDestek: {
+      badge: 'Twilio SMS',
+      h1: 'SMS ile iki yönlü müşteri desteği',
+      subtitle:
+        'Twilio SMS entegrasyonu ile gelen mesajlar inbox\'a düşer; temsilci yanıtları SMS olarak iletilir. AI otomatik yanıt desteklenir.',
+      cta: { label: 'SMS Kanalını Başlat', href: '/register' },
+      benefits: [
+        { title: 'Two-way SMS', desc: 'Müşteri SMS atar, siz panelden yanıtlarsınız — tek konuşma geçmişi.' },
+        { title: 'Twilio', desc: 'Account SID, Auth Token ve telefon numarası ile hızlı kurulum.' },
+        { title: 'AI + SMS', desc: 'Bot yanıtları SMS kanalına otomatik iletilir.' },
+      ],
+      sections: [
+        {
+          title: 'Kullanım alanları',
+          paragraphs: [
+            'Randevu hatırlatma sonrası destek, kargo takibi, saha satış ekipleri için hafif SMS destek hattı.',
+            'Webhook: /api/webhooks/sms?websiteId=SITENIZ — Twilio Messaging ayarlarından bağlayın.',
+          ],
+        },
+      ],
+      faqs: [
+        { q: 'Twilio hesabı şart mı?', a: 'Evet, Twilio hesabı ve SMS yetkili telefon numarası gereklidir.' },
+      ],
+      relatedLinks: [
+        { label: 'Entegrasyonlar', href: '/integrations' },
         { label: 'Fiyatlandırma', href: '/pricing' },
       ],
     },

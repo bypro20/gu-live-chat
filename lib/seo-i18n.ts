@@ -42,18 +42,18 @@ const EN_SEO: Partial<Record<PageSeoKey, PageMeta>> = {
     locale: 'en',
   },
   ai: {
-    title: 'AI Customer Support & Chatbot',
+    title: 'AI Customer Support — RAG, Voice AI & Copilot',
     description:
-      `${SITE_NAME} AI assistant answers repetitive questions 24/7. GPT/Gemini chatbot, knowledge base, and smart agent handoff.`,
+      `${SITE_NAME} AI platform: RAG training from PDF/URL, voice AI, inbox copilot, web search, sentiment, and smart agent routing.`,
     path: '/ai',
-    keywords: ['AI customer service', 'AI chatbot', 'automated support'],
+    keywords: ['AI customer service', 'RAG chatbot', 'voice AI support'],
     keywordFirst: true,
     locale: 'en',
   },
   integrations: {
-    title: 'Integrations — WhatsApp, E-commerce, API',
+    title: 'Integrations — WhatsApp, SMS, LinkedIn, API',
     description:
-      `${SITE_NAME} integrations: Shopify, WooCommerce, WhatsApp, Messenger, Telegram, Slack, Zapier, REST API, and webhooks.`,
+      `${SITE_NAME} integrations: WhatsApp, Twilio SMS, LinkedIn, Messenger, Telegram, Shopify, Zapier, REST API, and webhooks.`,
     path: '/integrations',
     keywords: ['whatsapp integration', 'shopify live chat', 'ecommerce support'],
     keywordFirst: true,
@@ -106,6 +106,29 @@ const EN_SEO: Partial<Record<PageSeoKey, PageMeta>> = {
       `${SITE_NAME} WhatsApp Business integration — manage messages in one inbox with live support, chatbot, and team assignment.`,
     path: '/whatsapp-destek',
     keywords: ['whatsapp live chat', 'whatsapp customer service'],
+    keywordFirst: true,
+    locale: 'en',
+  },
+  sesliAi: {
+    title: 'Voice AI Assistant — Browser Voice Support',
+    description:
+      `${SITE_NAME} voice AI uses Web Speech with RAG training, web search, and smart model routing.`,
+    path: '/sesli-ai',
+    keywords: ['voice AI support', 'voice chatbot'],
+    keywordFirst: true,
+    locale: 'en',
+  },
+  linkedinDestek: {
+    title: 'LinkedIn Messaging — B2B Inbox Integration',
+    description: `${SITE_NAME} — manage LinkedIn messages in one inbox with AI auto-reply and agent handoff.`,
+    path: '/linkedin-destek',
+    keywordFirst: true,
+    locale: 'en',
+  },
+  smsDestek: {
+    title: 'Twilio SMS Support — Two-Way SMS Inbox',
+    description: `${SITE_NAME} Twilio SMS — inbound SMS in inbox, replies sent as SMS with AI support.`,
+    path: '/sms-destek',
     keywordFirst: true,
     locale: 'en',
   },

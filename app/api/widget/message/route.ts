@@ -8,7 +8,7 @@ import { processChatbotOnVisitorMessage } from '@/lib/chatbot-runner'
 import { runWorkflows } from '@/lib/workflow-runner'
 import { maybeRunAiAutoReply } from '@/lib/ai/auto-reply'
 import { maybeAutoResolveOnSatisfaction } from '@/lib/ai/satisfaction-detect'
-import { analyzeSentiment } from '@/lib/ai/sentiment'
+import { analyzeSentiment, refineSentimentLater } from '@/lib/ai/sentiment'
 import { getClientIp } from '@/lib/ip-utils'
 import { isIpBanned } from '@/lib/ip-ban'
 import { canCreateConversation } from '@/lib/plan-limits'
@@ -219,6 +219,8 @@ export async function POST(req: Request) {
       },
       include: { attachments: true },
     })
+
+    void refineSentimentLater(message.id, validated.content).catch(() => {})
 
     // Update conversation
     await prisma.conversation.update({

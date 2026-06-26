@@ -2,6 +2,8 @@ import { prisma } from './db'
 import { emitBotMessage } from './socket-events'
 import { websiteHasFeature } from './addon-features'
 import { isPlatformMarketingWebsiteId } from './marketing-website'
+import { generateHandoffSummary } from './ai/handoff-summary'
+import { assignToBestAgent } from './agent-routing'
 
 interface RunChatbotParams {
   websiteDbId: string
@@ -107,16 +109,78 @@ async function persistBotMessage(
 }
 
 async function assignToOwner(websiteDbId: string, conversationId: string) {
-  const owner = await prisma.teamMember.findFirst({
-    where: { websiteId: websiteDbId, role: 'OWNER' },
-    select: { userId: true },
+  await assignToBestAgent(websiteDbId, conversationId)
+
+  const website = await prisma.website.findUnique({
+    where: { id: websiteDbId },
+    select: { name: true, plan: true, aiConfig: true },
   })
-  if (owner) {
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { assignedToId: owner.userId },
-    })
+  if (website) {
+    void generateHandoffSummary({
+      conversationId,
+      siteName: website.name,
+      dbConfig: website.aiConfig
+        ? {
+            provider: website.aiConfig.provider,
+            model: website.aiConfig.model,
+            apiKey: website.aiConfig.apiKey,
+            temperature: website.aiConfig.temperature,
+          }
+        : null,
+      plan: website.plan as import('./constants').PlanType,
+    }).catch(() => {})
   }
+}
+
+function parseWebhookConfig(options: string | null): { url: string; method?: string } | null {
+  if (!options?.trim()) return null
+  try {
+    const parsed = JSON.parse(options) as { url?: string; method?: string }
+    if (!parsed.url?.trim()) return null
+    return { url: parsed.url.trim(), method: parsed.method || 'GET' }
+  } catch {
+    if (options.startsWith('http')) return { url: options.trim(), method: 'GET' }
+    return null
+  }
+}
+
+async function callWebhookStep(
+  step: ChatbotStepRow,
+  params: RunChatbotParams,
+  botName: string
+): Promise<'advance' | 'wait' | 'end' | 'assign'> {
+  const cfg = parseWebhookConfig(step.options)
+  if (!cfg) {
+    await persistBotMessage(
+      params.conversationId,
+      params.websitePublicId,
+      step.message?.trim() || 'Webhook yapılandırması eksik.',
+      botName
+    )
+    return 'advance'
+  }
+
+  try {
+    const res = await fetch(cfg.url, {
+      method: (cfg.method || 'GET').toUpperCase(),
+      headers: { Accept: 'application/json, text/plain' },
+      signal: AbortSignal.timeout(8000),
+    })
+    const body = await res.text()
+    const snippet = body.slice(0, 600).trim()
+    const reply = step.message?.trim()
+      ? `${step.message}\n\n${snippet}`
+      : snippet || `API yanıtı: ${res.status}`
+    await persistBotMessage(params.conversationId, params.websitePublicId, reply, botName)
+  } catch {
+    await persistBotMessage(
+      params.conversationId,
+      params.websitePublicId,
+      step.message?.trim() || 'Harici servise ulaşılamadı.',
+      botName
+    )
+  }
+  return 'advance'
 }
 
 async function completeChatbot(
@@ -169,6 +233,8 @@ async function executeStep(
       await assignToOwner(params.websiteDbId, params.conversationId)
       return 'assign'
     }
+    case 'WEBHOOK':
+      return callWebhookStep(step, params, botName)
     case 'END':
       return 'end'
     default:

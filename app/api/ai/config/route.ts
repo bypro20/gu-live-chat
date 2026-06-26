@@ -17,6 +17,7 @@ import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
 import type { PlanType } from '@/lib/constants'
 import { isWebsiteAdmin } from '@/lib/website-member'
+import { getAiFeatureFlags, saveAiFeatureFlags } from '@/lib/ai/feature-flags'
 
 function buildPlanAiPayload(plan: PlanType) {
   const access = getPlanAiAccess(plan)
@@ -66,6 +67,8 @@ export async function GET(req: NextRequest) {
     const env = envRaw.effective ?? envRaw
     const platformReady = hasAnyPlatformAiKey()
 
+    const featureFlags = await getAiFeatureFlags(website.id)
+
     if (!aiConfig) {
       const defaultProvider = pickDefaultProvider() ?? getDefaultProviderForPlan(plan)
       const defaultModel = getDefaultModelForPlan(plan, defaultProvider)
@@ -85,6 +88,7 @@ export async function GET(req: NextRequest) {
           systemPrompt: '',
           autoSuggest: true,
           autoReply: platformReady,
+          ...featureFlags,
         },
       })
     }
@@ -103,6 +107,7 @@ export async function GET(req: NextRequest) {
         ...aiConfig,
         apiKey: maskedKey,
         _hasApiKey: !!aiConfig.apiKey,
+        ...featureFlags,
       },
     })
   } catch (error) {
@@ -120,7 +125,21 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { websiteId, isActive, provider, model, apiKey, temperature, systemPrompt, autoSuggest, autoReply } = body
+    const {
+      websiteId,
+      isActive,
+      provider,
+      model,
+      apiKey,
+      temperature,
+      systemPrompt,
+      autoSuggest,
+      autoReply,
+      webSearchEnabled,
+      multimodalEnabled,
+      voiceAgentEnabled,
+      smartRoutingEnabled,
+    } = body
 
     if (!websiteId) {
       return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })
@@ -204,6 +223,22 @@ export async function PUT(req: NextRequest) {
       },
     })
 
+    const flagPatch: Partial<{
+      webSearchEnabled: boolean
+      multimodalEnabled: boolean
+      voiceAgentEnabled: boolean
+      smartRoutingEnabled: boolean
+    }> = {}
+    if (webSearchEnabled !== undefined) flagPatch.webSearchEnabled = !!webSearchEnabled
+    if (multimodalEnabled !== undefined) flagPatch.multimodalEnabled = !!multimodalEnabled
+    if (voiceAgentEnabled !== undefined) flagPatch.voiceAgentEnabled = !!voiceAgentEnabled
+    if (smartRoutingEnabled !== undefined) flagPatch.smartRoutingEnabled = !!smartRoutingEnabled
+    if (Object.keys(flagPatch).length > 0) {
+      await saveAiFeatureFlags(website.id, flagPatch)
+    }
+
+    const featureFlags = await getAiFeatureFlags(website.id)
+
     const maskedKey = aiConfig.apiKey
       ? aiConfig.apiKey.substring(0, 8) + '...' + aiConfig.apiKey.substring(aiConfig.apiKey.length - 4)
       : ''
@@ -213,6 +248,7 @@ export async function PUT(req: NextRequest) {
         ...aiConfig,
         apiKey: maskedKey,
         _hasApiKey: !!aiConfig.apiKey,
+        ...featureFlags,
       },
     })
   } catch (error) {

@@ -64,6 +64,11 @@ export default function AnalyticsPage() {
     fetcher
   )
 
+  const { data: aiInsights, isLoading: aiInsightsLoading } = useSWR(
+    websiteId ? `/api/ai/insights?websiteId=${websiteId}` : null,
+    fetcher
+  )
+
   const periodLabels: Record<string, string> = {
     '7d': a.period7d,
     '30d': a.period30d,
@@ -173,6 +178,55 @@ export default function AnalyticsPage() {
             </svg>
           }
         />
+      </div>
+
+      <div className="surface p-5 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-base font-bold mb-4">{a.aiInsightsTitle}</h2>
+        {aiInsightsLoading ? (
+          <div className="flex items-center justify-center h-24">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-2xl font-bold tabular-nums">{aiInsights?.botReplies ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">{a.aiBotReplies}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-2xl font-bold tabular-nums">{aiInsights?.aiHandoffs ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">{a.aiHandoffs}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-2xl font-bold tabular-nums">{aiInsights?.ragChunks ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">{a.ragChunks}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-2xl font-bold tabular-nums">{aiInsights?.aiResolved ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">{a.aiResolved}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-4 space-y-1 sm:col-span-2">
+              <p className="text-xs text-muted-foreground mb-2">{a.topIntents}</p>
+              {(aiInsights?.topIntents ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">{a.noData}</p>
+              ) : (
+                <ul className="space-y-1">
+                  {(aiInsights?.topIntents ?? []).slice(0, 5).map((item: { text: string; count: number }) => (
+                    <li key={item.text} className="flex justify-between gap-2 text-sm">
+                      <span className="truncate">{item.text}</span>
+                      <span className="tabular-nums text-muted-foreground">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="rounded-lg bg-muted/50 p-4 space-y-1 sm:col-span-2">
+              <p className="text-xs text-muted-foreground">{a.sentimentPositive}</p>
+              <p className="text-lg font-semibold text-success tabular-nums">{aiInsights?.sentiment?.POSITIVE ?? 0}</p>
+              <p className="text-xs text-muted-foreground">{a.sentimentNeutral}: {aiInsights?.sentiment?.NEUTRAL ?? 0}</p>
+              <p className="text-xs text-muted-foreground">{a.sentimentNegative}: {aiInsights?.sentiment?.NEGATIVE ?? 0}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { generateAiReply, isAiLlmAvailable } from '@/lib/ai/provider'
+import { generateAiReply, isAiLlmAvailable, resolveAiConfig } from '@/lib/ai/provider'
 import { loadKnowledge } from '@/lib/ai/knowledge'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
+import { getAiFeatureFlags } from '@/lib/ai/feature-flags'
+import { estimateQueryComplexity, pickRoutedModel } from '@/lib/ai/smart-routing'
 
 /** POST /api/ai/test — panelden AI yanıtını dene */
 export async function POST(req: NextRequest) {
@@ -57,20 +59,34 @@ export async function POST(req: NextRequest) {
       : null
 
     const knowledge = await loadKnowledge(website.id)
+    const flags = await getAiFeatureFlags(website.id)
+    const messages = [{ role: 'user' as const, content: message.trim() }]
+    const runtime = resolveAiConfig(dbConfig, website.plan as import('@/lib/constants').PlanType)
+    const complexity = estimateQueryComplexity(messages)
+    const routedModel =
+      runtime && flags.smartRoutingEnabled
+        ? pickRoutedModel(runtime.provider, runtime.model, messages)
+        : runtime?.model
+
     const reply = await generateAiReply({
       siteName: website.name,
-      messages: [{ role: 'user', content: message.trim() }],
+      messages,
       knowledge,
       systemPrompt: aiConfig?.systemPrompt || undefined,
       dbConfig,
       plan: website.plan as import('@/lib/constants').PlanType,
       websiteId: website.id,
+      webSearchEnabled: flags.webSearchEnabled,
+      smartRoutingEnabled: flags.smartRoutingEnabled,
     })
 
     return NextResponse.json({
       ok: true,
       reply,
       mode: isAiLlmAvailable(dbConfig) ? 'llm' : 'fallback',
+      complexity,
+      baseModel: runtime?.model ?? null,
+      routedModel: routedModel ?? null,
     })
   } catch (error) {
     console.error('[AI Test]', error)

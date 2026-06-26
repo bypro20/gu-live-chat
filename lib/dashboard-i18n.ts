@@ -27,6 +27,7 @@ export type DashboardMessages = {
     knowledge: string
     tickets: string
     chatbot: string
+    voiceAgent: string
     cannedResponses: string
     csat: string
     workflows: string
@@ -181,6 +182,13 @@ export type DashboardMessages = {
     send: string
     addFile: string
     aiSuggest: string
+    aiCopilotMenu: string
+    aiCopilotProfessional: string
+    aiCopilotFriendly: string
+    aiCopilotShorten: string
+    aiCopilotExpand: string
+    aiCopilotGrammar: string
+    aiHandoffSummary: string
     sendHint: string
     yourLanguage: string
     liveTranslateActive: (lang: string) => string
@@ -259,6 +267,14 @@ export type DashboardMessages = {
     locationUnknown: string
     noChatsYet: string
     defaultChatPreview: string
+    editProfile: string
+    notes: string
+    phone: string
+    saveSuccess: string
+    saveFailed: string
+    landingPage: string
+    currentPage: string
+    referrer: string
   }
   analytics: {
     title: string
@@ -290,6 +306,15 @@ export type DashboardMessages = {
     noTeamMembers: string
     csvDownloaded: string
     exportFailed: string
+    aiInsightsTitle: string
+    aiBotReplies: string
+    aiHandoffs: string
+    ragChunks: string
+    sentimentPositive: string
+    sentimentNeutral: string
+    sentimentNegative: string
+    aiResolved: string
+    topIntents: string
   }
 }
 
@@ -317,6 +342,7 @@ const tr: DashboardMessages = {
     knowledge: 'Bilgi Bankası',
     tickets: 'Bilet Sistemi',
     chatbot: 'Chatbot',
+    voiceAgent: 'Sesli AI',
     cannedResponses: 'Hazır Cevaplar',
     csat: 'CSAT Puanları',
     workflows: 'Otomasyonlar',
@@ -471,6 +497,13 @@ const tr: DashboardMessages = {
     send: 'Gönder',
     addFile: 'Dosya ekle',
     aiSuggest: 'AI öneri',
+    aiCopilotMenu: 'Copilot',
+    aiCopilotProfessional: 'Profesyonel',
+    aiCopilotFriendly: 'Samimi',
+    aiCopilotShorten: 'Kısalt',
+    aiCopilotExpand: 'Uzat',
+    aiCopilotGrammar: 'Yazım düzelt',
+    aiHandoffSummary: 'AI devir özeti',
     sendHint: 'Enter gönder · Shift+Enter yeni satır',
     yourLanguage: 'Diliniz:',
     liveTranslateActive: (lang) => `↔ ${lang} canlı çeviri aktif`,
@@ -580,6 +613,14 @@ const tr: DashboardMessages = {
     locationUnknown: 'Konum bilinmiyor',
     noChatsYet: 'Henüz sohbet yok',
     defaultChatPreview: 'Sohbet',
+    editProfile: 'Kişi profili',
+    notes: 'Notlar',
+    phone: 'Telefon',
+    saveSuccess: 'Kişi kaydedildi',
+    saveFailed: 'Kaydedilemedi',
+    landingPage: 'Giriş sayfası',
+    currentPage: 'Son sayfa',
+    referrer: 'Referrer',
   },
   analytics: {
     title: 'Analitik',
@@ -611,6 +652,15 @@ const tr: DashboardMessages = {
     noTeamMembers: 'Henüz takım üyesi yok',
     csvDownloaded: 'CSV indirildi',
     exportFailed: 'Dışa aktarma başarısız',
+    aiInsightsTitle: 'AI Öngörüleri (30 gün)',
+    aiBotReplies: 'Bot yanıtları',
+    aiHandoffs: 'AI → temsilci devri',
+    ragChunks: 'RAG bilgi parçası',
+    sentimentPositive: 'Olumlu',
+    sentimentNeutral: 'Nötr',
+    sentimentNegative: 'Olumsuz',
+    aiResolved: 'AI ile çözülen',
+    topIntents: 'Sık sorulan mesajlar',
   },
 }
 
@@ -638,6 +688,7 @@ const en: DashboardMessages = {
     knowledge: 'Knowledge Base',
     tickets: 'Ticketing',
     chatbot: 'Chatbot',
+    voiceAgent: 'Voice AI',
     cannedResponses: 'Canned Responses',
     csat: 'CSAT Scores',
     workflows: 'Automations',
@@ -792,6 +843,13 @@ const en: DashboardMessages = {
     send: 'Send',
     addFile: 'Attach file',
     aiSuggest: 'AI suggest',
+    aiCopilotMenu: 'Copilot',
+    aiCopilotProfessional: 'Professional',
+    aiCopilotFriendly: 'Friendly',
+    aiCopilotShorten: 'Shorten',
+    aiCopilotExpand: 'Expand',
+    aiCopilotGrammar: 'Fix grammar',
+    aiHandoffSummary: 'AI handoff summary',
     sendHint: 'Enter to send · Shift+Enter for new line',
     yourLanguage: 'Your language:',
     liveTranslateActive: (lang) => `↔ Live translation with ${lang}`,
@@ -901,6 +959,14 @@ const en: DashboardMessages = {
     locationUnknown: 'Location unknown',
     noChatsYet: 'No chats yet',
     defaultChatPreview: 'Chat',
+    editProfile: 'Contact profile',
+    notes: 'Notes',
+    phone: 'Phone',
+    saveSuccess: 'Contact saved',
+    saveFailed: 'Could not save',
+    landingPage: 'Landing page',
+    currentPage: 'Current page',
+    referrer: 'Referrer',
   },
   analytics: {
     title: 'Analytics',
@@ -932,6 +998,15 @@ const en: DashboardMessages = {
     noTeamMembers: 'No team members yet',
     csvDownloaded: 'CSV downloaded',
     exportFailed: 'Export failed',
+    aiInsightsTitle: 'AI Insights (30 days)',
+    aiBotReplies: 'Bot replies',
+    aiHandoffs: 'AI → agent handoffs',
+    ragChunks: 'RAG knowledge chunks',
+    sentimentPositive: 'Positive',
+    sentimentNeutral: 'Neutral',
+    sentimentNegative: 'Negative',
+    aiResolved: 'AI resolved',
+    topIntents: 'Top visitor messages',
   },
 }
 
@@ -970,6 +1045,7 @@ export function getDashboardNavGroups(d: DashboardMessages): DashboardNavGroup[]
         { href: '/settings/knowledge', icon: 'book', label: n.knowledge, badge: null },
         { href: '/settings/tickets', icon: 'ticket', label: n.tickets, badge: null },
         { href: '/settings/chatbot', icon: 'bot', label: n.chatbot, badge: null },
+        { href: '/settings/voice-agent', icon: 'mic', label: n.voiceAgent, badge: null },
         { href: '/settings/canned-responses', icon: 'message', label: n.cannedResponses, badge: null },
         { href: '/settings/ratings', icon: 'star', label: n.csat, badge: null },
         { href: '/settings/workflows', icon: 'workflow', label: n.workflows, badge: null },

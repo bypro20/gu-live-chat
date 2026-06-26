@@ -259,6 +259,60 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     },
     { label: 'admin_mail_messages.status_idx', sql: `CREATE INDEX IF NOT EXISTS "admin_mail_messages_status_createdAt_idx" ON "admin_mail_messages"("status", "createdAt")` },
     { label: 'admin_mail_messages.source_idx', sql: `CREATE INDEX IF NOT EXISTS "admin_mail_messages_source_createdAt_idx" ON "admin_mail_messages"("source", "createdAt")` },
+    { label: 'conversations.aiHandoffSummary', sql: `ALTER TABLE "conversations" ADD COLUMN "aiHandoffSummary" TEXT` },
+    {
+      label: 'knowledge_sources',
+      sql: `CREATE TABLE IF NOT EXISTS "knowledge_sources" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "websiteId" TEXT NOT NULL,
+        "type" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "url" TEXT,
+        "textContent" TEXT,
+        "fileName" TEXT,
+        "status" TEXT NOT NULL DEFAULT 'PENDING',
+        "errorMessage" TEXT,
+        "chunkCount" INTEGER NOT NULL DEFAULT 0,
+        "lastIndexedAt" DATETIME,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    {
+      label: 'knowledge_chunks',
+      sql: `CREATE TABLE IF NOT EXISTS "knowledge_chunks" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "websiteId" TEXT NOT NULL,
+        "sourceId" TEXT,
+        "articleId" TEXT,
+        "title" TEXT NOT NULL,
+        "content" TEXT NOT NULL,
+        "embedding" TEXT NOT NULL,
+        "tokenEstimate" INTEGER NOT NULL DEFAULT 0,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
+    { label: 'knowledge_chunks.website_idx', sql: `CREATE INDEX IF NOT EXISTS "knowledge_chunks_websiteId_idx" ON "knowledge_chunks"("websiteId")` },
+    { label: 'knowledge_sources.website_idx', sql: `CREATE INDEX IF NOT EXISTS "knowledge_sources_websiteId_status_idx" ON "knowledge_sources"("websiteId", "status")` },
+    { label: 'ai_configs.webSearchEnabled', sql: `ALTER TABLE "ai_configs" ADD COLUMN "webSearchEnabled" BOOLEAN NOT NULL DEFAULT 1` },
+    { label: 'ai_configs.multimodalEnabled', sql: `ALTER TABLE "ai_configs" ADD COLUMN "multimodalEnabled" BOOLEAN NOT NULL DEFAULT 1` },
+    { label: 'ai_configs.voiceAgentEnabled', sql: `ALTER TABLE "ai_configs" ADD COLUMN "voiceAgentEnabled" BOOLEAN NOT NULL DEFAULT 0` },
+    { label: 'ai_configs.smartRoutingEnabled', sql: `ALTER TABLE "ai_configs" ADD COLUMN "smartRoutingEnabled" BOOLEAN NOT NULL DEFAULT 1` },
+    {
+      label: 'voice_agents',
+      sql: `CREATE TABLE IF NOT EXISTS "voice_agents" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "websiteId" TEXT NOT NULL UNIQUE,
+        "isActive" BOOLEAN NOT NULL DEFAULT 0,
+        "name" TEXT NOT NULL DEFAULT 'Sesli Asistan',
+        "greeting" TEXT NOT NULL DEFAULT 'Merhaba, size nasıl yardımcı olabilirim?',
+        "systemPrompt" TEXT,
+        "language" TEXT NOT NULL DEFAULT 'tr-TR',
+        "voiceStyle" TEXT NOT NULL DEFAULT 'friendly',
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`,
+    },
   ]
 
   for (const { label, sql } of statements) {
