@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { Plan } from '@/app/generated/prisma/client'
-import { auth } from '@/lib/auth'
 import { canPerformAction } from '@/lib/subscription'
 import { websiteHasFeature } from '@/lib/addon-features'
-import { isPlatformAdminRole } from '@/lib/admin-website'
+import { websiteHasUnlimitedAccess } from '@/lib/platform-admin-shared'
 import {
   FEATURE_ADDON_SLUG,
   MIN_PLAN_FOR_FEATURE,
@@ -40,6 +39,17 @@ export function planHasFeature(plan: Plan, feature: PlanFeature): boolean {
   return canPerformAction(plan, feature)
 }
 
+/** Plan + addon + admin limitsiz erişim. */
+export async function planHasFeatureAsync(
+  websiteDbId: string,
+  plan: Plan,
+  feature: PlanFeature,
+  currentCount?: number
+): Promise<boolean> {
+  if (await websiteHasUnlimitedAccess(websiteDbId)) return true
+  return websiteHasFeature(websiteDbId, plan, feature, currentCount)
+}
+
 export function planFeatureDenied(
   plan: Plan,
   feature: PlanFeature,
@@ -68,8 +78,7 @@ export async function planFeatureDeniedAsync(
   feature: PlanFeature,
   currentCount?: number
 ): Promise<NextResponse | null> {
-  const session = await auth()
-  if (isPlatformAdminRole(session?.user?.role)) return null
+  if (await websiteHasUnlimitedAccess(websiteDbId)) return null
   if (await websiteHasFeature(websiteDbId, plan, feature, currentCount)) return null
   const label = FEATURE_LABELS[feature] || feature
   const requiredPlan = MIN_PLAN_FOR_FEATURE[feature] || 'PRO'

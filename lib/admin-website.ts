@@ -1,16 +1,21 @@
 import { prisma } from './db'
+import {
+  isPlatformAdminRole,
+} from './platform-admin-shared'
+
+export { isPlatformAdminRole, ADMIN_UNLIMITED_LIMITS, websiteHasUnlimitedAccess } from './platform-admin-shared'
 
 /** Platform yöneticisine (ADMIN rolü) ait siteler — tüm özellikler ücretsiz. */
 export async function isAdminOwnedWebsite(websiteDbId: string): Promise<boolean> {
-  const site = await prisma.website.findUnique({
-    where: { id: websiteDbId },
-    select: { owner: { select: { role: true } } },
-  })
-  return site?.owner?.role === 'ADMIN'
-}
-
-export function isPlatformAdminRole(role: string | undefined | null): boolean {
-  return role === 'ADMIN'
+  try {
+    const site = await prisma.website.findUnique({
+      where: { id: websiteDbId },
+      select: { owner: { select: { role: true } } },
+    })
+    return site?.owner?.role === 'ADMIN'
+  } catch {
+    return false
+  }
 }
 
 export async function isPlatformAdminUser(userId: string): Promise<boolean> {
@@ -18,5 +23,5 @@ export async function isPlatformAdminUser(userId: string): Promise<boolean> {
     where: { id: userId },
     select: { role: true },
   })
-  return user?.role === 'ADMIN'
+  return isPlatformAdminRole(user?.role)
 }

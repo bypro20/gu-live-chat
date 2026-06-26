@@ -1,5 +1,5 @@
 import { prisma } from './db'
-import { planHasFeature } from './plan-gate'
+import { planHasFeatureAsync } from './plan-gate'
 import { emitBotMessage } from './socket-events'
 import { notifyWebsiteMembers } from './notifications'
 import { dispatchWebhooks } from './webhook-dispatcher'
@@ -32,7 +32,7 @@ export async function runWorkflows(trigger: WorkflowTrigger, ctx: WorkflowContex
     where: { id: ctx.websiteDbId },
     select: { plan: true },
   })
-  if (!website || !planHasFeature(website.plan, 'workflows')) return
+  if (!website || !(await planHasFeatureAsync(ctx.websiteDbId, website.plan, 'workflows'))) return
 
   const workflows = await prisma.workflow.findMany({
     where: {

@@ -2,7 +2,7 @@ import { prisma } from './db'
 import { ArticleStatus } from '@/app/generated/prisma/client'
 import { homeTr } from './messages/home-tr'
 import { TRIAL_DAYS } from './trial-config'
-import type { KnowledgeEntry } from './ai/provider'
+import type { ChatMessage, KnowledgeEntry } from './ai/provider'
 import { pickDefaultProvider, hasAnyPlatformAiKey } from './ai/provider'
 import { getDefaultModelForPlan } from './ai/plan-models'
 import {

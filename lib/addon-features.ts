@@ -3,7 +3,7 @@ import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, type PlanType } from './constants'
 import type { PlanFeature } from './plan-shared'
 import type { Plan } from '@/app/generated/prisma/client'
-import { isAdminOwnedWebsite } from './admin-website'
+import { websiteHasUnlimitedAccess } from './platform-admin-shared'
 
 export { FEATURE_ADDON_SLUG } from './plan-shared'
 
@@ -110,7 +110,7 @@ export async function websiteHasFeature(
   feature: PlanFeature,
   currentCount?: number
 ): Promise<boolean> {
-  if (await isAdminOwnedWebsite(websiteDbId)) return true
+  if (await websiteHasUnlimitedAccess(websiteDbId)) return true
   if (canPerformAction(plan as Plan, feature, currentCount)) return true
   try {
     if (feature === 'chatbot' || feature === 'aiAssistant') {

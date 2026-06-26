@@ -2,6 +2,11 @@ import { prisma } from './db'
 import { canPerformAction } from './subscription'
 import { PLAN_LIMITS, PlanType } from './constants'
 import { Plan } from '../app/generated/prisma/client'
+import {
+  ADMIN_UNLIMITED_LIMITS,
+  unlimitedLimitsForDisplay,
+  websiteHasUnlimitedAccess,
+} from './platform-admin-shared'
 
 // ─── Plan Feature Checks ────────────────────────────────────────────
 
@@ -30,6 +35,10 @@ export async function canCreateConversation(websiteId: string): Promise<{ allowe
     },
   })
 
+  if (await websiteHasUnlimitedAccess(website.id)) {
+    return { allowed: true, current: currentCount, limit: -1 }
+  }
+
   const limit = PLAN_LIMITS[website.plan].maxConversationsPerMonth
   const allowed = canPerformAction(website.plan, 'maxConversationsPerMonth', currentCount)
 
@@ -53,6 +62,10 @@ export async function canAddTeamMember(websiteId: string): Promise<{ allowed: bo
     where: { websiteId: website.id },
   })
 
+  if (await websiteHasUnlimitedAccess(website.id)) {
+    return { allowed: true, current: currentCount, limit: -1 }
+  }
+
   const limit = PLAN_LIMITS[website.plan].maxAgents
   const allowed = canPerformAction(website.plan, 'maxAgents', currentCount)
 
@@ -65,11 +78,15 @@ export async function canAddTeamMember(websiteId: string): Promise<{ allowed: bo
 export async function canUseFeature(websiteId: string, feature: PlanFeature): Promise<{ allowed: boolean; plan: Plan }> {
   const website = await prisma.website.findUnique({
     where: { websiteId },
-    select: { plan: true },
+    select: { id: true, plan: true },
   })
 
   if (!website) {
     return { allowed: false, plan: 'FREE' as Plan }
+  }
+
+  if (await websiteHasUnlimitedAccess(website.id)) {
+    return { allowed: true, plan: website.plan }
   }
 
   const allowed = canPerformAction(website.plan, feature)
@@ -88,11 +105,10 @@ export async function getWebsitePlanInfo(websiteId: string) {
 
   if (!website) return null
 
-  const planLimits = PLAN_LIMITS[website.plan]
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const [conversationCount, teamMemberCount] = await Promise.all([
+  const [conversationCount, teamMemberCount, unlimited] = await Promise.all([
     prisma.conversation.count({
       where: {
         websiteId: website.id,
@@ -102,7 +118,20 @@ export async function getWebsitePlanInfo(websiteId: string) {
     prisma.teamMember.count({
       where: { websiteId: website.id },
     }),
+    websiteHasUnlimitedAccess(website.id),
   ])
+
+  if (unlimited) {
+    return {
+      ...unlimitedLimitsForDisplay(),
+      usage: {
+        conversations: { current: conversationCount, limit: -1 },
+        teamMembers: { current: teamMemberCount, limit: -1 },
+      },
+    }
+  }
+
+  const planLimits = PLAN_LIMITS[website.plan]
 
   return {
     plan: website.plan,

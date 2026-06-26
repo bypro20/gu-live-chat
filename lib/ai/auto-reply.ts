@@ -8,7 +8,7 @@ import { loadVisitorContext } from './visitor-context'
 import { isChatbotWaitingForInput } from '../chatbot-runner'
 import { deliverChannelReply } from '../channels/deliver-reply'
 import { websiteHasAiAssistant } from '../plan-features'
-import { isAdminOwnedWebsite } from '../admin-website'
+import { resolveEffectivePlan, websiteHasUnlimitedAccess } from '../platform-admin-shared'
 import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady, buildMarketingSystemPrompt, getMarketingKnowledgeCache } from '../marketing-ai-setup'
@@ -136,7 +136,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     if (conversation.assignedToId) return
 
     const hasAi =
-      (await isAdminOwnedWebsite(params.websiteDbId)) ||
+      (await websiteHasUnlimitedAccess(params.websiteDbId)) ||
       (await websiteHasAiAssistant(params.websiteDbId, conversation.website.plan))
     if (!hasAi) return
 
@@ -263,7 +263,10 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         webSearchEnabled: isMarketing ? false : flags.webSearchEnabled,
         smartRoutingEnabled: isMarketing ? false : flags.smartRoutingEnabled,
         dbConfig,
-        plan: conversation.website.plan as PlanType,
+        plan: (await resolveEffectivePlan(
+          params.websiteDbId,
+          conversation.website.plan as PlanType
+        )) as PlanType,
         websiteId: params.websiteDbId,
         conversationId: params.conversationId,
         maxTokens: isMarketing ? MARKETING_MAX_TOKENS : WIDGET_MAX_TOKENS,
