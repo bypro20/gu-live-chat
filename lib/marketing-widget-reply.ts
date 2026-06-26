@@ -11,7 +11,7 @@ import { MARKETING_WIDGET_DISPLAY_NAME } from './marketing-demo-agents'
 
 const MARKETING_HISTORY_LIMIT = 8
 const MARKETING_MAX_TOKENS = 380
-const LLM_TIMEOUT_MS = 5000
+const LLM_TIMEOUT_MS = 9000
 
 export type MarketingWidgetReplyResult = {
   id: string

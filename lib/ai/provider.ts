@@ -70,6 +70,32 @@ export interface GenerateAiReplyParams {
 
 const MAX_TOKENS = 1024
 
+/**
+ * Ücretsiz katmanda her Gemini modelinin AYRI kotası vardır. Biri 429
+ * (kota doldu) verince sıradaki modele geçeriz → ödeme olmadan ~4 kat kapasite.
+ * Hızlı/ucuz modeller önce.
+ */
+const GEMINI_FREE_FALLBACK_CHAIN = [
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+]
+
+/** İstenen modeli başa alıp ardından yedek zinciri ekler (tekrarsız). */
+function geminiModelCandidates(primary: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const m of [primary, ...GEMINI_FREE_FALLBACK_CHAIN]) {
+    const name = m?.trim()
+    if (name && !seen.has(name)) {
+      seen.add(name)
+      out.push(name)
+    }
+  }
+  return out
+}
+
 const ENV_KEYS: Partial<Record<AiProvider, string | undefined>> = {
   OPENAI: process.env.OPENAI_API_KEY,
   ANTHROPIC: process.env.ANTHROPIC_API_KEY,
@@ -611,14 +637,31 @@ export async function* generateAiReplyStream(
 
   try {
     if (activeRuntime.provider === 'GEMINI') {
-      let emitted = false
-      for await (const chunk of callGeminiStream(activeRuntime, systemPrompt, messages, maxTokens)) {
-        if (chunk) {
-          emitted = true
-          yield chunk
+      // Kota (429) veya boş yanıtta sıradaki ücretsiz modele geç.
+      for (const model of geminiModelCandidates(activeRuntime.model)) {
+        let emittedThis = false
+        try {
+          for await (const chunk of callGeminiStream(
+            { ...activeRuntime, model },
+            systemPrompt,
+            messages,
+            maxTokens,
+          )) {
+            if (chunk) {
+              emittedThis = true
+              yield chunk
+            }
+          }
+        } catch (err) {
+          console.error(`[AI] Gemini stream ${model} failed:`, err instanceof Error ? err.message : err)
+          // Bu modele ait parça gönderdiysek tekrar etmemek için dur.
+          if (emittedThis) return
+          continue // sıradaki modeli dene
         }
+        if (emittedThis) return // başarılı
+        // boş yanıt → sıradaki modeli dene
       }
-      if (!emitted) yield fallbackReply(siteName, messages, knowledge, params.brandName)
+      yield fallbackReply(siteName, messages, knowledge, params.brandName)
       return
     }
 
@@ -665,6 +708,21 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
 
   try {
     const maxTokens = params.maxTokens ?? MAX_TOKENS
+
+    if (activeRuntime.provider === 'GEMINI') {
+      // Kota (429) veya boş yanıtta sıradaki ücretsiz Gemini modeline geç.
+      for (const model of geminiModelCandidates(activeRuntime.model)) {
+        try {
+          const text = (await callGemini({ ...activeRuntime, model }, systemPrompt, messages, maxTokens)).trim()
+          if (text) return text
+        } catch (err) {
+          console.error(`[AI] Gemini ${model} call failed:`, err instanceof Error ? err.message : err)
+          // sıradaki modeli dene
+        }
+      }
+      return fallbackReply(siteName, messages, knowledge, params.brandName)
+    }
+
     const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
     return text || fallbackReply(siteName, messages, knowledge, params.brandName)
   } catch (err) {
