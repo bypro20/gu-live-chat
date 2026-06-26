@@ -136,13 +136,13 @@ export function ServicesOfferGrid() {
   ]
 
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white marketing-section-light">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-14">
             <span className="premium-section-tag mb-4 inline-block">{title}</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#121110]">{title}</h2>
-            <p className="mt-3 text-[#635E58] max-w-xl mx-auto">{subtitle}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight premium-heading">{title}</h2>
+            <p className="mt-3 premium-body max-w-xl mx-auto">{subtitle}</p>
           </div>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
@@ -192,12 +192,12 @@ export function AboutSplitSection() {
           <span className="premium-section-tag mb-4 inline-block">
             {lang === 'en' ? 'Best Customer Experience' : 'En İyi Müşteri Deneyimi'}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-[#121110]">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight premium-heading">
             {lang === 'en'
               ? 'The best live chat & customer support for your business'
               : 'İşletmeniz için en iyi canlı destek ve müşteri hizmetleri'}
           </h2>
-          <p className="mt-4 text-[#635E58] leading-relaxed">
+          <p className="mt-4 premium-body leading-relaxed">
             {lang === 'en'
               ? 'Gu Live Chat helps Turkish and global businesses convert visitors into loyal customers with professional support tools — without enterprise complexity.'
               : 'Gu Live Chat, Türk ve global işletmelerin ziyaretçilerini profesyonel destek araçlarıyla sadık müşterilere dönüştürmesine yardımcı olur — kurumsal karmaşıklık olmadan.'}

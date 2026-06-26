@@ -309,6 +309,11 @@ body {
     max-width: 100vw;
     width: 100%;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    --premium-heading: #0a1018;
+    --premium-body: #5c6570;
+    --premium-muted: #8b949e;
+    --premium-accent: #00c9e0;
+    --premium-accent-soft: #029b9b;
     --shadow-xs: 0 1px 2px 0 rgba(26, 24, 20, 0.04);
     --shadow-sm: 0 2px 8px -2px rgba(26, 24, 20, 0.06);
     --shadow-md: 0 8px 24px -8px rgba(26, 24, 20, 0.08);
@@ -379,6 +384,178 @@ body {
 
   .premium-section-light {
     background: var(--marketing-surface, #f4f1ec);
+  }
+
+  .premium-heading {
+    color: var(--premium-heading, #0a1018);
+  }
+
+  .premium-body {
+    color: var(--premium-body, #5c6570);
+  }
+
+  .premium-accent-text {
+    color: var(--premium-accent, #00c9e0);
+  }
+
+  .marketing-site .marketing-section-light h2,
+  .marketing-site .marketing-section-light h3 {
+    color: var(--premium-heading, #0a1018);
+  }
+
+  .marketing-site .marketing-section-light p {
+    color: var(--premium-body, #5c6570);
+  }
+
+  /* Technoai hero FX layer */
+  .technoai-fx-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .technoai-particles-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  .technoai-repulse-circle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.06);
+    border: 1px solid rgba(0, 212, 255, 0.12);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    animation: technoai-repulse-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .technoai-floating-blob {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.45;
+    animation: technoai-blob-move 12s infinite alternate ease-in-out;
+  }
+
+  .technoai-floating-blob-1 {
+    top: 8%;
+    left: 4%;
+    background: linear-gradient(135deg, rgba(0, 201, 224, 0.35), rgba(2, 155, 155, 0.2));
+    animation-duration: 12s;
+  }
+
+  .technoai-floating-blob-2 {
+    bottom: 8%;
+    right: 4%;
+    background: linear-gradient(135deg, rgba(0, 80, 90, 0.4), rgba(0, 212, 255, 0.15));
+    animation-duration: 15s;
+  }
+
+  .technoai-glowing-orb {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.35) 0%, transparent 75%);
+    filter: blur(40px);
+    animation: technoai-orb-float-alt 7s infinite alternate ease-in-out;
+  }
+
+  .technoai-glowing-orb-1 { top: 18%; right: 22%; animation-duration: 8s; }
+  .technoai-glowing-orb-2 { bottom: 18%; left: 18%; animation-duration: 10s; }
+
+  .technoai-rotating-cube {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border: 2px solid rgba(0, 212, 255, 0.15);
+    background: linear-gradient(45deg, rgba(0, 212, 255, 0.08), rgba(3, 94, 94, 0.12));
+    opacity: 0.55;
+    animation: technoai-cube-rotate 10s infinite linear;
+  }
+
+  .technoai-rotating-cube-1 { top: 14%; left: 9%; animation-duration: 12s; }
+  .technoai-rotating-cube-2 { bottom: 14%; right: 9%; animation-duration: 10s; animation-direction: reverse; }
+
+  .technoai-pulsing-ring {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border: 2px solid rgba(0, 212, 255, 0.35);
+    border-radius: 50%;
+    animation: technoai-ring-expand 5s infinite ease-in-out;
+  }
+
+  .technoai-pulsing-ring-1 { top: 24%; right: 28%; animation-duration: 6s; }
+  .technoai-pulsing-ring-2 { bottom: 24%; left: 28%; animation-duration: 7s; animation-delay: 1s; }
+
+  .technoai-glowing-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.8);
+    opacity: 0.85;
+    animation: technoai-dot-drift 5s infinite alternate ease-in-out;
+  }
+
+  .technoai-glowing-dot-1 { top: 38%; left: 14%; animation-duration: 5s; }
+  .technoai-glowing-dot-2 { bottom: 38%; right: 14%; animation-duration: 6s; }
+
+  @keyframes technoai-repulse-pulse {
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.55; transform: translate(-50%, -50%) scale(1.1); }
+  }
+
+  @keyframes technoai-blob-move {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, -40px) scale(1.12); }
+  }
+
+  @keyframes technoai-orb-float-alt {
+    0% { transform: translate(0, 0); opacity: 0.6; }
+    100% { transform: translate(-20px, 25px); opacity: 1; }
+  }
+
+  @keyframes technoai-cube-rotate {
+    0% { transform: rotateX(0deg) rotateY(0deg) translateY(0); }
+    100% { transform: rotateX(360deg) rotateY(360deg) translateY(-18px); }
+  }
+
+  @keyframes technoai-ring-expand {
+    0% { transform: scale(1); opacity: 0.65; }
+    100% { transform: scale(1.55); opacity: 0; }
+  }
+
+  @keyframes technoai-dot-drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(12px, -18px); }
+  }
+
+  .technoai-btn-cyan {
+    @apply inline-flex items-center justify-center gap-2 font-bold rounded-full transition-all hover:scale-[1.02];
+    padding: 0.85rem 2rem;
+    color: #fff;
+    background: linear-gradient(45deg, #029b9b, #029b9b, #035e5e);
+    box-shadow: 0 6px 24px rgba(2, 155, 155, 0.45);
+  }
+
+  .technoai-btn-cyan:hover {
+    box-shadow: 0 10px 32px rgba(0, 212, 255, 0.35);
   }
 
   .marketing-site .surface-hover:hover {
@@ -514,7 +691,8 @@ body {
   .technoai-hero-robot-bg {
     position: absolute;
     inset: 0;
-    background: url('/marketing/hero-ai-robot.png') center right / cover no-repeat;
+    background: url('/marketing/hero-ai-robot.png') center top / cover no-repeat;
+    background-position: center right;
     pointer-events: none;
   }
 
@@ -523,10 +701,10 @@ body {
     inset: 0;
     background: linear-gradient(
       105deg,
-      rgba(5, 6, 7, 0.96) 0%,
-      rgba(5, 6, 7, 0.9) 36%,
-      rgba(5, 6, 7, 0.55) 58%,
-      rgba(5, 6, 7, 0.12) 100%
+      rgba(4, 8, 10, 0.94) 0%,
+      rgba(4, 8, 10, 0.82) 38%,
+      rgba(4, 8, 10, 0.35) 62%,
+      rgba(4, 8, 10, 0.05) 100%
     );
     pointer-events: none;
   }

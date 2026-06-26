@@ -87,6 +87,9 @@ export function guBrandMarketingStyle(): Record<string, string> {
     '--marketing-cta-hover': GU_BRAND.marketingCtaHover,
     '--marketing-cta-foreground': GU_BRAND.marketingCtaForeground,
     '--marketing-surface': GU_BRAND.marketingSurface,
+    '--premium-heading': '#0A1018',
+    '--premium-body': '#5C6570',
+    '--premium-accent': '#00C9E0',
     '--shadow-brand': GU_BRAND.shadowBrand,
     '--shadow-brand-lg': GU_BRAND.shadowBrandLg,
   }

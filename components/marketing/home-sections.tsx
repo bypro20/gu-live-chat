@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroRobotOverlays } from '@/components/marketing/hero-robot'
+import { TechnoaiHeroFx } from '@/components/marketing/technoai-hero-fx'
 import {
   AiReplyShowcase,
   AutomationShowcase,
@@ -91,19 +92,15 @@ export function HomeHero() {
 
   return (
     <section className="technoai-hero technoai-hero--robot pt-28 pb-6 sm:pt-36 sm:pb-8 lg:pt-44 px-4 sm:px-6 lg:px-8">
+      <TechnoaiHeroFx />
       <div className="technoai-hero-robot-bg" aria-hidden />
       <div className="technoai-hero-overlay" aria-hidden />
-      <div className="technoai-hero-grid" aria-hidden />
-      <div className="technoai-blob technoai-blob-1" aria-hidden />
-      <div className="technoai-blob technoai-blob-2" aria-hidden />
-      <div className="technoai-orb technoai-orb-1" aria-hidden />
-      <div className="technoai-orb technoai-orb-2" aria-hidden />
 
-      <div className="relative max-w-7xl mx-auto w-full">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center min-h-[420px] lg:min-h-[520px]">
-          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0 z-10">
+      <div className="relative max-w-7xl mx-auto w-full z-[1]">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center min-h-[420px] lg:min-h-[560px]">
+          <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
             <FadeIn>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-cyan-400/25 bg-cyan-400/10 text-[#67E8F9]">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-[#029b9b]/40 bg-[#029b9b]/10 text-[#67E8F9]">
                 {lang === 'en' ? 'AI-Powered Live Chat' : 'AI Destekli Canlı Sohbet'}
               </span>
             </FadeIn>
@@ -113,43 +110,40 @@ export function HomeHero() {
                   <>
                     Üstün
                     <br />
-                    <span className="text-[#00D4FF]">canlı destek çözümleri</span>
-                    <span className="technoai-headline-dot bg-[#00D4FF]" aria-hidden />
+                    <span className="text-[#00C9E0]">canlı destek çözümleri</span>
+                    <span className="technoai-headline-dot bg-[#029b9b]" aria-hidden />
                   </>
                 ) : (
                   <>
                     Delivering
                     <br />
-                    <span className="text-[#00D4FF]">Superior Live Support</span>
-                    <span className="technoai-headline-dot bg-[#00D4FF]" aria-hidden />
+                    <span className="text-[#00C9E0]">Superior Live Support</span>
+                    <span className="technoai-headline-dot bg-[#029b9b]" aria-hidden />
                   </>
                 )}
               </h1>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <p className="mt-6 text-lg sm:text-xl text-white/70 leading-relaxed max-w-lg mx-auto lg:mx-0">
+              <p className="mt-6 text-lg sm:text-xl text-[#dddddd] leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {t.hero.subtitle}
               </p>
             </FadeIn>
             <FadeIn delay={0.14}>
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-[#050607] bg-[#00D4FF] hover:bg-[#67E8F9] transition-all shadow-[0_12px_32px_-8px_rgba(0,212,255,0.45)] hover:scale-[1.02]"
-                >
+                <Link href="/register" className="technoai-btn-cyan text-base">
                   {t.hero.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href="/demo" className="btn-hero-outline px-8 py-3.5 text-base">
+                <Link href="/demo" className="btn-hero-outline px-8 py-3.5 rounded-full text-base">
                   {t.hero.demo}
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-white/45">
+              <p className="mt-4 text-sm text-white/50">
                 {locale === 'tr' ? trialHeroLine() : t.hero.trial}
               </p>
             </FadeIn>
           </div>
 
-          <FadeIn delay={0.12} className="relative z-10">
+          <FadeIn delay={0.12} className="relative hidden lg:block">
             <HeroRobotOverlays />
           </FadeIn>
         </div>
