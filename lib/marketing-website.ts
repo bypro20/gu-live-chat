@@ -2,6 +2,7 @@ import { prisma } from './db'
 import { generateWebsiteId } from './utils'
 import { marketingDomainVariants, SITE_DOMAIN } from './site-config'
 import { ensureMarketingSiteAiReady } from './marketing-ai-setup'
+import { loadWebsiteAgentFields, saveWebsiteAgentFields } from './website-agent-fields'
 import {
   MARKETING_AGENT_TITLE,
   MARKETING_PRIMARY_AGENT,
@@ -93,27 +94,58 @@ async function ensureMarketingSiteProPlan(websiteInternalId: string) {
   }
 }
 
-/** Canlı DB'deki marketing sitesi adı/domain'i güncel marka ile senkronize et */
+/** Marketing sitesinde yalnızca boş/legacy alanları doldurur — panelden yapılan özelleştirmeleri silmez. */
 async function ensureMarketingSiteBranding(websiteInternalId: string) {
   try {
-    await prisma.website.update({
+    const current = await prisma.website.findUnique({
       where: { id: websiteInternalId },
-      data: {
-        name: MARKETING_WIDGET_DISPLAY_NAME,
-        domain: MARKETING_DOMAIN,
-        avatarUrl: MARKETING_PRIMARY_AGENT.image,
-        welcomeMessage: MARKETING_WIDGET_WELCOME,
-        showPreChatForm: false,
-        requireName: false,
-        requireEmail: false,
+      select: {
+        name: true,
+        domain: true,
+        avatarUrl: true,
+        welcomeMessage: true,
+        showPreChatForm: true,
+        requireName: true,
+        requireEmail: true,
       },
     })
-    await prisma.$executeRawUnsafe(
-      `UPDATE websites SET agentDisplayName = ?, agentTitle = ? WHERE id = ?`,
-      MARKETING_PRIMARY_AGENT.fullName,
-      MARKETING_AGENT_TITLE,
-      websiteInternalId
-    )
+    if (!current) return
+
+    const patch: Record<string, unknown> = {
+      showPreChatForm: false,
+      requireName: false,
+      requireEmail: false,
+    }
+
+    if (!current.domain || current.domain !== MARKETING_DOMAIN) {
+      patch.domain = MARKETING_DOMAIN
+    }
+
+    const legacyName =
+      !current.name ||
+      current.name === 'Gu Live Chat — Platform' ||
+      current.name.includes('Gu Live Chat')
+    if (legacyName) {
+      patch.name = MARKETING_WIDGET_DISPLAY_NAME
+    }
+    if (!current.avatarUrl?.trim()) {
+      patch.avatarUrl = MARKETING_PRIMARY_AGENT.image
+    }
+    if (!current.welcomeMessage?.trim()) {
+      patch.welcomeMessage = MARKETING_WIDGET_WELCOME
+    }
+
+    await prisma.website.update({
+      where: { id: websiteInternalId },
+      data: patch,
+    })
+
+    const agentFields = await loadWebsiteAgentFields(websiteInternalId)
+    await saveWebsiteAgentFields(websiteInternalId, {
+      agentDisplayName:
+        agentFields.agentDisplayName?.trim() || MARKETING_PRIMARY_AGENT.fullName,
+      agentTitle: agentFields.agentTitle?.trim() || MARKETING_AGENT_TITLE,
+    })
   } catch (e) {
     console.warn('[marketing-website] branding sync:', e)
   }

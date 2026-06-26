@@ -25,6 +25,8 @@ export async function GET(req: Request) {
         avatarUrl: website.avatarUrl || null,
         websiteName: website.name || 'Destek',
         welcomeMessage: website.welcomeMessage || 'Merhaba! 👋 Size nasıl yardımcı olabilirim?',
+        agentDisplayName: website.agentDisplayName,
+        agentTitle: website.agentTitle,
       },
       origin
     )
@@ -34,6 +36,8 @@ export async function GET(req: Request) {
       welcomeMessage: branding.welcomeMessage,
       avatarUrl: branding.avatarUrl,
       websiteName: branding.websiteName,
+      agentDisplayName: branding.agentDisplayName ?? website.agentDisplayName,
+      agentTitle: branding.agentTitle ?? website.agentTitle,
       agentsOnline,
     })
   } catch (error) {

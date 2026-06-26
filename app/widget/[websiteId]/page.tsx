@@ -567,6 +567,35 @@ export default function WidgetPage() {
   }, [websiteId, searchParams.toString()])
 
   useEffect(() => {
+    if (!isOpen || !websiteId || !isInitialized) return
+
+    let cancelled = false
+    fetch(`/api/widget/appearance?websiteId=${encodeURIComponent(websiteId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        setConfig((prev) =>
+          prev
+            ? {
+                ...prev,
+                primaryColor: data.primaryColor ?? prev.primaryColor,
+                welcomeMessage: data.welcomeMessage ?? prev.welcomeMessage,
+                avatarUrl: data.avatarUrl ?? prev.avatarUrl,
+                websiteName: data.websiteName ?? prev.websiteName,
+                agentDisplayName: data.agentDisplayName ?? prev.agentDisplayName,
+                agentTitle: data.agentTitle ?? prev.agentTitle,
+              }
+            : prev
+        )
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, websiteId, isInitialized])
+
+  useEffect(() => {
     if (!isInitialized) return
     const pos = Math.floor(Math.random() * 4) + 1
     setQueuePosition(pos)
@@ -1174,11 +1203,14 @@ export default function WidgetPage() {
     setMessages((prev) => [...prev, newMessage])
     setInputMessage('')
     setIsTyping(true)
-    setTypingAgentName(
-      isMarketingWidgetSite(websiteId, config)
-        ? getMarketingWidgetPersona().displayName
-        : (config?.agentDisplayName?.split(/\s+/)[0] || config?.websiteName || 'Asistan')
-    )
+    const identity = resolveWidgetAgentIdentity({
+      websiteName: config?.websiteName,
+      agentDisplayName: config?.agentDisplayName,
+      agentTitle: config?.agentTitle,
+      avatarUrl: config?.avatarUrl,
+      isMarketing: isMarketingWidgetSite(websiteId, config),
+    })
+    setTypingAgentName(identity.headerName)
     setAwaitingReply(true)
 
     const socket = getSocket()
@@ -1375,7 +1407,6 @@ export default function WidgetPage() {
   const primaryColor = config?.primaryColor || '#1972F5'
   const agentsOnline = config?.agentsOnline ?? 3
   const marketingAi = isMarketingWidgetSite(websiteId, config)
-  const marketingPersona = marketingAi ? getMarketingWidgetPersona() : null
   const widgetAgentIdentity = resolveWidgetAgentIdentity({
     websiteName: config?.websiteName,
     agentDisplayName: config?.agentDisplayName,
@@ -1383,38 +1414,19 @@ export default function WidgetPage() {
     avatarUrl: config?.avatarUrl,
     isMarketing: marketingAi,
   })
-  const latestAgentProfile = (() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i]
-      if (msg.senderType === 'AGENT') {
-        return {
-          name: msg.senderName,
-          image: msg.senderImage,
-        }
-      }
-    }
-    return null
-  })()
-  const agentName =
-    latestAgentProfile?.name ||
-    widgetAgentIdentity.replyName
-  const headerName =
-    latestAgentProfile?.name?.split(/\s+/)[0] ||
-    widgetAgentIdentity.headerName
+  const botDisplayName = widgetAgentIdentity.replyName
+  const headerName = widgetAgentIdentity.headerName
   const headerSubtitle = widgetAgentIdentity.title
-  const agentInitials = getInitials(agentName)
-  const agentAvatar =
-    latestAgentProfile?.image ||
-    config?.avatarUrl ||
-    marketingPersona?.avatarUrl ||
-    widgetAgentIdentity.avatarUrl ||
-    null
+  const botAvatar = widgetAgentIdentity.avatarUrl || config?.avatarUrl || null
+  const botInitials = getInitials(botDisplayName)
 
   const renderAvatar = (size: number, imageUrl: string | null | undefined, name: string, initials: string) => (
     imageUrl
       ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
       : <span style={{ fontSize: size * 0.38, fontWeight: 700, color: 'white', letterSpacing: '-0.5px', userSelect: 'none' }}>{initials || '?'}</span>
   )
+
+  const avatarEl = (size: number) => renderAvatar(size, botAvatar, botDisplayName, botInitials)
 
   const renderAttachments = (msg: Message, onDark: boolean) => {
     if (!msg.attachments || msg.attachments.length === 0) return null
@@ -1496,8 +1508,6 @@ export default function WidgetPage() {
     }
     return loadingWidget
   }
-
-  const avatarEl = (size: number) => renderAvatar(size, agentAvatar, agentName, agentInitials)
 
   const identityGate = !!config && needsIdentityGate(config) && !identityComplete
 
@@ -1848,7 +1858,7 @@ export default function WidgetPage() {
                   </div>
                   <div style={{ maxWidth: '280px' }}>
                     <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-                      {agentName}
+                      {botDisplayName}
                     </p>
                     <div style={agentBubbleStyle()}>
                       <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', lineHeight: 1.65 }}>
@@ -1924,10 +1934,14 @@ export default function WidgetPage() {
                         {(() => {
                           const isBot = msg.senderType === 'BOT'
                           const isAgent = msg.senderType === 'AGENT'
-                          const bubbleName = isBot ? agentName : (msg.senderName || agentName)
-                          const bubbleImage = isBot || isAgent
-                            ? (msg.senderImage || agentAvatar)
-                            : agentAvatar
+                          const bubbleName = isBot
+                            ? botDisplayName
+                            : (msg.senderName || botDisplayName)
+                          const bubbleImage = isBot
+                            ? (msg.senderImage || botAvatar)
+                            : isAgent
+                              ? (msg.senderImage || botAvatar)
+                              : botAvatar
                           const bubbleInitials = getInitials(bubbleName)
                           return (
                         <div style={{
@@ -1944,7 +1958,7 @@ export default function WidgetPage() {
                         <div style={{ maxWidth: '280px' }}>
                           {(msg.senderType === 'BOT' || msg.senderType === 'AGENT') && (
                             <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-                              {msg.senderType === 'BOT' ? agentName : (msg.senderName || agentName)}
+                              {msg.senderType === 'BOT' ? botDisplayName : (msg.senderName || botDisplayName)}
                             </p>
                           )}
                           <div style={agentBubbleStyle()}>

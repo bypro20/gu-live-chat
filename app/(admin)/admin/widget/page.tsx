@@ -16,6 +16,12 @@ type AdminWebsiteRow = {
   domain: string
 }
 
+type MarketingSiteRef = {
+  id: string
+  websiteId: string
+  name: string
+}
+
 export default function AdminWidgetPage() {
   return (
     <Suspense fallback={<div className="admin-page admin-text-muted text-sm">Yükleniyor…</div>}>
@@ -27,6 +33,7 @@ export default function AdminWidgetPage() {
 function AdminWidgetContent() {
   const searchParams = useSearchParams()
   const [websites, setWebsites] = useState<AdminWebsiteRow[]>([])
+  const [marketingSite, setMarketingSite] = useState<MarketingSiteRef | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [website, setWebsite] = useState<WidgetWebsiteInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -46,6 +53,13 @@ function AdminWidgetContent() {
       .then(([list, marketing]) => {
         const rows = Array.isArray(list) ? list : []
         setWebsites(rows)
+        if (marketing?.id && marketing?.websiteId) {
+          setMarketingSite({
+            id: marketing.id,
+            websiteId: marketing.websiteId,
+            name: marketing.name || 'Gu Live Chat',
+          })
+        }
         const defaultId =
           (siteFromUrl && rows.some((w: AdminWebsiteRow) => w.id === siteFromUrl) ? siteFromUrl : null) ||
           marketing?.id ||
@@ -91,6 +105,7 @@ function AdminWidgetContent() {
   }
 
   const selected = websites.find((w) => w.id === selectedId)
+  const editingLiveWidget = marketingSite && selectedId === marketingSite.id
 
   return (
     <div className="admin-page max-w-6xl">
@@ -120,6 +135,13 @@ function AdminWidgetContent() {
             {selected && (
               <p className="text-xs admin-text-muted mt-2 font-mono break-all">
                 ID: {selected.websiteId}
+              </p>
+            )}
+            {marketingSite && !editingLiveWidget && (
+              <p className="text-xs text-amber-400 mt-3 max-w-2xl">
+                gulivechat.com canlı widget{' '}
+                <span className="font-semibold">{marketingSite.name}</span> sitesine bağlı.
+                Ana sayfadaki sohbeti düzenlemek için o siteyi seçin.
               </p>
             )}
           </div>

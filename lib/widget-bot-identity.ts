@@ -26,6 +26,15 @@ function firstName(full: string): string {
   return trimmed.split(/\s+/)[0] || trimmed
 }
 
+function resolveAvatarUrl(
+  avatarUrl: string | null | undefined,
+  origin?: string
+): string | null {
+  if (!avatarUrl?.trim()) return null
+  if (/^https?:\/\//i.test(avatarUrl)) return avatarUrl.trim()
+  return toPublicAssetUrl(avatarUrl, origin)
+}
+
 /** Widget header, bot replies, and typing share this human-facing identity. */
 export function resolveWidgetAgentIdentity(params: {
   websiteName?: string | null
@@ -35,33 +44,36 @@ export function resolveWidgetAgentIdentity(params: {
   isMarketing: boolean
   origin?: string
 }): WidgetAgentIdentity {
-  if (params.isMarketing) {
-    const agent = MARKETING_PRIMARY_AGENT
-    const avatarUrl =
-      params.avatarUrl || toPublicAssetUrl(agent.image, params.origin)
-    const teamAvatars = MARKETING_DEMO_AGENTS.map(
-      (a) => toPublicAssetUrl(a.image, params.origin)!
-    ).filter(Boolean)
-    const replyName = agent.fullName
-    return {
-      headerName: agent.name,
-      replyName,
-      title: params.agentTitle?.trim() || MARKETING_AGENT_TITLE,
-      avatarUrl,
-      teamAvatars,
-      displayName: replyName,
-    }
-  }
+  const customName = params.agentDisplayName?.trim()
+  const fallbackName = params.isMarketing
+    ? MARKETING_PRIMARY_AGENT.fullName
+    : (params.websiteName?.trim() || 'Destek')
+  const replyName = customName || fallbackName
 
-  const replyName = (params.agentDisplayName || params.websiteName || 'Destek').trim()
-  const avatarUrl = params.avatarUrl || null
+  const customAvatar = resolveAvatarUrl(params.avatarUrl, params.origin)
+  const avatarUrl =
+    customAvatar ||
+    (params.isMarketing ? toPublicAssetUrl(MARKETING_PRIMARY_AGENT.image, params.origin) : null)
+
+  const title =
+    params.agentTitle?.trim() ||
+    (params.isMarketing ? MARKETING_AGENT_TITLE : DEFAULT_REPLY_SLA)
+
+  const teamAvatars =
+    params.isMarketing && !customAvatar
+      ? MARKETING_DEMO_AGENTS.map(
+          (a) => toPublicAssetUrl(a.image, params.origin)!
+        ).filter(Boolean)
+      : avatarUrl
+        ? [avatarUrl]
+        : []
 
   return {
     headerName: firstName(replyName),
     replyName,
-    title: params.agentTitle?.trim() || DEFAULT_REPLY_SLA,
+    title,
     avatarUrl,
-    teamAvatars: avatarUrl ? [avatarUrl] : [],
+    teamAvatars,
     displayName: replyName,
   }
 }
