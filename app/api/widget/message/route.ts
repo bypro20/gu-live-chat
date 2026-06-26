@@ -19,10 +19,7 @@ import { resolveVisitorIdentity } from '@/lib/widget-identity'
 import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
-import {
-  MARKETING_PRIMARY_AGENT,
-  resolveMarketingAgentImage,
-} from '@/lib/marketing-demo-agents'
+import { resolveWidgetBotIdentity } from '@/lib/widget-bot-identity'
 
 const widgetAttachmentSchema = z.object({
   url: z.string().min(1).max(2000),
@@ -344,13 +341,16 @@ export async function POST(req: Request) {
           orderBy: { createdAt: 'desc' },
         })
         if (botMessage?.content?.trim()) {
+          const botIdentity = resolveWidgetBotIdentity({
+            websiteName: website.name,
+            avatarUrl: website.avatarUrl,
+            isMarketing: true,
+          })
           responseBody.aiReply = {
             id: botMessage.id,
             content: botMessage.content,
-            senderName: MARKETING_PRIMARY_AGENT.fullName,
-            senderImage:
-              website.avatarUrl ||
-              resolveMarketingAgentImage(MARKETING_PRIMARY_AGENT.fullName),
+            senderName: botIdentity.displayName,
+            senderImage: botIdentity.avatarUrl,
             createdAt: botMessage.createdAt.toISOString(),
           }
         }

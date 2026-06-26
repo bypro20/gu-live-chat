@@ -13,7 +13,8 @@ import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
-import { MARKETING_PRIMARY_AGENT, resolveMarketingAgentImage, MARKETING_AI_BRAND_NAME } from '../marketing-demo-agents'
+import { MARKETING_AI_BRAND_NAME } from '../marketing-demo-agents'
+import { resolveWidgetBotIdentity } from '../widget-bot-identity'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
@@ -169,18 +170,19 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     }
     const siteName = (conversation.website.name || 'Destek').trim()
     const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
-    const botDisplayName = isMarketing ? MARKETING_PRIMARY_AGENT.fullName : siteName
-    const botAvatar =
-      conversation.website.avatarUrl ||
-      (isMarketing ? resolveMarketingAgentImage(botDisplayName) : null)
+    const botIdentity = resolveWidgetBotIdentity({
+      websiteName: siteName,
+      avatarUrl: conversation.website.avatarUrl,
+      isMarketing,
+    })
+    const botDisplayName = botIdentity.displayName
+    const botAvatar = botIdentity.avatarUrl
 
-    if (!isMarketing) {
-      emitBotTyping({
-        conversationId: params.conversationId,
-        agentName: botDisplayName,
-        start: true,
-      })
-    }
+    emitBotTyping({
+      conversationId: params.conversationId,
+      agentName: botDisplayName,
+      start: true,
+    })
 
     const readIds = await markVisitorMessagesRead(params.conversationId)
     if (readIds.length > 0) {

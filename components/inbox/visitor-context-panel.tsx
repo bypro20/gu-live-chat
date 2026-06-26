@@ -19,6 +19,7 @@ import { getStatusLabels, visitorDisplayName } from './utils'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { VisitorContactEditor } from './visitor-contact-editor'
+import { ConversationTagsEditor } from './conversation-tags-editor'
 import type { InboxConversation } from './types'
 
 type VisitorDetail = {
@@ -46,12 +47,16 @@ type VisitorDetail = {
 
 export function VisitorContextPanel({
   conversation,
+  websitePublicId,
   onClose,
   onVisitorUpdated,
+  onTagsUpdated,
 }: {
   conversation: InboxConversation
+  websitePublicId?: string | null
   onClose?: () => void
   onVisitorUpdated?: (patch: { name: string | null; email: string | null }) => void
+  onTagsUpdated?: () => void
 }) {
   const d = useDashboardI18n()
   const i = d.inbox
@@ -164,6 +169,17 @@ export function VisitorContextPanel({
             {conversation.assignedTo?.name && (
               <InfoSection title={i.assignedSection}>
                 <InfoRow icon={User} label={i.agentLabel} value={conversation.assignedTo.name} />
+              </InfoSection>
+            )}
+
+            {websitePublicId && (
+              <InfoSection title={i.tagsSection}>
+                <ConversationTagsEditor
+                  conversationId={conversation.id}
+                  websiteId={websitePublicId}
+                  initialTags={(conversation.tags || []).map((row) => row.tag)}
+                  onChange={() => onTagsUpdated?.()}
+                />
               </InfoSection>
             )}
 

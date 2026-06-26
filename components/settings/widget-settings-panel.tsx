@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { buildWidgetInstallSnippet } from '@/lib/widget-snippet'
 import { WidgetLivePreview } from '@/components/widget/widget-live-preview'
 import type { SettingsMessages } from '@/lib/settings-i18n'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import { PlatformInstallPanel } from '@/components/settings/platform-install-panel'
+import { uploadInboxFile } from '@/lib/inbox-upload'
 
 export type WidgetConfigState = {
   primaryColor: string
@@ -107,6 +108,8 @@ export function WidgetSettingsPanel({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!website) return
@@ -133,6 +136,26 @@ export function WidgetSettingsPanel({
   }
 
   const installSnippet = buildWidgetInstallSnippet(website?.websiteId || '')
+  const avatarInitials = ((website?.name || 'GL').slice(0, 2)).toUpperCase()
+
+  const handleAvatarSelect = async (file: File | null) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setSaveError(w.avatarTypeError)
+      return
+    }
+    setUploadingAvatar(true)
+    setSaveError(null)
+    try {
+      const uploaded = await uploadInboxFile(file)
+      setConfig((prev) => ({ ...prev, avatarUrl: uploaded.url }))
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : w.avatarUploadFailed)
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
 
   if (!website) {
     return (
@@ -168,6 +191,48 @@ export function WidgetSettingsPanel({
                     onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
                     className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{w.avatarPhoto}</label>
+                <p className="text-xs text-muted-foreground mb-3">{w.avatarPhotoDesc}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-primary/10 flex items-center justify-center text-primary text-lg font-bold shrink-0 border border-border">
+                    {config.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={config.avatarUrl} alt={w.avatarPhoto} className="w-full h-full object-cover" />
+                    ) : (
+                      avatarInitials
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(e) => void handleAvatarSelect(e.target.files?.[0] ?? null)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={uploadingAvatar || saving}
+                      className="min-h-[44px] px-4 rounded-xl border border-border text-sm font-medium hover:border-border-strong transition disabled:opacity-50 cursor-pointer"
+                    >
+                      {uploadingAvatar ? c.saving : w.avatarUpload}
+                    </button>
+                    {config.avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setConfig((prev) => ({ ...prev, avatarUrl: '' }))}
+                        disabled={uploadingAvatar || saving}
+                        className="min-h-[44px] px-4 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
+                      >
+                        {w.avatarRemove}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -278,6 +343,7 @@ export function WidgetSettingsPanel({
             <WidgetLivePreview
               primaryColor={config.primaryColor}
               websiteName={website.name}
+              avatarUrl={config.avatarUrl || null}
               domain={website.domain}
               welcomeMessage={config.welcomeMessage}
               onlineLabel={w.online}

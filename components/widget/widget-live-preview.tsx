@@ -21,6 +21,7 @@ import {
 type WidgetLivePreviewProps = {
   primaryColor: string
   websiteName: string
+  avatarUrl?: string | null
   domain?: string | null
   welcomeMessage: string
   onlineLabel: string
@@ -31,6 +32,7 @@ type WidgetLivePreviewProps = {
 export function WidgetLivePreview({
   primaryColor,
   websiteName,
+  avatarUrl,
   domain,
   welcomeMessage,
   onlineLabel,
@@ -38,6 +40,22 @@ export function WidgetLivePreview({
   quickLabels = ['💬 Sohbet', '💰 Fiyat', '🛟 Destek'],
 }: WidgetLivePreviewProps) {
   const initials = websiteName.slice(0, 2).toUpperCase()
+  const avatarNode = (sizeClass: string, roundedClass: string) =>
+    avatarUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={avatarUrl} alt={websiteName} className={`${sizeClass} ${roundedClass} object-cover`} />
+    ) : (
+      <div
+        className={`${sizeClass} ${roundedClass} flex items-center justify-center text-white font-extrabold text-base`}
+        style={{
+          background: brandGradient(primaryColor),
+          boxShadow: `0 10px 28px ${hexToRgba(primaryColor, 0.4)}`,
+          border: '2px solid rgba(255,255,255,0.5)',
+        }}
+      >
+        {initials}
+      </div>
+    )
 
   return (
     <div
@@ -74,16 +92,7 @@ export function WidgetLivePreview({
         <div className="p-5">
           <div className="flex items-center gap-3.5 mb-3.5">
             <div className="relative shrink-0">
-              <div
-                className="w-14 h-14 rounded-[18px] flex items-center justify-center text-white font-extrabold text-base"
-                style={{
-                  background: brandGradient(primaryColor),
-                  boxShadow: `0 10px 28px ${hexToRgba(primaryColor, 0.4)}`,
-                  border: '2px solid rgba(255,255,255,0.5)',
-                }}
-              >
-                {initials}
-              </div>
+              {avatarNode('w-14 h-14', 'rounded-[18px]')}
               <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-[3px] border-white shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
             </div>
             <div>
@@ -113,12 +122,21 @@ export function WidgetLivePreview({
         <div style={getHeroHeaderStyle(primaryColor)}>
           <div className="absolute rounded-full pointer-events-none" style={{ top: -48, right: -36, width: 140, height: 140, background: 'rgba(255,255,255,0.14)' }} />
           <div className="relative flex items-center gap-3.5">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-sm shrink-0"
-              style={{ background: 'rgba(255,255,255,0.22)', border: '2px solid rgba(255,255,255,0.45)' }}
-            >
-              {initials}
-            </div>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={websiteName}
+                className="w-12 h-12 rounded-2xl object-cover shrink-0 border-2 border-white/45"
+              />
+            ) : (
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+                style={{ background: 'rgba(255,255,255,0.22)', border: '2px solid rgba(255,255,255,0.45)' }}
+              >
+                {initials}
+              </div>
+            )}
             <div>
               <p className="text-white font-bold text-[15px] m-0">{websiteName}</p>
               <p className="text-white/85 text-xs m-0 mt-0.5">🟢 {onlineLabel}</p>

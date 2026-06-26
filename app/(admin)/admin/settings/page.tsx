@@ -9,6 +9,7 @@ import { signOut } from 'next-auth/react'
 import { useToast } from '@/lib/toast'
 import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { PlatformThemeEditor } from '@/components/admin/platform-theme-editor'
+import { AgentProfileSection } from '@/components/dashboard/agent-profile-section'
 
 function passwordStrength(password: string) {
   const checks = [
@@ -217,6 +218,10 @@ export default function AdminSettingsPage() {
       />
 
       <div className="space-y-5 lg:space-y-6">
+        <div className="admin-form-section">
+          <AgentProfileSection />
+        </div>
+
         <PlatformThemeEditor />
 
         <div className="admin-form-section">

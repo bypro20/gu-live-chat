@@ -143,6 +143,7 @@ const PROTECTED_API_PREFIXES = [
   '/api/profile',
   '/api/invoices',
   '/api/canned-responses',
+  '/api/tags',
   '/api/ratings',
   '/api/channels',
   '/api/privacy',

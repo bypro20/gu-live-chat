@@ -32,10 +32,13 @@ export const MARKETING_DEMO_AGENTS: MarketingDemoAgent[] = [
 
 export const MARKETING_PRIMARY_AGENT = MARKETING_DEMO_AGENTS[0]
 
+/** Default bot avatar on marketing widget when no custom upload exists. */
+export const MARKETING_DEFAULT_BOT_AVATAR = '/marketing/hero-ai-robot.png'
+
 /** Shown in widget header on gulivechat.com */
 export const MARKETING_WIDGET_DISPLAY_NAME = 'Gu Live Chat'
 
-/** AI selamlama ve marka kimliği — widget başlığından ayrı */
+/** Bot replies, typing indicator, and AI persona — never a fake human name. */
 export const MARKETING_AI_BRAND_NAME = 'Gu Live Chat'
 
 export const MARKETING_WIDGET_WELCOME =
@@ -54,8 +57,8 @@ export function toPublicAssetUrl(path: string | null | undefined, origin?: strin
 export function getMarketingWidgetPersona(origin?: string) {
   return {
     displayName: MARKETING_WIDGET_DISPLAY_NAME,
-    botName: MARKETING_PRIMARY_AGENT.fullName,
-    avatarUrl: toPublicAssetUrl(MARKETING_PRIMARY_AGENT.image, origin)!,
+    botName: MARKETING_AI_BRAND_NAME,
+    avatarUrl: toPublicAssetUrl(MARKETING_DEFAULT_BOT_AVATAR, origin)!,
     team: MARKETING_DEMO_AGENTS.map((agent) => ({
       ...agent,
       image: toPublicAssetUrl(agent.image, origin)!,
@@ -94,7 +97,7 @@ export function applyMarketingWidgetBranding(
     config.websiteName.includes('Gu Live Chat')
 
   return {
-    avatarUrl: config.avatarUrl || MARKETING_PRIMARY_AGENT.image,
+    avatarUrl: config.avatarUrl || MARKETING_DEFAULT_BOT_AVATAR,
     websiteName: legacyName ? MARKETING_WIDGET_DISPLAY_NAME : config.websiteName,
     welcomeMessage: config.welcomeMessage || MARKETING_WIDGET_WELCOME,
   }

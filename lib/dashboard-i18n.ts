@@ -217,6 +217,13 @@ export type DashboardMessages = {
     pageSection: string
     sourceLabel: string
     assignedSection: string
+    tagsSection: string
+    tagPlaceholder: string
+    addTag: string
+    removeTag: string
+    noTagsYet: string
+    tagAddFailed: string
+    tagRemoveFailed: string
     langPairHint: (incoming: string, outgoing: string) => string
     editContactHint: string
     nameLabel: string
@@ -532,6 +539,13 @@ const tr: DashboardMessages = {
     pageSection: 'Sayfa',
     sourceLabel: 'Kaynak',
     assignedSection: 'Atanan',
+    tagsSection: 'Etiketler',
+    tagPlaceholder: 'Yeni etiket…',
+    addTag: 'Ekle',
+    removeTag: 'Etiketi kaldır',
+    noTagsYet: 'Henüz etiket yok',
+    tagAddFailed: 'Etiket eklenemedi',
+    tagRemoveFailed: 'Etiket kaldırılamadı',
     langPairHint: (incoming, outgoing) => `Gelen mesajlar ${incoming} · Yanıtlarınız ${outgoing}`,
     editContactHint: 'İsteğe bağlı — ziyaretçi adı ve e-postasını siz girebilirsiniz',
     nameLabel: 'İsim',
@@ -878,6 +892,13 @@ const en: DashboardMessages = {
     pageSection: 'Page',
     sourceLabel: 'Source',
     assignedSection: 'Assigned',
+    tagsSection: 'Tags',
+    tagPlaceholder: 'New tag…',
+    addTag: 'Add',
+    removeTag: 'Remove tag',
+    noTagsYet: 'No tags yet',
+    tagAddFailed: 'Could not add tag',
+    tagRemoveFailed: 'Could not remove tag',
     langPairHint: (incoming, outgoing) => `Incoming in ${incoming} · Your replies in ${outgoing}`,
     editContactHint: 'Optional — you can set the visitor name and email',
     nameLabel: 'Name',

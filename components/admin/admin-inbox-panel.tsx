@@ -979,7 +979,9 @@ export function AdminInboxPanel() {
       {selectedConversation && (
         <VisitorContextPanel
           conversation={selectedConversation}
+          websitePublicId={websiteId}
           onVisitorUpdated={() => void mutateConversations()}
+          onTagsUpdated={() => void mutateConversations()}
         />
       )}
     </div>

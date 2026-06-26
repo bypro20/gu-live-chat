@@ -343,6 +343,12 @@ export type SettingsMessages = {
     copy: string
     defaultWelcome: string
     defaultOffline: string
+    avatarPhoto: string
+    avatarPhotoDesc: string
+    avatarUpload: string
+    avatarRemove: string
+    avatarUploadFailed: string
+    avatarTypeError: string
   }
   billing: {
     title: string
@@ -1081,6 +1087,12 @@ const tr: SettingsMessages = {
     copy: 'Kopyala',
     defaultWelcome: 'Merhaba! Size nasıl yardımcı olabiliriz?',
     defaultOffline: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',
+    avatarPhoto: 'Widget profil fotoğrafı',
+    avatarPhotoDesc: 'Sohbet başlığında ve AI yanıtlarında görünür. Kare görsel önerilir (256×256 px).',
+    avatarUpload: 'Fotoğraf yükle',
+    avatarRemove: 'Kaldır',
+    avatarUploadFailed: 'Fotoğraf yüklenemedi',
+    avatarTypeError: 'JPEG, PNG, WebP veya GIF yükleyin.',
   },
   billing: {
     title: 'Faturalama',
@@ -1943,6 +1955,12 @@ const en: SettingsMessages = {
     copy: 'Copy',
     defaultWelcome: 'Hello! How can we help you?',
     defaultOffline: 'We are offline. Leave a message and we will get back to you.',
+    avatarPhoto: 'Widget profile photo',
+    avatarPhotoDesc: 'Shown in the chat header and AI replies. Square image recommended (256×256 px).',
+    avatarUpload: 'Upload photo',
+    avatarRemove: 'Remove',
+    avatarUploadFailed: 'Photo upload failed',
+    avatarTypeError: 'Upload JPEG, PNG, WebP, or GIF.',
   },
   billing: {
     title: 'Billing',

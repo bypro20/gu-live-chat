@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { resolveVisitorToken } from '@/lib/secure-tokens'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
-import { MARKETING_PRIMARY_AGENT } from '@/lib/marketing-demo-agents'
+import { resolveWidgetBotIdentity } from '@/lib/widget-bot-identity'
 import { isMarketingWidgetWebsite, resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
 /**
@@ -112,6 +112,12 @@ export async function GET(req: Request) {
         }
     const siteAvatar = branding.avatarUrl
     const marketingSite = publicWebsiteId ? await isMarketingWidgetWebsite(publicWebsiteId) : false
+    const botIdentity = resolveWidgetBotIdentity({
+      websiteName: conversation.website?.name,
+      avatarUrl: siteAvatar,
+      isMarketing: marketingSite,
+      origin,
+    })
 
     return NextResponse.json({
       status: conversation.status,
@@ -121,14 +127,14 @@ export async function GET(req: Request) {
         type: m.type,
         senderType: m.senderType,
         senderName:
-          m.senderType === 'BOT' && marketingSite
-            ? MARKETING_PRIMARY_AGENT.fullName
+          m.senderType === 'BOT'
+            ? botIdentity.displayName
             : m.sender?.name || null,
         senderImage:
           m.senderType === 'AGENT'
             ? m.sender?.image || siteAvatar
             : m.senderType === 'BOT'
-              ? siteAvatar
+              ? botIdentity.avatarUrl || siteAvatar
               : null,
         status: m.status,
         createdAt: m.createdAt,

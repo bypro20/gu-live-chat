@@ -23,6 +23,7 @@ export type InboxMessage = {
 
 export type InboxConversation = {
   id: string
+  websiteId?: string
   status: string
   source?: string
   visitorLang?: string | null
@@ -32,5 +33,6 @@ export type InboxConversation = {
   visitorId?: string
   visitor: { id?: string; name: string | null; email: string | null; avatarUrl: string | null }
   assignedTo?: { name: string | null; image: string | null } | null
+  tags?: Array<{ tag: { id: string; name: string; color: string } }>
   _count?: { messages: number }
 }

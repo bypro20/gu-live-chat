@@ -34,8 +34,8 @@ import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
   MARKETING_AI_BRAND_NAME,
-  resolveMarketingAgentImage,
 } from '@/lib/marketing-demo-agents'
+import { resolveWidgetBotIdentity } from '@/lib/widget-bot-identity'
 
 function isMarketingWidgetSite(websiteId: string, cfg: WidgetConfig | null | undefined): boolean {
   if (cfg?.aiAssistant) return true
@@ -1171,8 +1171,8 @@ export default function WidgetPage() {
     setInputMessage('')
     setIsTyping(true)
     setTypingAgentName(
-      isMarketingWidgetSite(websiteId, config)
-        ? (getMarketingWidgetPersona().botName)
+      marketingAi
+        ? MARKETING_AI_BRAND_NAME
         : config?.websiteName || 'Asistan'
     )
     setAwaitingReply(true)
@@ -1372,6 +1372,11 @@ export default function WidgetPage() {
   const agentsOnline = config?.agentsOnline ?? 3
   const marketingAi = isMarketingWidgetSite(websiteId, config)
   const marketingPersona = marketingAi ? getMarketingWidgetPersona() : null
+  const widgetBotIdentity = resolveWidgetBotIdentity({
+    websiteName: config?.websiteName,
+    avatarUrl: config?.avatarUrl,
+    isMarketing: marketingAi,
+  })
   const latestAgentProfile = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i]
@@ -1393,8 +1398,9 @@ export default function WidgetPage() {
   const agentInitials = getInitials(agentName)
   const agentAvatar =
     latestAgentProfile?.image ||
-    marketingPersona?.avatarUrl ||
     config?.avatarUrl ||
+    marketingPersona?.avatarUrl ||
+    widgetBotIdentity.avatarUrl ||
     null
 
   const renderAvatar = (size: number, imageUrl: string | null | undefined, name: string, initials: string) => (
@@ -1909,13 +1915,12 @@ export default function WidgetPage() {
                     ) : (
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                         {(() => {
-                          const bubbleName = msg.senderName || agentName
-                          const bubbleImage =
-                            msg.senderType === 'AGENT'
-                              ? (msg.senderImage || config?.avatarUrl || marketingPersona?.avatarUrl || null)
-                              : msg.senderType === 'BOT'
-                                ? (msg.senderImage || config?.avatarUrl || marketingPersona?.avatarUrl || resolveMarketingAgentImage(msg.senderName))
-                                : (config?.avatarUrl || marketingPersona?.avatarUrl || null)
+                          const isBot = msg.senderType === 'BOT'
+                          const isAgent = msg.senderType === 'AGENT'
+                          const bubbleName = isBot ? agentName : (msg.senderName || agentName)
+                          const bubbleImage = isBot || isAgent
+                            ? (msg.senderImage || agentAvatar)
+                            : agentAvatar
                           const bubbleInitials = getInitials(bubbleName)
                           return (
                         <div style={{
@@ -1930,9 +1935,9 @@ export default function WidgetPage() {
                           )
                         })()}
                         <div style={{ maxWidth: '280px' }}>
-                          {msg.senderName && (
+                          {(msg.senderType === 'BOT' || msg.senderType === 'AGENT') && (
                             <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-                              {msg.senderName}
+                              {msg.senderType === 'BOT' ? agentName : (msg.senderName || agentName)}
                             </p>
                           )}
                           <div style={agentBubbleStyle()}>
@@ -2028,9 +2033,9 @@ export default function WidgetPage() {
                       {avatarEl(30)}
                     </div>
                     <div style={{ maxWidth: '280px' }}>
-                      {typingAgentName && (
+                      {(typingAgentName || agentName) && (
                         <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-                          {typingAgentName}
+                          {typingAgentName || agentName}
                         </p>
                       )}
                       <div style={{

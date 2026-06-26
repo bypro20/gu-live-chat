@@ -883,7 +883,9 @@ function InboxPageContent() {
       {selectedConversation && (
         <VisitorContextPanel
           conversation={selectedConversation}
+          websitePublicId={activeWebsite?.websiteId}
           onVisitorUpdated={() => void mutateConversations()}
+          onTagsUpdated={() => void mutateConversations()}
         />
       )}
     </div>
