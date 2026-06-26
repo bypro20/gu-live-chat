@@ -62,3 +62,4 @@ mobile-admin/node_modules/
 /public/pool-manifest.json
 /tools/node22/
 *.mp4
+!public/marketing/panel-demo/*.mp4
