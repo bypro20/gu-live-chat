@@ -16,7 +16,7 @@ import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 export const maxDuration = 30
 
 const MARKETING_HISTORY_LIMIT = 8
-const MARKETING_MAX_TOKENS = 380
+const MARKETING_MAX_TOKENS = 700
 
 const bodySchema = z.object({
   websiteId: z.string(),
