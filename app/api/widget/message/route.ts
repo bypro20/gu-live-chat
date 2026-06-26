@@ -253,6 +253,16 @@ export async function POST(req: Request) {
     const isMarketing = await isPlatformMarketingWebsiteId(website.websiteId)
 
     const runAiPipeline = async () => {
+      if (isMarketing) {
+        await maybeRunAiAutoReply({
+          websiteDbId: website.id,
+          websitePublicId: website.websiteId,
+          conversationId,
+          visitorId: visitor.id,
+        })
+        return
+      }
+
       await processChatbotOnVisitorMessage({
         websiteDbId: website.id,
         websitePublicId: website.websiteId,

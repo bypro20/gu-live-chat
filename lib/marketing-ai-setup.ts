@@ -2,6 +2,7 @@ import { prisma } from './db'
 import { ArticleStatus } from '@/app/generated/prisma/client'
 import { homeTr } from './messages/home-tr'
 import { TRIAL_DAYS } from './trial-config'
+import type { KnowledgeEntry } from './ai/provider'
 import { pickDefaultProvider, hasAnyPlatformAiKey } from './ai/provider'
 import { getDefaultModelForPlan } from './ai/plan-models'
 import {
@@ -10,6 +11,7 @@ import {
   isPlatformGeminiConfigured,
   platformAiEnvHint,
 } from './ai/platform-config'
+import { MARKETING_PRIMARY_AGENT } from './marketing-demo-agents'
 
 const KB_CATEGORY = {
   name: 'Gu Live Chat — Platform',
@@ -18,17 +20,41 @@ const KB_CATEGORY = {
   icon: '🤖',
 }
 
-export const MARKETING_AI_SYSTEM_PROMPT = `Sen Gu Live Chat (gulivechat.com) platformunun deneyimli müşteri destek uzmanısın. Adın Deniz Arslan.
+/** Gemini sohbet kutusu tarzı — agent adı widget panelinden gelir. */
+export function buildMarketingSystemPrompt(agentDisplayName?: string | null): string {
+  const name = agentDisplayName?.trim() || MARKETING_PRIMARY_AGENT.fullName
+  const firstName = name.split(/\s+/)[0] || MARKETING_PRIMARY_AGENT.name
+  return `Sen ${name} — Gu Live Chat (gulivechat.com) ekibinin müşteri temsilcisisin. Ziyaretçiyle bire bir sohbet ediyorsun; Google Gemini sohbet kutusu gibi doğal, akıcı ve samimi konuş.
 
-Kurallar:
-- Türkçe, sıcak ve doğal konuş; birinci tekil şahıs kullan ("yardımcı olabilirim", "size anlatayım").
-- Bilgi bankasındaki gerçek bilgilere dayan; fiyat, paket, özellik uydurma.
-- Bilmediğin veya hesap/ödeme detayı gerektiren konuda nazikçe canlı temsilciye veya destek@gulivechat.com yönlendir.
-- Önceki mesajlardaki cümleleri tekrarlama ("Mesajınızı aldım", "kısa süre içinde dönüş" kullanma).
-- "yapay zeka", "bot", "LLM" deme — gerçek bir destek uzmanı gibi yaz.
-- İlk selamlamada kendini kısaca tanıt: "Merhaba, ben Deniz. Gu Live Chat ekibinden size yardımcı olacağım."
-- Yanıtlar 2-5 cümle; gerektiğinde madde işareti kullan.
-- Ziyaretçinin sorduğu konuya göre ilgili özelliği öne çıkar (fiyat, kurulum, WhatsApp, AI, ekran izleme vb.).`
+Görevin:
+- Gu Live Chat'i tanıt: sitelere eklenen canlı destek widget'ı, AI destekli yanıtlar, birleşik inbox (WhatsApp, e-posta, sosyal), ekran izleme, bilgi bankası eğitimi.
+- Müşterilerin yerine konuş: "bizim platformumuz", "ekibimiz", "size kurulumda yardımcı oluruz" de.
+- İlk selamda kendini tanıt (${firstName} olarak) ve nasıl yardımcı olabileceğini sor.
+- Bilgi bankasındaki gerçek bilgilere dayan; fiyat, paket veya özellik uydurma.
+- Soruya göre ilgili konuyu öne çıkar: fiyat → paketler, kurulum → widget kodu, WhatsApp → çok kanallı inbox.
+- Yanıtlar 2-4 cümle; gerektiğinde kısa madde listesi kullan.
+- "yapay zeka", "bot", "LLM", "model" deme — gerçek bir destek uzmanısın.
+- "Mesajınızı aldım", "kısa süre içinde dönüş yapacağız" gibi şablon cümleler kullanma.
+- Kayıt: gulivechat.com/register · Fiyatlar: gulivechat.com/pricing · E-posta: destek@gulivechat.com
+
+Ton: sıcak, güven veren, satış baskısı olmadan ikna edici.`
+}
+
+/** Eski import uyumluluğu */
+export const MARKETING_AI_SYSTEM_PROMPT = buildMarketingSystemPrompt()
+
+let marketingKnowledgeCache: KnowledgeEntry[] | null = null
+
+/** RAG/embed beklemeden marketing widget yanıtı — bellek içi bilgi bankası. */
+export function getMarketingKnowledgeCache(): KnowledgeEntry[] {
+  if (!marketingKnowledgeCache) {
+    marketingKnowledgeCache = buildMarketingKnowledgeArticles().map((a) => ({
+      title: a.title,
+      content: a.content,
+    }))
+  }
+  return marketingKnowledgeCache
+}
 
 const TR_CHAR_MAP: Record<string, string> = {
   ğ: 'g',
@@ -263,8 +289,8 @@ export async function ensureMarketingAiConfig(websiteDbId: string): Promise<void
       provider,
       model,
       apiKey: '', // platform: GEMINI_API_KEY (Vercel env)
-      temperature: 0.72,
-      systemPrompt: MARKETING_AI_SYSTEM_PROMPT,
+      temperature: 0.82,
+      systemPrompt: buildMarketingSystemPrompt(),
     },
     update: {
       isActive: true,
@@ -272,8 +298,8 @@ export async function ensureMarketingAiConfig(websiteDbId: string): Promise<void
       autoSuggest: true,
       provider,
       model,
-      temperature: 0.72,
-      systemPrompt: MARKETING_AI_SYSTEM_PROMPT,
+      temperature: 0.82,
+      systemPrompt: buildMarketingSystemPrompt(),
     },
   })
 

@@ -915,7 +915,7 @@ export default function WidgetPage() {
     if (!conversationId) return
 
     let active = true
-    const pollMs = awaitingReply ? 900 : isSocketEnabled() && socketConnected ? 4000 : 2000
+    const pollMs = awaitingReply ? 450 : isSocketEnabled() && socketConnected ? 4000 : 2000
 
     const poll = async () => {
       if (document.hidden) return

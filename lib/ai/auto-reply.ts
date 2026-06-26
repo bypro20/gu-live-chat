@@ -11,15 +11,18 @@ import { websiteHasAiAssistant } from '../plan-features'
 import { isAdminOwnedWebsite } from '../admin-website'
 import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
-import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
+import { ensureMarketingSiteAiReady, buildMarketingSystemPrompt, getMarketingKnowledgeCache } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
 import { resolveWidgetAgentIdentity } from '../widget-bot-identity'
 import { loadWebsiteAgentFields } from '../website-agent-fields'
+import { PLATFORM_AI_MODEL } from './platform-config'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
+const MARKETING_HISTORY_LIMIT = 8
 const KNOWLEDGE_LIMIT = 6
 const WIDGET_MAX_TOKENS = 420
+const MARKETING_MAX_TOKENS = 380
 let marketingAiReadyPromise: Promise<void> | null = null
 
 async function ensureMarketingAiBeforeReply(
@@ -27,6 +30,13 @@ async function ensureMarketingAiBeforeReply(
   websitePublicId: string
 ): Promise<void> {
   if (!(await isPlatformMarketingWebsiteId(websitePublicId))) return
+
+  const ready = await prisma.aIConfig.findUnique({
+    where: { websiteId: websiteDbId },
+    select: { isActive: true, autoReply: true },
+  })
+  if (ready?.isActive && ready.autoReply) return
+
   if (!marketingAiReadyPromise) {
     marketingAiReadyPromise = ensureMarketingSiteAiReady(websiteDbId).catch((e) => {
       marketingAiReadyPromise = null
@@ -145,10 +155,12 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
 
     if (!aiConfig || !aiConfig.isActive || !aiConfig.autoReply) return
 
+    const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
+
     const recent = await prisma.message.findMany({
       where: { conversationId: params.conversationId },
       orderBy: { createdAt: 'desc' },
-      take: HISTORY_LIMIT,
+      take: isMarketing ? MARKETING_HISTORY_LIMIT : HISTORY_LIMIT,
       select: {
         id: true,
         content: true,
@@ -163,13 +175,17 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
 
     const flags = await getAiFeatureFlags(params.websiteDbId)
 
-    let knowledgeForReply = await loadRelevantKnowledge(params.websiteDbId, last.content, KNOWLEDGE_LIMIT)
-    if (knowledgeForReply.length === 0) {
-      const all = await loadKnowledge(params.websiteDbId)
-      knowledgeForReply = all.slice(0, KNOWLEDGE_LIMIT)
+    let knowledgeForReply
+    if (isMarketing) {
+      knowledgeForReply = getMarketingKnowledgeCache()
+    } else {
+      knowledgeForReply = await loadRelevantKnowledge(params.websiteDbId, last.content, KNOWLEDGE_LIMIT)
+      if (knowledgeForReply.length === 0) {
+        const all = await loadKnowledge(params.websiteDbId)
+        knowledgeForReply = all.slice(0, KNOWLEDGE_LIMIT)
+      }
     }
     const siteName = (conversation.website.name || 'Destek').trim()
-    const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
     const agentFields = await loadWebsiteAgentFields(conversation.website.id)
     const botIdentity = resolveWidgetAgentIdentity({
       websiteName: siteName,
@@ -187,17 +203,24 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       start: true,
     })
 
-    const readIds = await markVisitorMessagesRead(params.conversationId)
+    const readIds = isMarketing ? [] : await markVisitorMessagesRead(params.conversationId)
     if (readIds.length > 0) {
       emitVisitorMessagesRead({ conversationId: params.conversationId, messageIds: readIds })
     }
 
-    const dbConfig = {
-      provider: aiConfig.provider,
-      model: aiConfig.model,
-      apiKey: aiConfig.apiKey,
-      temperature: aiConfig.temperature,
-    }
+    const dbConfig = isMarketing
+      ? {
+          provider: 'GEMINI' as const,
+          model: PLATFORM_AI_MODEL,
+          apiKey: '',
+          temperature: 0.82,
+        }
+      : {
+          provider: aiConfig.provider,
+          model: aiConfig.model,
+          apiKey: aiConfig.apiKey,
+          temperature: aiConfig.temperature,
+        }
     const llmReady = isAiLlmAvailable(dbConfig)
 
     try {
@@ -213,13 +236,15 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       const messages = toChatMessages(ordered)
       if (messages.length === 0) return
 
-      const visitorContext = await loadVisitorContext(
-        params.visitorId || conversation.visitorId,
-        params.conversationId
-      )
+      const visitorContext = isMarketing
+        ? undefined
+        : await loadVisitorContext(
+            params.visitorId || conversation.visitorId,
+            params.conversationId
+          )
 
       let visionContext = ''
-      if (flags.multimodalEnabled) {
+      if (!isMarketing && flags.multimodalEnabled) {
         const image = last.attachments?.find((a) => a.mimeType?.startsWith('image/') && a.url)
         if (image?.url) {
           const desc = await describeImageUrl(image.url, last.content)
@@ -231,15 +256,17 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         siteName: isMarketing ? botDisplayName : conversation.website.name,
         messages,
         knowledge: knowledgeForReply,
-        systemPrompt: aiConfig.systemPrompt || undefined,
+        systemPrompt: isMarketing
+          ? buildMarketingSystemPrompt(agentFields.agentDisplayName)
+          : aiConfig.systemPrompt || undefined,
         visitorContext: [visitorContext, visionContext].filter(Boolean).join('\n\n') || undefined,
-        webSearchEnabled: flags.webSearchEnabled,
-        smartRoutingEnabled: flags.smartRoutingEnabled,
+        webSearchEnabled: isMarketing ? false : flags.webSearchEnabled,
+        smartRoutingEnabled: isMarketing ? false : flags.smartRoutingEnabled,
         dbConfig,
         plan: conversation.website.plan as PlanType,
         websiteId: params.websiteDbId,
         conversationId: params.conversationId,
-        maxTokens: WIDGET_MAX_TOKENS,
+        maxTokens: isMarketing ? MARKETING_MAX_TOKENS : WIDGET_MAX_TOKENS,
       })
 
       const content = reply?.trim()
@@ -247,13 +274,11 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
 
       await sendBotReply(params, content, botDisplayName, botAvatar)
     } finally {
-      if (!isMarketing) {
-        emitBotTyping({
-          conversationId: params.conversationId,
-          agentName: botDisplayName,
-          start: false,
-        })
-      }
+      emitBotTyping({
+        conversationId: params.conversationId,
+        agentName: botDisplayName,
+        start: false,
+      })
     }
   } catch {
     console.error('[AI auto-reply] failed for conversation', params.conversationId)

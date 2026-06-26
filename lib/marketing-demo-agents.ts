@@ -38,7 +38,7 @@ export const MARKETING_AGENT_TITLE = 'Müşteri Destek Uzmanı · Genellikle bir
 export const MARKETING_AI_BRAND_NAME = MARKETING_PRIMARY_AGENT.fullName
 
 export const MARKETING_WIDGET_WELCOME =
-  'Merhaba! 👋 Ben Deniz. Fiyat, kurulum ve özellikler hakkında size yardımcı olabilirim.'
+  'Merhaba! 👋 Ben Deniz, Gu Live Chat ekibinden. Canlı destek widget\'ı, AI asistan ve fiyat paketleri hakkında sorularınızı yanıtlayabilirim — ne merak ediyorsunuz?'
 
 export function toPublicAssetUrl(path: string | null | undefined, origin?: string): string | null {
   if (!path) return null
