@@ -9,57 +9,57 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #111827;
+  --background: #FAF9F7;
+  --foreground: #1A1814;
   --card: #FFFFFF;
-  --card-foreground: #111827;
+  --card-foreground: #1A1814;
   --popover: #FFFFFF;
-  --popover-foreground: #111827;
+  --popover-foreground: #1A1814;
 
-  --primary: #9333EA;
+  --primary: #146356;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #7E22CE;
-  --primary-active: #6B21A8;
-  --primary-light: #F3E8FF;
-  --primary-glow: rgba(147, 51, 234, 0.2);
+  --primary-hover: #0F5247;
+  --primary-active: #0A4038;
+  --primary-light: #E6F2EF;
+  --primary-glow: rgba(20, 99, 86, 0.22);
 
-  --secondary: #EC4899;
-  --secondary-foreground: #FFFFFF;
-  --secondary-light: #FCE7F3;
-  --muted: #F9FAFB;
-  --muted-foreground: #6B7280;
-  --accent: #F3F4F6;
-  --accent-foreground: #111827;
+  --secondary: #C9922E;
+  --secondary-foreground: #1A1814;
+  --secondary-light: #FBF5E8;
+  --muted: #F3F1ED;
+  --muted-foreground: #6B6560;
+  --accent: #F3F1ED;
+  --accent-foreground: #1A1814;
 
-  --success: #059669;
+  --success: #2D9B83;
   --success-foreground: #FFFFFF;
-  --success-light: #ECFDF5;
-  --warning: #D97706;
-  --warning-foreground: #FFFFFF;
-  --warning-light: #FFFBEB;
-  --destructive: #DC2626;
+  --success-light: #E8F7F3;
+  --warning: #C9922E;
+  --warning-foreground: #1A1814;
+  --warning-light: #FBF5E8;
+  --destructive: #B91C1C;
   --destructive-foreground: #FFFFFF;
   --destructive-light: #FEF2F2;
-  --info: #2563EB;
+  --info: #146356;
   --info-foreground: #FFFFFF;
-  --info-light: #EFF6FF;
+  --info-light: #E6F2EF;
 
-  --border: #E5E7EB;
-  --border-strong: #D1D5DB;
-  --input: #E5E7EB;
-  --ring: #9333EA;
+  --border: #E8E4DE;
+  --border-strong: #D4CFC6;
+  --input: #E8E4DE;
+  --ring: #146356;
 
-  --sidebar-bg: #FAF5FF;
-  --sidebar-bg-end: #F3E8FF;
-  --sidebar-foreground: #6B7280;
-  --sidebar-foreground-active: #1F2937;
-  --sidebar-title: #111827;
-  --sidebar-active: rgba(147, 51, 234, 0.14);
-  --sidebar-active-border: #9333EA;
-  --sidebar-border: #E9D5FF;
-  --sidebar-hover: rgba(147, 51, 234, 0.06);
-  --sidebar-surface: rgba(147, 51, 234, 0.06);
-  --sidebar-group-label: #A78BFA;
+  --sidebar-bg: #F7F5F2;
+  --sidebar-bg-end: #EDEAE4;
+  --sidebar-foreground: #6B6560;
+  --sidebar-foreground-active: #1A1814;
+  --sidebar-title: #1A1814;
+  --sidebar-active: rgba(20, 99, 86, 0.12);
+  --sidebar-active-border: #146356;
+  --sidebar-border: #E8E4DE;
+  --sidebar-hover: rgba(20, 99, 86, 0.06);
+  --sidebar-surface: rgba(20, 99, 86, 0.05);
+  --sidebar-group-label: #8A847C;
 
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
@@ -69,60 +69,64 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.25rem;
 
-  --shadow-xs: 0 1px 2px 0 rgba(17, 24, 39, 0.04);
-  --shadow-sm: 0 1px 3px 0 rgba(17, 24, 39, 0.06), 0 1px 2px -1px rgba(17, 24, 39, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.06), 0 2px 4px -2px rgba(17, 24, 39, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.08), 0 4px 6px -4px rgba(17, 24, 39, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(17, 24, 39, 0.08), 0 8px 10px -6px rgba(17, 24, 39, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(17, 24, 39, 0.18);
-  --shadow-brand: 0 4px 14px -4px rgba(147, 51, 234, 0.4);
-  --shadow-brand-lg: 0 8px 24px -6px rgba(236, 72, 153, 0.35);
+  --shadow-xs: 0 1px 2px 0 rgba(26, 24, 20, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(26, 24, 20, 0.06), 0 1px 2px -1px rgba(26, 24, 20, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(26, 24, 20, 0.07), 0 2px 4px -2px rgba(26, 24, 20, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 24, 20, 0.08), 0 4px 6px -4px rgba(26, 24, 20, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(26, 24, 20, 0.08), 0 8px 10px -6px rgba(26, 24, 20, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(26, 24, 20, 0.16);
+  --shadow-brand: 0 8px 24px -6px rgba(20, 99, 86, 0.28);
+  --shadow-brand-lg: 0 12px 32px -8px rgba(20, 99, 86, 0.32);
+
+  --marketing-hero: linear-gradient(180deg, #FFFFFF 0%, #EDF5F3 48%, #FAF9F7 100%);
+  --marketing-navy: #141210;
+  --marketing-accent: #C9922E;
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F1F5F9;
-  --card: #1E293B;
-  --card-foreground: #F1F5F9;
-  --popover: #1E293B;
-  --popover-foreground: #F1F5F9;
+  --background: #141210;
+  --foreground: #F5F3EF;
+  --card: #1F1D1A;
+  --card-foreground: #F5F3EF;
+  --popover: #1F1D1A;
+  --popover-foreground: #F5F3EF;
 
-  --primary: #3B82F6;
-  --primary-foreground: #FFFFFF;
-  --primary-hover: #2563EB;
-  --primary-active: #1D4ED8;
-  --primary-light: rgba(59, 130, 246, 0.12);
-  --primary-glow: rgba(59, 130, 246, 0.2);
+  --primary: #3DBDA5;
+  --primary-foreground: #0A201C;
+  --primary-hover: #2D9B83;
+  --primary-active: #146356;
+  --primary-light: rgba(61, 189, 165, 0.12);
+  --primary-glow: rgba(61, 189, 165, 0.18);
 
-  --secondary: #2563EB;
-  --secondary-foreground: #FFFFFF;
-  --secondary-light: rgba(37, 99, 235, 0.12);
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #334155;
-  --accent-foreground: #F1F5F9;
+  --secondary: #D4A853;
+  --secondary-foreground: #141210;
+  --secondary-light: rgba(212, 168, 83, 0.12);
+  --muted: #1F1D1A;
+  --muted-foreground: #A8A29E;
+  --accent: #2A2724;
+  --accent-foreground: #F5F3EF;
 
-  --success: #10B981;
-  --success-light: rgba(16, 185, 129, 0.12);
-  --warning: #F59E0B;
-  --warning-light: rgba(245, 158, 11, 0.12);
+  --success: #3DBDA5;
+  --success-light: rgba(61, 189, 165, 0.12);
+  --warning: #D4A853;
+  --warning-light: rgba(212, 168, 83, 0.12);
   --destructive: #EF4444;
   --destructive-light: rgba(239, 68, 68, 0.12);
-  --info: #60A5FA;
-  --info-light: rgba(96, 165, 250, 0.12);
+  --info: #3DBDA5;
+  --info-light: rgba(61, 189, 165, 0.12);
 
-  --border: #334155;
-  --border-strong: #475569;
-  --input: #334155;
-  --ring: #3B82F6;
+  --border: #3D3935;
+  --border-strong: #57534E;
+  --input: #3D3935;
+  --ring: #3DBDA5;
 
-  --sidebar-bg: #0B1120;
-  --sidebar-bg-end: #111827;
-  --sidebar-foreground: #94A3B8;
-  --sidebar-foreground-active: #F8FAFC;
+  --sidebar-bg: #0F0E0C;
+  --sidebar-bg-end: #1A1814;
+  --sidebar-foreground: #A8A29E;
+  --sidebar-foreground-active: #F5F3EF;
   --sidebar-title: #FFFFFF;
-  --sidebar-active: rgba(59, 130, 246, 0.12);
-  --sidebar-active-border: #3B82F6;
+  --sidebar-active: rgba(61, 189, 165, 0.12);
+  --sidebar-active-border: #3DBDA5;
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-hover: rgba(255, 255, 255, 0.04);
   --sidebar-surface: rgba(255, 255, 255, 0.04);
@@ -254,13 +258,13 @@ body {
     transform: translateY(-1px);
   }
   .text-gradient-brand {
-    background: linear-gradient(135deg, #9333ea 0%, #ec4899 45%, #f97316 100%);
+    background: linear-gradient(135deg, #146356 0%, #2D9B83 42%, #C9922E 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #9333ea 0%, #ec4899 55%, #f97316 100%);
+    background: linear-gradient(135deg, #146356 0%, #0F5247 55%, #141210 100%);
   }
   .bg-gradient-brand-subtle {
     background: linear-gradient(135deg, var(--primary-light) 0%, #F8FAFC 100%);
@@ -276,9 +280,9 @@ body {
   }
   .bg-mesh {
     background-image:
-      radial-gradient(at 50% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 55%),
-      radial-gradient(at 100% 80%, rgba(168, 85, 247, 0.06) 0px, transparent 45%),
-      radial-gradient(at 0% 60%, rgba(34, 211, 238, 0.05) 0px, transparent 40%);
+      radial-gradient(at 50% 0%, rgba(20, 99, 86, 0.09) 0px, transparent 55%),
+      radial-gradient(at 100% 80%, rgba(201, 146, 46, 0.06) 0px, transparent 45%),
+      radial-gradient(at 0% 60%, rgba(45, 155, 131, 0.05) 0px, transparent 40%);
   }
 
   .animate-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -296,29 +300,29 @@ body {
     @apply inline-flex items-center px-3 py-1 bg-primary-light text-primary text-xs font-semibold rounded-full;
   }
 
-  /* gulivechat.com — Crisp / LiveChat tarzı premium SaaS */
+  /* gulivechat.com — Gu Meridian premium */
   .marketing-site {
     overflow-x: hidden;
     max-width: 100vw;
     width: 100%;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    --shadow-xs: 0 1px 2px 0 rgba(11, 18, 32, 0.04);
-    --shadow-sm: 0 2px 8px -2px rgba(11, 18, 32, 0.06);
-    --shadow-md: 0 8px 24px -8px rgba(11, 18, 32, 0.08);
-    --shadow-lg: 0 16px 40px -12px rgba(11, 18, 32, 0.1);
-    --shadow-xl: 0 24px 48px -16px rgba(11, 18, 32, 0.12);
-    --shadow-2xl: 0 32px 64px -20px rgba(11, 18, 32, 0.14);
-    --shadow-brand: 0 8px 24px -6px rgba(11, 95, 255, 0.35);
-    --shadow-brand-lg: 0 12px 32px -8px rgba(11, 95, 255, 0.4);
+    --shadow-xs: 0 1px 2px 0 rgba(26, 24, 20, 0.04);
+    --shadow-sm: 0 2px 8px -2px rgba(26, 24, 20, 0.06);
+    --shadow-md: 0 8px 24px -8px rgba(26, 24, 20, 0.08);
+    --shadow-lg: 0 16px 40px -12px rgba(26, 24, 20, 0.1);
+    --shadow-xl: 0 24px 48px -16px rgba(26, 24, 20, 0.12);
+    --shadow-2xl: 0 32px 64px -20px rgba(26, 24, 20, 0.14);
+    --shadow-brand: 0 8px 24px -6px rgba(20, 99, 86, 0.28);
+    --shadow-brand-lg: 0 12px 32px -8px rgba(20, 99, 86, 0.32);
   }
 
   .marketing-site .marketing-hero-bg {
-    background: var(--marketing-hero, linear-gradient(180deg, #fff 0%, #f0f6ff 50%, #fafbfc 100%));
+    background: var(--marketing-hero, linear-gradient(180deg, #fff 0%, #edf5f3 48%, #faf9f7 100%));
   }
 
   .marketing-site .marketing-section-dark {
-    background: var(--marketing-navy, #0b1220);
-    color: #f8fafc;
+    background: var(--marketing-navy, #141210);
+    color: #f5f3ef;
   }
 
   .marketing-site .marketing-card {
@@ -336,7 +340,7 @@ body {
   }
 
   .marketing-site .btn-primary:hover {
-    background: var(--primary-hover, #004ee0);
+    background: var(--primary-hover, #0f5247);
     box-shadow: var(--shadow-brand-lg);
   }
 
@@ -1939,7 +1943,7 @@ html { scroll-behavior: smooth; }
 }
 
 .text-gradient-brand {
-  background: linear-gradient(135deg, #0b5fff 0%, #0066ff 45%, #00a3ff 100%);
+  background: linear-gradient(135deg, #146356 0%, #2D9B83 42%, #C9922E 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

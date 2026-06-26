@@ -1,3 +1,5 @@
+import { GU_BRAND } from '@/lib/brand-theme'
+
 export const PLATFORM_THEME_KEY = 'platform_theme'
 
 /** Tek panel renk paleti */
@@ -29,56 +31,57 @@ export type PlatformThemes = {
   customerDark: PanelTheme
 }
 
+
 export const DEFAULT_ADMIN_THEME: PanelTheme = {
-  background: '#f8fafc',
-  foreground: '#0f172a',
-  card: '#ffffff',
-  cardForeground: '#0f172a',
-  muted: '#f1f5f9',
-  mutedForeground: '#64748b',
-  border: '#e2e8f0',
-  accent: '#4f46e5',
-  accentForeground: '#ffffff',
-  hover: '#f1f5f9',
+  background: GU_BRAND.background,
+  foreground: GU_BRAND.foreground,
+  card: GU_BRAND.card,
+  cardForeground: GU_BRAND.cardForeground,
+  muted: GU_BRAND.muted,
+  mutedForeground: GU_BRAND.mutedForeground,
+  border: GU_BRAND.border,
+  accent: GU_BRAND.primary,
+  accentForeground: GU_BRAND.primaryForeground,
+  hover: GU_BRAND.primaryLight,
 }
 
 export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = {
-  background: '#0b1120',
-  foreground: '#f8fafc',
-  card: '#111827',
-  cardForeground: '#f8fafc',
-  muted: '#1e293b',
-  mutedForeground: '#94a3b8',
-  border: '#334155',
-  accent: '#818cf8',
-  accentForeground: '#ffffff',
-  hover: '#1e293b',
+  background: GU_BRAND.ink,
+  foreground: '#F5F3EF',
+  card: GU_BRAND.inkSoft,
+  cardForeground: '#F5F3EF',
+  muted: '#1F1D1A',
+  mutedForeground: '#A8A29E',
+  border: '#3D3935',
+  accent: '#3DBDA5',
+  accentForeground: GU_BRAND.ink,
+  hover: '#2A2724',
 }
 
 export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
-  background: '#f8fafc',
-  foreground: '#111827',
-  card: '#ffffff',
-  cardForeground: '#111827',
-  muted: '#f9fafb',
-  mutedForeground: '#6b7280',
-  border: '#e5e7eb',
-  accent: '#9333ea',
-  accentForeground: '#ffffff',
-  hover: '#f3e8ff',
+  background: GU_BRAND.background,
+  foreground: GU_BRAND.foreground,
+  card: GU_BRAND.card,
+  cardForeground: GU_BRAND.cardForeground,
+  muted: GU_BRAND.muted,
+  mutedForeground: GU_BRAND.mutedForeground,
+  border: GU_BRAND.border,
+  accent: GU_BRAND.primary,
+  accentForeground: GU_BRAND.primaryForeground,
+  hover: GU_BRAND.primaryLight,
 }
 
 export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = {
-  background: '#000000',
-  foreground: '#f5f5f5',
-  card: '#0a0a0a',
-  cardForeground: '#f5f5f5',
-  muted: '#171717',
-  mutedForeground: '#a3a3a3',
-  border: '#262626',
-  accent: '#a855f7',
-  accentForeground: '#ffffff',
-  hover: '#1f1f1f',
+  background: GU_BRAND.ink,
+  foreground: '#F5F3EF',
+  card: '#1F1D1A',
+  cardForeground: '#F5F3EF',
+  muted: '#1F1D1A',
+  mutedForeground: '#A8A29E',
+  border: '#3D3935',
+  accent: '#3DBDA5',
+  accentForeground: GU_BRAND.ink,
+  hover: '#2A2724',
 }
 
 export const DEFAULT_PLATFORM_THEMES: PlatformThemes = {
@@ -106,8 +109,8 @@ export const ADMIN_DARK_THEME_PRESETS: Record<string, { label: string; theme: Pa
 }
 
 export const CUSTOMER_THEME_PRESETS: Record<string, { label: string; theme: PanelTheme }> = {
-  purple: {
-    label: 'Mor marka',
+  jade: {
+    label: 'Gu Jade',
     theme: DEFAULT_CUSTOMER_THEME,
   },
   ocean: {

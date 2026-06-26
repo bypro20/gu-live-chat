@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Send, Bell, Zap, Shield, Clock } from 'lucide-react'
 import { MARKETING_DEMO_AGENTS } from '@/lib/marketing-demo-agents'
+import { GU_BRAND } from '@/lib/brand-theme'
 
-/** Crisp / Tidio tarzı: müşteri sitesi + widget + mobil sohbet — tek profesyonel kompozit */
+/** Gu Live Chat — özgün hero kompoziti: site + widget + mobil */
 export function HeroShowcase() {
   const [step, setStep] = useState(0)
   const agents = MARKETING_DEMO_AGENTS
@@ -19,7 +20,12 @@ export function HeroShowcase() {
   return (
     <div className="relative w-full max-w-[540px] mx-auto lg:mx-0 lg:ml-auto">
       {/* Glow */}
-      <div className="absolute -inset-8 bg-gradient-to-tr from-[#0B5FFF]/15 via-[#0B5FFF]/5 to-cyan-400/10 rounded-[3rem] blur-3xl pointer-events-none" />
+      <div
+        className="absolute -inset-8 rounded-[3rem] blur-3xl pointer-events-none"
+        style={{
+          background: `linear-gradient(to top right, ${GU_BRAND.primaryGlow}, transparent, ${GU_BRAND.accentLight})`,
+        }}
+      />
 
       {/* Browser — müşteri web sitesi */}
       <div className="relative rounded-2xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-900/10 overflow-hidden">
@@ -48,11 +54,18 @@ export function HeroShowcase() {
 
           {/* Site üzerinde açık widget */}
           <div
-            className={`absolute bottom-3 right-3 w-[min(220px,58%)] rounded-2xl border border-[#0B5FFF]/10 bg-white shadow-xl shadow-[#0B5FFF]/10 overflow-hidden transition-all duration-500 ${
+            className={`absolute bottom-3 right-3 w-[min(220px,58%)] rounded-2xl border bg-white shadow-xl overflow-hidden transition-all duration-500 ${
               step >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
             }`}
+            style={{
+              borderColor: `${GU_BRAND.primary}18`,
+              boxShadow: `0 20px 40px -12px ${GU_BRAND.primaryGlow}`,
+            }}
           >
-            <div className="px-3 py-2 bg-gradient-to-r from-[#0B5FFF] to-[#0088FF] flex items-center gap-2">
+            <div
+              className="px-3 py-2 flex items-center gap-2"
+              style={{ background: `linear-gradient(to right, ${GU_BRAND.primary}, ${GU_BRAND.success})` }}
+            >
               <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-white/40 shrink-0">
                 <Image
                   src={primary.image}
@@ -82,10 +95,13 @@ export function HeroShowcase() {
               <div
                 className={`flex justify-end gap-1.5 items-end transition-all duration-500 delay-150 ${step >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}
               >
-                <div className="bg-gradient-to-r from-[#0B5FFF] to-[#0066FF] rounded-xl rounded-tr-sm px-2.5 py-1.5 max-w-[88%] shadow-sm">
+                <div
+                  className="rounded-xl rounded-tr-sm px-2.5 py-1.5 max-w-[88%] shadow-sm"
+                  style={{ background: `linear-gradient(to right, ${GU_BRAND.primary}, ${GU_BRAND.success})` }}
+                >
                   <p className="text-[9px] text-white">Evet, hemen sipariş verebilirsiniz ✓</p>
                 </div>
-                <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0 border border-indigo-200">
+                <div className="relative w-5 h-5 rounded-md overflow-hidden shrink-0 border border-[color:var(--border)]">
                   <Image src={primary.image} alt="" fill className="object-cover" sizes="20px" unoptimized />
                 </div>
               </div>
@@ -105,20 +121,26 @@ export function HeroShowcase() {
             <div className="h-5 bg-slate-900 flex items-center justify-center">
               <div className="w-8 h-1 rounded-full bg-slate-700" />
             </div>
-            <div className="px-2 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600">
+            <div
+              className="px-2 py-1.5"
+              style={{ background: `linear-gradient(to right, ${GU_BRAND.primary}, ${GU_BRAND.primaryActive})` }}
+            >
               <p className="text-[7px] font-bold text-white">Gu Live Chat</p>
             </div>
             <div className="p-2 space-y-1.5 bg-slate-50 min-h-[100px]">
               <div className="bg-white border border-slate-100 rounded-lg px-2 py-1">
                 <p className="text-[6.5px] text-slate-600">Yeni mesaj!</p>
               </div>
-              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg px-2 py-1 ml-auto max-w-[90%]">
+              <div
+                className="rounded-lg px-2 py-1 ml-auto max-w-[90%]"
+                style={{ background: GU_BRAND.primary }}
+              >
                 <p className="text-[6.5px] text-white">Size yardımcı olalım</p>
               </div>
             </div>
             <div className="px-2 pb-2 flex items-center gap-1 border-t border-slate-100 pt-1.5">
               <div className="flex-1 h-4 rounded-md bg-slate-100" />
-              <Send className="w-3 h-3 text-indigo-500" />
+              <Send className="w-3 h-3" style={{ color: GU_BRAND.primary }} />
             </div>
           </div>
         </div>

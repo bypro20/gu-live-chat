@@ -156,7 +156,7 @@ export function ChatHeader({
             className={cn(
               'h-8 text-xs gap-1.5',
               autoTranslate
-                ? 'bg-white text-indigo-700 hover:bg-white/90'
+                ? 'bg-white text-primary hover:bg-white/90'
                 : 'bg-white/10 border-white/25 text-white hover:bg-white/20'
             )}
             onClick={onToggleTranslate}

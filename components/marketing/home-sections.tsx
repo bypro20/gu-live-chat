@@ -23,6 +23,7 @@ import { useT, useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import { getPlanEntry } from '@/lib/plan-i18n'
 import { APK_DOWNLOAD_FILENAME, APK_DOWNLOAD_PATH } from '@/lib/site-config'
+import { GU_BRAND } from '@/lib/brand-theme'
 
 const FEATURE_ICONS = [MessageCircle, Bot, Inbox, Languages, Users, BookOpen, BarChart3] as const
 const PRODUCT_ICONS = [MessageCircle, Users, Bot, BarChart3] as const
@@ -90,16 +91,16 @@ export function HomeHero() {
       <div
         className="absolute inset-0 opacity-40 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(circle at 20% 20%, rgba(11,95,255,0.08) 0%, transparent 42%),
-            radial-gradient(circle at 80% 0%, rgba(0,163,255,0.06) 0%, transparent 38%)`,
+          backgroundImage: `radial-gradient(circle at 20% 20%, ${GU_BRAND.marketingHeroGlow} 0%, transparent 42%),
+            radial-gradient(circle at 80% 0%, rgba(201, 146, 46, 0.05) 0%, transparent 38%)`,
         }}
       />
       <div
         className="absolute inset-0 opacity-[0.25] pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(11,95,255,0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(11,95,255,0.05) 1px, transparent 1px)
+            linear-gradient(to right, ${GU_BRAND.marketingHeroGrid} 1px, transparent 1px),
+            linear-gradient(to bottom, ${GU_BRAND.marketingHeroGrid} 1px, transparent 1px)
           `,
           backgroundSize: '56px 56px',
         }}
@@ -109,13 +110,13 @@ export function HomeHero() {
         <div className="grid lg:grid-cols-[1fr_1.08fr] gap-12 lg:gap-20 items-center">
           <div className="text-center lg:text-left max-w-xl mx-auto lg:mx-0">
             <FadeIn>
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 bg-white/90 text-[#0B5FFF] border border-[#0B5FFF]/15 shadow-sm backdrop-blur-sm">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 bg-white/90 text-primary border border-primary/15 shadow-sm backdrop-blur-sm">
                 <Sparkles className="w-3.5 h-3.5" />
                 {t.hero.badge}
               </span>
             </FadeIn>
             <FadeIn delay={0.05}>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08] text-[#0B1220]">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.08] text-foreground">
                 {locale === 'tr' ? (
                   <>
                     Müşterilerinize{' '}
@@ -142,7 +143,7 @@ export function HomeHero() {
                 </Link>
                 <Link
                   href="/demo"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white border border-slate-200/90 hover:border-[#0B5FFF]/30 hover:bg-[#F0F6FF] transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-foreground bg-white border border-border hover:border-primary/30 hover:bg-primary-light transition-all shadow-sm"
                 >
                   {t.hero.demo}
                 </Link>
@@ -263,7 +264,7 @@ export function FeatureGrid() {
             return (
             <FadeIn key={f.title} delay={i * 0.04}>
               <div className="marketing-card surface-hover p-6 h-full transition-all duration-200">
-                <div className="w-11 h-11 rounded-xl bg-[#0B5FFF]/10 text-[#0B5FFF] flex items-center justify-center mb-4">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-semibold mb-1.5">{f.title}</h3>
@@ -685,7 +686,10 @@ export function FooterCta() {
     <section className="py-20 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
         <FadeIn>
-          <div className="rounded-3xl bg-gradient-to-br from-[#0B5FFF] via-[#0066FF] to-[#0B1220] px-8 py-14 sm:py-16 text-center text-white shadow-brand-lg">
+          <div
+            className="rounded-3xl px-8 py-14 sm:py-16 text-center text-white shadow-brand-lg"
+            style={{ background: GU_BRAND.gradientCta }}
+          >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{h.title}</h2>
             <p className="mt-3 text-white/80 max-w-md mx-auto">
               {h.desc}
@@ -698,7 +702,7 @@ export function FooterCta() {
               ))}
             </div>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/register" className="px-7 py-3.5 bg-white text-[#0B5FFF] font-semibold rounded-xl hover:bg-white/95 transition-colors inline-flex items-center gap-2 shadow-sm">
+              <Link href="/register" className="px-7 py-3.5 bg-white font-semibold rounded-xl hover:bg-white/95 transition-colors inline-flex items-center gap-2 shadow-sm" style={{ color: GU_BRAND.primary }}>
                 {h.register} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/contact" className="px-7 py-3 border border-white/30 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors">

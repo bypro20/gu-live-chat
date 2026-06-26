@@ -33,8 +33,8 @@ export function MarketingNav() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
         scrolled
-          ? 'glass-nav glass-nav-scrolled bg-white/90 border-slate-200/80'
-          : 'bg-[#FAFBFC]/80 backdrop-blur-md border-transparent'
+          ? 'glass-nav glass-nav-scrolled bg-white/90 border-border/80'
+          : 'bg-background/80 backdrop-blur-md border-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,7 +46,7 @@ export function MarketingNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-[#0B1220] rounded-lg hover:bg-slate-100/80 transition-colors duration-150"
+                className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors duration-150"
               >
                 {item.label}
               </Link>

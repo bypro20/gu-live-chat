@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     )
 
     return NextResponse.json({
-      primaryColor: website.primaryColor || '#1972F5',
+      primaryColor: website.primaryColor || '#146356',
       welcomeMessage: branding.welcomeMessage,
       avatarUrl: branding.avatarUrl,
       websiteName: branding.websiteName,

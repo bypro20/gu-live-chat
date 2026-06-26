@@ -14,7 +14,7 @@ export const CHANNEL_META: Record<
   ConversationChannel,
   { label: string; color: string; short: string }
 > = {
-  WIDGET: { label: 'Web Widget', color: '#1972F5', short: 'Web' },
+  WIDGET: { label: 'Web Widget', color: '#146356', short: 'Web' },
   WHATSAPP: { label: 'WhatsApp', color: '#25D366', short: 'WA' },
   TELEGRAM: { label: 'Telegram', color: '#0088CC', short: 'TG' },
   INSTAGRAM: { label: 'Instagram', color: '#E4405F', short: 'IG' },

@@ -3,7 +3,9 @@
 import type { CSSProperties } from 'react'
 import { adjustColor, hexToRgba, WIDGET_FONT } from '@/lib/widget-theme'
 
-export const INBOX_DEFAULT_PRIMARY = '#6366F1'
+import { GU_BRAND } from '@/lib/brand-theme'
+
+export const INBOX_DEFAULT_PRIMARY = GU_BRAND.primary
 
 export function resolveInboxPrimary(color?: string | null): string {
   if (color && /^#[0-9A-Fa-f]{3,8}$/.test(color)) return color

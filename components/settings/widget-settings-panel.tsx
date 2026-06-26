@@ -38,7 +38,7 @@ export type WidgetWebsiteInfo = {
 
 function getDefaultConfig(w: SettingsMessages['widget']): WidgetConfigState {
   return {
-    primaryColor: '#1972F5',
+    primaryColor: '#146356',
     position: 'BOTTOM_RIGHT',
     welcomeMessage: w.defaultWelcome,
     offlineMessage: w.defaultOffline,

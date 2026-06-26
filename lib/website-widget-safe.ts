@@ -19,7 +19,7 @@ export type WidgetWebsiteRow = {
 }
 
 const DEFAULTS: Omit<WidgetWebsiteRow, 'id' | 'websiteId' | 'name' | 'plan'> = {
-  primaryColor: '#1972F5',
+  primaryColor: '#146356',
   position: 'BOTTOM_RIGHT',
   welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
   offlineMessage: 'Şu an çevrimdışıyız. Bir mesaj bırakın, size dönelim.',
