@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { updateWebsiteSchema } from '@/lib/validators/website'
+import { saveWebsiteAgentFields, loadWebsiteAgentFields } from '@/lib/website-agent-fields'
 
 export async function GET(
   req: Request,
@@ -33,7 +34,8 @@ export async function GET(
     return NextResponse.json({ error: 'Website bulunamadı' }, { status: 404 })
   }
 
-  return NextResponse.json(website)
+  const agentFields = await loadWebsiteAgentFields(website.id)
+  return NextResponse.json({ ...website, ...agentFields })
 }
 
 export async function PATCH(
@@ -74,10 +76,28 @@ export async function PATCH(
 
     const website = await prisma.website.update({
       where: { id: target.id },
-      data: validated,
+      data: {
+        ...(validated.name !== undefined ? { name: validated.name } : {}),
+        ...(validated.domain !== undefined ? { domain: validated.domain } : {}),
+        ...(validated.primaryColor !== undefined ? { primaryColor: validated.primaryColor } : {}),
+        ...(validated.position !== undefined ? { position: validated.position } : {}),
+        ...(validated.welcomeMessage !== undefined ? { welcomeMessage: validated.welcomeMessage } : {}),
+        ...(validated.offlineMessage !== undefined ? { offlineMessage: validated.offlineMessage } : {}),
+        ...(validated.avatarUrl !== undefined ? { avatarUrl: validated.avatarUrl } : {}),
+        ...(validated.showPreChatForm !== undefined ? { showPreChatForm: validated.showPreChatForm } : {}),
+        ...(validated.requireName !== undefined ? { requireName: validated.requireName } : {}),
+        ...(validated.requireEmail !== undefined ? { requireEmail: validated.requireEmail } : {}),
+      },
     })
 
-    return NextResponse.json(website)
+    await saveWebsiteAgentFields(target.id, {
+      agentDisplayName: validated.agentDisplayName,
+      agentTitle: validated.agentTitle,
+    })
+
+    const agentFields = await loadWebsiteAgentFields(target.id)
+
+    return NextResponse.json({ ...website, ...agentFields })
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {
       return NextResponse.json(

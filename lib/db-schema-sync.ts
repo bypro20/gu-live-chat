@@ -116,6 +116,8 @@ export async function syncProductionSchema(): Promise<{ applied: string[]; skipp
     { label: 'websites.cookieConsentEnabled', sql: `ALTER TABLE "websites" ADD COLUMN "cookieConsentEnabled" BOOLEAN NOT NULL DEFAULT 1` },
     { label: 'websites.showConsentBanner', sql: `ALTER TABLE "websites" ADD COLUMN "showConsentBanner" BOOLEAN NOT NULL DEFAULT 1` },
     { label: 'websites.avatarUrl', sql: `ALTER TABLE "websites" ADD COLUMN "avatarUrl" TEXT` },
+    { label: 'websites.agentDisplayName', sql: `ALTER TABLE "websites" ADD COLUMN "agentDisplayName" TEXT` },
+    { label: 'websites.agentTitle', sql: `ALTER TABLE "websites" ADD COLUMN "agentTitle" TEXT` },
     // visitors
     { label: 'visitors.avatarUrl', sql: `ALTER TABLE "visitors" ADD COLUMN "avatarUrl" TEXT` },
     { label: 'visitors.browser', sql: `ALTER TABLE "visitors" ADD COLUMN "browser" TEXT` },

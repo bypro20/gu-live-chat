@@ -33,9 +33,8 @@ import { recordWidgetPageview, requestWidgetDeviceGeo, resolveWidgetEmbedContext
 import { isValidCustomerEmbedUrl } from '@/lib/widget-embed-url'
 import {
   getMarketingWidgetPersona,
-  MARKETING_AI_BRAND_NAME,
 } from '@/lib/marketing-demo-agents'
-import { resolveWidgetBotIdentity } from '@/lib/widget-bot-identity'
+import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
 
 function isMarketingWidgetSite(websiteId: string, cfg: WidgetConfig | null | undefined): boolean {
   if (cfg?.aiAssistant) return true
@@ -53,6 +52,8 @@ interface WidgetConfig {
   offlineMessage: string
   avatarUrl: string | null
   websiteName: string | null
+  agentDisplayName?: string | null
+  agentTitle?: string | null
   agentsOnline: number
   aiAssistant?: boolean
   showPreChatForm?: boolean
@@ -508,6 +509,9 @@ export default function WidgetPage() {
           ...data.websiteConfig,
           avatarUrl: data.websiteConfig.avatarUrl || getMarketingWidgetPersona().avatarUrl,
           websiteName: data.websiteConfig.websiteName || getMarketingWidgetPersona().displayName,
+          agentDisplayName:
+            data.websiteConfig.agentDisplayName || getMarketingWidgetPersona().botName,
+          agentTitle: data.websiteConfig.agentTitle || getMarketingWidgetPersona().agentTitle,
         })
         setConversationId(data.conversationId)
         setAiTranslateAvailable(!!data.features?.aiTranslate)
@@ -1171,9 +1175,9 @@ export default function WidgetPage() {
     setInputMessage('')
     setIsTyping(true)
     setTypingAgentName(
-      marketingAi
-        ? MARKETING_AI_BRAND_NAME
-        : config?.websiteName || 'Asistan'
+      isMarketingWidgetSite(websiteId, config)
+        ? getMarketingWidgetPersona().displayName
+        : (config?.agentDisplayName?.split(/\s+/)[0] || config?.websiteName || 'Asistan')
     )
     setAwaitingReply(true)
 
@@ -1372,8 +1376,10 @@ export default function WidgetPage() {
   const agentsOnline = config?.agentsOnline ?? 3
   const marketingAi = isMarketingWidgetSite(websiteId, config)
   const marketingPersona = marketingAi ? getMarketingWidgetPersona() : null
-  const widgetBotIdentity = resolveWidgetBotIdentity({
+  const widgetAgentIdentity = resolveWidgetAgentIdentity({
     websiteName: config?.websiteName,
+    agentDisplayName: config?.agentDisplayName,
+    agentTitle: config?.agentTitle,
     avatarUrl: config?.avatarUrl,
     isMarketing: marketingAi,
   })
@@ -1390,17 +1396,18 @@ export default function WidgetPage() {
     return null
   })()
   const agentName =
-    (marketingAi ? MARKETING_AI_BRAND_NAME : null) ||
     latestAgentProfile?.name ||
-    marketingPersona?.displayName ||
-    config?.websiteName ||
-    'Destek'
+    widgetAgentIdentity.replyName
+  const headerName =
+    latestAgentProfile?.name?.split(/\s+/)[0] ||
+    widgetAgentIdentity.headerName
+  const headerSubtitle = widgetAgentIdentity.title
   const agentInitials = getInitials(agentName)
   const agentAvatar =
     latestAgentProfile?.image ||
     config?.avatarUrl ||
     marketingPersona?.avatarUrl ||
-    widgetBotIdentity.avatarUrl ||
+    widgetAgentIdentity.avatarUrl ||
     null
 
   const renderAvatar = (size: number, imageUrl: string | null | undefined, name: string, initials: string) => (
@@ -1541,11 +1548,11 @@ export default function WidgetPage() {
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '16px', color: '#fff', letterSpacing: '-0.03em' }}>
-                  {agentName}
+                  {headerName}
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: '#6EE7B7', boxShadow: '0 0 6px rgba(110,231,183,0.9)' }} />
-                  {t.online}
+                  {headerSubtitle}
                 </p>
               </div>
 
@@ -2033,9 +2040,9 @@ export default function WidgetPage() {
                       {avatarEl(30)}
                     </div>
                     <div style={{ maxWidth: '280px' }}>
-                      {(typingAgentName || agentName) && (
+                      {(typingAgentName || headerName) && (
                         <p style={{ margin: '0 0 4px 2px', fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-                          {typingAgentName || agentName}
+                          {typingAgentName || headerName}
                         </p>
                       )}
                       <div style={{

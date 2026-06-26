@@ -13,6 +13,8 @@ export const updateWebsiteSchema = z.object({
   welcomeMessage: z.string().max(500).optional(),
   offlineMessage: z.string().max(500).optional(),
   avatarUrl: z.string().url().nullable().optional(),
+  agentDisplayName: z.string().trim().min(1).max(80).nullable().optional(),
+  agentTitle: z.string().trim().max(120).nullable().optional(),
   showPreChatForm: z.boolean().optional(),
   requireName: z.boolean().optional(),
   requireEmail: z.boolean().optional(),

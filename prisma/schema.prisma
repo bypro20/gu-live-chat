@@ -112,6 +112,8 @@ model Website {
   cookieConsentText  String?  @default("Bu site, deneyiminizi iyileştirmek için çerezler kullanmaktadır.")
   privacyPolicyUrl   String?
   avatarUrl     String?
+  agentDisplayName String?
+  agentTitle       String?
   welcomeMessage String        @default("Merhaba! Size nasıl yardımcı olabiliriz?")
   offlineMessage String        @default("Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.")
   showPreChatForm Boolean      @default(true)

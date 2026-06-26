@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { resolveVisitorToken } from '@/lib/secure-tokens'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
-import { resolveWidgetBotIdentity } from '@/lib/widget-bot-identity'
+import { resolveWidgetAgentIdentity } from '@/lib/widget-bot-identity'
+import { loadWebsiteAgentFields } from '@/lib/website-agent-fields'
 import { isMarketingWidgetWebsite, resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
 
 /**
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
         status: true,
         visitorId: true,
         visitor: { select: { fingerprint: true } },
-        website: { select: { websiteId: true, avatarUrl: true, name: true, welcomeMessage: true } },
+        website: { select: { id: true, websiteId: true, avatarUrl: true, name: true, welcomeMessage: true } },
       },
     })
 
@@ -95,6 +96,9 @@ export async function GET(req: Request) {
 
     const publicWebsiteId = conversation.website?.websiteId
     const origin = new URL(req.url).origin
+    const agentFields = conversation.website?.id
+      ? await loadWebsiteAgentFields(conversation.website.id)
+      : { agentDisplayName: null, agentTitle: null }
     const branding = publicWebsiteId
       ? await resolveMarketingWidgetBranding(
           publicWebsiteId,
@@ -102,6 +106,8 @@ export async function GET(req: Request) {
             avatarUrl: conversation.website?.avatarUrl || null,
             websiteName: conversation.website?.name || null,
             welcomeMessage: conversation.website?.welcomeMessage || null,
+            agentDisplayName: agentFields.agentDisplayName,
+            agentTitle: agentFields.agentTitle,
           },
           origin
         )
@@ -109,11 +115,15 @@ export async function GET(req: Request) {
           avatarUrl: conversation.website?.avatarUrl || null,
           websiteName: conversation.website?.name || null,
           welcomeMessage: null,
+          agentDisplayName: agentFields.agentDisplayName,
+          agentTitle: agentFields.agentTitle,
         }
     const siteAvatar = branding.avatarUrl
     const marketingSite = publicWebsiteId ? await isMarketingWidgetWebsite(publicWebsiteId) : false
-    const botIdentity = resolveWidgetBotIdentity({
-      websiteName: conversation.website?.name,
+    const botIdentity = resolveWidgetAgentIdentity({
+      websiteName: branding.websiteName || conversation.website?.name,
+      agentDisplayName: branding.agentDisplayName || agentFields.agentDisplayName,
+      agentTitle: branding.agentTitle || agentFields.agentTitle,
       avatarUrl: siteAvatar,
       isMarketing: marketingSite,
       origin,
@@ -128,7 +138,7 @@ export async function GET(req: Request) {
         senderType: m.senderType,
         senderName:
           m.senderType === 'BOT'
-            ? botIdentity.displayName
+            ? botIdentity.replyName
             : m.sender?.name || null,
         senderImage:
           m.senderType === 'AGENT'

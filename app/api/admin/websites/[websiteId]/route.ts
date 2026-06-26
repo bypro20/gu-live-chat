@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { updateWebsiteSchema } from '@/lib/validators/website'
+import { loadWebsiteAgentFields, saveWebsiteAgentFields } from '@/lib/website-agent-fields'
 
 const widgetSelect = {
   id: true,
@@ -56,7 +57,8 @@ export async function GET(
       return NextResponse.json({ error: 'Site bulunamadı' }, { status: 404 })
     }
 
-    return NextResponse.json(website)
+    const agentFields = await loadWebsiteAgentFields(website.id)
+    return NextResponse.json({ ...website, ...agentFields })
   } catch (error) {
     console.error('Admin get website error:', error)
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
@@ -91,10 +93,14 @@ export async function PATCH(
 
     const widgetFields = updateWebsiteSchema.safeParse(body)
     const data: Record<string, unknown> = {}
+    let agentPatch: { agentDisplayName?: string | null; agentTitle?: string | null } = {}
 
     if (body.plan !== undefined) data.plan = body.plan
     if (widgetFields.success) {
-      Object.assign(data, widgetFields.data)
+      const { agentDisplayName, agentTitle, ...rest } = widgetFields.data
+      Object.assign(data, rest)
+      if (agentDisplayName !== undefined) agentPatch.agentDisplayName = agentDisplayName
+      if (agentTitle !== undefined) agentPatch.agentTitle = agentTitle
     } else if (body.plan === undefined) {
       return NextResponse.json(
         { error: 'Geçersiz veri', details: widgetFields.error.issues },
@@ -108,7 +114,10 @@ export async function PATCH(
       select: widgetSelect,
     })
 
-    return NextResponse.json(updated)
+    await saveWebsiteAgentFields(target.id, agentPatch)
+    const agentFields = await loadWebsiteAgentFields(target.id)
+
+    return NextResponse.json({ ...updated, ...agentFields })
   } catch (error) {
     console.error('Admin update website error:', error)
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })

@@ -2,6 +2,7 @@ import { prisma } from './db'
 import type { Plan } from '@/app/generated/prisma/client'
 
 import { WIDGET_IDENTITY_DEFAULTS } from './widget-platform-defaults'
+import { loadWebsiteAgentFields } from './website-agent-fields'
 
 export type WidgetWebsiteRow = {
   id: string
@@ -13,6 +14,8 @@ export type WidgetWebsiteRow = {
   welcomeMessage: string
   offlineMessage: string
   avatarUrl: string | null
+  agentDisplayName: string | null
+  agentTitle: string | null
   showPreChatForm: boolean
   requireName: boolean
   requireEmail: boolean
@@ -24,6 +27,8 @@ const DEFAULTS: Omit<WidgetWebsiteRow, 'id' | 'websiteId' | 'name' | 'plan'> = {
   welcomeMessage: 'Merhaba! Size nasıl yardımcı olabiliriz?',
   offlineMessage: 'Şu an çevrimdışıyız. Bir mesaj bırakın, size dönelim.',
   avatarUrl: null,
+  agentDisplayName: null,
+  agentTitle: null,
   showPreChatForm: WIDGET_IDENTITY_DEFAULTS.showPreChatForm,
   requireName: WIDGET_IDENTITY_DEFAULTS.requireName,
   requireEmail: WIDGET_IDENTITY_DEFAULTS.requireEmail,
@@ -40,6 +45,8 @@ function mapRow(row: Record<string, unknown>): WidgetWebsiteRow {
     welcomeMessage: String(row.welcomeMessage ?? DEFAULTS.welcomeMessage),
     offlineMessage: String(row.offlineMessage ?? DEFAULTS.offlineMessage),
     avatarUrl: row.avatarUrl != null ? String(row.avatarUrl) : null,
+    agentDisplayName: row.agentDisplayName != null ? String(row.agentDisplayName) : null,
+    agentTitle: row.agentTitle != null ? String(row.agentTitle) : null,
     showPreChatForm:
       row.showPreChatForm == null
         ? DEFAULTS.showPreChatForm
@@ -77,7 +84,10 @@ export async function findWebsiteForWidget(
         requireEmail: true,
       },
     })
-    if (site) return site as WidgetWebsiteRow
+    if (site) {
+      const agentFields = await loadWebsiteAgentFields(site.id)
+      return { ...site, ...agentFields } as WidgetWebsiteRow
+    }
   } catch (e) {
     console.warn('[website-widget-safe] prisma select failed:', e)
   }

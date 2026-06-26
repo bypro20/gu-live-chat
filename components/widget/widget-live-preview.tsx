@@ -21,6 +21,7 @@ import {
 type WidgetLivePreviewProps = {
   primaryColor: string
   websiteName: string
+  agentTitle?: string
   avatarUrl?: string | null
   domain?: string | null
   welcomeMessage: string
@@ -32,6 +33,7 @@ type WidgetLivePreviewProps = {
 export function WidgetLivePreview({
   primaryColor,
   websiteName,
+  agentTitle,
   avatarUrl,
   domain,
   welcomeMessage,
@@ -96,8 +98,8 @@ export function WidgetLivePreview({
               <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-[3px] border-white shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
             </div>
             <div>
-              <p className="font-extrabold text-base text-slate-900 tracking-tight m-0">{websiteName}</p>
-              <p className="text-emerald-600 text-xs font-semibold mt-1 m-0">🟢 {onlineLabel} · ~30 sn</p>
+              <p className="font-extrabold text-base text-slate-900 tracking-tight m-0">{websiteName.split(' ')[0] || websiteName}</p>
+              <p className="text-emerald-600 text-xs font-semibold mt-1 m-0">🟢 {agentTitle || onlineLabel}</p>
             </div>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed m-0 mb-4">{welcomeMessage}</p>
@@ -138,8 +140,8 @@ export function WidgetLivePreview({
               </div>
             )}
             <div>
-              <p className="text-white font-bold text-[15px] m-0">{websiteName}</p>
-              <p className="text-white/85 text-xs m-0 mt-0.5">🟢 {onlineLabel}</p>
+              <p className="text-white font-bold text-[15px] m-0">{websiteName.split(' ')[0] || websiteName}</p>
+              <p className="text-white/85 text-xs m-0 mt-0.5">🟢 {agentTitle || onlineLabel}</p>
             </div>
           </div>
           <div style={getTrustStripStyle()}>

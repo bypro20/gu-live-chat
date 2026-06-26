@@ -13,8 +13,8 @@ import { matchFaqFromKnowledge } from './faq-matcher'
 import { ensureAiConfig } from './ensure-config'
 import { ensureMarketingSiteAiReady } from '../marketing-ai-setup'
 import { isPlatformMarketingWebsiteId } from '../marketing-website'
-import { MARKETING_AI_BRAND_NAME } from '../marketing-demo-agents'
-import { resolveWidgetBotIdentity } from '../widget-bot-identity'
+import { resolveWidgetAgentIdentity } from '../widget-bot-identity'
+import { loadWebsiteAgentFields } from '../website-agent-fields'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
@@ -170,12 +170,15 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
     }
     const siteName = (conversation.website.name || 'Destek').trim()
     const isMarketing = await isPlatformMarketingWebsiteId(params.websitePublicId)
-    const botIdentity = resolveWidgetBotIdentity({
+    const agentFields = await loadWebsiteAgentFields(conversation.website.id)
+    const botIdentity = resolveWidgetAgentIdentity({
       websiteName: siteName,
+      agentDisplayName: agentFields.agentDisplayName,
+      agentTitle: agentFields.agentTitle,
       avatarUrl: conversation.website.avatarUrl,
       isMarketing,
     })
-    const botDisplayName = botIdentity.displayName
+    const botDisplayName = botIdentity.replyName
     const botAvatar = botIdentity.avatarUrl
 
     emitBotTyping({
@@ -225,7 +228,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
       }
 
       const reply = await generateAiReply({
-        siteName: isMarketing ? MARKETING_AI_BRAND_NAME : conversation.website.name,
+        siteName: isMarketing ? botDisplayName : conversation.website.name,
         messages,
         knowledge: knowledgeForReply,
         systemPrompt: aiConfig.systemPrompt || undefined,

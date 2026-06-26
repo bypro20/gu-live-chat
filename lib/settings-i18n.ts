@@ -349,6 +349,12 @@ export type SettingsMessages = {
     avatarRemove: string
     avatarUploadFailed: string
     avatarTypeError: string
+    agentDisplayName: string
+    agentDisplayNameDesc: string
+    agentDisplayNamePlaceholder: string
+    agentTitle: string
+    agentTitleDesc: string
+    agentTitlePlaceholder: string
   }
   billing: {
     title: string
@@ -1093,6 +1099,12 @@ const tr: SettingsMessages = {
     avatarRemove: 'Kaldır',
     avatarUploadFailed: 'Fotoğraf yüklenemedi',
     avatarTypeError: 'JPEG, PNG, WebP veya GIF yükleyin.',
+    agentDisplayName: 'Temsilci adı',
+    agentDisplayNameDesc: 'Widget başlığında ve mesajlarda görünen isim (Tidio/Crisp tarzı).',
+    agentDisplayNamePlaceholder: 'Örn. Deniz Arslan',
+    agentTitle: 'Temsilci ünvanı',
+    agentTitleDesc: 'Başlık altında görünen kısa açıklama.',
+    agentTitlePlaceholder: 'Örn. Müşteri Destek Uzmanı · Genellikle birkaç dakika içinde yanıt verir',
   },
   billing: {
     title: 'Faturalama',
@@ -1961,6 +1973,12 @@ const en: SettingsMessages = {
     avatarRemove: 'Remove',
     avatarUploadFailed: 'Photo upload failed',
     avatarTypeError: 'Upload JPEG, PNG, WebP, or GIF.',
+    agentDisplayName: 'Agent name',
+    agentDisplayNameDesc: 'Name shown in the widget header and message bubbles (Tidio/Crisp style).',
+    agentDisplayNamePlaceholder: 'e.g. Jane Smith',
+    agentTitle: 'Agent title',
+    agentTitleDesc: 'Short subtitle shown under the agent name in the header.',
+    agentTitlePlaceholder: 'e.g. Customer Support · Usually replies in a few minutes',
   },
   billing: {
     title: 'Billing',

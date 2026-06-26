@@ -18,6 +18,7 @@ import { buildVisitorGeoUpdate, buildVisitorSessionMetadata } from '@/lib/visito
 import { parseUtmFromUrl } from '@/lib/entry-source'
 import { isPlatformMarketingWebsiteId } from '@/lib/marketing-website'
 import { resolveMarketingWidgetBranding } from '@/lib/marketing-widget-branding'
+import { loadWebsiteAgentFields } from '@/lib/website-agent-fields'
 import { syncProductionSchema } from '@/lib/db-schema-sync'
 
 const widgetInitSchema = z.object({
@@ -265,12 +266,15 @@ export async function POST(req: Request) {
     })
 
     const origin = new URL(req.url).origin
+    const agentFields = await loadWebsiteAgentFields(website.id)
     const branding = await resolveMarketingWidgetBranding(
       website.websiteId,
       {
         avatarUrl: website.avatarUrl,
         websiteName: website.name,
         welcomeMessage: website.welcomeMessage,
+        agentDisplayName: agentFields.agentDisplayName,
+        agentTitle: agentFields.agentTitle,
       },
       origin
     )
@@ -310,6 +314,8 @@ export async function POST(req: Request) {
         offlineMessage: website.offlineMessage,
         avatarUrl: branding.avatarUrl,
         websiteName: branding.websiteName,
+        agentDisplayName: branding.agentDisplayName ?? agentFields.agentDisplayName,
+        agentTitle: branding.agentTitle ?? agentFields.agentTitle,
         agentsOnline,
         showPreChatForm: identityPolicy.showPreChatForm,
         requireName: identityPolicy.requireName,

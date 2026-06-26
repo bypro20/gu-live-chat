@@ -8,41 +8,37 @@ export type MarketingDemoAgent = {
   image: string
 }
 
-/** Stable HTTPS headshots — works before /public assets are deployed. */
 export const MARKETING_DEMO_AGENTS: MarketingDemoAgent[] = [
   {
     name: 'Deniz',
     fullName: 'Deniz Arslan',
-    image:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=256&h=256&fit=crop&crop=faces',
+    image: '/marketing/agents/deniz.jpg',
   },
   {
     name: 'Emre',
     fullName: 'Emre Kaya',
-    image:
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=256&h=256&fit=crop&crop=faces',
+    image: '/marketing/agents/emre.jpg',
   },
   {
     name: 'Selin',
     fullName: 'Selin Demir',
-    image:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=256&h=256&fit=crop&crop=faces',
+    image: '/marketing/agents/selin.jpg',
   },
 ]
 
 export const MARKETING_PRIMARY_AGENT = MARKETING_DEMO_AGENTS[0]
 
-/** Default bot avatar on marketing widget when no custom upload exists. */
-export const MARKETING_DEFAULT_BOT_AVATAR = '/marketing/hero-ai-robot.png'
-
-/** Shown in widget header on gulivechat.com */
+/** Company name in site settings — widget shows the human agent instead. */
 export const MARKETING_WIDGET_DISPLAY_NAME = 'Gu Live Chat'
 
-/** Bot replies, typing indicator, and AI persona — never a fake human name. */
-export const MARKETING_AI_BRAND_NAME = 'Gu Live Chat'
+/** Header subtitle under agent name (Tidio/Crisp pattern). */
+export const MARKETING_AGENT_TITLE = 'Müşteri Destek Uzmanı · Genellikle birkaç dakika içinde yanıt verir'
+
+/** Legacy export — bot replies use the primary agent full name. */
+export const MARKETING_AI_BRAND_NAME = MARKETING_PRIMARY_AGENT.fullName
 
 export const MARKETING_WIDGET_WELCOME =
-  'Merhaba! 👋 Fiyat, kurulum ve özellikler hakkında sorularınızı yanıtlayabilirim.'
+  'Merhaba! 👋 Ben Deniz. Fiyat, kurulum ve özellikler hakkında size yardımcı olabilirim.'
 
 export function toPublicAssetUrl(path: string | null | undefined, origin?: string): string | null {
   if (!path) return null
@@ -55,13 +51,15 @@ export function toPublicAssetUrl(path: string | null | undefined, origin?: strin
 }
 
 export function getMarketingWidgetPersona(origin?: string) {
+  const agent = MARKETING_PRIMARY_AGENT
   return {
-    displayName: MARKETING_WIDGET_DISPLAY_NAME,
-    botName: MARKETING_AI_BRAND_NAME,
-    avatarUrl: toPublicAssetUrl(MARKETING_DEFAULT_BOT_AVATAR, origin)!,
-    team: MARKETING_DEMO_AGENTS.map((agent) => ({
-      ...agent,
-      image: toPublicAssetUrl(agent.image, origin)!,
+    displayName: agent.name,
+    botName: agent.fullName,
+    agentTitle: MARKETING_AGENT_TITLE,
+    avatarUrl: toPublicAssetUrl(agent.image, origin)!,
+    team: MARKETING_DEMO_AGENTS.map((a) => ({
+      ...a,
+      image: toPublicAssetUrl(a.image, origin)!,
     })),
   }
 }
@@ -84,6 +82,8 @@ export type WidgetBrandingFields = {
   avatarUrl: string | null
   websiteName: string | null
   welcomeMessage: string | null
+  agentDisplayName?: string | null
+  agentTitle?: string | null
 }
 
 /** Marketing sitesinde widget teaser + iframe için marka alanlarını doldurur. */
@@ -97,8 +97,10 @@ export function applyMarketingWidgetBranding(
     config.websiteName.includes('Gu Live Chat')
 
   return {
-    avatarUrl: config.avatarUrl || MARKETING_DEFAULT_BOT_AVATAR,
+    avatarUrl: config.avatarUrl || MARKETING_PRIMARY_AGENT.image,
     websiteName: legacyName ? MARKETING_WIDGET_DISPLAY_NAME : config.websiteName,
     welcomeMessage: config.welcomeMessage || MARKETING_WIDGET_WELCOME,
+    agentDisplayName: config.agentDisplayName || MARKETING_PRIMARY_AGENT.fullName,
+    agentTitle: config.agentTitle || MARKETING_AGENT_TITLE,
   }
 }

@@ -3,6 +3,7 @@ import { generateWebsiteId } from './utils'
 import { marketingDomainVariants, SITE_DOMAIN } from './site-config'
 import { ensureMarketingSiteAiReady } from './marketing-ai-setup'
 import {
+  MARKETING_AGENT_TITLE,
   MARKETING_PRIMARY_AGENT,
   MARKETING_WIDGET_DISPLAY_NAME,
   MARKETING_WIDGET_WELCOME,
@@ -107,6 +108,12 @@ async function ensureMarketingSiteBranding(websiteInternalId: string) {
         requireEmail: false,
       },
     })
+    await prisma.$executeRawUnsafe(
+      `UPDATE websites SET agentDisplayName = ?, agentTitle = ? WHERE id = ?`,
+      MARKETING_PRIMARY_AGENT.fullName,
+      MARKETING_AGENT_TITLE,
+      websiteInternalId
+    )
   } catch (e) {
     console.warn('[marketing-website] branding sync:', e)
   }
@@ -187,6 +194,12 @@ export async function ensureMarketingWebsite(ownerUserId: string): Promise<strin
       },
       select: { id: true, websiteId: true },
     })
+    await prisma.$executeRawUnsafe(
+      `UPDATE websites SET agentDisplayName = ?, agentTitle = ? WHERE id = ?`,
+      MARKETING_PRIMARY_AGENT.fullName,
+      MARKETING_AGENT_TITLE,
+      created.id
+    )
     await ensureAllPlatformAdmins(created.id)
     await ensureMarketingSiteAiReady(created.id)
     return created.websiteId

@@ -14,6 +14,8 @@ export type WidgetConfigState = {
   welcomeMessage: string
   offlineMessage: string
   avatarUrl: string
+  agentDisplayName: string
+  agentTitle: string
   showPreChatForm: boolean
   requireName: boolean
   requireEmail: boolean
@@ -32,6 +34,8 @@ export type WidgetWebsiteInfo = {
   welcomeMessage?: string | null
   offlineMessage?: string | null
   avatarUrl?: string | null
+  agentDisplayName?: string | null
+  agentTitle?: string | null
   showPreChatForm?: boolean | null
   requireName?: boolean | null
   requireEmail?: boolean | null
@@ -44,6 +48,8 @@ function getDefaultConfig(w: SettingsMessages['widget']): WidgetConfigState {
     welcomeMessage: w.defaultWelcome,
     offlineMessage: w.defaultOffline,
     avatarUrl: '',
+    agentDisplayName: '',
+    agentTitle: '',
     showPreChatForm: true,
     requireName: true,
     requireEmail: true,
@@ -61,6 +67,8 @@ function configFromWebsite(website: WidgetWebsiteInfo, w: SettingsMessages['widg
     welcomeMessage: website.welcomeMessage || defaults.welcomeMessage,
     offlineMessage: website.offlineMessage || defaults.offlineMessage,
     avatarUrl: website.avatarUrl || '',
+    agentDisplayName: website.agentDisplayName || '',
+    agentTitle: website.agentTitle || '',
     showPreChatForm: website.showPreChatForm ?? defaults.showPreChatForm,
     requireName: website.requireName ?? defaults.requireName,
     requireEmail: website.requireEmail ?? defaults.requireEmail,
@@ -77,6 +85,8 @@ export function widgetConfigToPayload(config: WidgetConfigState) {
     welcomeMessage: config.welcomeMessage,
     offlineMessage: config.offlineMessage,
     avatarUrl: config.avatarUrl || null,
+    agentDisplayName: config.agentDisplayName.trim() || null,
+    agentTitle: config.agentTitle.trim() || null,
     showPreChatForm: config.showPreChatForm,
     requireName: config.requireName,
     requireEmail: config.requireEmail,
@@ -237,6 +247,30 @@ export function WidgetSettingsPanel({
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{w.agentDisplayName}</label>
+                <p className="text-xs text-muted-foreground mb-2">{w.agentDisplayNameDesc}</p>
+                <input
+                  type="text"
+                  value={config.agentDisplayName}
+                  onChange={(e) => setConfig({ ...config, agentDisplayName: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  placeholder={w.agentDisplayNamePlaceholder}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{w.agentTitle}</label>
+                <p className="text-xs text-muted-foreground mb-2">{w.agentTitleDesc}</p>
+                <input
+                  type="text"
+                  value={config.agentTitle}
+                  onChange={(e) => setConfig({ ...config, agentTitle: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  placeholder={w.agentTitlePlaceholder}
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-2">{w.position}</label>
                 <div className="flex gap-3">
                   <button
@@ -342,7 +376,8 @@ export function WidgetSettingsPanel({
             <h3 className="text-sm font-medium text-muted-foreground mb-3">{w.livePreview}</h3>
             <WidgetLivePreview
               primaryColor={config.primaryColor}
-              websiteName={website.name}
+              websiteName={config.agentDisplayName || website.name}
+              agentTitle={config.agentTitle}
               avatarUrl={config.avatarUrl || null}
               domain={website.domain}
               welcomeMessage={config.welcomeMessage}
