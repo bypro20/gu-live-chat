@@ -533,6 +533,36 @@ async function callGemini(runtime: AiRuntimeConfig, systemPrompt: string, messag
   return parts.map((p) => p.text || '').join('').trim()
 }
 
+/**
+ * Tüm ücretsiz Gemini modelleri kotadan (429) tükendiğinde devreye giren
+ * sağlayıcı-üstü yedek. Groq ücretsiz katmanı çok daha cömert ve hızlıdır.
+ * GROQ_API_KEY yoksa boş döner (zarar vermez).
+ */
+async function tryCrossProviderFallback(
+  systemPrompt: string,
+  messages: ChatMessage[],
+  maxTokens: number,
+): Promise<string> {
+  const groqKey = process.env.GROQ_API_KEY?.trim()
+  if (groqKey) {
+    try {
+      const runtime: AiRuntimeConfig = {
+        provider: 'GROQ',
+        apiKey: groqKey,
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.8,
+        source: 'env',
+        baseURL: 'https://api.groq.com/openai/v1',
+      }
+      const text = (await callOpenAiCompat(runtime, systemPrompt, messages, maxTokens)).trim()
+      if (text) return text
+    } catch (err) {
+      console.error('[AI] Groq fallback failed:', err instanceof Error ? err.message : err)
+    }
+  }
+  return ''
+}
+
 async function callLlm(runtime: AiRuntimeConfig, systemPrompt: string, messages: ChatMessage[], maxTokens = MAX_TOKENS): Promise<string> {
   switch (runtime.provider) {
     case 'ANTHROPIC':
@@ -678,6 +708,12 @@ export async function* generateAiReplyStream(
         if (emittedThis) return // başarılı
         // boş yanıt → sıradaki modeli dene
       }
+      // Tüm Gemini modelleri tükendi → Groq yedeği (varsa)
+      const groqText = await tryCrossProviderFallback(systemPrompt, messages, maxTokens)
+      if (groqText) {
+        yield groqText
+        return
+      }
       yield fallbackReply(siteName, messages, knowledge, params.brandName)
       return
     }
@@ -737,6 +773,9 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
           // sıradaki modeli dene
         }
       }
+      // Tüm Gemini modelleri tükendi → Groq yedeği (varsa)
+      const groqText = await tryCrossProviderFallback(systemPrompt, messages, maxTokens)
+      if (groqText) return groqText
       return fallbackReply(siteName, messages, knowledge, params.brandName)
     }
 
