@@ -24,7 +24,7 @@ export function PanelDemoVideo({ className = '' }: { className?: string }) {
         <source src={DEMO_VIDEO} type="video/mp4" />
       </video>
       <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm border border-white/60 shadow-sm">
-        <span className="w-2 h-2 rounded-full bg-[#C9922E] animate-pulse" aria-hidden />
+        <span className="w-2 h-2 rounded-full bg-[#9333EA] animate-pulse" aria-hidden />
         <span className="text-[11px] font-bold text-[#121110] tracking-wide">
           {lang === 'en' ? 'Panel tour · 50 sec' : 'Panel turu · ~50 sn'}
         </span>

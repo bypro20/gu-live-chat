@@ -1,74 +1,75 @@
 /**
- * Gu Live Chat — özgün premium marka paleti (Gu Meridian).
+ * Gu Live Chat — canlı mor/pembe/camgöbeği marka paleti (myQR esinli).
  * Tek kaynak: marketing, panel, widget varsayılanları.
+ * İmza gradyan: mor #A855F7 → pembe #EC4899 → camgöbeği #22D3EE.
  */
 export const GU_BRAND = {
-  /** Ana marka — derin jade (mavi/mor SaaS klişesi değil) */
-  primary: '#146356',
-  primaryHover: '#0F5247',
-  primaryActive: '#0A4038',
-  primaryLight: '#E6F2EF',
+  /** Ana marka — elektrik mor */
+  primary: '#9333EA',
+  primaryHover: '#7E22CE',
+  primaryActive: '#6B21A8',
+  primaryLight: '#F3E8FF',
   primaryForeground: '#FFFFFF',
-  primaryGlow: 'rgba(20, 99, 86, 0.22)',
+  primaryGlow: 'rgba(147, 51, 234, 0.30)',
 
-  /** İkincil vurgu — sıcak altın (premium, TR güven hissi) */
-  accent: '#C9922E',
-  accentHover: '#A87620',
-  accentLight: '#FBF5E8',
-  accentForeground: '#1A1814',
+  /** İkincil vurgu — canlı pembe */
+  accent: '#EC4899',
+  accentHover: '#DB2777',
+  accentLight: '#FCE7F3',
+  accentForeground: '#FFFFFF',
 
-  /** Yüzeyler — sıcak nötr (soğuk slate değil) */
-  background: '#FAF9F7',
-  foreground: '#1A1814',
+  /** Yüzeyler — lavanta beyazı */
+  background: '#FAF7FF',
+  foreground: '#0F0720',
   card: '#FFFFFF',
-  cardForeground: '#1A1814',
-  muted: '#F3F1ED',
-  mutedForeground: '#6B6560',
-  border: '#E8E4DE',
-  borderStrong: '#D4CFC6',
+  cardForeground: '#0F0720',
+  muted: '#F5F1FB',
+  mutedForeground: '#5E5570',
+  border: '#ECE3F6',
+  borderStrong: '#DBCBEE',
 
-  /** Koyu bölümler */
-  ink: '#141210',
-  inkSoft: '#2A2724',
+  /** Koyu bölümler — mor-siyah */
+  ink: '#0C0118',
+  inkSoft: '#1A0A2E',
 
   /** Durum */
-  success: '#2D9B83',
-  successLight: '#E8F7F3',
+  success: '#16A34A',
+  successLight: '#E7F8EE',
 
   /** Marketing */
   marketingHero:
-    'linear-gradient(180deg, #FFFFFF 0%, #EDF5F3 48%, #FAF9F7 100%)',
-  marketingHeroGrid: 'rgba(20, 99, 86, 0.06)',
-  marketingHeroGlow: 'rgba(20, 99, 86, 0.12)',
-  marketingDark: '#141210',
+    'linear-gradient(180deg, #FFFFFF 0%, #F3E8FF 48%, #FAF7FF 100%)',
+  marketingHeroGrid: 'rgba(147, 51, 234, 0.06)',
+  marketingHeroGlow: 'rgba(147, 51, 234, 0.12)',
+  marketingDark: '#0C0118',
 
-  /** Gölgeler — jade tonlu, mavi değil */
-  shadowBrand: '0 8px 24px -6px rgba(20, 99, 86, 0.28)',
-  shadowBrandLg: '0 12px 32px -8px rgba(20, 99, 86, 0.32)',
+  /** Gölgeler — mor tonlu */
+  shadowBrand: '0 8px 24px -6px rgba(147, 51, 234, 0.32)',
+  shadowBrandLg: '0 12px 32px -8px rgba(147, 51, 234, 0.38)',
 
-  /** Gradient metin */
-  gradientText: 'linear-gradient(135deg, #146356 0%, #2D9B83 42%, #C9922E 100%)',
-  gradientBrand: 'linear-gradient(135deg, #146356 0%, #0F5247 55%, #141210 100%)',
-  gradientCta: 'linear-gradient(135deg, #146356 0%, #0F5247 48%, #141210 100%)',
+  /** Gradient — imza mor→pembe→camgöbeği */
+  gradientText: 'linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #22D3EE 100%)',
+  gradientBrand: 'linear-gradient(165deg, #0C0118 0%, #1A0A2E 40%, #0F172A 100%)',
+  gradientCta: 'linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #22D3EE 100%)',
 
   /** Widget / kanal varsayılanı */
-  widgetDefault: '#146356',
+  widgetDefault: '#9333EA',
 
-  /** Marketing CTA — butonlar yeşil değil, koyu mürekkep */
-  marketingCta: '#121110',
-  marketingCtaHover: '#2A2724',
+  /** Marketing CTA — canlı mor */
+  marketingCta: '#9333EA',
+  marketingCtaHover: '#7E22CE',
   marketingCtaForeground: '#FFFFFF',
-  marketingSurface: '#F4F1EC',
-  marketingSurfaceAlt: '#EDEAE4',
+  marketingSurface: '#F5EEFC',
+  marketingSurfaceAlt: '#EFE4FA',
 
-  /** Marketing tipografi — mürekkep + altın + sıcak gri (yeşil metin yok) */
-  marketingHeading: '#121110',
-  marketingBody: '#635E58',
-  marketingMuted: '#8B8580',
-  marketingLink: '#121110',
-  marketingLinkHover: '#A87620',
-  marketingAccentGold: '#C9922E',
-  marketingAccentGoldSoft: '#8A6A1E',
+  /** Marketing tipografi — mor-siyah başlık + mor vurgu + camgöbeği */
+  marketingHeading: '#0F0720',
+  marketingBody: '#5A5168',
+  marketingMuted: '#8E84A3',
+  marketingLink: '#0F0720',
+  marketingLinkHover: '#7E22CE',
+  marketingAccentGold: '#9333EA',
+  marketingAccentGoldSoft: '#7E22CE',
 } as const
 
 export type GuBrandKey = keyof typeof GU_BRAND
@@ -86,10 +87,10 @@ export function guBrandMarketingStyle(): Record<string, string> {
     '--muted-foreground': GU_BRAND.marketingMuted,
     '--border': GU_BRAND.border,
     /* Marketing: altın vurgu, yeşil metin/icon değil */
-    '--primary': GU_BRAND.marketingAccentGold,
-    '--primary-hover': GU_BRAND.marketingLinkHover,
+    '--primary': GU_BRAND.primary,
+    '--primary-hover': GU_BRAND.primaryHover,
     '--primary-foreground': GU_BRAND.primaryForeground,
-    '--primary-light': GU_BRAND.accentLight,
+    '--primary-light': GU_BRAND.primaryLight,
     '--marketing-hero': GU_BRAND.marketingHero,
     '--marketing-accent': GU_BRAND.marketingAccentGold,
     '--marketing-navy': GU_BRAND.marketingDark,
@@ -103,7 +104,7 @@ export function guBrandMarketingStyle(): Record<string, string> {
     '--premium-gold': GU_BRAND.marketingAccentGold,
     '--premium-link': GU_BRAND.marketingLink,
     '--premium-link-hover': GU_BRAND.marketingLinkHover,
-    '--shadow-brand': '0 8px 24px -6px rgba(18, 17, 16, 0.18)',
-    '--shadow-brand-lg': '0 12px 32px -8px rgba(18, 17, 16, 0.22)',
+    '--shadow-brand': GU_BRAND.shadowBrand,
+    '--shadow-brand-lg': GU_BRAND.shadowBrandLg,
   }
 }

@@ -100,7 +100,7 @@ export const PLAN_LIMITS = {
 export type PlanType = keyof typeof PLAN_LIMITS
 
 export const DEFAULT_WIDGET_SETTINGS = {
-  primaryColor: '#146356',
+  primaryColor: '#9333EA',
   position: 'BOTTOM_RIGHT' as const,
   welcomeMessage: 'Merhaba! Size nasıl yardıncı olabiliriz?',
   offlineMessage: 'Şu an çevrimdışısınız. Bir mesaj bırakın, size dönelim.',

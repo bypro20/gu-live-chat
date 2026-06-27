@@ -34,7 +34,7 @@ export function heroGradient(primary: string): string {
 }
 
 export function auroraGradient(primary: string): string {
-  return `linear-gradient(135deg, ${adjustColor(primary, 45)} 0%, ${primary} 38%, #2D9B83 72%, ${adjustColor(primary, -35)} 100%)`
+  return `linear-gradient(135deg, ${adjustColor(primary, 45)} 0%, ${primary} 38%, #EC4899 72%, ${adjustColor(primary, -35)} 100%)`
 }
 
 export function getWidgetGlobalCss(): string {
@@ -107,7 +107,7 @@ export function getWidgetGlobalCss(): string {
       position: absolute;
       inset: -2px;
       border-radius: 30px;
-      background: linear-gradient(135deg, #146356, #2D9B83, #3DBDA5, #146356);
+      background: linear-gradient(135deg, #9333EA, #EC4899, #22D3EE, #9333EA);
       background-size: 300% 300%;
       animation: gwShimmer 4s ease infinite;
       z-index: -1;

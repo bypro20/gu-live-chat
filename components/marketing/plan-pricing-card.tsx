@@ -13,17 +13,17 @@ const TIER_STYLES: Record<
     badge: 'bg-muted text-muted-foreground',
   },
   STARTER: {
-    accent: 'bg-gradient-to-r from-[#146356] to-[#2D9B83]',
+    accent: 'bg-gradient-to-r from-[#9333EA] to-[#EC4899]',
     ring: 'border-border hover:border-primary/25',
     badge: 'bg-primary/10 text-primary',
   },
   PRO: {
-    accent: 'bg-gradient-to-r from-[#146356] via-[#2D9B83] to-[#C9922E]',
+    accent: 'bg-gradient-to-r from-[#A855F7] via-[#EC4899] to-[#22D3EE]',
     ring: 'border-primary/40 ring-2 ring-primary/15',
     badge: 'bg-primary text-primary-foreground',
   },
   BUSINESS: {
-    accent: 'bg-gradient-to-r from-[#141210] to-[#146356]',
+    accent: 'bg-gradient-to-r from-[#0C0118] to-[#9333EA]',
     ring: 'border-border hover:border-primary/30',
     badge: 'bg-[#141210] text-white',
   },
