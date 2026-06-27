@@ -6,10 +6,20 @@ import { getVoiceAgent } from '@/lib/ai/voice-db'
 import { getAiFeatureFlags } from '@/lib/ai/feature-flags'
 import { fetchWebContext } from '@/lib/ai/web-search'
 import type { PlanType } from '@/lib/constants'
+import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/ip-utils'
+import { isIpBanned } from '@/lib/ip-ban'
 
 /** POST /api/voice/chat — sesli asistan metin döngüsü (STT/TTS istemcide) */
 export async function POST(req: NextRequest) {
   try {
+    // Public uç + ücretli LLM çağırdığı için kötüye kullanım/cüzdan-DoS koruması şart.
+    const limited = rateLimitByIp(req, 'voice-chat', 20, 60_000)
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec)
+    if (await isIpBanned(getClientIp(req))) {
+      return NextResponse.json({ error: 'Erişim engellendi' }, { status: 403 })
+    }
+
     const { websiteId, message, history } = await req.json()
     if (!websiteId || !message?.trim()) {
       return NextResponse.json({ error: 'websiteId ve message gerekli' }, { status: 400 })

@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { prisma } from './db'
+import { assertSafeHttpsUrl } from './url-sanitize'
 
 export type WebhookEventName =
   | 'conversation.created'
@@ -36,13 +37,20 @@ export async function dispatchWebhooks(
 
   await Promise.allSettled(
     webhooks.map(async (webhook) => {
+      // SSRF defense-in-depth: eski/güvensiz kayıtlı URL'lere POST atma.
+      const safeUrl = assertSafeHttpsUrl(webhook.url)
+      if (!safeUrl) {
+        console.error(`[Webhook] Skipped unsafe URL: ${webhook.url}`)
+        return
+      }
+
       const signature = crypto
         .createHmac('sha256', webhook.secret)
         .update(body)
         .digest('hex')
 
       try {
-        const res = await fetch(webhook.url, {
+        const res = await fetch(safeUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

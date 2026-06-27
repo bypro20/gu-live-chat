@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
 import { planHasFeature } from '@/lib/plan-gate'
+import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 
 async function authorizeWebhook(webhookId: string, userId: string) {
   const webhook = await prisma.webhook.findUnique({
@@ -84,6 +85,14 @@ export async function POST(
   }
 
   const webhook = result.webhook
+  const safeUrl = assertSafeHttpsUrl(webhook.url)
+  if (!safeUrl) {
+    return NextResponse.json(
+      { success: false, error: 'Webhook adresi güvenli değil (yalnızca herkese açık https).' },
+      { status: 200 }
+    )
+  }
+
   const body = JSON.stringify({
     event: 'webhook.test',
     timestamp: new Date().toISOString(),
@@ -93,7 +102,7 @@ export async function POST(
   const signature = crypto.createHmac('sha256', webhook.secret).update(body).digest('hex')
 
   try {
-    const res = await fetch(webhook.url, {
+    const res = await fetch(safeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

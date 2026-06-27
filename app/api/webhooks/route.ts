@@ -5,10 +5,17 @@ import { resolveWebsite } from '@/lib/website-resolve'
 import { planFeatureDeniedAsync } from '@/lib/plan-gate'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { assertSafeHttpsUrl } from '@/lib/url-sanitize'
 
 const webhookSchema = z.object({
   websiteId: z.string(),
-  url: z.string().url('Geçerli bir URL girin'),
+  url: z
+    .string()
+    .url('Geçerli bir URL girin')
+    // SSRF: yalnızca public https hedeflerine izin ver (private/loopback/metadata IP'leri engelle).
+    .refine((u) => assertSafeHttpsUrl(u) !== null, {
+      message: 'Yalnızca herkese açık https:// adresleri kullanılabilir',
+    }),
   events: z.array(z.string()).min(1, 'En az bir olay seçin'),
   isActive: z.boolean().default(true),
 })

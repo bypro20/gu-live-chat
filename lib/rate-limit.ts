@@ -3,6 +3,8 @@
  * Suitable for Vercel/serverless — reduces abuse; use Redis for strict global limits.
  */
 
+import { getClientIp } from './ip-utils'
+
 type Bucket = { count: number; resetAt: number }
 
 const store = new Map<string, Bucket>()
@@ -51,7 +53,7 @@ export function rateLimitResponse(retryAfterSec: number) {
 }
 
 export function rateLimitByIp(req: Request, prefix: string, limit: number, windowMs: number) {
-  const forwarded = req.headers.get('x-forwarded-for')
-  const ip = forwarded?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  // Güvenilir IP (Vercel başlıkları) — istemci spoof'una karşı dayanıklı.
+  const ip = getClientIp(req) || 'unknown'
   return checkRateLimit(`${prefix}:${ip}`, limit, windowMs)
 }

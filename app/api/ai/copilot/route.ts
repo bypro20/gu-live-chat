@@ -5,6 +5,7 @@ import { runCopilot, type CopilotMode } from '@/lib/ai/copilot'
 import { loadRelevantKnowledge, toChatMessages } from '@/lib/ai/knowledge'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
 import { sessionIsPlatformAdmin } from '@/lib/platform-admin'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import type { PlanType } from '@/lib/constants'
 
 const MODES: CopilotMode[] = [
@@ -23,6 +24,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
   }
+
+  // LLM çağrısı — kullanıcı bazlı kota (kötüye kullanım/maliyet kontrolü).
+  const rl = checkRateLimit(`ai-copilot:${session.user.id}`, 40, 60_000)
+  if (!rl.ok) return rateLimitResponse(rl.retryAfterSec)
 
   try {
     const body = await req.json()

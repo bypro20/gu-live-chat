@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { resolveWebsite } from '@/lib/website-resolve'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /** GET /api/ai/insights?websiteId= — duygu dağılımı ve AI metrikleri */
 export async function GET(req: NextRequest) {
@@ -9,6 +10,10 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 })
   }
+
+  // Ağır raw SQL agregasyonları — kullanıcı bazlı kota.
+  const rl = checkRateLimit(`ai-insights:${session.user.id}`, 30, 60_000)
+  if (!rl.ok) return rateLimitResponse(rl.retryAfterSec)
 
   const websiteId = req.nextUrl.searchParams.get('websiteId')
   if (!websiteId) return NextResponse.json({ error: 'websiteId gerekli' }, { status: 400 })

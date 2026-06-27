@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateAiReply } from '@/lib/ai/provider'
 import { websiteHasAiAssistant } from '@/lib/plan-features'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /** POST /api/ai/suggest — temsilci için yanıt önerisi */
 export async function POST(req: NextRequest) {
@@ -11,6 +12,10 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
     }
+
+    // LLM çağrısı — kullanıcı bazlı kota (kötüye kullanım/maliyet kontrolü).
+    const rl = checkRateLimit(`ai-suggest:${session.user.id}`, 30, 60_000)
+    if (!rl.ok) return rateLimitResponse(rl.retryAfterSec)
 
     const body = await req.json()
     const { websiteId, context, visitorActivity } = body
