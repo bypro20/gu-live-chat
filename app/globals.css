@@ -184,6 +184,8 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
+  letter-spacing: -0.006em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -194,6 +196,17 @@ body {
 }
 
 ::selection { background: var(--primary); color: var(--primary-foreground); }
+
+/* Panel (dashboard + admin) başlık tipografisi — premium, sıkı kerning */
+.app-shell :is(h1, h2, h3, h4),
+.admin-shell-v2 :is(h1, h2, h3, h4) {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.app-shell h1,
+.admin-shell-v2 h1 {
+  letter-spacing: -0.03em;
+}
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -290,11 +303,40 @@ body {
   .animate-in-scale { animation: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
   .animate-float { animation: float 6s ease-in-out infinite; }
 
+  /* Premium dolgu gradyanları — Button primitifi ve yardımcı sınıflar paylaşır */
+  .btn-fill-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 92%, #fff 8%), var(--primary) 45%, var(--primary-active));
+  }
+  .btn-fill-secondary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--secondary) 92%, #fff 8%), var(--secondary));
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold text-sm rounded-lg shadow-brand hover:bg-primary-hover transition-colors cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-primary-foreground font-semibold text-sm rounded-xl transition-all duration-200 cursor-pointer;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 92%, #fff 8%), var(--primary) 45%, var(--primary-active));
+    box-shadow: var(--shadow-brand);
+    border: 1px solid color-mix(in srgb, var(--primary-active) 60%, transparent);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--shadow-brand-lg);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(0.985);
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-card text-foreground font-semibold text-sm rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-card text-foreground font-semibold text-sm rounded-xl border transition-all duration-200 cursor-pointer;
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-xs);
+  }
+  .btn-secondary:hover {
+    background: var(--muted);
+    border-color: color-mix(in srgb, var(--primary) 38%, var(--border-strong));
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+  .btn-secondary:active {
+    transform: translateY(0) scale(0.985);
   }
   .section-label {
     @apply inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full;

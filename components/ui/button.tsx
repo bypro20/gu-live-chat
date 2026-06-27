@@ -5,27 +5,27 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium tracking-tight transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold tracking-tight transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm hover:shadow-brand',
+          'text-primary-foreground btn-fill-primary border border-primary-active/30 shadow-brand hover:shadow-brand-lg hover:-translate-y-0.5',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-accent border border-border',
+          'text-secondary-foreground btn-fill-secondary border border-secondary/50 shadow-sm hover:shadow-md hover:-translate-y-0.5',
         outline:
-          'border border-border bg-card text-foreground hover:bg-accent hover:border-border-strong',
+          'border border-border-strong bg-card text-foreground shadow-xs hover:bg-accent hover:border-primary/40 hover:shadow-sm hover:-translate-y-0.5',
         ghost:
           'text-foreground hover:bg-accent',
         destructive:
-          'bg-destructive text-destructive-foreground hover:opacity-90 shadow-sm',
+          'bg-destructive text-destructive-foreground hover:brightness-105 shadow-sm hover:shadow-md hover:-translate-y-0.5',
         success:
-          'bg-success text-success-foreground hover:opacity-90 shadow-sm',
+          'bg-success text-success-foreground hover:brightness-105 shadow-sm hover:shadow-md hover:-translate-y-0.5',
         link:
           'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-8 px-3 text-xs [&_svg]:size-3.5',
+        sm: 'h-8 px-3.5 text-xs [&_svg]:size-3.5',
         default: 'h-9 px-4 text-sm [&_svg]:size-4',
         lg: 'h-11 px-6 text-[15px] [&_svg]:size-[18px]',
         xl: 'h-12 px-7 text-base [&_svg]:size-5',
