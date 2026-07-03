@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { DemoChrome, useSteps } from '@/components/marketing/feature-micro-showcases'
 import { useLocale } from '@/components/marketing/locale-provider'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import { getDashboardMessages, getDashboardNavGroups } from '@/lib/dashboard-i18n'
 
 const HINTS: Record<string, { tr: string; en: string }> = {
@@ -37,7 +38,15 @@ const HINTS: Record<string, { tr: string; en: string }> = {
   '/settings/privacy': { tr: 'KVKK, çerez onayı ve veri saklama ayarları.', en: 'GDPR, cookie consent, and data retention settings.' },
 }
 
-function PanelContent({ href, isTr }: { href: string; isTr: boolean }) {
+function PanelContent({
+  href,
+  isTr,
+  planPrices,
+}: {
+  href: string
+  isTr: boolean
+  planPrices: { starter: string; pro: string; business: string }
+}) {
   const card = 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm'
   const label = 'text-xs font-semibold text-slate-500 uppercase tracking-wide'
 
@@ -164,13 +173,16 @@ function PanelContent({ href, isTr }: { href: string; isTr: boolean }) {
       return (
         <div className="p-4 space-y-2">
           {[
-            [isTr ? 'Starter' : 'Starter', '₺490'],
-            [isTr ? 'PRO' : 'PRO', '₺990'],
-            [isTr ? 'Business' : 'Business', '₺2.490'],
+            [isTr ? 'Starter' : 'Starter', planPrices.starter],
+            [isTr ? 'PRO' : 'PRO', planPrices.pro],
+            [isTr ? 'Business' : 'Business', planPrices.business],
           ].map(([name, price]) => (
             <div key={String(name)} className={`${card} flex justify-between items-center`}>
               <span className="text-sm font-semibold">{name}</span>
-              <span className="text-sm font-bold text-indigo-600">{price}<span className="text-xs text-slate-400 font-normal">/ay</span></span>
+              <span className="text-sm font-bold text-indigo-600">
+                {price}
+                <span className="text-xs text-slate-400 font-normal">{isTr ? '/ay' : '/mo'}</span>
+              </span>
             </div>
           ))}
         </div>
@@ -180,7 +192,10 @@ function PanelContent({ href, isTr }: { href: string; isTr: boolean }) {
         <div className="p-4">
           <div className={`${card} border-indigo-200 bg-indigo-50`}>
             <p className="text-sm font-bold text-slate-800">PRO · {isTr ? 'Aylık' : 'Monthly'}</p>
-            <p className="text-lg font-extrabold text-indigo-600 mt-1">₺990<span className="text-xs font-medium text-slate-400">/ay</span></p>
+            <p className="text-lg font-extrabold text-indigo-600 mt-1">
+              {planPrices.pro}
+              <span className="text-xs font-medium text-slate-400">{isTr ? '/ay' : '/mo'}</span>
+            </p>
           </div>
         </div>
       )
@@ -233,7 +248,13 @@ const ICONS: Record<string, typeof Inbox> = {
 
 export function PanelTourShowcase({ className = '' }: { className?: string }) {
   const { locale } = useLocale()
+  const { planPrice } = useRegionalPricing()
   const isTr = locale !== 'en'
+  const planPrices = {
+    starter: planPrice('STARTER').formatted,
+    pro: planPrice('PRO').formatted,
+    business: planPrice('BUSINESS').formatted,
+  }
   const d = getDashboardMessages(isTr ? 'tr' : 'en')
   const groups = getDashboardNavGroups(d)
   const items = useMemo(
@@ -319,7 +340,7 @@ export function PanelTourShowcase({ className = '' }: { className?: string }) {
                 key={active.href}
                 className="absolute inset-0 animate-in fade-in slide-in-from-right-4 duration-500"
               >
-                <PanelContent href={active.href} isTr={isTr} />
+                <PanelContent href={active.href} isTr={isTr} planPrices={planPrices} />
               </div>
             </div>
           </div>

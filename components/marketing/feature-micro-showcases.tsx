@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Check, CreditCard, Copy, MessageCircle, Sparkles, TrendingUp, Users, Zap, LayoutDashboard, UserCircle, Eye } from 'lucide-react'
 import { useLocale } from '@/components/marketing/locale-provider'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 
 export const MICRO_DEMO_COPY = {
   tr: {
@@ -74,6 +75,8 @@ export function DemoChrome({ url, children, className = '' }: { url: string; chi
 export function PaymentFlowShowcase({ className = '' }: { className?: string }) {
   const step = useSteps(4)
   const { locale } = useLocale()
+  const { planPrice } = useRegionalPricing()
+  const proPrice = planPrice('PRO').formatted
   const isTr = locale !== 'en'
 
   return (
@@ -87,7 +90,10 @@ export function PaymentFlowShowcase({ className = '' }: { className?: string }) 
           >
             <p className="text-sm font-bold text-slate-800">PRO Plan · {isTr ? 'Aylık' : 'Monthly'}</p>
             <p className="text-xs text-slate-500 mt-1">{isTr ? '2.000 sohbet · 500 site' : '2,000 chats · 500 sites'}</p>
-            <p className="text-lg font-extrabold text-indigo-600 mt-2">₺990<span className="text-xs font-medium text-slate-400">/ay</span></p>
+            <p className="text-lg font-extrabold text-indigo-600 mt-2">
+              {proPrice}
+              <span className="text-xs font-medium text-slate-400">{isTr ? '/ay' : '/mo'}</span>
+            </p>
           </div>
 
           <div

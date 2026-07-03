@@ -1,33 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import type { LocaleContext } from '@/lib/locale-server'
+import { useCallback } from 'react'
+import { useLocale } from '@/components/marketing/locale-provider'
 import { getPlanPriceForCurrency } from '@/lib/regional-pricing'
 import { formatPrice } from '@/lib/format-price'
 import type { PlanId } from '@/lib/plan-cta'
-import type { MarketRegion, PaymentCurrency } from '@/lib/regional-config'
-import { GLOBAL_FALLBACK_COUNTRY, resolvePaymentCurrency } from '@/lib/regional-config'
 
+/** Ülkeye göre para birimi — LocaleProvider sunucudan IP ile doldurur */
 export function useRegionalPricing() {
-  const [ctx, setCtx] = useState<LocaleContext | null>(null)
+  const { region, currency, intlLocale, locale, country } = useLocale()
 
-  useEffect(() => {
-    fetch('/api/locale')
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setCtx)
-      .catch(() => setCtx(null))
-  }, [])
+  const planPrice = useCallback(
+    (planId: PlanId, yearly = false) => {
+      const p = getPlanPriceForCurrency(currency, planId)
+      const amount = yearly ? p.yearlyMonthly : p.monthly
+      return { amount, currency: p.currency, formatted: formatPrice(amount, p.currency, intlLocale) }
+    },
+    [currency, intlLocale],
+  )
 
-  const region: MarketRegion = ctx?.region ?? 'GLOBAL'
-  const currency: PaymentCurrency =
-    ctx?.currency ?? resolvePaymentCurrency(GLOBAL_FALLBACK_COUNTRY)
-  const intlLocale = ctx?.intlLocale ?? 'en-US'
-
-  function planPrice(planId: PlanId, yearly = false) {
-    const p = getPlanPriceForCurrency(currency, planId)
-    const amount = yearly ? p.yearlyMonthly : p.monthly
-    return { amount, currency: p.currency, formatted: formatPrice(amount, p.currency, intlLocale) }
-  }
-
-  return { region, currency, intlLocale, locale: ctx?.locale ?? 'en', planPrice }
+  return { region, currency, intlLocale, locale, country, planPrice }
 }
