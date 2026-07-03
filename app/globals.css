@@ -1147,6 +1147,10 @@ body {
     }
 
     .admin-shell .app-main:has(.inbox-shell) {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    html[data-inbox-mobile-chat='1'] .admin-shell .app-main:has(.inbox-shell) {
       padding-bottom: 0;
     }
   }
@@ -2816,7 +2820,12 @@ html.native-app-admin .native-app-admin-content {
 
 @media (max-width: 1023px) {
   html[data-inbox-mobile-chat='1'] .app-main > .lg\:hidden.shrink-0.h-14,
-  html[data-inbox-mobile-chat='1'] .app-main > .native-app-topbar {
+  html[data-inbox-mobile-chat='1'] .app-main > .native-app-topbar,
+  html[data-inbox-mobile-chat='1'] .admin-shell .admin-mobile-topbar {
+    display: none !important;
+  }
+
+  html[data-inbox-mobile-chat='1'] .admin-mobile-bottom-nav {
     display: none !important;
   }
 
@@ -2829,6 +2838,25 @@ html.native-app-admin .native-app-admin-content {
   html[data-admin-mobile-detail='1'] .admin-split-shell {
     height: 100dvh;
     max-height: 100dvh;
+  }
+
+  /* Admin gelen kutusu listesi — mobilde flex yüksekliği (h-full zinciri kırılmasın) */
+  .app-shell[data-admin-inbox='true'] .admin-inbox-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0%;
+    min-height: 0;
+  }
+
+  .app-shell[data-admin-inbox='true'] .admin-inbox-content .inbox-shell {
+    flex: 1 1 0%;
+    min-height: 0;
+    height: auto;
+  }
+
+  .app-shell[data-admin-inbox='true'] .admin-inbox-content .inbox-shell-list {
+    flex: 1 1 0%;
+    min-height: 0;
   }
 }
 

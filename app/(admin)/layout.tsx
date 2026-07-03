@@ -180,8 +180,9 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   const pageTitle = getAdminPageTitle(pathname || '')
-  const isFullBleed =
-    pathname.startsWith('/admin/inbox') || pathname.startsWith('/admin/customer-sites')
+  const isInboxRoute = pathname.startsWith('/admin/inbox')
+  const isFullBleed = pathname.startsWith('/admin/customer-sites')
+  const hideBottomNav = isFullBleed
 
   return (
     <SessionProvider>
@@ -200,6 +201,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         }`}
         data-admin-theme={adminTheme}
         data-sidebar-open={sidebarOpen ? 'true' : 'false'}
+        data-admin-inbox={isInboxRoute ? 'true' : 'false'}
       >
         <AdminCommandPalette open={paletteOpen} onClose={closePalette} />
         {sidebarOpen && (
@@ -233,7 +235,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         <main
           className={`app-main admin-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full min-h-0 ${
             isNativeAdminApp ? 'native-app-main z-10' : ''
-          } ${isFullBleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+          } ${isFullBleed || isInboxRoute ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
         >
           <AdminTopBar
             inboxUnread={inboxUnread}
@@ -293,14 +295,14 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
 
           <div
-            className={`flex-1 min-h-0 min-w-0 ${isFullBleed ? 'overflow-hidden' : ''} ${
+            className={`flex-1 min-h-0 min-w-0 ${isFullBleed || isInboxRoute ? 'overflow-hidden' : ''} ${
               isNativeAdminApp ? 'native-app-admin-content' : ''
-            }`}
+            } ${isInboxRoute ? 'admin-inbox-content' : ''}`}
           >
             <div
               className={
-                pathname.startsWith('/admin/inbox')
-                  ? 'h-full min-h-0 flex flex-col'
+                isInboxRoute
+                  ? 'flex-1 min-h-0 flex flex-col overflow-hidden'
                   : 'admin-content-root min-h-full'
               }
             >
@@ -308,7 +310,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {!isFullBleed && (
+          {!hideBottomNav && (
             <AdminMobileBottomNav
               inboxUnread={inboxUnread}
               liveVisitorCount={liveVisitorCount}

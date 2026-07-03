@@ -688,7 +688,7 @@ export function AdminInboxPanel() {
   if (!marketingSite) return null
 
   return (
-    <div className="inbox-shell h-full min-h-0 w-full max-w-full flex overflow-hidden">
+    <div className="inbox-shell flex-1 min-h-0 h-full w-full max-w-full flex overflow-hidden">
       {/* Sidebar — müşteri paneli ile aynı */}
       <div
         className={`inbox-shell-list w-full lg:w-[340px] xl:w-[380px] border-r flex flex-col min-h-0 shrink-0 ${
