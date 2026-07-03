@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
       returnTo: returnTo === 'plans' ? 'plans' : 'billing',
       region: localeCtx.region,
       currency: localeCtx.currency,
+      locale: localeCtx.locale,
     })
 
     if ('error' in result) {

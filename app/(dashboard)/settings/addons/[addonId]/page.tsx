@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
+import { formatAddonPrice } from '@/lib/regional-addon-pricing'
 import { addonCategoryLabels } from '@/lib/settings-i18n'
 
 interface Addon {
@@ -39,6 +41,7 @@ interface Purchase {
 
 export default function AddonDetailPage() {
   const i18n = useSettingsI18n()
+  const { currency, intlLocale } = useRegionalPricing()
   const { addons: a, common: c } = i18n
   const CATEGORY_LABELS = addonCategoryLabels(i18n)
   const params = useParams()
@@ -265,7 +268,7 @@ export default function AddonDetailPage() {
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">
-                  {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
+                  {addon.price === 0 ? a.free : formatAddonPrice(addon.price, currency, intlLocale)}
                 </div>
                 {addon.price > 0 && (
                   <p className="text-xs text-muted-foreground">

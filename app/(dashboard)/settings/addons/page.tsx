@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
+import { formatAddonPrice } from '@/lib/regional-addon-pricing'
 import { useSettingsI18n } from '@/lib/hooks/use-settings-i18n'
 import { addonCategoryLabels, addonPlanBadges } from '@/lib/settings-i18n'
 import { useRouter } from 'next/navigation'
@@ -69,6 +71,7 @@ function StarRating({ rating = 5, size = 14 }: { rating?: number; size?: number 
 
 export default function AddonsPage() {
   const i18n = useSettingsI18n()
+  const { currency, intlLocale } = useRegionalPricing()
   const { addons: a, common: c } = i18n
   const CATEGORY_LABELS = addonCategoryLabels(i18n)
   const PLAN_BADGE = addonPlanBadges(i18n)
@@ -447,7 +450,7 @@ export default function AddonsPage() {
                       <div>
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-2xl font-bold text-[var(--foreground)]">
-                            {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
+                            {addon.price === 0 ? a.free : formatAddonPrice(addon.price, currency, intlLocale)}
                           </span>
                           {addon.price > 0 && (
                              <span className="text-xs text-[var(--muted-foreground)]">{a.perMonth}</span>
@@ -550,7 +553,7 @@ export default function AddonsPage() {
                       <div>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-[var(--foreground)]">
-                            {addon.price === 0 ? a.free : `₺${(addon.price / 100).toLocaleString(i18n.dateLocale)}`}
+                            {addon.price === 0 ? a.free : formatAddonPrice(addon.price, currency, intlLocale)}
                           </span>
                           {addon.price > 0 && (
                             <span className="text-xs text-[var(--muted-foreground)]">/{addon.purchaseType === 'YEARLY' ? a.perYear.replace('/', '') : a.perMonth.replace('/', '')}</span>
@@ -675,7 +678,7 @@ export default function AddonsPage() {
                         <span className="text-sm text-[var(--muted-foreground)]">{a.monthlyFee}</span>
                         <div className="text-right">
                           <span className="text-2xl font-bold text-[var(--foreground)]">
-                            {modalAddon.price === 0 ? a.free : `₺${(modalAddon.price / 100).toLocaleString(i18n.dateLocale)}`}
+                            {modalAddon.price === 0 ? a.free : formatAddonPrice(modalAddon.price, currency, intlLocale)}
                           </span>
                           {modalAddon.price > 0 && (
                             <span className="text-sm text-[var(--muted-foreground)]">/{modalAddon.purchaseType === 'YEARLY' ? a.perYear.replace('/', '') : a.perMonth.replace('/', '')}</span>

@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'next/navigation'
 import type { LocaleContext } from '@/lib/locale-server'
 import { getMessages, type FullMessageTree } from '@/lib/messages'
-import type { SiteLocale } from '@/lib/regional-config'
+import { GLOBAL_FALLBACK_COUNTRY, type SiteLocale } from '@/lib/regional-config'
 
 type LocaleState = LocaleContext & {
   messages: FullMessageTree
@@ -27,12 +27,12 @@ function buildState(ctx: LocaleContext): Omit<LocaleState, 'setLocale'> {
 }
 
 const FALLBACK = buildState({
-  country: 'TR',
-  region: 'TR',
-  locale: 'tr',
-  currency: 'TRY',
+  country: GLOBAL_FALLBACK_COUNTRY,
+  region: 'GLOBAL',
+  locale: 'en',
+  currency: 'EUR',
   paymentProvider: 'iyzico',
-  intlLocale: 'tr-TR',
+  intlLocale: 'en-US',
 })
 
 const LocaleCtx = createContext<LocaleState>({ ...FALLBACK, setLocale: async () => {} })

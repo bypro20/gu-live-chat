@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { PLANS } from '@/lib/constants'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import type { PlanId } from '@/lib/plan-cta'
 import { getPlanEntry } from '@/lib/plan-i18n'
 import { PlanPackagesPanel } from '@/components/dashboard/plan-packages-panel'
@@ -50,6 +50,7 @@ interface Invoice {
 export default function BillingPage() {
   const i18n = useSettingsI18n()
   const { billing: b, common: c } = i18n
+  const { planPrice, currency } = useRegionalPricing()
   const { data: session } = useSession()
   const { activeWebsite, isLoading: websitesLoading } = useActiveWebsite()
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
@@ -141,7 +142,7 @@ export default function BillingPage() {
         type: 'success',
         text: trialStarted ? b.trialStarted : b.paymentSuccess,
       })
-      trackPurchase({ currency: 'TRY' })
+      trackPurchase({ currency })
       // Clean URL
       window.history.replaceState({}, '', '/settings/billing')
       // Refresh subscription status
@@ -421,7 +422,7 @@ export default function BillingPage() {
             </div>
             <div className="text-right shrink-0">
               <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                ₺{PLANS.find(p => p.id === currentPlan)?.price || 0}
+                {planPrice(currentPlan as PlanId).formatted}
               </p>
               <p className="text-sm text-muted-foreground">{b.perMonth}</p>
             </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseLocale, regionConfig } from '@/lib/regional-config'
+import { intlLocaleFor, parseLocale } from '@/lib/regional-config'
 import { detectLocaleContext, applyLocaleCookies } from '@/lib/locale-server'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
 
@@ -22,8 +22,7 @@ export async function POST(request: NextRequest) {
 
   const ctx = detectLocaleContext(request)
   ctx.locale = locale
-  const cfg = regionConfig(ctx.region)
-  ctx.intlLocale = locale === 'tr' ? 'tr-TR' : cfg.intlLocale
+  ctx.intlLocale = intlLocaleFor(ctx.currency, locale)
 
   const res = NextResponse.json(ctx)
   applyLocaleCookies(res, ctx, { manual: true })

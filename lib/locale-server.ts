@@ -3,15 +3,19 @@ import { NextResponse } from 'next/server'
 import { cookies, headers } from 'next/headers'
 import {
   COUNTRY_COOKIE,
+  GLOBAL_FALLBACK_COUNTRY,
   LOCALE_COOKIE,
   LOCALE_MANUAL_COOKIE,
   REGION_COOKIE,
   defaultLocaleForCountry,
   defaultLocaleForRegion,
+  parseAcceptLanguage,
   parseLocale,
-  regionConfig,
+  countryPaymentProfile,
+  intlLocaleFor,
   resolveRegion,
   type MarketRegion,
+  type PaymentCurrency,
   type SiteLocale,
 } from './regional-config'
 
@@ -19,8 +23,8 @@ export type LocaleContext = {
   country: string
   region: MarketRegion
   locale: SiteLocale
-  currency: ReturnType<typeof regionConfig>['currency']
-  paymentProvider: ReturnType<typeof regionConfig>['paymentProvider']
+  currency: PaymentCurrency
+  paymentProvider: 'iyzico'
   intlLocale: string
 }
 
@@ -29,6 +33,7 @@ type LocaleInput = {
   cookieLocale?: string | null
   localeManual?: string | null
   queryLang?: string | null
+  acceptLanguage?: string | null
 }
 
 function countryFromRequest(req: NextRequest): string {
@@ -36,7 +41,7 @@ function countryFromRequest(req: NextRequest): string {
     req.headers.get('x-vercel-ip-country') ||
     req.headers.get('cf-ipcountry') ||
     req.cookies.get(COUNTRY_COOKIE)?.value ||
-    'TR'
+    GLOBAL_FALLBACK_COUNTRY
   ).toUpperCase()
 }
 
@@ -47,21 +52,23 @@ function buildLocaleContext(input: LocaleInput): LocaleContext {
   const queryLocale = parseLocale(input.queryLang)
   const cookieLocale = parseLocale(input.cookieLocale)
   const countryLocale = defaultLocaleForCountry(country)
+  const browserLocale = parseAcceptLanguage(input.acceptLanguage ?? null)
 
   const locale =
     queryLocale ||
     (manual && cookieLocale ? cookieLocale : null) ||
     countryLocale ||
+    browserLocale ||
     defaultLocaleForRegion(region)
 
-  const cfg = regionConfig(region)
+  const profile = countryPaymentProfile(country)
   return {
     country,
     region,
     locale,
-    currency: cfg.currency,
-    paymentProvider: cfg.paymentProvider,
-    intlLocale: locale === 'tr' ? 'tr-TR' : cfg.intlLocale,
+    currency: profile.currency,
+    paymentProvider: profile.paymentProvider,
+    intlLocale: intlLocaleFor(profile.currency, locale),
   }
 }
 
@@ -71,6 +78,7 @@ export function detectLocaleContext(req: NextRequest): LocaleContext {
     cookieLocale: req.cookies.get(LOCALE_COOKIE)?.value,
     localeManual: req.cookies.get(LOCALE_MANUAL_COOKIE)?.value,
     queryLang: req.nextUrl.searchParams.get('lang'),
+    acceptLanguage: req.headers.get('accept-language'),
   })
 }
 
@@ -81,13 +89,14 @@ export async function getServerLocaleContext(): Promise<LocaleContext> {
     headersList.get('x-vercel-ip-country') ||
     headersList.get('cf-ipcountry') ||
     cookieStore.get(COUNTRY_COOKIE)?.value ||
-    'TR'
+    GLOBAL_FALLBACK_COUNTRY
   ).toUpperCase()
 
   return buildLocaleContext({
     country,
     cookieLocale: cookieStore.get(LOCALE_COOKIE)?.value,
     localeManual: cookieStore.get(LOCALE_MANUAL_COOKIE)?.value,
+    acceptLanguage: headersList.get('accept-language'),
   })
 }
 
@@ -122,7 +131,7 @@ export function readLocaleContextFromCookies(cookieHeader: string | null): Parti
     const m = cookieHeader.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
     return m ? decodeURIComponent(m[1]) : null
   }
-  const country = get(COUNTRY_COOKIE) || 'TR'
+  const country = get(COUNTRY_COOKIE) || GLOBAL_FALLBACK_COUNTRY
   const region = resolveRegion(country)
   const manual = get(LOCALE_MANUAL_COOKIE) === '1'
   const cookieLocale = parseLocale(get(LOCALE_COOKIE))
@@ -130,13 +139,13 @@ export function readLocaleContextFromCookies(cookieHeader: string | null): Parti
     (manual && cookieLocale ? cookieLocale : null) ||
     defaultLocaleForCountry(country) ||
     defaultLocaleForRegion(region)
-  const cfg = regionConfig(region)
+  const profile = countryPaymentProfile(country)
   return {
     country,
     region,
     locale,
-    currency: cfg.currency,
-    paymentProvider: cfg.paymentProvider,
-    intlLocale: locale === 'tr' ? 'tr-TR' : cfg.intlLocale,
+    currency: profile.currency,
+    paymentProvider: profile.paymentProvider,
+    intlLocale: intlLocaleFor(profile.currency, locale),
   }
 }

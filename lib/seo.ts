@@ -82,6 +82,11 @@ export function buildMetadata({
     applicationName: brand,
     alternates: {
       canonical: url,
+      languages: {
+        tr: `${url}${url.includes('?') ? '&' : '?'}lang=tr`,
+        en: `${url}${url.includes('?') ? '&' : '?'}lang=en`,
+        'x-default': `${url}${url.includes('?') ? '&' : '?'}lang=en`,
+      },
       types: { 'application/rss+xml': `${SITE_URL}/blog/feed.xml` },
     },
     ...getSiteVerificationMetadata(),
@@ -389,7 +394,7 @@ export function softwareApplicationJsonLd(locale: 'tr' | 'en' = 'tr') {
     offers: {
       '@type': 'Offer',
       price: '0',
-      priceCurrency: 'TRY',
+      priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
       url: `${SITE_URL}/register`,
       description: `Ücretsiz paket — ${TRIAL_DAYS} gün PRO deneme`,

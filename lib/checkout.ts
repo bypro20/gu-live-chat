@@ -2,7 +2,7 @@ import { generateMerchantOid } from './payment-orders'
 import { prisma } from './db'
 import { PLANS } from './constants'
 import { initializeCheckoutForm, isIyzicoConfigured } from './iyzico'
-import { getRegionalPlanPrice } from './regional-pricing'
+import { getPlanPriceForCurrency, matchPlanPayment } from './regional-pricing'
 import type { MarketRegion, PaymentCurrency } from './regional-config'
 import type { PlanId } from './plan-cta'
 import { getSiteUrl } from './site-config'
@@ -17,6 +17,7 @@ export async function initiateRegionalCheckout(params: {
   returnTo: 'billing' | 'plans'
   region: MarketRegion
   currency: PaymentCurrency
+  locale?: 'tr' | 'en'
 }): Promise<
   | {
       provider: 'iyzico'
@@ -29,7 +30,7 @@ export async function initiateRegionalCheckout(params: {
   | { error: string }
 > {
   const planId = params.planId as PlanId
-  const regional = getRegionalPlanPrice(params.region, planId)
+  const regional = getPlanPriceForCurrency(params.currency, planId)
   if (regional.monthly <= 0) {
     return { error: 'Invalid plan' }
   }
@@ -54,7 +55,7 @@ export async function initiateRegionalCheckout(params: {
   })
 
   const baseUrl = getSiteUrl()
-  const locale = params.region === 'TR' ? 'tr' : 'en'
+  const locale = params.locale ?? (params.region === 'TR' ? 'tr' : 'en')
 
   const result = await initializeCheckoutForm({
     conversationId: merchantOid,
@@ -82,20 +83,11 @@ export async function initiateRegionalCheckout(params: {
   }
 }
 
-/** Callback doğrulama — TR/EU/Global fiyatlarından biriyle eşleşmeli */
+/** Callback doğrulama — tüm iyzico para birimlerindeki fiyatlarla eşleşmeli */
 export function isValidRegionalPlanPayment(planId: PlanId, paidAmount: number): boolean {
-  const regions: MarketRegion[] = ['TR', 'EU', 'GLOBAL']
-  return regions.some((r) => {
-    const expected = getRegionalPlanPrice(r, planId).monthly
-    return Math.abs(expected - paidAmount) < 0.02
-  })
+  return matchPlanPayment(planId, paidAmount)?.matched ?? false
 }
 
 export function currencyForRegionalPayment(planId: PlanId, paidAmount: number): PaymentCurrency {
-  const regions: MarketRegion[] = ['TR', 'EU', 'GLOBAL']
-  for (const r of regions) {
-    const p = getRegionalPlanPrice(r, planId)
-    if (Math.abs(p.monthly - paidAmount) < 0.02) return p.currency
-  }
-  return 'TRY'
+  return matchPlanPayment(planId, paidAmount)?.currency ?? 'EUR'
 }

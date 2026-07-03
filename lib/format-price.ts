@@ -4,6 +4,9 @@ const INTL_LOCALE: Record<PaymentCurrency, string> = {
   TRY: 'tr-TR',
   EUR: 'de-DE',
   USD: 'en-US',
+  GBP: 'en-GB',
+  CHF: 'de-CH',
+  NOK: 'nb-NO',
 }
 
 export function formatPrice(
@@ -21,7 +24,5 @@ export function formatPrice(
 }
 
 export function formatPriceCompact(amount: number, currency: PaymentCurrency): string {
-  if (currency === 'TRY') return `₺${amount.toLocaleString('tr-TR')}`
-  if (currency === 'EUR') return `€${amount}`
-  return `$${amount}`
+  return formatPrice(amount, currency)
 }

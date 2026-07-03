@@ -23,7 +23,7 @@ function gtagEvent(name: string, params?: Record<string, unknown>) {
   window.gtag('event', name, params)
 }
 
-function adsConversion(sendTo: string | undefined, value?: number, currency = 'TRY') {
+function adsConversion(sendTo: string | undefined, value?: number, currency = 'EUR') {
   if (!sendTo || typeof window.gtag !== 'function') return
   window.gtag('event', 'conversion', {
     send_to: sendTo,
@@ -53,7 +53,7 @@ export function trackSignUp(props?: { plan?: string; method?: string }) {
 /** Ödeme başarılı */
 export function trackPurchase(props: { value?: number; currency?: string; plan?: string }) {
   const value = props.value
-  const currency = props.currency ?? 'TRY'
+  const currency = props.currency ?? 'EUR'
 
   const purchaseParams = {
     transaction_id: `purchase_${Date.now()}`,

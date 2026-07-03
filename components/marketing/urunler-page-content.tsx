@@ -11,6 +11,7 @@ import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { useMarketingPages } from '@/lib/hooks/use-marketing-pages'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
+import { formatAddonMonthlyTry } from '@/lib/regional-addon-pricing'
 import { getPlanEntry } from '@/lib/plan-i18n'
 import {
   ADDON_PRODUCTS,
@@ -35,7 +36,8 @@ export function UrunlerPageContent() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const { urunler: u, common, apps } = useMarketingPages()
   const { locale } = useLocale()
-  const { planPrice } = useRegionalPricing()
+  const { planPrice, currency, intlLocale } = useRegionalPricing()
+  const perMonth = locale === 'tr' ? '/ay' : '/mo'
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -154,7 +156,9 @@ export function UrunlerPageContent() {
               const localized = apps.items[i]
               const name = localized?.name ?? addon.name
               const desc = localized?.desc ?? addon.description
-              const price = localized?.price ?? `₺${addon.monthlyPrice}/ay`
+              const price =
+                localized?.price ??
+                formatAddonMonthlyTry(addon.monthlyPrice, currency, intlLocale, perMonth)
 
               return (
                 <FadeIn key={addon.slug} delay={i * 0.04}>

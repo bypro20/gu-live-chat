@@ -11,6 +11,7 @@ import {
   Check, Star, Plus, Minus, Headphones, TrendingUp, Megaphone, Languages, Globe, Download,
   Mic, FileText, Sparkles, Link2,
 } from 'lucide-react'
+import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { HeroRobotOverlays } from '@/components/marketing/hero-robot'
 import { TechnoaiHeroFx } from '@/components/marketing/technoai-hero-fx'
@@ -22,7 +23,6 @@ import {
 import { PlanPricingCard } from '@/components/marketing/plan-pricing-card'
 import { trialHeroLine } from '@/lib/trial-config'
 import { useT, useLocale } from '@/components/marketing/locale-provider'
-import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import { getPlanEntry } from '@/lib/plan-i18n'
 import { APK_DOWNLOAD_FILENAME, APK_DOWNLOAD_PATH } from '@/lib/site-config'
 import { GU_BRAND } from '@/lib/brand-theme'
@@ -591,6 +591,8 @@ export function PricingSection() {
   const isLoggedIn = !!session?.user
   const t = useT()
   const { locale } = useLocale()
+  const { planPrice } = useRegionalPricing()
+  const proFormatted = planPrice('PRO', billing === 'yearly').formatted
 
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 marketing-section-light bg-[var(--marketing-surface,#f4f1ec)] relative overflow-hidden">
@@ -600,7 +602,9 @@ export function PricingSection() {
           <div className="text-center mb-10">
             <span className="ecall-section-tag"># {t.pricing.title}</span>
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-4 bg-[#121110] text-white shadow-lg">
-              {locale === 'tr' ? 'PRO sadece ₺990/ay — 14 gün ücretsiz' : 'PRO from $49/mo — 14-day free trial'}
+              {locale === 'tr'
+                ? `PRO yalnızca ${proFormatted}/ay — 14 gün ücretsiz`
+                : `PRO from ${proFormatted}/mo — 14-day free trial`}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4">{t.pricing.title}</h2>
             <p className="mt-3 text-muted-foreground">{t.pricing.subtitle}</p>
