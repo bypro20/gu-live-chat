@@ -46,23 +46,27 @@ export const INBOX_CHAT_PANEL_MOBILE =
 export const ADMIN_SPLIT_DETAIL =
   'fixed inset-0 z-[60] flex w-full h-[100dvh] max-h-[100dvh] md:static md:inset-auto md:z-auto md:flex-1 md:min-h-0 md:max-h-none'
 
-/** Sadece dar ekranda (< md) üst barı gizle */
-export function useAdminMobileDetail(active: boolean) {
+/** Admin master-detail: mobil/tablet tam ekran, xl+ yan yana (ziyaretçi izleme) */
+export const ADMIN_VISITOR_DETAIL =
+  'fixed inset-0 z-[60] flex w-full h-[100dvh] max-h-[100dvh] xl:static xl:inset-auto xl:z-auto xl:flex-1 xl:min-h-0 xl:max-h-none'
+
+/** Sadece dar ekranda üst barı gizle */
+export function useAdminMobileDetail(active: boolean, mq = '(max-width: 767px)') {
   useEffect(() => {
     const root = document.documentElement
+    const media = window.matchMedia(mq)
     const sync = () => {
-      const narrow = window.matchMedia('(max-width: 767px)').matches
-      if (active && narrow) {
+      if (active && media.matches) {
         root.setAttribute('data-admin-mobile-detail', '1')
       } else {
         root.removeAttribute('data-admin-mobile-detail')
       }
     }
     sync()
-    window.addEventListener('resize', sync)
+    media.addEventListener('change', sync)
     return () => {
-      window.removeEventListener('resize', sync)
+      media.removeEventListener('change', sync)
       root.removeAttribute('data-admin-mobile-detail')
     }
-  }, [active])
+  }, [active, mq])
 }

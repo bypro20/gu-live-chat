@@ -608,41 +608,45 @@ export function OverlayPreview({
   // ─── Idle state (not capturing, no stream) ───
   if (!isActive && webrtcState !== 'denied') {
     return (
-      <div className="w-full h-full rounded-[24px] border border-white/[0.08] bg-gradient-to-b from-[#070b18] to-[#0c1024] overflow-hidden flex items-center justify-center">
-        <div className="flex flex-col items-center gap-5 text-center px-6 max-w-sm">
-          <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${accent.avatar} grid place-items-center shadow-2xl`}>
-            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+      <div className="w-full h-full min-h-[220px] rounded-[24px] border border-white/[0.08] bg-gradient-to-b from-[#070b18] to-[#0c1024] overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 flex items-center justify-center overflow-y-auto px-6 py-4">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${accent.avatar} grid place-items-center shadow-2xl shrink-0`}>
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-white/90">{o.screenWatchTitle}</p>
+              <p className="text-sm text-white/40 mt-1.5 leading-relaxed">
+                {o.screenWatchDesc}<br />
+                <span className="text-white/30">{o.screenWatchHint}</span>
+              </p>
+            </div>
+            {!socketLive && (
+              <p className="text-xs text-amber-400/90 max-w-xs leading-relaxed">
+                {recentlyActive ? o.socketPending : o.visitorOffline}
+              </p>
+            )}
           </div>
-          <div>
-            <p className="text-lg font-bold text-white/90">{o.screenWatchTitle}</p>
-            <p className="text-sm text-white/40 mt-1.5 leading-relaxed">
-              {o.screenWatchDesc}<br />
-              <span className="text-white/30">{o.screenWatchHint}</span>
-            </p>
-          </div>
-          {canStartScreenWatch ? (
+        </div>
+        {canStartScreenWatch ? (
+          <div className="shrink-0 p-4 pt-2 border-t border-white/[0.06] bg-[#070b18]/95 backdrop-blur-sm safe-area-pb">
             <button
               type="button"
               onClick={handleStart}
               title={o.watchScreen}
-              className={`mt-2 inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 ${
+              className={`w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-95 touch-manipulation ${
                 theme === 'admin'
-                  ? accent.button
+                  ? `admin-screen-watch-btn ${accent.button}`
                   : 'bg-gradient-to-r from-[#1972F5] to-[#2563EB] shadow-lg shadow-[#1972F5]/25 hover:shadow-[#1972F5]/40'
               }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
               {o.watchScreen}
             </button>
-          ) : null}
-          {!socketLive && (
-            <p className="text-xs text-amber-400/90 max-w-xs leading-relaxed">
-              {recentlyActive ? o.socketPending : o.visitorOffline}
-            </p>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
     )
   }

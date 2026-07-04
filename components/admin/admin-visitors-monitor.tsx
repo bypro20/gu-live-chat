@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useLiveVisitorsStore, type LiveVisitor, type VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { connectSocket, getSocket, isSocketConnected, isSocketEnabled } from '@/lib/socket-client'
-import { emitAgentSocketAuth, ensureAgentSocketAuth } from '@/lib/socket-agent-auth'
+import { ensureAgentSocketAuth } from '@/lib/socket-agent-auth'
 import { usePlanFeature } from '@/lib/hooks/use-plan-feature'
 import { isPlatformAdminRole } from '@/lib/platform-admin-shared'
 import { VisitorDetailPanel } from '@/components/visitors/visitor-detail-panel'
@@ -14,6 +14,7 @@ import { WebRTCViewer } from '@/components/visitors/webrtc-viewer'
 import { formatTimeAgo } from '@/lib/visitors-utils'
 import type { WebRTCConnectionState } from '@/lib/webrtc'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
+import { useAdminMobileDetail, ADMIN_VISITOR_DETAIL } from '@/lib/hooks/use-inbox-mobile-chat'
 import { formatVisitorActivityLabel } from '@/lib/visitors-i18n'
 import { visitorDisplayName } from '@/lib/visitor-live-geo'
 import { VisitorLiveProfile } from '@/components/visitors/visitor-live-profile'
@@ -87,10 +88,10 @@ export function AdminVisitorsMonitor({
     .map((a) => ({ x: a.x!, y: a.y!, timestamp: a.timestamp }))
     .slice(0, 5)
 
-  const fetchLiveVisitors = useCallback(async () => {
+  const fetchLiveVisitors = useCallback(async (opts?: { silent?: boolean }) => {
     if (!session?.user) return
     try {
-      setLoading(true)
+      if (!opts?.silent) setLoading(true)
       const url = isDashboard
         ? `/api/visitors/live${websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : ''}`
         : '/api/admin/visitors/live'
@@ -155,10 +156,10 @@ export function AdminVisitorsMonitor({
     [selectVisitor, onVisitorSelect]
   )
 
-  useEffect(() => { fetchLiveVisitors() }, [fetchLiveVisitors])
+  useEffect(() => { void fetchLiveVisitors() }, [fetchLiveVisitors])
 
   useEffect(() => {
-    const interval = setInterval(fetchLiveVisitors, 10000)
+    const interval = setInterval(() => { void fetchLiveVisitors({ silent: true }) }, 4000)
     return () => clearInterval(interval)
   }, [fetchLiveVisitors])
 
@@ -172,9 +173,10 @@ export function AdminVisitorsMonitor({
       if (isDashboard) {
         const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
         if (ids.length === 0) return
-        await emitAgentSocketAuth(emit, ids)
+        await ensureAgentSocketAuth(emit, ids)
       } else {
-        await emitAgentSocketAuth(emit, websiteIds, 'platform')
+        const ids = websiteIds.length > 0 ? websiteIds : []
+        await ensureAgentSocketAuth(emit, ids, 'platform')
       }
     }
 
@@ -342,9 +344,10 @@ export function AdminVisitorsMonitor({
     if (isDashboard) {
       const ids = websiteIds.length > 0 ? websiteIds : websiteId ? [websiteId] : []
       if (ids.length === 0) return
-      void emitAgentSocketAuth(emit, ids)
+      void ensureAgentSocketAuth(emit, ids)
     } else {
-      void emitAgentSocketAuth(emit, websiteIds, 'platform')
+      const ids = websiteIds.length > 0 ? websiteIds : []
+      void ensureAgentSocketAuth(emit, ids, 'platform')
     }
   }, [session, websiteIds, websiteId, isDashboard, emit])
 
@@ -428,6 +431,7 @@ export function AdminVisitorsMonitor({
   }, [emit, visitors, session, isDashboard, overlayEnabled, websiteId, agentLabel])
 
   useEffect(() => { setPrivacyMode(false) }, [selectedVisitorId])
+  useAdminMobileDetail(!!selectedVisitorId && !isDashboard, '(max-width: 1279px)')
   useEffect(() => { setOverlayDeniedMessage(null) }, [overlayEnabled, websiteId])
   useEffect(() => {
     return () => {
@@ -451,6 +455,7 @@ export function AdminVisitorsMonitor({
       )
     })
     .sort((a, b) => {
+      if (a.isLive !== b.isLive) return a.isLive ? -1 : 1
       const at = a.lastActiveAt ? new Date(a.lastActiveAt).getTime() : 0
       const bt = b.lastActiveAt ? new Date(b.lastActiveAt).getTime() : 0
       return bt - at
@@ -610,8 +615,12 @@ export function AdminVisitorsMonitor({
         )}
       </div>
 
-      {/* Sağ: ekran izleme */}
-      <div className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden'}`}>
+      {/* Sağ: ekran izleme — mobilde tam ekran */}
+      <div
+        className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden'} ${
+          selectedVisitor && !isDashboard ? `${ADMIN_VISITOR_DETAIL} admin-visitors-detail-panel` : ''
+        }`}
+      >
         {selectedVisitor && (
           <button
             type="button"
@@ -622,7 +631,7 @@ export function AdminVisitorsMonitor({
             {m.backToList}
           </button>
         )}
-        <div className="flex-1 min-h-0 p-2 flex flex-col">
+        <div className="flex-1 min-h-0 p-2 flex flex-col overflow-hidden">
           {selectedVisitor ? (
             <>
               {screenCapturingId === selectedVisitorId && (
@@ -636,8 +645,11 @@ export function AdminVisitorsMonitor({
                   onStateChange={setWebrtcState}
                 />
               )}
-              <div className="flex-1 min-h-0 flex flex-col gap-2">
-                <VisitorLiveProfile visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
+              <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
+                <div className="shrink-0">
+                  <VisitorLiveProfile visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
+                </div>
+                <div className="flex-1 min-h-[240px]">
                 <VisitorDetailPanel
                   visitor={selectedVisitor}
                   recentClicks={recentClicks}
@@ -650,6 +662,7 @@ export function AdminVisitorsMonitor({
                   privacyMode={privacyMode}
                   onWebRTCHDToggle={handleWebRTCHDToggle}
                 />
+                </div>
               </div>
               {overlayDeniedMessage && (
                 <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 shrink-0">

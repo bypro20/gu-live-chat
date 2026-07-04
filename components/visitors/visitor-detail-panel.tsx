@@ -30,7 +30,7 @@ export function VisitorDetailPanel({
   onWebRTCHDToggle,
 }: VisitorDetailPanelProps) {
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       <OverlayPreview
         visitor={visitor}
         recentClicks={recentClicks}

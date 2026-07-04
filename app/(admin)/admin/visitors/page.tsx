@@ -161,6 +161,7 @@ export default function AdminVisitorsPage() {
   }), [liveVisitorList, timeCutoff, timeFilter])
 
   const sortedVisitors = useMemo(() => [...filteredVisitors].sort((a, b) => {
+    if (a.isLive !== b.isLive) return a.isLive ? -1 : 1
     const aTime = a.lastActiveAt ? new Date(a.lastActiveAt).getTime() : 0
     const bTime = b.lastActiveAt ? new Date(b.lastActiveAt).getTime() : 0
     return bTime - aTime

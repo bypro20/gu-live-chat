@@ -2830,7 +2830,8 @@ html.native-app-admin .native-app-admin-content {
   }
 
   html[data-admin-mobile-detail='1'] .admin-shell .app-main > .lg\:hidden.shrink-0.h-14,
-  html[data-admin-mobile-detail='1'] .admin-shell .app-main > .native-app-topbar {
+  html[data-admin-mobile-detail='1'] .admin-shell .app-main > .native-app-topbar,
+  html[data-admin-mobile-detail='1'] .admin-mobile-bottom-nav {
     display: none !important;
   }
 
@@ -2838,6 +2839,14 @@ html.native-app-admin .native-app-admin-content {
   html[data-admin-mobile-detail='1'] .admin-split-shell {
     height: 100dvh;
     max-height: 100dvh;
+  }
+
+  html[data-admin-mobile-detail='1'] .admin-visitors-detail-panel {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .safe-area-pb {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   }
 
   /* Admin gelen kutusu listesi — mobilde flex yüksekliği (h-full zinciri kırılmasın) */

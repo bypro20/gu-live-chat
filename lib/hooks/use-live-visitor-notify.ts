@@ -165,7 +165,7 @@ export function useLiveVisitorNotify({
     upgradeBlockedRef.current = false
 
     void pollLiveVisitors()
-    const pollId = setInterval(pollLiveVisitors, 15000)
+    const pollId = setInterval(pollLiveVisitors, 4000)
     return () => clearInterval(pollId)
   }, [enabled, userId, websiteId, variant, pollLiveVisitors])
 
