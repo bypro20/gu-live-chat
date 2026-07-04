@@ -724,7 +724,14 @@ export default function WidgetPage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(`gu_widget_lang_${websiteId}`)
-      if (saved) setLang(saved)
+      if (saved) {
+        setLang(saved)
+        setAutoTranslateOn(readAutoTranslatePref(websiteId))
+        return
+      }
+      const browser = navigator.language?.split('-')[0]?.toLowerCase() || 'en'
+      const supported = WIDGET_LANGUAGES.some((l) => l.code === browser)
+      setLang(supported ? browser : 'en')
       setAutoTranslateOn(readAutoTranslatePref(websiteId))
     } catch { /* ignore */ }
   }, [websiteId])

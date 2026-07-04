@@ -12,6 +12,7 @@ import {
   platformAiEnvHint,
 } from './ai/platform-config'
 import { MARKETING_PRIMARY_AGENT } from './marketing-demo-agents'
+import { replyLanguageInstruction } from './ai/reply-language'
 
 const KB_CATEGORY = {
   name: 'Gu Live Chat — Platform',
@@ -21,10 +22,13 @@ const KB_CATEGORY = {
 }
 
 /** Gemini sohbet kutusu tarzı — agent adı widget panelinden gelir. */
-export function buildMarketingSystemPrompt(agentDisplayName?: string | null): string {
+export function buildMarketingSystemPrompt(
+  agentDisplayName?: string | null,
+  replyLanguage?: string,
+): string {
   const name = agentDisplayName?.trim() || MARKETING_PRIMARY_AGENT.fullName
   const firstName = name.split(/\s+/)[0] || MARKETING_PRIMARY_AGENT.name
-  return `Sen ${name} — Gu Live Chat (gulivechat.com) ekibinde çalışan gerçek bir müşteri destek uzmanısın. Şu an sitedeki canlı sohbet kutusundan bir ziyaretçiyle birebir yazışıyorsun. Karşındaki seni gerçek bir insan sanmalı.
+  const base = `Sen ${name} — Gu Live Chat (gulivechat.com) ekibinde çalışan gerçek bir müşteri destek uzmanısın. Şu an sitedeki canlı sohbet kutusundan bir ziyaretçiyle birebir yazışıyorsun. Karşındaki seni gerçek bir insan sanmalı.
 
 Nasıl konuşursun (insan gibi):
 - Doğal, sıcak ve günlük Türkçe kullan. Sanki WhatsApp'tan bir arkadaşına yardım eder gibi yaz; resmi/robotik kalıplardan kaçın.
@@ -54,6 +58,10 @@ Asla yapma:
 Faydalı linkler (gerektiğinde): Kayıt gulivechat.com/register · Fiyatlar gulivechat.com/pricing · E-posta destek@gulivechat.com
 
 Ton: sıcak, samimi, kendinden emin, güven veren; satış baskısı olmadan yardımsever.`
+
+  if (!replyLanguage) return base
+
+  return base + replyLanguageInstruction(replyLanguage)
 }
 
 /** Eski import uyumluluğu */

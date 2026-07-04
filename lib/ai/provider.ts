@@ -12,6 +12,11 @@ import {
   clampRequestedForPlan,
 } from './platform-router'
 import { getPlatformGeminiKey, isPlatformGeminiConfigured } from './platform-config'
+import {
+  replyLanguageInstruction,
+  resolveVisitorReplyLanguage,
+} from './reply-language'
+import { languageLabel, normalizeLangCode } from '@/lib/translate-languages'
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -66,6 +71,8 @@ export interface GenerateAiReplyParams {
   maxTokens?: number
   /** Fallback metinlerinde "<marka> ekibinden" demek için (örn. "Gu Live Chat"). */
   brandName?: string
+  /** Widget / ziyaretçi dili — yanıt bu dilde üretilir */
+  replyLanguage?: string
 }
 
 const MAX_TOKENS = 1024
@@ -321,15 +328,12 @@ function knowledgeToText(knowledge?: KnowledgeEntry[]): string {
     .join('\n\n')
 }
 
-function buildSystemPrompt(
-  siteName: string,
-  knowledge?: KnowledgeEntry[],
-  custom?: string,
-  visitorContext?: string
-): string {
-  const base =
-    custom?.trim() ||
-    `Sen ${siteName} markasının deneyimli müşteri destek temsilcisisin. Gerçek bir insan gibi yaz:
+function defaultAgentBasePrompt(siteName: string, replyLanguage: string): string {
+  const lang = normalizeLangCode(replyLanguage)
+  const label = languageLabel(lang)
+
+  if (lang === 'tr') {
+    return `Sen ${siteName} markasının deneyimli müşteri destek temsilcisisin. Gerçek bir insan gibi yaz:
 - Türkçe, doğal ve akıcı konuş; kısa paragraflar, gerektiğinde madde işaretleri kullan.
 - Ziyaretçinin sorusunu anladığını göster, empati kur, net ve mantıklı cevap ver.
 - Bilmediğin konuda uydurma; "bu konuda sizi canlı temsilcimize aktarayım" gibi doğal geçiş yap.
@@ -338,8 +342,29 @@ function buildSystemPrompt(
 - Her yanıt soruya özel olsun; önceki mesajlardaki cümleleri ve kalıpları tekrarlama.
 - "Mesajınızı aldım", "kısa süre içinde dönüş yapacağız" gibi şablon cümleler kullanma.
 - Her yanıt 1-4 cümle olsun; gereksiz uzatma.`
+  }
 
-  let prompt = base
+  return `You are an experienced customer support agent for ${siteName}. Write like a real human:
+- Respond naturally and fluently in ${label}; use short paragraphs and bullet points when helpful.
+- Show you understand the visitor's question; be empathetic and give clear answers.
+- Do not invent facts; if unsure, offer to connect them with a live agent naturally.
+- Never say "AI", "bot", "assistant", or "LLM" — you are on the support team.
+- Each reply must be specific to the question; avoid repeating templates from earlier messages.
+- Avoid generic lines like "We received your message" or "We will get back to you soon".
+- Keep replies to 1-4 sentences; do not ramble.`
+}
+
+function buildSystemPrompt(
+  siteName: string,
+  knowledge?: KnowledgeEntry[],
+  custom?: string,
+  visitorContext?: string,
+  replyLanguage = 'tr'
+): string {
+  const lang = normalizeLangCode(replyLanguage)
+  const base = custom?.trim() || defaultAgentBasePrompt(siteName, lang)
+
+  let prompt = base + replyLanguageInstruction(lang)
   if (visitorContext?.trim()) {
     prompt += `\n\nZiyaretçi bağlamı: ${visitorContext.trim()}`
   }
@@ -350,6 +375,15 @@ function buildSystemPrompt(
       `\n\n${siteName} bilgi tabanı (soruyla ilgiliyse bunlara dayan, metni kopyalama — kendi cümlelerinle anlat):\n\n${kb}`
   }
   return prompt
+}
+
+function effectiveReplyLanguage(params: GenerateAiReplyParams, messages: ChatMessage[]): string {
+  const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content
+  return resolveVisitorReplyLanguage({
+    visitorLang: params.replyLanguage,
+    lastUserMessage: lastUser,
+    fallback: 'tr',
+  })
 }
 
 // ─── Rule / knowledge-based fallback (no API key) ───────────────────
@@ -383,10 +417,48 @@ export function fallbackReply(
   messages: ChatMessage[],
   knowledge?: KnowledgeEntry[],
   brandName?: string,
+  replyLanguage?: string,
 ): string {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim() || ''
+  const lang = resolveVisitorReplyLanguage({
+    visitorLang: replyLanguage,
+    lastUserMessage: lastUser,
+    fallback: 'tr',
+  })
   const agent = (siteName || 'Destek').trim().split(/\s+/)[0] || 'Destek'
   const brand = brandName?.trim() || ''
+  const variantIdx = Math.max(0, messages.length) % 3
+
+  if (lang !== 'tr') {
+    const teamSuffix = brand ? `from the ${brand} team` : 'from support'
+    if (!lastUser) {
+      const welcomes = [
+        `Hello! I'm ${agent}, ${teamSuffix}. How can I help you today?`,
+        `Hi there! I'm ${agent}, ${teamSuffix}. What can I assist you with?`,
+        `Hello 👋 I'm ${agent}, ${teamSuffix}. How may I help?`,
+      ]
+      return welcomes[variantIdx]
+    }
+    if (GREETING_RE.test(lastUser) && lastUser.length < 40) {
+      return `Hello! I'm ${agent}, ${teamSuffix}. How can I help you?`
+    }
+    if (THANKS_RE.test(lastUser) && lastUser.length < 40) {
+      const thanks = [
+        `You're welcome! Let me know if you need anything else.`,
+        `Happy to help! Anything else I can do for you?`,
+        `Anytime! Feel free to ask if you have more questions.`,
+      ]
+      return thanks[variantIdx]
+    }
+    if (knowledge && knowledge.length > 0) {
+      const relevant = selectRelevantKnowledge(lastUser, knowledge, 3)
+      if (relevant.length > 0) {
+        return truncate(relevant[0].content, 480)
+      }
+    }
+    return `Thanks for your message. I'm ${agent}, ${teamSuffix} — could you tell me a bit more so I can help?`
+  }
+
   const teamSuffix = brand ? `${brand} ekibinden` : 'destek ekibinden'
   // Aynı cümlenin sürekli tekrarını azaltmak için konuşma uzunluğuna göre döndür.
   const variantIdx = Math.max(0, messages.length) % 3
@@ -652,13 +724,13 @@ export async function* generateAiReplyStream(
   const { siteName, messages, knowledge } = params
 
   if (!messages || messages.length === 0) {
-    yield fallbackReply(siteName, [], knowledge, params.brandName)
+    yield fallbackReply(siteName, [], knowledge, params.brandName, params.replyLanguage)
     return
   }
 
   const runtime = resolveAiConfig(params.dbConfig, params.plan)
   if (!runtime) {
-    yield fallbackReply(siteName, messages, knowledge, params.brandName)
+    yield fallbackReply(siteName, messages, knowledge, params.brandName, effectiveReplyLanguage(params, messages))
     return
   }
 
@@ -679,8 +751,15 @@ export async function* generateAiReplyStream(
     }
   }
 
-  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, enrichedContext)
+  const systemPrompt = buildSystemPrompt(
+    siteName,
+    knowledge,
+    params.systemPrompt,
+    enrichedContext,
+    effectiveReplyLanguage(params, messages),
+  )
   const maxTokens = params.maxTokens ?? MAX_TOKENS
+  const lang = effectiveReplyLanguage(params, messages)
 
   try {
     if (activeRuntime.provider === 'GEMINI') {
@@ -714,15 +793,15 @@ export async function* generateAiReplyStream(
         yield groqText
         return
       }
-      yield fallbackReply(siteName, messages, knowledge, params.brandName)
+      yield fallbackReply(siteName, messages, knowledge, params.brandName, lang)
       return
     }
 
     const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
-    yield text || fallbackReply(siteName, messages, knowledge, params.brandName)
+    yield text || fallbackReply(siteName, messages, knowledge, params.brandName, lang)
   } catch (err) {
     console.error(`[AI] ${activeRuntime.provider} stream failed:`, err instanceof Error ? err.message : err)
-    yield fallbackReply(siteName, messages, knowledge, params.brandName)
+    yield fallbackReply(siteName, messages, knowledge, params.brandName, lang)
   }
 }
 
@@ -732,12 +811,12 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
   const { siteName, messages, knowledge } = params
 
   if (!messages || messages.length === 0) {
-    return fallbackReply(siteName, [], knowledge, params.brandName)
+    return fallbackReply(siteName, [], knowledge, params.brandName, params.replyLanguage)
   }
 
   const runtime = resolveAiConfig(params.dbConfig, params.plan)
   if (!runtime) {
-    return fallbackReply(siteName, messages, knowledge, params.brandName)
+    return fallbackReply(siteName, messages, knowledge, params.brandName, effectiveReplyLanguage(params, messages))
   }
 
   const routedModel =
@@ -757,11 +836,17 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
     }
   }
 
-  const systemPrompt = buildSystemPrompt(siteName, knowledge, params.systemPrompt, enrichedContext)
+  const systemPrompt = buildSystemPrompt(
+    siteName,
+    knowledge,
+    params.systemPrompt,
+    enrichedContext,
+    effectiveReplyLanguage(params, messages),
+  )
+  const maxTokens = params.maxTokens ?? MAX_TOKENS
+  const lang = effectiveReplyLanguage(params, messages)
 
   try {
-    const maxTokens = params.maxTokens ?? MAX_TOKENS
-
     if (activeRuntime.provider === 'GEMINI') {
       // Kota (429) veya boş yanıtta sıradaki ücretsiz Gemini modeline geç.
       for (const model of geminiModelCandidates(activeRuntime.model)) {
@@ -776,13 +861,13 @@ export async function generateAiReply(params: GenerateAiReplyParams): Promise<st
       // Tüm Gemini modelleri tükendi → Groq yedeği (varsa)
       const groqText = await tryCrossProviderFallback(systemPrompt, messages, maxTokens)
       if (groqText) return groqText
-      return fallbackReply(siteName, messages, knowledge, params.brandName)
+      return fallbackReply(siteName, messages, knowledge, params.brandName, lang)
     }
 
     const text = await callLlm(activeRuntime, systemPrompt, messages, maxTokens)
-    return text || fallbackReply(siteName, messages, knowledge, params.brandName)
+    return text || fallbackReply(siteName, messages, knowledge, params.brandName, lang)
   } catch (err) {
     console.error(`[AI] ${runtime.provider} call failed:`, err instanceof Error ? err.message : err)
-    return fallbackReply(siteName, messages, knowledge, params.brandName)
+    return fallbackReply(siteName, messages, knowledge, params.brandName, lang)
   }
 }

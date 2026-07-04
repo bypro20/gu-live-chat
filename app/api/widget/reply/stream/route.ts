@@ -12,6 +12,7 @@ import { MARKETING_WIDGET_DISPLAY_NAME } from '@/lib/marketing-demo-agents'
 import { PLATFORM_AI_MODEL } from '@/lib/ai/platform-config'
 import { emitBotMessage } from '@/lib/socket-events'
 import { rateLimitByIp, rateLimitResponse } from '@/lib/rate-limit'
+import { resolveVisitorReplyLanguage } from '@/lib/ai/reply-language'
 
 export const maxDuration = 30
 
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: parsed.conversationId, websiteId: website.id, visitorId: visitor.id },
-    select: { id: true },
+    select: { id: true, visitorLang: true },
   })
   if (!conversation) {
     return NextResponse.json({ error: 'Konuşma bulunamadı' }, { status: 404 })
@@ -129,6 +130,11 @@ export async function POST(req: Request) {
 
   const messages = toChatMessages(ordered)
   const knowledge = getMarketingKnowledgeCache()
+  const replyLanguage = resolveVisitorReplyLanguage({
+    visitorLang: conversation.visitorLang,
+    lastUserMessage: lastVisitor?.content,
+    fallback: 'tr',
+  })
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -147,7 +153,7 @@ export async function POST(req: Request) {
             siteName: identity.replyName,
             messages,
             knowledge,
-            systemPrompt: buildMarketingSystemPrompt(agentFields.agentDisplayName),
+            systemPrompt: buildMarketingSystemPrompt(agentFields.agentDisplayName, replyLanguage),
             webSearchEnabled: false,
             smartRoutingEnabled: false,
             dbConfig: {
@@ -161,6 +167,7 @@ export async function POST(req: Request) {
             conversationId: conversation.id,
             maxTokens: MARKETING_MAX_TOKENS,
             brandName: MARKETING_WIDGET_DISPLAY_NAME,
+            replyLanguage,
           })
         ).trim()
 

@@ -17,6 +17,7 @@ import { isPlatformMarketingWebsiteId } from '../marketing-website'
 import { resolveWidgetAgentIdentity } from '../widget-bot-identity'
 import { loadWebsiteAgentFields } from '../website-agent-fields'
 import { PLATFORM_AI_MODEL } from './platform-config'
+import { resolveVisitorReplyLanguage } from './reply-language'
 import type { PlanType } from '../constants'
 
 const HISTORY_LIMIT = 12
@@ -207,6 +208,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         chatbotHandedToAi: true,
         chatbotId: true,
         visitorId: true,
+        visitorLang: true,
         website: { select: { id: true, name: true, plan: true, avatarUrl: true } },
       },
     })
@@ -355,12 +357,18 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         }
       }
 
+      const replyLanguage = resolveVisitorReplyLanguage({
+        visitorLang: conversation.visitorLang,
+        lastUserMessage: last.content,
+        fallback: 'tr',
+      })
+
       const reply = await generateAiReply({
         siteName: isMarketing ? botDisplayName : conversation.website.name,
         messages,
         knowledge: knowledgeForReply,
         systemPrompt: isMarketing
-          ? buildMarketingSystemPrompt(agentFields.agentDisplayName)
+          ? buildMarketingSystemPrompt(agentFields.agentDisplayName, replyLanguage)
           : aiConfig?.systemPrompt || undefined,
         visitorContext: [visitorContext, visionContext].filter(Boolean).join('\n\n') || undefined,
         webSearchEnabled: isMarketing ? false : flags.webSearchEnabled,
@@ -374,6 +382,7 @@ export async function maybeRunAiAutoReply(params: AutoReplyParams): Promise<void
         conversationId: params.conversationId,
         maxTokens: isMarketing ? MARKETING_MAX_TOKENS : WIDGET_MAX_TOKENS,
         brandName: isMarketing ? MARKETING_WIDGET_DISPLAY_NAME : undefined,
+        replyLanguage,
       })
 
       const content = reply?.trim()
