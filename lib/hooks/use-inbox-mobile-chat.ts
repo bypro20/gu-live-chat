@@ -1,6 +1,30 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+
+/** Tailwind lg — inbox master/detail mobil/tablet (<1024px) */
+export const INBOX_NARROW_MQ = '(max-width: 1023px)'
+
+export function isInboxNarrowLayout() {
+  return typeof window !== 'undefined' && window.matchMedia(INBOX_NARROW_MQ).matches
+}
+
+/** lg altı ekran — liste/sohbet geçişi için reaktif */
+export function useInboxNarrowLayout() {
+  const [isNarrow, setIsNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(INBOX_NARROW_MQ).matches
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia(INBOX_NARROW_MQ)
+    const sync = () => setIsNarrow(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  return isNarrow
+}
 
 /** Mobilde aktif sohbet açıkken shell üst barını gizlemek için html işaretler. */
 export function useInboxMobileChat(active: boolean) {
@@ -16,7 +40,7 @@ export function useInboxMobileChat(active: boolean) {
 }
 
 export const INBOX_CHAT_PANEL_MOBILE =
-  'fixed inset-0 z-[60] flex w-full h-[100dvh] max-h-[100dvh] md:static md:inset-auto md:z-auto md:w-auto md:h-auto md:max-h-none'
+  'fixed inset-0 z-[60] flex w-full h-[100dvh] max-h-[100dvh] lg:static lg:inset-auto lg:z-auto lg:w-auto lg:h-auto lg:max-h-none'
 
 /** Admin master-detail: mobilde tam ekran, md+ yan yana */
 export const ADMIN_SPLIT_DETAIL =

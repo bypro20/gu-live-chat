@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Volume2, VolumeX, MessageSquare, Search, AlertTriangle } from 'lucide-react'
 import { useInboxMessageScroll } from '@/lib/hooks/use-inbox-message-scroll'
-import { useInboxMobileChat, INBOX_CHAT_PANEL_MOBILE } from '@/lib/hooks/use-inbox-mobile-chat'
+import { useInboxMobileChat, useInboxNarrowLayout, isInboxNarrowLayout, INBOX_CHAT_PANEL_MOBILE } from '@/lib/hooks/use-inbox-mobile-chat'
 import {
   useAdminInboxConversations,
   useAdminInboxMessages,
@@ -55,7 +55,10 @@ import type { InboxConversation } from '@/components/inbox/types'
 
 export function AdminInboxPanel() {
   const i = useDashboardI18n().inbox
+  const pathname = usePathname()
+  const router = useRouter()
   const searchParams = useSearchParams()
+  const isNarrow = useInboxNarrowLayout()
   const { data: session } = useSession()
   const [marketingSite, setMarketingSite] = useState<{
     websiteId: string
@@ -151,7 +154,7 @@ export function AdminInboxPanel() {
     selectedId,
   )
 
-  useInboxMobileChat(!!selectedId)
+  useInboxMobileChat(isNarrow && !!selectedId)
 
   useInboxSoundAlert(conversations, false, liveConnected)
 
@@ -184,9 +187,21 @@ export function AdminInboxPanel() {
 
   const openPersistentAlert = useCallback((alert: PersistentInboxAlert) => {
     const conversationId = alert.conversationId || (alert.id.startsWith('visitor:') ? null : alert.id)
-    if (conversationId) setSelectedId(conversationId)
+    if (conversationId) {
+      setSelectedId(conversationId)
+      if (isInboxNarrowLayout()) {
+        router.replace(`/admin/inbox?conversation=${encodeURIComponent(conversationId)}`, { scroll: false })
+      }
+    }
     stopPersistentInboxAlertsForConversation(conversationId || alert.id)
-  }, [])
+  }, [router])
+
+  const showInboxList = useCallback(() => {
+    setSelectedId(null)
+    if (searchParams.get('conversation')) {
+      router.replace('/admin/inbox', { scroll: false })
+    }
+  }, [router, searchParams])
 
   const filteredConversations = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -210,16 +225,33 @@ export function AdminInboxPanel() {
 
   useEffect(() => {
     const fromUrl = searchParams.get('conversation')
-    if (fromUrl) setSelectedId(fromUrl)
-  }, [searchParams])
+    if (fromUrl) {
+      setSelectedId(fromUrl)
+      return
+    }
+    // Mobilde gelen kutusuna girince önce konuşma listesi gösterilsin
+    if (!isInboxNarrowLayout()) {
+      setSelectedId(null)
+    }
+  }, [pathname, searchParams])
 
   useEffect(() => {
     if (selectedId || filteredConversations.length === 0) return
     const fromUrl = searchParams.get('conversation')
     if (fromUrl) return
+    // Masaüstünde yan yana görünüm için ilk okunmamışı seç; mobil/tablet'te listeyi kilitleme
+    if (isInboxNarrowLayout()) return
     const firstUnread = filteredConversations.find((c) => c.unreadCount > 0)
     setSelectedId((firstUnread ?? filteredConversations[0]).id)
   }, [filteredConversations, selectedId, searchParams])
+
+  useEffect(() => {
+    const showList = () => {
+      if (isInboxNarrowLayout()) showInboxList()
+    }
+    window.addEventListener('admin-inbox-show-list', showList)
+    return () => window.removeEventListener('admin-inbox-show-list', showList)
+  }, [showInboxList])
 
   useEffect(() => {
     if (!isSocketEnabled()) {
@@ -459,7 +491,7 @@ export function AdminInboxPanel() {
       }
 
       void mutateConversations()
-      if (!selectedIdRef.current && data.conversationId) {
+      if (!selectedIdRef.current && data.conversationId && !isInboxNarrowLayout()) {
         setSelectedId(data.conversationId)
       }
     },
@@ -484,7 +516,10 @@ export function AdminInboxPanel() {
         preview: 'Müşteri widget üzerinden yazdı',
         reason: 'conversation',
       })
-      setSelectedId((cur) => cur ?? data.conversationId)
+      setSelectedId((cur) => {
+        if (cur) return cur
+        return isInboxNarrowLayout() ? null : data.conversationId
+      })
     }
     const onVisitorOnline = (data: {
       visitorId: string
@@ -687,12 +722,14 @@ export function AdminInboxPanel() {
 
   if (!marketingSite) return null
 
+  const mobileChatOpen = isNarrow && !!selectedId
+
   return (
     <div className="inbox-shell flex-1 min-h-0 h-full w-full max-w-full flex overflow-hidden">
       {/* Sidebar — müşteri paneli ile aynı */}
       <div
         className={`inbox-shell-list w-full lg:w-[340px] xl:w-[380px] border-r flex flex-col min-h-0 shrink-0 ${
-          selectedConversation ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
+          mobileChatOpen ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
         }`}
       >
         <div className="p-4 border-b border-border space-y-3">
@@ -849,24 +886,33 @@ export function AdminInboxPanel() {
       {/* Chat panel */}
       <div
         className={`inbox-shell-chat flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden ${
-          selectedConversation ? `${INBOX_CHAT_PANEL_MOBILE}` : 'hidden lg:flex'
+          mobileChatOpen ? INBOX_CHAT_PANEL_MOBILE : 'hidden lg:flex'
         }`}
       >
         {!selectedConversation ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center px-6">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-muted-foreground/60" />
-              </div>
-              <h2 className="text-lg font-semibold text-foreground">Sohbet seçin</h2>
-              <p className="text-sm text-muted-foreground mt-1">Soldan bir konuşma seçerek yanıt verin.</p>
+              {selectedId ? (
+                <>
+                  <Skeleton className="h-8 w-8 rounded-full mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground">Sohbet yükleniyor…</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare className="w-8 h-8 text-muted-foreground/60" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-foreground">Sohbet seçin</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Soldan bir konuşma seçerek yanıt verin.</p>
+                </>
+              )}
             </div>
           </div>
         ) : (
           <>
             <ChatHeader
               conversation={selectedConversation}
-              onBack={() => setSelectedId(null)}
+              onBack={showInboxList}
               canTranslate
               autoTranslate={autoTranslate}
               onToggleTranslate={toggleAutoTranslate}

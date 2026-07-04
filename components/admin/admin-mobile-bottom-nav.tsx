@@ -93,6 +93,16 @@ export function AdminMobileBottomNav({
                 key={tab.href}
                 href={tab.href}
                 className={`mobile-web-tab touch-manipulation ${active ? 'mobile-web-tab--active' : ''}`}
+                onClick={(e) => {
+                  if (
+                    active &&
+                    tab.href === '/admin/inbox' &&
+                    pathname.startsWith('/admin/inbox')
+                  ) {
+                    e.preventDefault()
+                    window.dispatchEvent(new CustomEvent('admin-inbox-show-list'))
+                  }
+                }}
               >
                 {content}
               </Link>
