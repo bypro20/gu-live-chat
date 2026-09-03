@@ -48,6 +48,8 @@ next-env.d.ts
 /tools/imvd/__pycache__/
 **/__pycache__/
 .cursor/
+!.cursor/environment.json
+!.cursor/install.sh
 .playwright-mcp/
 .railway/
 mobile-admin/node_modules/

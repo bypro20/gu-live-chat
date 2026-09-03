@@ -1,0 +1,10 @@
+{
+  "name": "Gu Live Chat",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "npm run dev"
+    }
+  ]
+}
