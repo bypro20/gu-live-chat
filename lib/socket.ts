@@ -6,6 +6,7 @@ import { resolveAgentSocketToken, resolveVisitorToken, type AgentSocketTokenPayl
 import { websiteHasFeature } from './addon-features'
 import { isValidCustomerEmbedUrl, isWidgetPlatformUrl, normalizeExternalUrl } from './widget-embed-url'
 import { enrichVisitorLiveProfile } from './visitor-live-enrich'
+import { matchVisitorSession } from './find-visitor-session'
 
 let io: SocketIOServer
 
@@ -290,6 +291,17 @@ function getVisitorSession(socket: { id: string }): VisitorSessionInfo | undefin
   return visitorSessions.get(socket.id)
 }
 
+function findVisitorSocketEntry(
+  visitorId: string,
+  websiteId: string,
+  sessionId?: string
+): [string, VisitorSessionInfo] | undefined {
+  const sessions = Array.from(visitorSessions.values())
+  const matched = matchVisitorSession(sessions, { visitorId, websiteId, sessionId })
+  if (!matched) return undefined
+  return [matched.socketId, matched]
+}
+
 async function agentCanAccessConversation(
   socket: { userId?: string; websiteIds?: string[] },
   conversationId: string
@@ -354,12 +366,27 @@ export function initSocketServer(httpServer: HTTPServer) {
 
       const requestedWebsiteIds = Array.isArray(data.websiteIds) ? data.websiteIds : []
 
-      // Tenant isolation: never trust the client-supplied website list. Only
-      // let this user join the rooms of websites they are actually a member of.
-      // `requestedWebsiteIds` are public websiteIds; membership is stored
-      // against the internal website id, so we resolve through the relation.
       let websiteIds: string[] = []
-      if (userId && requestedWebsiteIds.length > 0) {
+      let isPlatformAdmin = false
+
+      if (userId) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+          })
+          if (user?.role === 'ADMIN' && scope === 'platform') {
+            isPlatformAdmin = true
+            const allSites = await prisma.website.findMany({ select: { websiteId: true } })
+            websiteIds = allSites.map((w) => w.websiteId)
+          }
+        } catch (err) {
+          console.error('[Socket] admin auth failed:', err)
+        }
+      }
+
+      // Tenant isolation: never trust the client-supplied website list.
+      if (websiteIds.length === 0 && userId && requestedWebsiteIds.length > 0) {
         try {
           const [memberships, ownedWebsites] = await Promise.all([
             prisma.teamMember.findMany({
@@ -386,32 +413,6 @@ export function initSocketServer(httpServer: HTTPServer) {
         } catch (err) {
           console.error('[Socket] agent:auth membership check failed:', err)
           return
-        }
-      }
-
-      // Platform admin: tüm siteler veya marketing sitesi
-      let isPlatformAdmin = false
-      if (websiteIds.length === 0 && userId) {
-        try {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { role: true },
-          })
-          if (user?.role === 'ADMIN') {
-            isPlatformAdmin = true
-            if (scope === 'platform') {
-              const allSites = await prisma.website.findMany({ select: { websiteId: true } })
-              websiteIds = allSites.map((w) => w.websiteId)
-            } else if (requestedWebsiteIds.length > 0) {
-              const { ensureAdminMarketingAccess } = await import('./marketing-website')
-              const marketingId = await ensureAdminMarketingAccess(userId)
-              if (requestedWebsiteIds.includes(marketingId)) {
-                websiteIds = [marketingId]
-              }
-            }
-          }
-        } catch (err) {
-          console.error('[Socket] admin auth failed:', err)
         }
       }
 
@@ -838,10 +839,9 @@ export function initSocketServer(httpServer: HTTPServer) {
       screenshotCounter++
       // Log every 10th screenshot to avoid console spam
       if (screenshotCounter % 10 === 1) {
-        console.log(`[Socket] Screenshot #${screenshotCounter} from visitor ${data.visitorId?.substring(0, 8)}..., size: ${Math.round((data.screenshot?.length || 0) / 1024)}KB`)
+        console.log(`[Socket] Screenshot #${screenshotCounter} from visitor ${session.visitorId?.substring(0, 8)}..., size: ${Math.round((data.screenshot?.length || 0) / 1024)}KB`)
       }
 
-      // Update session data
       session.lastScreenshotUrl = data.screenshot
       session.lastScreenshotAt = new Date()
       session.lastActiveAt = new Date()
@@ -850,10 +850,9 @@ export function initSocketServer(httpServer: HTTPServer) {
       if (data.scrollY) session.scrollY = data.scrollY
       if (data.documentH) session.documentH = data.documentH
 
-      // Broadcast screenshot to all agents watching this website
-      io.to(`website:${data.websiteId}`).emit('agent:visitor:screenshot', {
-        visitorId: data.visitorId,
-        websiteId: data.websiteId,
+      io.to(`website:${session.websiteId}`).emit('agent:visitor:screenshot', {
+        visitorId: session.visitorId,
+        websiteId: session.websiteId,
         screenshot: data.screenshot,
         viewportW: data.viewportW,
         viewportH: data.viewportH,
@@ -884,9 +883,7 @@ export function initSocketServer(httpServer: HTTPServer) {
         })
         return
       }
-      // Forward to the specific visitor to start sending screenshots
-      const visitorSocket = Array.from(visitorSessions.entries())
-        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      const visitorSocket = findVisitorSocketEntry(data.visitorId, data.websiteId)
       if (visitorSocket) {
         io.to(visitorSocket[0]).emit('visitor:screen:start')
         console.log(`[Socket] Screen capture started for visitor ${data.visitorId?.substring(0, 8)}...`)
@@ -904,8 +901,7 @@ export function initSocketServer(httpServer: HTTPServer) {
     socket.on('agent:screen:stop', (data: { visitorId: string; websiteId: string }) => {
       if (!isAgentAuthed(socket as { userId?: string; websiteIds?: string[] }, data.websiteId)) return
       // Forward to the specific visitor to stop sending screenshots
-      const visitorSocket = Array.from(visitorSessions.entries())
-        .find(([_, session]) => session.visitorId === data.visitorId && session.websiteId === data.websiteId)
+      const visitorSocket = findVisitorSocketEntry(data.visitorId, data.websiteId)
       if (visitorSocket) {
         io.to(visitorSocket[0]).emit('visitor:screen:stop')
         console.log(`[Socket] Screen capture stopped for visitor ${data.visitorId?.substring(0, 8)}...`)
@@ -1176,9 +1172,7 @@ export function getAllLiveVisitors() {
 export function emitVisitorScreenStart(visitorId: string, websiteId: string): 'ok' | 'offline' {
   const socketIo = getIO()
   if (!socketIo) return 'offline'
-  const entry = Array.from(visitorSessions.entries()).find(
-    ([, s]) => s.visitorId === visitorId && s.websiteId === websiteId
-  )
+  const entry = findVisitorSocketEntry(visitorId, websiteId)
   if (!entry) return 'offline'
   socketIo.to(entry[0]).emit('visitor:screen:start')
   console.log(`[Socket] Screen capture started for visitor ${visitorId.substring(0, 8)}...`)
@@ -1188,9 +1182,7 @@ export function emitVisitorScreenStart(visitorId: string, websiteId: string): 'o
 export function emitVisitorScreenStop(visitorId: string, websiteId: string): void {
   const socketIo = getIO()
   if (!socketIo) return
-  const entry = Array.from(visitorSessions.entries()).find(
-    ([, s]) => s.visitorId === visitorId && s.websiteId === websiteId
-  )
+  const entry = findVisitorSocketEntry(visitorId, websiteId)
   if (!entry) return
   socketIo.to(entry[0]).emit('visitor:screen:stop')
 }

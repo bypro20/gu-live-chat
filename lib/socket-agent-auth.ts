@@ -65,16 +65,11 @@ export async function ensureAgentSocketAuth(
       cleanup()
       resolve(ok)
     }
-    const timer = setTimeout(() => finish(true), 6000)
-    const legacy = setTimeout(() => finish(socket.connected), 2000)
-    const onOk = () => {
-      clearTimeout(legacy)
-      finish(true)
-    }
+    const timer = setTimeout(() => finish(false), 12000)
+    const onOk = () => finish(true)
     const onFail = () => finish(false)
     const cleanup = () => {
       clearTimeout(timer)
-      clearTimeout(legacy)
       socket.off('agent:auth:ok', onOk)
       socket.off('agent:auth:failed', onFail)
     }

@@ -460,8 +460,6 @@ export function fallbackReply(
   }
 
   const teamSuffix = brand ? `${brand} ekibinden` : 'destek ekibinden'
-  // Aynı cümlenin sürekli tekrarını azaltmak için konuşma uzunluğuna göre döndür.
-  const variantIdx = Math.max(0, messages.length) % 3
 
   if (!lastUser) {
     const welcomes = [

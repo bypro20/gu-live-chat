@@ -175,8 +175,7 @@ export function AdminVisitorsMonitor({
         if (ids.length === 0) return
         await ensureAgentSocketAuth(emit, ids)
       } else {
-        const ids = websiteIds.length > 0 ? websiteIds : []
-        await ensureAgentSocketAuth(emit, ids, 'platform')
+        await ensureAgentSocketAuth(emit, [], 'platform')
       }
     }
 
@@ -346,8 +345,7 @@ export function AdminVisitorsMonitor({
       if (ids.length === 0) return
       void ensureAgentSocketAuth(emit, ids)
     } else {
-      const ids = websiteIds.length > 0 ? websiteIds : []
-      void ensureAgentSocketAuth(emit, ids, 'platform')
+      void ensureAgentSocketAuth(emit, [], 'platform')
     }
   }, [session, websiteIds, websiteId, isDashboard, emit])
 
@@ -373,7 +371,7 @@ export function AdminVisitorsMonitor({
         : websiteIds
       const authed = await ensureAgentSocketAuth(
         emit,
-        ids,
+        isDashboard ? ids : [],
         isDashboard ? undefined : 'platform'
       )
       if (!authed) {

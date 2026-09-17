@@ -859,8 +859,8 @@
   }
 
   function isBlankScreenshot(dataUrl) {
-    // Failed scroll captures collapse to a tiny white JPEG (~29KB).
-    return !dataUrl || dataUrl.length < 40000;
+    // Only drop truly failed captures (empty / tiny). Real pages can be 15–40KB JPEGs.
+    return !dataUrl || dataUrl.length < 1500;
   }
 
   // Dynamically load html-to-image library (same origin first, then CDN fallback)
@@ -1010,7 +1010,8 @@
       } catch (e) {}
     }
 
-    window.htmlToImage.toJpeg(document.body, {
+    var captureTarget = document.documentElement || document.body;
+    window.htmlToImage.toJpeg(captureTarget, {
       quality: SCREENSHOT_QUALITY,
       backgroundColor: '#ffffff',
       width: captureW,

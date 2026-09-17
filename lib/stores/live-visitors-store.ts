@@ -200,14 +200,16 @@ export const useLiveVisitorsStore = create<LiveVisitorsState>((set) => ({
     set((state) => {
       const newMap = new Map(state.visitors)
       const existing = newMap.get(visitorId)
-      if (existing) {
-        newMap.set(visitorId, {
-          ...existing,
-          screenshotUrl,
-          screenshotAt: timestamp || new Date().toISOString(),
-          ...(extras || {}),
-        })
+      const next = {
+        visitorId,
+        currentPage: existing?.currentPage || '',
+        isLive: true,
+        ...(existing || {}),
+        screenshotUrl,
+        screenshotAt: timestamp || new Date().toISOString(),
+        ...(extras || {}),
       }
+      newMap.set(visitorId, next)
       return { visitors: newMap }
     }),
 
