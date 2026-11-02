@@ -1674,7 +1674,7 @@ export default function WidgetPage() {
     }
   }, [websiteId, conversationId, visitorInfo, inputMessage, t])
 
-  // Gelen temsilci/bot mesajlarını otomatik çevir (Supsis tarzı)
+  // Gelen temsilci/bot mesajlarını otomatik çevir
   useEffect(() => {
     autoTranslateIncoming(messages)
   }, [messages, autoTranslateIncoming])

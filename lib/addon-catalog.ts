@@ -202,7 +202,7 @@ export const ADDON_SEED_CATALOG: AddonSeed[] = [
   {
     slug: 'ai-rag-pro',
     name: 'AI Bilgi Eğitimi (RAG)',
-    description: 'PDF, URL ve metinlerden semantik bilgi bankası — Supsis tarzı AI eğitimi.',
+    description: 'PDF, URL ve metinlerden semantik bilgi bankası ile AI eğitimi.',
     longDescription: 'Embedding tabanlı arama, PDF içe aktarma, makale indeksleme ve AI yanıtlarına otomatik bağlam. Profesyonel pakette dahil; Başlangıç paketinde eklenti.',
     category: AddonCategory.AI,
     icon: '📚',

@@ -49,7 +49,7 @@ export const homeTr: HomeMessages = {
   },
   aiPlatform: {
     label: 'AI Platformu',
-    title: 'Supsis tarzı uçtan uca AI destek',
+    title: 'Uçtan uca AI destek platformu',
     desc: 'RAG eğitimi, sesli asistan, inbox copilot, web araması, duygu analizi ve akıllı model yönlendirme — tek panelde.',
     items: [
       { title: 'RAG bilgi eğitimi', desc: 'PDF, URL ve metin ile semantik arama.', href: '/ai' },
