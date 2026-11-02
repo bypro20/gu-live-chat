@@ -13,8 +13,7 @@ import {
 } from 'lucide-react'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import { FadeIn } from '@/components/marketing/fade-in'
-import { HeroRobotOverlays } from '@/components/marketing/hero-robot'
-import { TechnoaiHeroFx } from '@/components/marketing/technoai-hero-fx'
+import { HeroShowcase } from '@/components/marketing/hero-showcase'
 import {
   AiReplyShowcase,
   AutomationShowcase,
@@ -92,56 +91,56 @@ export function HomeHero() {
   const lang = locale === 'en' ? 'en' : 'tr'
 
   return (
-    <section className="technoai-hero technoai-hero--robot pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-44 px-4 sm:px-6 lg:px-8">
-      <TechnoaiHeroFx />
-      <div className="technoai-hero-overlay" aria-hidden />
-      <HeroRobotOverlays />
+    <section className="marketing-hero-bg relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28 px-4 sm:px-6 lg:px-8">
+      <div className="ecall-hero-shape" aria-hidden />
 
-      <div className="relative max-w-7xl mx-auto w-full z-[2]">
-        <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0 min-h-[420px] lg:min-h-[520px] flex flex-col justify-center">
-            <FadeIn>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-[#029b9b]/40 bg-[#029b9b]/10 text-[#67E8F9]">
-                {lang === 'en' ? 'AI-Powered Live Chat' : 'AI Destekli Canlı Sohbet'}
-              </span>
-            </FadeIn>
-            <FadeIn delay={0.05}>
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.08] text-white">
-                {lang === 'tr' ? (
-                  <>
-                    Üstün
-                    <br />
-                    <span className="text-[#00C9E0]">canlı destek çözümleri</span>
-                    <span className="technoai-headline-dot bg-[#029b9b]" aria-hidden />
-                  </>
-                ) : (
-                  <>
-                    Delivering
-                    <br />
-                    <span className="text-[#00C9E0]">Superior Live Support</span>
-                    <span className="technoai-headline-dot bg-[#029b9b]" aria-hidden />
-                  </>
-                )}
-              </h1>
-            </FadeIn>
-            <FadeIn delay={0.1}>
-              <p className="mt-6 text-lg sm:text-xl text-[#dddddd] leading-relaxed max-w-lg mx-auto lg:mx-0">
-                {t.hero.subtitle}
-              </p>
-            </FadeIn>
-            <FadeIn delay={0.14}>
-              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link href="/register" className="technoai-btn-cyan text-base">
-                  {t.hero.cta} <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/demo" className="btn-hero-outline px-8 py-3.5 rounded-full text-base">
-                  {t.hero.demo}
-                </Link>
-              </div>
-              <p className="mt-4 text-sm text-white/50">
-                {locale === 'tr' ? trialHeroLine() : t.hero.trial}
-              </p>
-            </FadeIn>
+      <div className="relative max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-14 lg:gap-16 items-center">
+        <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
+          <FadeIn>
+            <span className="premium-section-tag">
+              {lang === 'en' ? 'AI-Powered Live Chat' : 'AI Destekli Canlı Sohbet'}
+            </span>
+          </FadeIn>
+          <FadeIn delay={0.05}>
+            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.08] premium-heading">
+              {lang === 'tr' ? (
+                <>
+                  Üstün
+                  <br />
+                  <span className="text-primary">canlı destek çözümleri</span>
+                </>
+              ) : (
+                <>
+                  Delivering
+                  <br />
+                  <span className="text-primary">Superior Live Support</span>
+                </>
+              )}
+            </h1>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <p className="mt-6 text-lg sm:text-xl premium-body leading-relaxed max-w-lg mx-auto lg:mx-0">
+              {t.hero.subtitle}
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.14}>
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+              <Link href="/register" className="btn-primary text-base px-8 py-3.5">
+                {t.hero.cta} <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href="/demo" className="btn-secondary text-base px-8 py-3.5">
+                {t.hero.demo}
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {locale === 'tr' ? trialHeroLine() : t.hero.trial}
+            </p>
+          </FadeIn>
         </div>
+
+        <FadeIn delay={0.1} className="hidden lg:block">
+          <HeroShowcase />
+        </FadeIn>
       </div>
     </section>
   )

@@ -2379,6 +2379,16 @@ body {
     color: var(--admin-text);
   }
 
+  .admin-monitor-panel.hidden {
+    display: none;
+  }
+
+  @media (min-width: 1280px) {
+    .admin-monitor-panel.admin-watch-empty {
+      display: flex;
+    }
+  }
+
   .admin-shell-v2 .admin-screen-watch-btn,
   .admin-overlay-host .admin-screen-watch-btn {
     background: linear-gradient(

@@ -3,21 +3,15 @@
 import Link from 'next/link'
 import {
   ArrowRight,
-  Bot,
   Headphones,
-  Inbox,
-  MessageCircle,
-  Phone,
   Shield,
   Clock,
-  BarChart3,
-  Layers,
   Check,
   Play,
 } from 'lucide-react'
 import { FadeIn } from '@/components/marketing/fade-in'
 import { useLocale } from '@/components/marketing/locale-provider'
-import { HeroShowcase } from '@/components/marketing/hero-showcase'
+import { HeroPreview } from '@/components/marketing/hero-preview'
 import { GU_BRAND } from '@/lib/brand-theme'
 
 export function HeroFeaturePills() {
@@ -69,103 +63,6 @@ export function HeroFeaturePills() {
   )
 }
 
-export function ServicesOfferGrid() {
-  const { locale } = useLocale()
-  const lang = locale === 'en' ? 'en' : 'tr'
-  const title = lang === 'en' ? 'Services We Offer' : 'Sunduğumuz Hizmetler'
-  const subtitle =
-    lang === 'en'
-      ? 'Explore our creative solutions that make a real difference for your customers.'
-      : 'Müşterileriniz için gerçek fark yaratan çözümlerimizi keşfedin.'
-
-  const services = [
-    {
-      icon: MessageCircle,
-      title: lang === 'en' ? 'Live Chat Widget' : 'Canlı Sohbet Widget',
-      desc:
-        lang === 'en'
-          ? 'Embed on any site in 30 seconds. Pre-chat forms and proactive messages.'
-          : '30 saniyede her siteye ekleyin. Ön sohbet formu ve proaktif mesajlar.',
-      href: '/canli-destek',
-    },
-    {
-      icon: Inbox,
-      title: lang === 'en' ? 'Unified Inbox' : 'Birleşik Inbox',
-      desc:
-        lang === 'en'
-          ? 'Widget, WhatsApp, email and social channels in one panel.'
-          : 'Widget, WhatsApp, e-posta ve sosyal kanallar tek panelde.',
-      href: '/integrations',
-    },
-    {
-      icon: Bot,
-      title: lang === 'en' ? 'AI Chat Assistant' : 'AI Sohbet Asistanı',
-      desc:
-        lang === 'en'
-          ? 'GPT-powered replies, knowledge base integration, smart handoff.'
-          : 'GPT destekli yanıtlar, bilgi bankası entegrasyonu, akıllı devir.',
-      href: '/ai',
-    },
-    {
-      icon: Headphones,
-      title: lang === 'en' ? 'Customer Support' : 'Müşteri Desteği',
-      desc:
-        lang === 'en'
-          ? 'Team assignment, canned responses, CSAT and performance reports.'
-          : 'Ekip ataması, hazır cevaplar, CSAT ve performans raporları.',
-      href: '/features',
-    },
-    {
-      icon: Layers,
-      title: lang === 'en' ? 'Platform Integrations' : 'Platform Entegrasyonları',
-      desc:
-        lang === 'en'
-          ? 'Shopify, WordPress, Wix, IdeaSoft, Ticimax, ikas and 30+ guides.'
-          : 'Shopify, WordPress, Wix, IdeaSoft, Ticimax, ikas ve 30+ rehber.',
-      href: '/platformlar',
-    },
-    {
-      icon: BarChart3,
-      title: lang === 'en' ? 'Analytics & Reports' : 'Analitik & Raporlar',
-      desc:
-        lang === 'en'
-          ? 'Response times, resolution rates and agent performance metrics.'
-          : 'Yanıt süreleri, çözüm oranları ve temsilci performans metrikleri.',
-      href: '/features',
-    },
-  ]
-
-  return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white marketing-section-light">
-      <div className="max-w-6xl mx-auto">
-        <FadeIn>
-          <div className="text-center mb-14">
-            <span className="premium-section-tag mb-4 inline-block">{title}</span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight premium-heading">{title}</h2>
-            <p className="mt-3 premium-body max-w-xl mx-auto">{subtitle}</p>
-          </div>
-        </FadeIn>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
-          {services.map((s, i) => (
-            <FadeIn key={s.title} delay={i * 0.04}>
-              <Link href={s.href} className="ecall-service-card technoai-service-card group block text-center">
-                <div className="technoai-service-icon-wrap">
-                  <s.icon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5">{s.desc}</p>
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                  {lang === 'en' ? 'Explore' : 'Keşfet'} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </span>
-              </Link>
-            </FadeIn>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 export function AboutSplitSection() {
   const { locale } = useLocale()
   const lang = locale === 'en' ? 'en' : 'tr'
@@ -186,7 +83,7 @@ export function AboutSplitSection() {
     <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 premium-section-light">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <FadeIn>
-          <HeroShowcase />
+          <HeroPreview />
         </FadeIn>
         <FadeIn delay={0.08}>
           <span className="premium-section-tag mb-4 inline-block">
@@ -262,43 +159,6 @@ export function HowItWorksSteps() {
                 <div className="ecall-step-num">{i + 1}</div>
                 <h3 className="font-bold text-white mb-2">{step.title}</h3>
                 <p className="text-sm text-white/65 leading-relaxed">{step.desc}</p>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-export function DarkFeatureGrid() {
-  const { locale } = useLocale()
-  const lang = locale === 'en' ? 'en' : 'tr'
-  const features = [
-    { icon: Shield, label: lang === 'en' ? 'Safe & Trusted' : 'Güvenli Altyapı' },
-    { icon: Phone, label: lang === 'en' ? 'Multi-Channel' : 'Çok Kanallı' },
-    { icon: Clock, label: lang === 'en' ? 'Fast Response' : 'Hızlı Yanıt' },
-    { icon: BarChart3, label: lang === 'en' ? 'Live Analytics' : 'Canlı Analitik' },
-    { icon: Bot, label: lang === 'en' ? 'AI Assistant' : 'AI Asistan' },
-    { icon: MessageCircle, label: lang === 'en' ? 'Live Chat' : 'Canlı Sohbet' },
-  ]
-
-  return (
-    <section className="py-16 px-4 sm:px-6 marketing-section-dark border-t border-white/5">
-      <div className="max-w-6xl mx-auto">
-        <FadeIn>
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
-              {lang === 'en' ? 'Built to elevate your support team' : 'Destek ekibinizi yükseltmek için tasarlandı'}
-            </h2>
-          </div>
-        </FadeIn>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {features.map((f, i) => (
-            <FadeIn key={f.label} delay={i * 0.03}>
-              <div className="text-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors">
-                <f.icon className="w-6 h-6 mx-auto mb-2 text-[var(--premium-gold,#c9922e)]" />
-                <p className="text-xs font-semibold text-white/90">{f.label}</p>
               </div>
             </FadeIn>
           ))}

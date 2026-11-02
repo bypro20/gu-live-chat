@@ -8,10 +8,8 @@ import {
 } from '@/components/marketing/home-sections'
 import {
   HeroFeaturePills,
-  ServicesOfferGrid,
   AboutSplitSection,
   HowItWorksSteps,
-  DarkFeatureGrid,
   FullWidthCtaBanner,
 } from '@/components/marketing/ecall-home-blocks'
 import { getHomeFaqs } from '@/lib/home-faqs'
@@ -35,11 +33,9 @@ export default async function HomePage() {
       <HomeHero />
       <HeroFeaturePills />
       <AboutSplitSection />
-      <ServicesOfferGrid />
       <TrustStrip />
       <FeatureGrid />
       <HowItWorksSteps />
-      <DarkFeatureGrid />
       <AiShowcase />
       <AiPlatformSection />
       <SharedInbox />
