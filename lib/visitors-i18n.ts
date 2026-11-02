@@ -46,6 +46,7 @@ export type VisitorsMessages = {
     zoomOut: string
     zoomReset: string
     zoomIn: string
+    zoomDisabledIntervention: string
     exitFullscreen: string
     fullscreen: string
     disconnecting: string
@@ -157,6 +158,7 @@ const tr: VisitorsMessages = {
     zoomOut: 'Uzaklaştır',
     zoomReset: 'Sıfırla',
     zoomIn: 'Yakınlaştır',
+    zoomDisabledIntervention: 'Müdahale modunda yakınlaştırma kapalı — tıklamaların doğru konuma gitmesi için',
     exitFullscreen: 'Küçült',
     fullscreen: 'Tam ekran',
     disconnecting: 'Kapatılıyor…',
@@ -268,6 +270,7 @@ const en: VisitorsMessages = {
     zoomOut: 'Zoom out',
     zoomReset: 'Reset',
     zoomIn: 'Zoom in',
+    zoomDisabledIntervention: 'Zoom is disabled in intervention mode so clicks land in the right place',
     exitFullscreen: 'Exit fullscreen',
     fullscreen: 'Fullscreen',
     disconnecting: 'Disconnecting…',

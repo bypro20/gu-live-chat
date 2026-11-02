@@ -306,7 +306,10 @@ export function OverlayPreview({
         {/* Intervention mode toggle — cursor icon */}
         {isActive && (
           <button
-            onClick={() => setInterventionMode((v) => !v)}
+            onClick={() => setInterventionMode((v) => {
+              if (!v) setZoom(1)
+              return !v
+            })}
             title={interventionMode ? o.interventionOn : o.interventionOff}
             className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-[11px] font-semibold transition-all ${
               interventionMode
@@ -331,11 +334,11 @@ export function OverlayPreview({
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </button>
-        {/* Zoom */}
-        <div className="flex items-center gap-0.5 bg-white/[0.06] rounded-lg px-1 py-0.5">
-          <button onClick={zoomOut} disabled={zoom <= 1} title={o.zoomOut} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">−</button>
-          <button onClick={zoomReset} title={o.zoomReset} className="px-1 text-[10px] font-mono text-white/35 hover:text-white/70 min-w-[36px]">{Math.round(zoom * 100)}%</button>
-          <button onClick={zoomIn} disabled={zoom >= 4} title={o.zoomIn} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">+</button>
+        {/* Zoom — disabled in intervention mode: zoomed-in clicks can't map to visitor coordinates */}
+        <div className={`flex items-center gap-0.5 bg-white/[0.06] rounded-lg px-1 py-0.5 ${interventionMode ? 'opacity-40' : ''}`} title={interventionMode ? o.zoomDisabledIntervention : undefined}>
+          <button onClick={zoomOut} disabled={interventionMode || zoom <= 1} title={o.zoomOut} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">−</button>
+          <button onClick={zoomReset} disabled={interventionMode} title={o.zoomReset} className="px-1 text-[10px] font-mono text-white/35 hover:text-white/70 min-w-[36px] disabled:opacity-25">{Math.round(zoom * 100)}%</button>
+          <button onClick={zoomIn} disabled={interventionMode || zoom >= 4} title={o.zoomIn} className="w-6 h-6 grid place-items-center rounded text-white/40 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-25 disabled:hover:bg-transparent text-sm leading-none">+</button>
         </div>
         {/* Fullscreen */}
         <button onClick={() => setIsFullscreen((f) => !f)} title={isFullscreen ? o.exitFullscreen : o.fullscreen} className="w-8 h-8 grid place-items-center rounded-lg text-white/40 hover:bg-white/[0.08] hover:text-white/80 transition-colors">
