@@ -45,7 +45,7 @@ export function AdminVisitorsMonitor({
 }: AdminVisitorsMonitorProps = {}) {
   const isDashboard = variant === 'dashboard'
   const agentLabel = isDashboard ? 'dashboard' : 'admin'
-  const { monitor: m, locale } = useVisitorsI18n()
+  const { monitor: m, overlay: o, locale } = useVisitorsI18n()
   const { data: session } = useSession()
   const { allowed: overlayFeature } = usePlanFeature('overlayAI')
   const {
@@ -77,6 +77,7 @@ export function AdminVisitorsMonitor({
   const [liveConnected, setLiveConnected] = useState(false)
   const selectedVisitorIdRef = useRef<string | null>(selectedVisitorId)
   const screenCaptureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const didAutoSelectRef = useRef(false)
   useEffect(() => { selectedVisitorIdRef.current = selectedVisitorId }, [selectedVisitorId])
 
   const websiteIds = isDashboard ? websiteIdsProp : adminWebsiteIds
@@ -145,8 +146,21 @@ export function AdminVisitorsMonitor({
   useEffect(() => {
     if (!initialVisitorId) return
     const match = visitors.get(initialVisitorId)
-    if (match) selectVisitor(initialVisitorId)
+    if (match) {
+      didAutoSelectRef.current = true
+      selectVisitor(initialVisitorId)
+    }
   }, [initialVisitorId, visitors, selectVisitor])
+
+  useEffect(() => {
+    if (didAutoSelectRef.current || selectedVisitorId) return
+    const list = Array.from(visitors.values())
+    const firstLive = list.find((v) => v.isLive) || list[0]
+    if (!firstLive) return
+    didAutoSelectRef.current = true
+    selectVisitor(firstLive.visitorId)
+    onVisitorSelect?.(firstLive.visitorId)
+  }, [visitors, selectedVisitorId, selectVisitor, onVisitorSelect])
 
   const handleSelectVisitor = useCallback(
     (visitorId: string | null) => {
@@ -409,6 +423,14 @@ export function AdminVisitorsMonitor({
     }
   }, [emit, visitors, updateVisitor, session, isDashboard, overlayEnabled, websiteId, agentLabel, authenticateAgent, m, liveConnected])
 
+  const startWatching = useCallback(
+    (visitorId: string) => {
+      handleSelectVisitor(visitorId)
+      void handleScreenCaptureToggle(visitorId, true)
+    },
+    [handleSelectVisitor, handleScreenCaptureToggle]
+  )
+
   const handleWebRTCHDToggle = useCallback((visitorId: string, active: boolean) => {
     if (active && isDashboard && !overlayEnabled) {
       setOverlayDeniedMessage(m.hdDeniedPro)
@@ -549,8 +571,9 @@ export function AdminVisitorsMonitor({
               return (
                 <div key={visitor.visitorId}>
                   <button
+                    type="button"
                     onClick={() => handleSelectVisitor(expanded ? null : visitor.visitorId)}
-                    className={`w-full text-left p-3.5 transition-colors ${rowHover} ${expanded ? rowActive : ''}`}
+                    className={`w-full text-left p-3.5 pb-2 transition-colors ${rowHover} ${expanded ? rowActive : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative shrink-0">
@@ -589,6 +612,20 @@ export function AdminVisitorsMonitor({
                       {expanded ? <ChevronUp className="w-3.5 h-3.5 text-gray-500 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />}
                     </div>
                   </button>
+                  <div className="px-3.5 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => startWatching(visitor.visitorId)}
+                      className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white touch-manipulation ${
+                        isDashboard
+                          ? 'bg-gradient-to-r from-[#1972F5] to-[#2563EB]'
+                          : 'admin-screen-watch-btn bg-violet-600 hover:bg-violet-500'
+                      }`}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {o.watchScreen}
+                    </button>
+                  </div>
                 </div>
               )
             })
@@ -615,7 +652,7 @@ export function AdminVisitorsMonitor({
 
       {/* Sağ: ekran izleme — mobilde tam ekran */}
       <div
-        className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden'} ${
+        className={`${detailPanelClass} ${selectedVisitor ? 'flex' : 'hidden xl:flex admin-watch-empty'} ${
           selectedVisitor && !isDashboard ? `${ADMIN_VISITOR_DETAIL} admin-visitors-detail-panel` : ''
         }`}
       >
@@ -686,6 +723,23 @@ export function AdminVisitorsMonitor({
                 </p>
                 {filtered.length > 0 && (
                   <p className="text-xs text-emerald-400 mt-3 font-medium">{m.visitorsOnline(filtered.filter((v) => v.isLive).length)}</p>
+                )}
+                {(filtered.find((v) => v.isLive) || filtered[0]) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = filtered.find((v) => v.isLive) || filtered[0]
+                      if (target) startWatching(target.visitorId)
+                    }}
+                    className={`mt-4 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white ${
+                      isDashboard
+                        ? 'bg-gradient-to-r from-[#1972F5] to-[#2563EB]'
+                        : 'admin-screen-watch-btn bg-violet-600 hover:bg-violet-500'
+                    }`}
+                  >
+                    <Eye className="w-4 h-4" />
+                    {o.watchScreen}
+                  </button>
                 )}
               </div>
             </div>

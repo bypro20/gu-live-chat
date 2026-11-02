@@ -418,6 +418,7 @@ export function initSocketServer(httpServer: HTTPServer) {
 
       if (websiteIds.length === 0) {
         console.warn(`[Socket] agent:auth denied for user ${userId}: no verified website membership`)
+        socket.emit('agent:auth:failed', { message: 'no website access' })
         return
       }
 

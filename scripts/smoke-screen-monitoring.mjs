@@ -10,6 +10,7 @@ import { readFileSync, existsSync } from 'fs'
 import { io } from 'socket.io-client'
 
 const BASE = (process.env.SMOKE_BASE_URL || 'https://www.gulivechat.com').replace(/\/$/, '')
+const SOCKET = (process.env.SMOKE_SOCKET_URL || process.env.NEXT_PUBLIC_SOCKET_URL || 'https://167.233.58.166.sslip.io').replace(/\/$/, '')
 const WEBSITE = process.env.SMOKE_WEBSITE_ID || 'HA0wSGsbImQ39YDJ4UI5UpY8'
 const VERCEL_ENV_FILE = process.env.VERCEL_ENV_FILE || '/tmp/gu-vercel.env'
 
@@ -76,7 +77,7 @@ function waitFor(socket, event, timeoutMs = 12000) {
 }
 
 async function connectSocket(label) {
-  const s = io(BASE, { path: '/socket.io', transports: ['polling'], timeout: 15000 })
+  const s = io(SOCKET, { path: '/socket.io', transports: ['websocket', 'polling'], timeout: 15000 })
   await new Promise((res, rej) => {
     s.on('connect', res)
     s.on('connect_error', (e) => rej(new Error(`${label} connect: ${e.message}`)))
@@ -89,6 +90,7 @@ async function main() {
   applyEnvFile()
   console.log('=== Production ekran izleme smoke test ===')
   console.log('Base:', BASE)
+  console.log('Socket:', SOCKET)
 
   const init = await fetch(`${BASE}/api/widget/init`, {
     method: 'POST',

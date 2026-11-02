@@ -6,6 +6,23 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
+  // Native libsql/prisma binaries must not be bundled — Vercel Linux needs
+  // @libsql/linux-arm64-gnu which a local macOS --prebuilt output cannot ship.
+  serverExternalPackages: [
+    '@libsql/client',
+    'libsql',
+    '@prisma/adapter-libsql',
+    '@prisma/adapter-better-sqlite3',
+    '@prisma/client',
+    'better-sqlite3',
+  ],
+  outputFileTracingIncludes: {
+    '*': [
+      './node_modules/@libsql/**',
+      './node_modules/libsql/**',
+      './node_modules/@prisma/adapter-libsql/**',
+    ],
+  },
   turbopack: {
     root: path.join(__dirname),
   },
