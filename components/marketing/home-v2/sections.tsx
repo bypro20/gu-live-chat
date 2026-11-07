@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Instrument_Serif } from 'next/font/google'
 import {
-  ArrowRight, Eye, MessageCircle, ShieldCheck, Inbox, BookOpen, UserRound, Bot, Megaphone,
+  ArrowRight, Eye, ShieldCheck, Inbox, BookOpen, UserRound, Bot, Megaphone,
   LifeBuoy, Workflow, BarChart3, Phone, Languages, Smartphone, Palette, Terminal,
 } from 'lucide-react'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { HeroStage } from '@/components/marketing/home-v2/hero-stage'
+import { Marquee, Orb, SpotlightCard, Starfield, TiltStage } from '@/components/marketing/home-v2/fx'
 import { usePrefersReducedMotion } from '@/components/marketing/home-v2/use-reduced-motion'
 
 const serif = Instrument_Serif({ subsets: ['latin', 'latin-ext'], weight: '400', style: ['normal', 'italic'] })
@@ -192,8 +193,9 @@ const FEATURE_TONE = [
 export function HomeHeroV2() {
   const c = useCopy()
   return (
-    <section className="hv2 hv2-hero relative overflow-hidden bg-[#07060d] px-4 pb-28 pt-32 text-white sm:px-6 sm:pt-40 lg:pt-44">
+    <section className="hv2 hv2-hero hv2-grain relative overflow-hidden bg-[#07060d] px-4 pb-28 pt-32 text-white sm:px-6 sm:pt-40 lg:pt-44">
       <div className="hv2-aurora" aria-hidden="true" />
+      <Starfield />
       <div className="hv2-grid" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-x-0 top-28 hidden h-[420px] xl:block" aria-hidden="true">
         {c.bubbles.map((b, i) => (
@@ -219,15 +221,23 @@ export function HomeHeroV2() {
           {c.eyebrow}
         </p>
         <h1 className="mt-7 text-balance text-[2.1rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
-          {c.h1a}
+          {c.h1a.split(' ').map((w, i) => (
+            <span key={`${w}-${i}`}>
+              <span className="hv2-word" style={{ animationDelay: `${150 + i * 90}ms` }}>
+                {w}
+              </span>{' '}
+            </span>
+          ))}
           <br />
-          <span className={`${serif.className} italic font-normal text-violet-200`}>{c.h1b}</span>
+          <span className="hv2-word" style={{ animationDelay: `${150 + c.h1a.split(' ').length * 90 + 120}ms` }}>
+            <span className={`${serif.className} hv2-glowtext italic font-normal text-violet-200`}>{c.h1b}</span>
+          </span>
         </h1>
         <p className="mx-auto mt-7 max-w-2xl text-pretty text-base leading-relaxed text-white/60 sm:text-lg">{c.sub}</p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
+            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
           >
             {c.cta1} <ArrowRight className="h-4 w-4" />
           </Link>
@@ -241,26 +251,26 @@ export function HomeHeroV2() {
         <p className="mt-5 text-xs text-white/40">{c.note}</p>
       </div>
       <div className="relative mt-16 px-1 sm:mt-20">
-        <HeroStage />
+        <TiltStage>
+          <HeroStage />
+        </TiltStage>
       </div>
     </section>
   )
 }
 
+const CHANNEL_DOTS = ['bg-violet-400', 'bg-emerald-400', 'bg-sky-400', 'bg-blue-400', 'bg-cyan-400', 'bg-amber-300', 'bg-fuchsia-400']
+
 export function ChannelsV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative bg-[#07060d] px-4 pb-8 pt-16 text-white sm:px-6">
-      <Reveal className="mx-auto max-w-5xl text-center">
+    <section className="hv2 relative bg-[#07060d] px-0 pb-8 pt-20 text-white">
+      <Reveal className="mx-auto max-w-5xl px-4 text-center sm:px-6">
         <p className="text-sm text-white/45">{c.channelsTitle}</p>
-        <ul className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
-          {c.channels.map((ch) => (
-            <li key={ch} className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[13px] text-white/75">
-              {ch}
-            </li>
-          ))}
-        </ul>
       </Reveal>
+      <div className="mt-7">
+        <Marquee items={c.channels.map((label, i) => ({ label, dot: CHANNEL_DOTS[i % CHANNEL_DOTS.length] }))} />
+      </div>
     </section>
   )
 }
@@ -331,7 +341,7 @@ export function FeaturesV2() {
             const big = i === 0
             return (
               <Reveal key={f.h} delay={(i % 3) * 70} className={big ? 'lg:col-span-2' : i === c.features.length - 1 ? 'sm:col-span-2 lg:col-span-3' : ''}>
-                <div className={`hv2-card h-full p-7 ${big ? 'lg:p-9' : ''}`}>
+                <SpotlightCard className={`h-full p-7 ${big ? 'lg:p-9' : ''}`}>
                   <Icon className={`h-5 w-5 ${FEATURE_TONE[i]}`} />
                   <h3 className={`mt-5 font-semibold tracking-tight ${big ? 'text-2xl' : 'text-lg'}`}>{f.h}</h3>
                   <p className={`mt-3 leading-relaxed text-white/55 ${big ? 'max-w-xl' : 'text-[15px]'}`}>{f.p}</p>
@@ -349,7 +359,7 @@ export function FeaturesV2() {
                       </div>
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
               </Reveal>
             )
           })}
@@ -442,10 +452,10 @@ export function TrustV2() {
 export function FinalCtaV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative overflow-hidden bg-[#07060d] px-4 py-28 text-center text-white sm:px-6 sm:py-36">
+    <section className="hv2 hv2-grain relative overflow-hidden bg-[#07060d] px-4 py-28 text-center text-white sm:px-6 sm:py-36">
       <div className="hv2-aurora hv2-aurora-soft" aria-hidden="true" />
       <Reveal className="relative mx-auto max-w-3xl">
-        <MessageCircle className="mx-auto h-6 w-6 text-violet-300" />
+        <Orb />
         <h2 className="mt-6 text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl">
           {c.finalTitle}
         </h2>
@@ -453,7 +463,7 @@ export function FinalCtaV2() {
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
+            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
           >
             {c.finalCta} <ArrowRight className="h-4 w-4" />
           </Link>

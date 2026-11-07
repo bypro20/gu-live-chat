@@ -3412,3 +3412,60 @@ html.native-app .native-app-shell .app-main {
 .hv2-footer-dark :is(p,span,a,li,nav){color:rgba(255,255,255,.58)}
 .hv2-footer-dark :is(a:hover,h4){color:#fff}
 .hv2-footer-dark .bg-white :is(p,span,a){color:#334155}
+
+/* ───────── Ana sayfa v2: efektler ───────── */
+.hv2-tilt{perspective:1600px}
+.hv2-tilt-inner{transform:translate3d(0,calc(var(--lift,0)*1px),0) rotateX(calc(var(--tilt,0)*1deg + var(--rx,0)*1deg)) rotateY(calc(var(--ry,0)*1deg));transform-origin:50% 100%;transition:transform .35s cubic-bezier(.22,1,.36,1);will-change:transform}
+
+.hv2-spot{position:relative;overflow:hidden;border-radius:1.25rem;border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));transition:border-color .35s,transform .35s cubic-bezier(.22,1,.36,1)}
+.hv2-spot::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(167,139,250,.16),transparent 55%)}
+.hv2-spot::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .35s;padding:1px;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(196,181,253,.9),transparent 60%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.hv2-spot:hover{transform:translateY(-3px)}
+.hv2-spot:hover::before,.hv2-spot:hover::after{opacity:1}
+@media (hover:none){.hv2-spot:hover{transform:none}}
+
+.hv2-marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.hv2-marquee-track{display:flex;gap:.75rem;width:max-content;animation:hv2-marq 38s linear infinite}
+.hv2-marquee:hover .hv2-marquee-track{animation-play-state:paused}
+@keyframes hv2-marq{to{transform:translateX(calc(-50% - .375rem))}}
+@media (prefers-reduced-motion:reduce){.hv2-marquee-track{animation:none}}
+
+.hv2-orb{position:relative;margin:0 auto;width:min(340px,70vw);aspect-ratio:1;display:grid;place-items:center}
+.hv2-orb-core{position:relative;width:46%;aspect-ratio:1;border-radius:9999px;background:conic-gradient(from 210deg,#14b8a6,#3b82f6,#7c3aed,#d946ef,#14b8a6);box-shadow:0 0 80px 10px rgba(124,58,237,.55),inset 0 0 40px rgba(255,255,255,.25);animation:hv2-spin 14s linear infinite}
+.hv2-orb-core::after{content:"";position:absolute;inset:6%;border-radius:inherit;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),transparent 55%)}
+.hv2-orb-ring{position:absolute;inset:0;border-radius:9999px;border:1px solid rgba(196,181,253,.28);animation:hv2-ring 5.4s ease-out infinite}
+.hv2-orb-ring-1{inset:14%}
+.hv2-orb-ring-2{inset:4%;animation-delay:1.8s}
+.hv2-orb-ring-3{inset:-8%;animation-delay:3.6s}
+@keyframes hv2-spin{to{transform:rotate(360deg)}}
+@keyframes hv2-ring{0%{transform:scale(.82);opacity:0}25%{opacity:.9}100%{transform:scale(1.18);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hv2-orb-core,.hv2-orb-ring{animation:none}}
+
+.hv2-word{display:inline-block;opacity:0;filter:blur(14px);transform:translateY(18px);animation:hv2-word .9s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes hv2-word{to{opacity:1;filter:blur(0);transform:none}}
+.hv2-glowtext{animation:hv2-glow 4.5s ease-in-out infinite}
+@keyframes hv2-glow{0%,100%{text-shadow:0 0 24px rgba(167,139,250,.25)}50%{text-shadow:0 0 44px rgba(196,181,253,.7),0 0 90px rgba(124,58,237,.35)}}
+@media (prefers-reduced-motion:reduce){.hv2-word{animation:none;opacity:1;filter:none;transform:none}.hv2-glowtext{animation:none}}
+
+.hv2-btn{position:relative;overflow:hidden;isolation:isolate}
+.hv2-btn::after{content:"";position:absolute;inset:0;z-index:-1;transform:translateX(-120%) skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(124,58,237,.28),transparent);transition:transform .8s cubic-bezier(.22,1,.36,1)}
+.hv2-btn:hover::after{transform:translateX(120%) skewX(-18deg)}
+.hv2-btn-glow{box-shadow:0 0 0 1px rgba(255,255,255,.4),0 10px 50px -8px rgba(167,139,250,.65)}
+
+.hv2-grain{position:relative}
+.hv2-grain::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.hv2-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.5),transparent)}
+
+/* Koyu kapsam: iç sayfalar ve ana sayfadaki fiyat/SSS */
+.hv2-scope{background:#07060d;color:#f3effa}
+.hv2-scope .marketing-section-light{background:transparent !important}
+.hv2-scope :is(h1,h2,h3,h4){color:#fff}
+.hv2-scope .marketing-section-light p{color:rgba(255,255,255,.62)}
+.hv2-scope .text-muted-foreground{color:rgba(255,255,255,.58)}
+.hv2-aurora-page{height:520px;opacity:.55}
+
+.hv2-scope .surface{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border-color:rgba(255,255,255,.09)}
+.hv2-scope :is(a.text-primary,.text-primary){color:#c4b5fd}
+.hv2-scope .border-border{border-color:rgba(255,255,255,.1)}
+.hv2-scope input,.hv2-scope textarea,.hv2-scope select{color:#fff}
+.hv2-scope{--premium-heading:#fff;--premium-body:rgba(255,255,255,.64);--premium-muted:rgba(255,255,255,.45);--premium-link:#c4b5fd;--premium-link-hover:#fff;--marketing-surface:transparent;--background:#07060d;--foreground:#f3effa;--card:#100d1d;--card-foreground:#f3effa;--muted:rgba(255,255,255,.06);--muted-foreground:rgba(255,255,255,.58);--border:rgba(255,255,255,.1);--primary:#a78bfa;--primary-light:rgba(167,139,250,.14)}

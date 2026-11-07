@@ -1,61 +1,47 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { Fragment, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { getMarketingPlanCta, type PlanId } from '@/lib/plan-cta'
 import { TRIAL_DAYS } from '@/lib/trial-config'
 import { type PlanType } from '@/lib/constants'
-import { buildPlanCardFeatures } from '@/lib/plan-i18n'
+import { buildPlanCardFeatures, getPlanCatalog } from '@/lib/plan-i18n'
 import {
   getPricingFaqs,
   getPricingFeatureGroups,
   getPricingPageUi,
   PRICING_PLAN_META,
 } from '@/lib/pricing-page-i18n'
-import { getPlanCatalog } from '@/lib/plan-i18n'
-import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle } from 'lucide-react'
+import { Check, Minus, X, ArrowRight, Sparkles, HelpCircle, Plus } from 'lucide-react'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
-import { PaymentFlowStrip } from '@/components/marketing/feature-micro-showcases'
-import { FadeIn } from '@/components/marketing/fade-in'
+import { Starfield, SpotlightCard } from '@/components/marketing/home-v2/fx'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { useRegionalPricing } from '@/lib/hooks/use-regional-pricing'
 import type { SiteLocale } from '@/lib/regional-config'
 
-interface PlanCardFeature {
-  label: string
-  included: boolean
-}
-
-function PlanFeatureList({ planId, locale, highlighted }: { planId: PlanType; locale: SiteLocale; highlighted?: boolean }) {
+function PlanFeatureList({ planId, locale }: { planId: PlanType; locale: SiteLocale }) {
   const features = buildPlanCardFeatures(planId, locale)
   return (
-    <ul className="mt-5 mb-5 flex-1 space-y-2 pt-5"
-      style={{ borderTop: highlighted ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E2E8F0' }}>
+    <ul className="mb-6 mt-6 flex-1 space-y-2.5 border-t border-white/10 pt-6">
       {features.map((f) => (
         <li
           key={f.label}
-          className={`flex items-start gap-2 text-xs leading-relaxed ${
-            highlighted
-              ? f.included ? 'text-blue-50' : 'text-blue-300/50'
-              : f.included ? 'text-slate-700' : 'text-slate-400'
-          }`}
+          className={`flex items-start gap-2.5 text-[13px] leading-relaxed ${f.included ? 'text-white/80' : 'text-white/30'}`}
         >
           {f.included ? (
-            <Check className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlighted ? 'text-blue-200' : 'text-emerald-500'}`} />
+            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
           ) : (
-            <X className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlighted ? 'text-blue-400/40' : 'text-slate-300'}`} />
+            <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/20" />
           )}
-          <span className={f.included ? '' : 'line-through decoration-slate-300/60'}>{f.label}</span>
+          <span className={f.included ? '' : 'line-through decoration-white/20'}>{f.label}</span>
         </li>
       ))}
     </ul>
   )
 }
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 type FeatureValue = boolean | string | null
 
@@ -63,44 +49,39 @@ function FeatureCell({ value }: { value: FeatureValue }) {
   if (value === true) {
     return (
       <span className="flex items-center justify-center">
-        <Check className="w-4 h-4 text-emerald-500" />
+        <Check className="h-4 w-4 text-emerald-300" />
       </span>
     )
   }
   if (value === false || value === null) {
     return (
       <span className="flex items-center justify-center">
-        <Minus className="w-4 h-4 text-slate-200" />
+        <Minus className="h-4 w-4 text-white/15" />
       </span>
     )
   }
-  return <span className="text-sm font-medium text-slate-700 text-center block">{value}</span>
+  return <span className="block text-center text-sm font-medium text-white/80">{value}</span>
 }
 
 function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.025]">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-4 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between px-5 py-4 text-left text-[15px] font-medium text-white transition-colors hover:bg-white/[0.04]"
       >
         {q}
-        <span className={`ml-4 flex-shrink-0 w-5 h-5 rounded-full border border-slate-200 flex items-center justify-center transition-transform ${open ? 'rotate-45' : ''}`}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </span>
+        <Plus className={`ml-4 h-4 w-4 shrink-0 text-violet-300 transition-transform duration-300 ${open ? 'rotate-45' : ''}`} />
       </button>
-      {open && (
-        <div className="px-5 pb-4 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-          {a}
+      <div className={`grid transition-all duration-300 ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          <p className="border-t border-white/[0.07] px-5 pb-5 pt-4 text-sm leading-relaxed text-white/60">{a}</p>
         </div>
-      )}
+      </div>
     </div>
   )
 }
-
-// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
   const { data: session } = useSession()
@@ -121,196 +102,139 @@ export default function PricingPage() {
       pro: planPrice('PRO').formatted,
       business: planPrice('BUSINESS').formatted,
     }),
-    [planPrice]
+    [planPrice],
   )
 
-  const featureGroups = useMemo(
-    () => getPricingFeatureGroups(locale, tablePrices),
-    [locale, tablePrices]
-  )
-
+  const featureGroups = useMemo(() => getPricingFeatureGroups(locale, tablePrices), [locale, tablePrices])
   const planCta = (planId: PlanId) => getMarketingPlanCta(planId, { isLoggedIn, locale })
-
   const trialBadge =
-    locale === 'en'
-      ? `Try any plan free for ${TRIAL_DAYS} days`
-      : `Her planı ${TRIAL_DAYS} gün boyunca ücretsiz deneyin`
+    locale === 'en' ? `Try any plan free for ${TRIAL_DAYS} days` : `Her planı ${TRIAL_DAYS} gün boyunca ücretsiz deneyin`
 
   return (
-    <>
-      <MarketingNav />
-      <main className="min-h-screen" style={{ background: '#F8FAFC' }}>
-
-        {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section
-          className="pt-32 pb-20 px-4 sm:px-6 text-center"
-          style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e2d4e 55%, #0f1f3d 100%)' }}
-        >
-          <FadeIn>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6"
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(186,230,253,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <Sparkles className="w-3 h-3" />
+    <div className="dark hv2-scope hv2-grain relative min-h-screen overflow-hidden text-foreground">
+      <MarketingNav tone="dark" />
+      <main className="relative z-10">
+        {/* Hero */}
+        <section className="relative px-4 pb-10 pt-36 text-center sm:px-6">
+          <div className="hv2-aurora" aria-hidden="true" />
+          <Starfield count={70} />
+          <div className="relative mx-auto max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-1.5 text-[12px] text-white/65">
+              <Sparkles className="h-3.5 w-3.5 text-violet-300" />
               {trialBadge}
             </span>
-          </FadeIn>
-          <FadeIn delay={0.05}>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight" style={{ color: '#F1F5F9' }}>
+            <h1 className="mt-7 text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl">
               {ui.heroTitle}
             </h1>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: 'rgba(148,163,184,0.9)' }}>
-              {ui.heroSubtitle}
-            </p>
-          </FadeIn>
+            <p className="mx-auto mt-6 max-w-xl text-pretty leading-relaxed text-white/60 sm:text-lg">{ui.heroSubtitle}</p>
 
-          {/* Billing toggle */}
-          <FadeIn delay={0.15}>
-            <div className="flex items-center justify-center gap-4 mt-10">
-              <span className={`text-sm font-medium transition-colors ${billing === 'monthly' ? 'text-white' : 'text-slate-500'}`}>
-                {ui.monthly}
-              </span>
-              <button
-                onClick={() => setBilling(b => b === 'monthly' ? 'yearly' : 'monthly')}
-                className={`relative w-12 h-6 rounded-full transition-colors ${billing === 'yearly' ? 'bg-blue-500' : 'bg-slate-600'}`}
-                aria-label={ui.monthly}
-              >
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`} />
-              </button>
-              <span className={`text-sm font-medium transition-colors ${billing === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
-                {ui.yearly}
-                <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: '#34D399', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)' }}>
-                  {ui.yearlyDiscount}
-                </span>
+            <div className="mt-9 inline-flex items-center gap-4 rounded-full border border-white/10 bg-white/[0.04] p-1.5 pr-4">
+              <div role="tablist" className="flex">
+                {(['monthly', 'yearly'] as const).map((k) => (
+                  <button
+                    key={k}
+                    role="tab"
+                    aria-selected={billing === k}
+                    onClick={() => setBilling(k)}
+                    className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+                      billing === k ? 'bg-white text-[#07060d]' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {k === 'monthly' ? ui.monthly : ui.yearly}
+                  </button>
+                ))}
+              </div>
+              <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+                {ui.yearlyDiscount}
               </span>
             </div>
-          </FadeIn>
+          </div>
         </section>
 
-        {/* ── Plan cards ───────────────────────────────────────────────────── */}
-        <section className="py-14 px-4 sm:px-6" style={{ marginTop: '-2px' }}>
-          <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-            {PRICING_PLAN_META.map((plan, i) => {
+        {/* Plan kartları */}
+        <section className="relative px-4 pb-16 pt-6 sm:px-6">
+          <div className="mx-auto grid max-w-6xl items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {PRICING_PLAN_META.map((plan) => {
               const entry = catalog[plan.id]
               const yearly = billing === 'yearly'
               const priceInfo = planPrice(plan.id, yearly)
-              const badgeLabel = plan.badge === 'bestValue' ? ui.bestValue : null
+              const cta = planCta(plan.id as PlanId)
               return (
-                <FadeIn key={plan.id} delay={i * 0.06}>
-                  <div
-                    className="relative h-full rounded-2xl p-6 flex flex-col transition-all"
-                    style={plan.highlighted ? {
-                      background: '#1D4ED8',
-                      boxShadow: '0 20px 60px -10px rgba(29,78,216,0.45), 0 0 0 1px rgba(29,78,216,0.5)',
-                    } : {
-                      background: '#ffffff',
-                      border: '1px solid #E2E8F0',
-                      boxShadow: '0 2px 12px rgba(15,23,42,0.05)',
-                    }}
+                <div key={plan.id} className={`relative ${plan.highlighted ? 'lg:-mt-3 lg:mb-3' : ''}`}>
+                  {plan.highlighted && (
+                    <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-violet-500 px-3.5 py-1 text-[11px] font-semibold text-white shadow-[0_8px_30px_-6px_rgba(139,92,246,0.9)]">
+                      {ui.bestValue}
+                    </div>
+                  )}
+                  <SpotlightCard
+                    className={`flex h-full flex-col p-7 ${
+                      plan.highlighted ? '!border-violet-300/40 shadow-[0_30px_100px_-30px_rgba(124,58,237,0.7)]' : ''
+                    }`}
                   >
-                    {badgeLabel && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                        <span className="text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap"
-                          style={{ background: '#0F172A' }}>
-                          {badgeLabel}
-                        </span>
+                    <div className="flex h-full flex-col">
+                      <h3 className="text-lg font-semibold tracking-tight">{entry.name}</h3>
+                      <p className="mt-1.5 min-h-[40px] text-[13px] leading-relaxed text-white/50">{entry.description}</p>
+                      <div className="mt-6">
+                        {priceInfo.amount === 0 ? (
+                          <>
+                            <span className="text-4xl font-semibold tracking-tight">{ui.free}</span>
+                            <p className="mt-1 text-xs text-white/40">{ui.forever}</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-4xl font-semibold tracking-tight">{priceInfo.formatted}</span>
+                              <span className="text-sm text-white/45">{ui.perMonth}</span>
+                            </div>
+                            <p className="mt-1 text-xs text-white/40">
+                              {yearly
+                                ? ui.yearlyNote(
+                                    new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
+                                      style: 'currency',
+                                      currency: priceInfo.currency,
+                                      maximumFractionDigits: priceInfo.currency === 'TRY' ? 0 : 2,
+                                    }).format(priceInfo.amount * 12),
+                                  )
+                                : ui.perWorkspace}
+                            </p>
+                          </>
+                        )}
                       </div>
-                    )}
-                    <div>
-                      <h3 className={`text-base font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{entry.name}</h3>
-                      <p className={`mt-1 text-xs leading-relaxed ${plan.highlighted ? 'text-blue-200' : 'text-slate-500'}`}>{entry.description}</p>
+                      <PlanFeatureList planId={plan.id as PlanType} locale={locale} />
+                      <Link
+                        href={cta.href}
+                        className={`hv2-btn inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
+                          plan.highlighted
+                            ? 'hv2-btn-glow bg-white text-[#07060d] hover:bg-white/90'
+                            : 'border border-white/15 text-white hover:bg-white/[0.06]'
+                        }`}
+                      >
+                        {cta.label}
+                      </Link>
+                      {priceInfo.amount > 0 && <p className="mt-3 text-center text-[11px] text-white/35">{ui.noCard}</p>}
                     </div>
-                    <div className="mt-6 mb-5">
-                      {priceInfo.amount === 0 ? (
-                        <div>
-                          <span className={`text-3xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{ui.free}</span>
-                          <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{ui.forever}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="flex items-baseline gap-1">
-                            <span className={`text-3xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>{priceInfo.formatted}</span>
-                            <span className={`text-sm ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{ui.perMonth}</span>
-                          </div>
-                          <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>
-                            {yearly
-                              ? ui.yearlyNote(
-                                  new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
-                                    style: 'currency',
-                                    currency: priceInfo.currency,
-                                    maximumFractionDigits: priceInfo.currency === 'TRY' ? 0 : 2,
-                                  }).format(priceInfo.amount * 12)
-                                )
-                              : ui.perWorkspace}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <PlanFeatureList planId={plan.id as PlanType} locale={locale} highlighted={plan.highlighted} />
-                    <Link
-                      href={planCta(plan.id as PlanId).href}
-                      className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-center transition-all"
-                      style={plan.highlighted ? {
-                        background: '#ffffff',
-                        color: '#1D4ED8',
-                      } : {
-                        background: '#EFF6FF',
-                        color: '#1D4ED8',
-                        border: '1px solid #BFDBFE',
-                      }}
-                    >
-                      {planCta(plan.id as PlanId).label}
-                    </Link>
-                    {priceInfo.amount > 0 && (
-                      <p className={`text-[10px] text-center mt-2 ${plan.highlighted ? 'text-blue-200' : 'text-slate-400'}`}>
-                        {ui.noCard}
-                      </p>
-                    )}
-                  </div>
-                </FadeIn>
+                  </SpotlightCard>
+                </div>
               )
             })}
           </div>
         </section>
 
-        <PaymentFlowStrip />
+        {/* Karşılaştırma */}
+        <section className="relative px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-center text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">{ui.compareTitle}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-center text-sm text-white/50">{ui.compareSubtitle}</p>
 
-        {/* ── Flat pricing callout ─────────────────────────────────────────── */}
-        <FadeIn>
-          <section className="py-10 px-4 sm:px-6">
-            <div className="max-w-3xl mx-auto rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6"
-              style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-900">{ui.flatTitle}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                  {ui.flatDesc}
-                </p>
-              </div>
-              <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-colors"
-                style={{ background: '#1D4ED8' }}>
-                {ui.startFree} <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </section>
-        </FadeIn>
-
-        {/* ── Feature comparison table ─────────────────────────────────────── */}
-        <section className="py-16 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <FadeIn>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-2">{ui.compareTitle}</h2>
-              <p className="text-slate-500 text-center text-sm mb-10">{ui.compareSubtitle}</p>
-            </FadeIn>
-
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full text-sm">
+            <div className="mt-10 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.02]">
+              <table className="w-full min-w-[760px] text-sm">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-5 py-4 font-semibold text-slate-600 w-[40%]">{ui.featureCol}</th>
+                  <tr className="border-b border-white/10 bg-white/[0.03]">
+                    <th className="w-[40%] px-5 py-4 text-left font-medium text-white/50">{ui.featureCol}</th>
                     {PRICING_PLAN_META.map((plan) => (
-                      <th key={plan.id} className={`text-center px-4 py-4 font-bold ${plan.highlighted ? 'text-blue-600' : 'text-slate-700'}`}>
+                      <th key={plan.id} className={`px-4 py-4 text-center font-semibold ${plan.highlighted ? 'text-violet-200' : 'text-white'}`}>
                         <div>{catalog[plan.id].name}</div>
-                        <div className={`text-xs font-normal mt-0.5 ${plan.highlighted ? 'text-blue-400' : 'text-slate-400'}`}>
+                        <div className="mt-0.5 text-xs font-normal text-white/40">
                           {plan.id === 'FREE'
                             ? tablePrices.free
                             : `${tablePrices[plan.id === 'STARTER' ? 'starter' : plan.id === 'PRO' ? 'pro' : 'business']}${ui.perMonth}`}
@@ -321,47 +245,43 @@ export default function PricingPage() {
                 </thead>
                 <tbody>
                   {featureGroups.map((group) => (
-                    <>
-                      <tr key={group.group} className="bg-slate-50/60">
-                        <td colSpan={5} className="px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <Fragment key={group.group}>
+                      <tr className="bg-white/[0.025]">
+                        <td colSpan={5} className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-300/80">
                           {group.group}
                         </td>
                       </tr>
                       {group.rows.map((row) => (
-                        <tr key={row.label} className="border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
-                          <td className="px-5 py-3.5 text-slate-700 font-medium flex items-center gap-1.5">
+                        <tr key={row.label} className="border-t border-white/[0.06] transition-colors hover:bg-white/[0.03]">
+                          <td className="flex items-center gap-1.5 px-5 py-3.5 font-medium text-white/80">
                             {row.label}
                             {row.tooltip && (
                               <span title={row.tooltip}>
-                                <HelpCircle className="w-3.5 h-3.5 text-slate-300 cursor-help" />
+                                <HelpCircle className="h-3.5 w-3.5 cursor-help text-white/25" />
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-center"><FeatureCell value={row.free} /></td>
-                          <td className="px-4 py-3.5 text-center"><FeatureCell value={row.starter} /></td>
-                          <td className={`px-4 py-3.5 text-center ${PRICING_PLAN_META[2].highlighted ? 'bg-blue-50/40' : ''}`}>
-                            <FeatureCell value={row.pro} />
-                          </td>
-                          <td className="px-4 py-3.5 text-center"><FeatureCell value={row.business} /></td>
+                          <td className="px-4 py-3.5"><FeatureCell value={row.free} /></td>
+                          <td className="px-4 py-3.5"><FeatureCell value={row.starter} /></td>
+                          <td className="bg-violet-400/[0.05] px-4 py-3.5"><FeatureCell value={row.pro} /></td>
+                          <td className="px-4 py-3.5"><FeatureCell value={row.business} /></td>
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-slate-200 bg-slate-50">
+                  <tr className="border-t border-white/10 bg-white/[0.03]">
                     <td className="px-5 py-4" />
                     {PRICING_PLAN_META.map((plan) => (
                       <td key={plan.id} className="px-4 py-4 text-center">
                         <Link
-                          href={planCta(plan.id).href}
-                          className={`inline-block text-xs font-semibold px-4 py-2 rounded-lg transition-all ${
-                            plan.highlighted
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                              : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                          href={planCta(plan.id as PlanId).href}
+                          className={`inline-block rounded-lg px-4 py-2 text-xs font-semibold transition ${
+                            plan.highlighted ? 'bg-white text-[#07060d] hover:bg-white/90' : 'border border-white/15 text-white hover:bg-white/[0.06]'
                           }`}
                         >
-                          {planCta(plan.id).label}
+                          {planCta(plan.id as PlanId).label}
                         </Link>
                       </td>
                     ))}
@@ -372,93 +292,65 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* ── Enterprise callout ───────────────────────────────────────────── */}
-        <FadeIn>
-          <section className="py-10 px-4 sm:px-6">
-            <div className="max-w-4xl mx-auto rounded-2xl p-8 sm:p-10"
-              style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', border: '1px solid rgba(139,92,246,0.3)' }}>
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                <div className="flex-1">
-                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#A78BFA' }}>Kurumsal</span>
-                  <h3 className="mt-2 text-xl font-bold text-white">Daha özel bir şeye mi ihtiyacınız var?</h3>
-                  <p className="mt-2 text-sm leading-relaxed" style={{ color: '#94A3B8' }}>
-                    Özel entegrasyon, white-label, kişiselleştirilmiş SLA ve ekip eğitimi için kurumsal paketimizi keşfedin.
-                  </p>
-                  <ul className="mt-4 space-y-1.5">
-                    {['Özel onboarding programı', 'Kişiselleştirilmiş SLA', 'Özel özellik geliştirme', 'Benzersiz fiyatlandırma', 'Ekip eğitimi & danışmanlık'].map(f => (
-                      <li key={f} className="flex items-center gap-2 text-sm" style={{ color: '#CBD5E1' }}>
-                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#A78BFA' }} /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <Link
-                  href="/contact"
-                  className="flex-shrink-0 inline-flex items-center gap-2 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors"
-                  style={{ background: '#7C3AED' }}
-                >
-                  İletişime Geç <ArrowRight className="w-4 h-4" />
-                </Link>
+        {/* Sabit fiyat vurgusu */}
+        <section className="px-4 py-10 sm:px-6">
+          <SpotlightCard className="mx-auto max-w-4xl">
+            <div className="flex flex-col items-start gap-6 p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10">
+              <div>
+                <h3 className="text-xl font-semibold tracking-tight">{ui.flatTitle}</h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/55">{ui.flatDesc}</p>
               </div>
+              <Link
+                href="/register"
+                className="hv2-btn hv2-btn-glow inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#07060d]"
+              >
+                {ui.startFree} <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          </section>
-        </FadeIn>
+          </SpotlightCard>
+        </section>
 
-        {/* ── FAQ ─────────────────────────────────────────────────────────── */}
-        <section className="py-16 px-4 sm:px-6" style={{ background: '#F8FAFC' }}>
-          <div className="max-w-2xl mx-auto">
-            <FadeIn>
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10" style={{ color: '#0F172A' }}>{ui.faqTitle}</h2>
-            </FadeIn>
-            <div className="space-y-2">
+        {/* SSS */}
+        <section className="px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="mb-10 text-center text-3xl font-semibold tracking-[-0.02em]">{ui.faqTitle}</h2>
+            <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <FadeIn key={i} delay={i * 0.04}>
-                  <FaqItem
-                    q={faq.q}
-                    a={faq.a}
-                    open={openFaq === i}
-                    onToggle={() => setOpenFaq(openFaq === i ? null : i)}
-                  />
-                </FadeIn>
+                <FaqItem key={faq.q} q={faq.q} a={faq.a} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── Final CTA ────────────────────────────────────────────────────── */}
-        <FadeIn>
-          <section className="py-20 px-4 sm:px-6 text-center"
-            style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e2d4e 100%)' }}>
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold mb-4" style={{ color: '#F1F5F9' }}>
-                {ui.footerCtaTitle}
-              </h2>
-              <p className="mb-8" style={{ color: '#94A3B8' }}>
-                {ui.footerCtaSubtitle}
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/register"
-                  className="inline-flex items-center gap-2 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-                  style={{ background: '#1D4ED8' }}>
-                  {ui.startFree} <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/contact"
-                  className="inline-flex items-center gap-2 font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-                  style={{ background: 'rgba(255,255,255,0.1)', color: '#E2E8F0', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  {ui.contactUs}
-                </Link>
-              </div>
+        {/* Kapanış */}
+        <section className="px-4 pb-20 pt-10 text-center sm:px-6">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="text-balance text-3xl font-semibold tracking-[-0.025em] sm:text-5xl">{ui.footerCtaTitle}</h2>
+            <p className="mx-auto mt-5 max-w-md text-white/55">{ui.footerCtaSubtitle}</p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d]"
+              >
+                {ui.startFree} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center rounded-xl border border-white/15 px-8 py-4 text-sm font-medium text-white/80 transition hover:bg-white/[0.06]"
+              >
+                {ui.contactUs}
+              </Link>
             </div>
-          </section>
-        </FadeIn>
+          </div>
+        </section>
 
-        <section className="py-12 px-4" style={{ borderTop: '1px solid #E2E8F0', background: '#ffffff' }}>
-          <div className="max-w-xl mx-auto">
+        <section className="border-t border-white/[0.07] px-4 py-12">
+          <div className="mx-auto max-w-xl rounded-xl bg-white px-5 py-4">
             <PaymentLogos variant="checkout" />
           </div>
         </section>
       </main>
-      <MarketingFooter />
-    </>
+      <MarketingFooter tone="dark" />
+    </div>
   )
 }

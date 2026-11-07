@@ -30,8 +30,11 @@ export default async function HomePage() {
       <FeaturesV2 />
       <AiHumanV2 />
       <TrustV2 />
-      <PricingSection />
-      <FaqSection />
+      <div className="dark hv2-scope">
+        <div className="hv2-divider" />
+        <PricingSection />
+        <FaqSection />
+      </div>
       <FinalCtaV2 />
       <MarketingFooter tone="dark" />
     </div>

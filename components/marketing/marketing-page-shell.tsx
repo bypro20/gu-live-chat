@@ -11,12 +11,13 @@ export function MarketingPageShell({
   contentClassName?: string
 }) {
   return (
-    <div className={`min-h-screen bg-background text-foreground ${className}`}>
-      <MarketingNav />
-      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className={`dark hv2-scope hv2-grain relative min-h-screen overflow-hidden text-foreground ${className}`}>
+      <div className="hv2-aurora hv2-aurora-page" aria-hidden="true" />
+      <MarketingNav tone="dark" />
+      <main className="relative z-10 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className={`${contentClassName} mx-auto`}>{children}</div>
       </main>
-      <MarketingFooter />
+      <MarketingFooter tone="dark" />
     </div>
   )
 }

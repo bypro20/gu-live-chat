@@ -40,8 +40,9 @@ export function UrunlerPageContent() {
   const perMonth = locale === 'tr' ? '/ay' : '/mo'
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <MarketingNav />
+    <div className="dark hv2-scope hv2-grain relative min-h-screen overflow-hidden text-foreground">
+      <div className="hv2-aurora hv2-aurora-page" aria-hidden="true" />
+      <MarketingNav tone="dark" />
 
       <section className="pt-28 pb-16 px-4 sm:px-6 bg-gradient-to-b from-primary/5 to-background">
         <div className="max-w-6xl mx-auto text-center">
@@ -203,7 +204,7 @@ export function UrunlerPageContent() {
         </div>
       </section>
 
-      <MarketingFooter />
+      <MarketingFooter tone="dark" />
     </div>
   )
 }
