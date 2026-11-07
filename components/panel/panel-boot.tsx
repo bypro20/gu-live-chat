@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
 
-const INIT_KEY = 'gu-panel-dark-init'
+const INIT_KEY = 'gu-panel-dark-init-v2'
 
 /**
  * Panel açılışı:
@@ -18,7 +18,8 @@ export function PanelBoot() {
     try {
       if (!localStorage.getItem(INIT_KEY)) {
         localStorage.setItem(INIT_KEY, '1')
-        if (!localStorage.getItem('theme')) setTheme('dark')
+        // Eski otomatik 'light' kaydı olan kullanıcıları da yeni koyu varsayılana geçir (bir kez).
+        setTheme('dark')
       }
     } catch {
       // gizli mod
