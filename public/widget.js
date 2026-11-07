@@ -904,6 +904,87 @@
   // are the heaviest DOM subtrees; skipping them makes screenshots 5-10× faster.
   var HIDDEN_ELEMENT_IDS = ['gu-widget-iframe', 'gu-chat-button', 'gu-greeting-bubble'];
 
+  // position:fixed elements need re-anchoring in the clone (see oncloneCallback).
+  // The scan is relatively expensive, so it is cached for a short time.
+  var fixedCache = { at: 0, list: [] };
+  var fixedSeq = 0;
+  function collectFixedElements() {
+    var now = Date.now();
+    if (now - fixedCache.at < 1200) return fixedCache.list;
+    var list = [];
+    try {
+      var all = document.body ? document.body.querySelectorAll('*') : [];
+      var limit = Math.min(all.length, 4000);
+      for (var i = 0; i < limit; i++) {
+        var el = all[i];
+        if (el.id && HIDDEN_ELEMENT_IDS.indexOf(el.id) !== -1) continue;
+        var pos = window.getComputedStyle(el).position;
+        if (pos !== 'fixed') continue;
+        var r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        var id = el.getAttribute('data-gu-fx');
+        if (!id) { id = String(++fixedSeq); el.setAttribute('data-gu-fx', id); }
+        list.push({ id: id, top: r.top, left: r.left, width: r.width, height: r.height });
+      }
+    } catch (e) {}
+    fixedCache = { at: now, list: list };
+    return list;
+  }
+
+  // GU_RENDER_START
+  // html-to-image has no "onclone" hook, so we render to SVG, patch the markup
+  // ourselves (re-anchor position:fixed elements, blur sensitive fields) and
+  // rasterise it to a JPEG on a canvas.
+  function renderViewportJpeg(target, o) {
+    return window.htmlToImage.toSvg(target, {
+      width: o.captureW, height: o.captureH,
+      canvasWidth: o.captureW, canvasHeight: o.captureH,
+      pixelRatio: 1, skipAutoScale: true,
+      filter: o.filter,
+      style: {
+        transform: 'scale(' + o.scale + ') translate(' + (-o.scrollX) + 'px, ' + (-o.scrollY) + 'px)',
+        transformOrigin: 'top left',
+        width: o.docW + 'px', height: o.docH + 'px', margin: '0', overflow: 'hidden',
+      },
+    }).then(function(svgUrl) {
+      var xml = decodeURIComponent(svgUrl.substring(svgUrl.indexOf(',') + 1));
+      try {
+        var doc = new DOMParser().parseFromString(xml, 'image/svg+xml');
+        if (!doc.querySelector('parsererror')) {
+          var addStyle = function(el, css) {
+            el.setAttribute('style', (el.getAttribute('style') || '') + ';' + css);
+          };
+          for (var i = 0; i < o.fixedList.length; i++) {
+            var fx = o.fixedList[i];
+            var el = doc.querySelector('[data-gu-fx="' + fx.id + '"]');
+            if (!el) continue;
+            addStyle(el, 'position:absolute !important;margin:0 !important;right:auto !important;bottom:auto !important;' +
+              'top:' + (fx.top + o.scrollY) + 'px !important;left:' + (fx.left + o.scrollX) + 'px !important;' +
+              'width:' + fx.width + 'px !important;height:' + fx.height + 'px !important');
+          }
+          var sens = doc.querySelectorAll(SENSITIVE_SELECTORS);
+          for (var j = 0; j < sens.length; j++) addStyle(sens[j], 'filter:blur(6px) !important');
+          xml = new XMLSerializer().serializeToString(doc.documentElement);
+        }
+      } catch (e) {}
+      return new Promise(function(resolve, reject) {
+        var img = new Image();
+        img.onload = function() {
+          var c = document.createElement('canvas');
+          c.width = o.captureW; c.height = o.captureH;
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          try { resolve(c.toDataURL('image/jpeg', SCREENSHOT_QUALITY)); } catch (err) { reject(err); }
+        };
+        img.onerror = reject;
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+      });
+    });
+  }
+  // GU_RENDER_END
+
   function getCaptureScale(width) {
     if (width <= CAPTURE_MAX_WIDTH) return 1;
     return CAPTURE_MAX_WIDTH / width;
@@ -987,41 +1068,15 @@
       return true;
     }
 
-    function oncloneCallback(clonedDoc) {
-      try {
-        var sensitiveFields = clonedDoc.querySelectorAll(SENSITIVE_SELECTORS);
-        for (var s = 0; s < sensitiveFields.length; s++) {
-          sensitiveFields[s].style.filter = 'blur(6px)';
-        }
-      } catch (e) {}
-
-      // Scroll usually lives on <html>, not body. Syncing scrollTop in the clone
-      // captures the visible viewport; body translate(-scrollY) breaks on Next.js sites.
-      try {
-        var clonedRoot = clonedDoc.documentElement;
-        if (clonedRoot) {
-          clonedRoot.scrollTop = scrollY;
-          clonedRoot.scrollLeft = scrollX;
-        }
-        if (clonedDoc.body) {
-          clonedDoc.body.scrollTop = scrollY;
-          clonedDoc.body.scrollLeft = scrollX;
-        }
-      } catch (e) {}
-    }
+    var fixedList = collectFixedElements();
 
     var captureTarget = document.documentElement || document.body;
-    window.htmlToImage.toJpeg(captureTarget, {
-      quality: SCREENSHOT_QUALITY,
-      backgroundColor: '#ffffff',
-      width: captureW,
-      height: captureH,
-      canvasWidth: captureW,
-      canvasHeight: captureH,
-      pixelRatio: 1,
-      skipAutoScale: true,
-      filter: filterNode,
-      onclone: oncloneCallback,
+    var docW = Math.max(vpWidth, document.documentElement.scrollWidth || vpWidth);
+    var docH = Math.max(vpHeight, document.documentElement.scrollHeight || vpHeight);
+    renderViewportJpeg(captureTarget, {
+      captureW: captureW, captureH: captureH, scale: scale,
+      scrollX: scrollX, scrollY: scrollY, docW: docW, docH: docH,
+      fixedList: fixedList, filter: filterNode,
     }).then(function(dataUrl) {
       if (!isBlankScreenshot(dataUrl) && iframe.contentWindow) {
         iframe.contentWindow.postMessage({
