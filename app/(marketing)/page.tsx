@@ -33,7 +33,7 @@ export default async function HomePage() {
       <PricingSection />
       <FaqSection />
       <FinalCtaV2 />
-      <MarketingFooter />
+      <MarketingFooter tone="dark" />
     </div>
   )
 }

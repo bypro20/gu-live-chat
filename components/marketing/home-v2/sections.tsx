@@ -218,7 +218,7 @@ export function HomeHeroV2() {
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           {c.eyebrow}
         </p>
-        <h1 className="mt-7 text-balance text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
+        <h1 className="mt-7 text-balance text-[2.1rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
           {c.h1a}
           <br />
           <span className={`${serif.className} italic font-normal text-violet-200`}>{c.h1b}</span>

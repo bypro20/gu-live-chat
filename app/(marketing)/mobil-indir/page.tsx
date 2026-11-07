@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
-import { MobilIndirContent } from '@/components/marketing/mobil-indir-content'
+import { MarketingNav } from '@/components/marketing/marketing-nav'
+import { MarketingFooter } from '@/components/marketing/marketing-footer'
+import { MobilV2 } from '@/components/marketing/home-v2/mobil-v2'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { getMessages } from '@/lib/messages'
 import { buildMetadata } from '@/lib/seo'
@@ -12,15 +13,19 @@ export async function generateMetadata(): Promise<Metadata> {
     title: m.metaTitle,
     description: m.metaDescription,
     path: '/mobil-indir',
-    keywords: ['gu live chat apk', 'gulivechat apk', 'canlı destek uygulaması', 'android indir'],
+    keywords: ['gu live chat apk', 'gulivechat apk', 'canlı destek uygulaması', 'android indir', 'ana ekrana ekle'],
     locale: locale === 'en' ? 'en' : 'tr',
   })
 }
 
 export default function MobilIndirPage() {
   return (
-    <MarketingPageShell>
-      <MobilIndirContent />
-    </MarketingPageShell>
+    <div className="min-h-screen bg-[#07060d] text-foreground">
+      <MarketingNav tone="dark" />
+      <main>
+        <MobilV2 />
+      </main>
+      <MarketingFooter tone="dark" />
+    </div>
   )
 }

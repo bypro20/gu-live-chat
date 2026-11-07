@@ -31,6 +31,7 @@ export const metadata: Metadata = {
   description: SITE_LEGAL.metaDescription,
   ...getSiteVerificationMetadata(),
   applicationName: SITE_NAME,
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'black-translucent' },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },

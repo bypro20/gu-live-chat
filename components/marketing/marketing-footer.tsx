@@ -7,11 +7,11 @@ import { IyzicoLegalBar } from '@/components/marketing/iyzico-legal-bar'
 import { SocialLinksBar } from '@/components/marketing/social-links-bar'
 import { PaymentLogos } from '@/components/marketing/payment-logos'
 import { useT } from '@/components/marketing/locale-provider'
-export function MarketingFooter() {
+export function MarketingFooter({ tone = 'light' }: { tone?: 'light' | 'dark' } = {}) {
   const footer = useT().footerExtended
 
   return (
-    <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-200 bg-white">
+    <footer className={`py-16 px-4 sm:px-6 lg:px-8 border-t ${tone === 'dark' ? 'hv2-footer-dark' : 'border-slate-200 bg-white'}`}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-1">
@@ -38,7 +38,9 @@ export function MarketingFooter() {
           <IyzicoLegalBar />
           <SocialLinksBar />
           <div className="flex justify-center">
-            <PaymentLogos variant="footer" />
+            <div className={tone === 'dark' ? 'rounded-xl bg-white px-5 py-3' : ''}>
+              <PaymentLogos variant="footer" />
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-slate-600">
