@@ -2,16 +2,10 @@ import type { Metadata } from 'next'
 import { MarketingNav } from '@/components/marketing/marketing-nav'
 import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
+import { PricingSection, FaqSection } from '@/components/marketing/home-sections'
 import {
-  HomeHero, TrustStrip, FeatureGrid, AiShowcase, AiPlatformSection, SharedInbox,
-  PricingSection, TestimonialsSection, FaqSection,
-} from '@/components/marketing/home-sections'
-import {
-  HeroFeaturePills,
-  AboutSplitSection,
-  HowItWorksSteps,
-  FullWidthCtaBanner,
-} from '@/components/marketing/ecall-home-blocks'
+  HomeHeroV2, StoryV2, PillarsV2, AiHumanV2, TrustV2, FinalCtaV2,
+} from '@/components/marketing/home-v2/sections'
 import { getHomeFaqs } from '@/lib/home-faqs'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { marketingMetadata } from '@/lib/marketing-pages/metadata'
@@ -29,20 +23,15 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <JsonLd data={[softwareApplicationJsonLd(contentLocale), faqJsonLd(faqs)]} />
-      <MarketingNav />
-      <HomeHero />
-      <HeroFeaturePills />
-      <AboutSplitSection />
-      <TrustStrip />
-      <FeatureGrid />
-      <HowItWorksSteps />
-      <AiShowcase />
-      <AiPlatformSection />
-      <SharedInbox />
+      <MarketingNav tone="dark" />
+      <HomeHeroV2 />
+      <StoryV2 />
+      <PillarsV2 />
+      <AiHumanV2 />
+      <TrustV2 />
       <PricingSection />
-      <TestimonialsSection />
       <FaqSection />
-      <FullWidthCtaBanner />
+      <FinalCtaV2 />
       <MarketingFooter />
     </div>
   )

@@ -3361,3 +3361,35 @@ html.native-app .native-settings-hub {
 html.native-app .native-app-shell .app-main {
   background: var(--background);
 }
+
+
+/* ───────── Ana sayfa v2 (koyu, sinematik) ───────── */
+.hv2-aurora{position:absolute;inset:-20% -10% auto -10%;height:90%;pointer-events:none;opacity:.9;
+  background:
+    radial-gradient(40% 50% at 18% 20%, rgba(124,58,237,.38), transparent 70%),
+    radial-gradient(35% 45% at 82% 12%, rgba(20,184,166,.22), transparent 70%),
+    radial-gradient(30% 40% at 55% 0%, rgba(217,70,239,.16), transparent 70%);
+  filter:blur(20px);animation:hv2-drift 22s ease-in-out infinite alternate}
+.hv2-aurora-soft{opacity:.5;top:auto;bottom:-30%}
+.hv2-grid{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(70% 60% at 50% 30%,#000 30%,transparent 80%);
+  -webkit-mask-image:radial-gradient(70% 60% at 50% 30%,#000 30%,transparent 80%)}
+.hv2-stage-glow{background:radial-gradient(50% 50% at 50% 40%,rgba(124,58,237,.28),transparent 70%);filter:blur(30px);pointer-events:none}
+.hv2-card{border:1px solid rgba(255,255,255,.09);border-radius:1.25rem;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));transition:border-color .3s,background .3s}
+.hv2-card:hover{border-color:rgba(167,139,250,.35)}
+.hv2-dot{display:inline-block;width:5px;height:5px;border-radius:9999px;background:currentColor;animation:hv2-blink 1s infinite ease-in-out}
+.hv2-pop{animation:hv2-pop .45s cubic-bezier(.22,1,.36,1) both}
+@keyframes hv2-blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
+@keyframes hv2-pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes hv2-drift{from{transform:translate3d(-2%,0,0)}to{transform:translate3d(3%,4%,0)}}
+@media (prefers-reduced-motion:reduce){.hv2-aurora,.hv2-dot,.hv2-pop{animation:none}}
+.hv2-nav-dark a:not(.btn-primary),.hv2-nav-dark button{color:rgba(255,255,255,.72)}
+.hv2-nav-dark a:not(.btn-primary):hover,.hv2-nav-dark button:hover{color:#fff;background:rgba(255,255,255,.07)}
+.hv2-nav-dark span.text-foreground,.hv2-nav-dark span.text-primary{color:#fff}
+.hv2-nav-dark select{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.14)}
+.hv2-nav-dark select option{color:#111}
+
+.hv2 :is(h1,h2,h3){color:#fff}
+.hv2-nav-dark{border-bottom-color:transparent !important}
+.hv2-nav-dark.hv2-nav-scrolled{border-bottom-color:rgba(255,255,255,.1) !important}
