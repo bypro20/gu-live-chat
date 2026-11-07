@@ -76,12 +76,23 @@ export function clearNativeAppMark() {
   )
 }
 
+/** Gerçek uygulama kabuğu: Capacitor ya da uygulamaya özgü User-Agent. */
+export function isRealNativeShell(): boolean {
+  if (typeof window === 'undefined') return false
+  const ua = navigator.userAgent
+  if (isNativeAdminUserAgent(ua) || isNativeCustomerUserAgent(ua)) return true
+  const cap = (window as CapacitorWindow).Capacitor
+  return Boolean(cap?.isNativePlatform?.())
+}
+
 export function getNativeAppPlatform(): NativeAppPlatform | null {
   if (typeof window === 'undefined') return null
 
+  // Kayıtlı işaret yalnızca gerçek uygulama kabuğunda geçerlidir. Sıradan tarayıcıda
+  // eski bir ?app=admin ziyareti siteyi/müşteri panelini engellememeli.
   try {
     const stored = localStorage.getItem(NATIVE_APP_STORAGE_KEY)
-    if (stored === 'android' || stored === 'ios' || stored === 'admin') return stored
+    if ((stored === 'android' || stored === 'ios' || stored === 'admin') && isRealNativeShell()) return stored
   } catch {
     // ignore
   }

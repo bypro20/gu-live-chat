@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   getNativeAppPlatform,
   isNativeAdminUserAgent,
+  isRealNativeShell,
+  clearNativeAppMark,
   isNativeBlockedPath,
   isNativeCustomerUserAgent,
   markNativeApp,
@@ -75,9 +77,11 @@ export function NativeAppBootstrap() {
     let cancelled = false
 
     const bootstrap = async () => {
+      // Gerçek uygulama kabuğu değilsek (normal tarayıcı) bayat işareti temizle.
+      if (!isRealNativeShell()) clearNativeAppMark()
       const fromUrl = parseNativeAppFromSearch(window.location.search)
       if (fromUrl) {
-        markNativeApp(fromUrl)
+        if (isRealNativeShell()) markNativeApp(fromUrl)
         const url = new URL(window.location.href)
         url.searchParams.delete('app')
         const clean = url.pathname + url.search + url.hash
