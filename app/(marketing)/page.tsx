@@ -4,7 +4,7 @@ import { MarketingFooter } from '@/components/marketing/marketing-footer'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { PricingSection, FaqSection } from '@/components/marketing/home-sections'
 import {
-  HomeHeroV2, StoryV2, PillarsV2, AiHumanV2, TrustV2, FinalCtaV2,
+  HomeHeroV2, ChannelsV2, InstallV2, FeaturesV2, AiHumanV2, TrustV2, FinalCtaV2,
 } from '@/components/marketing/home-v2/sections'
 import { getHomeFaqs } from '@/lib/home-faqs'
 import { getServerLocaleContext } from '@/lib/locale-server'
@@ -25,8 +25,9 @@ export default async function HomePage() {
       <JsonLd data={[softwareApplicationJsonLd(contentLocale), faqJsonLd(faqs)]} />
       <MarketingNav tone="dark" />
       <HomeHeroV2 />
-      <StoryV2 />
-      <PillarsV2 />
+      <ChannelsV2 />
+      <InstallV2 />
+      <FeaturesV2 />
       <AiHumanV2 />
       <TrustV2 />
       <PricingSection />

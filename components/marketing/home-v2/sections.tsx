@@ -3,7 +3,10 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Instrument_Serif } from 'next/font/google'
-import { ArrowRight, Eye, MessageCircle, ShieldCheck, Inbox, BookOpen, UserRound, Layers } from 'lucide-react'
+import {
+  ArrowRight, Eye, MessageCircle, ShieldCheck, Inbox, BookOpen, UserRound, Bot, Megaphone,
+  LifeBuoy, Workflow, BarChart3, Phone, Languages, Smartphone, Palette, Terminal,
+} from 'lucide-react'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { HeroStage } from '@/components/marketing/home-v2/hero-stage'
 import { usePrefersReducedMotion } from '@/components/marketing/home-v2/use-reduced-motion'
@@ -30,7 +33,7 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
           io.disconnect()
         }
       },
-      { threshold: 0.15 },
+      { threshold: 0.12 },
     )
     io.observe(el)
     return () => io.disconnect()
@@ -46,34 +49,52 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
   )
 }
 
+type Feature = { h: string; p: string }
+
 const TR = {
-  eyebrow: 'Canlı destek · Yapay zekâ · Ekran izleme',
-  h1a: 'Ziyaretçin takıldığı an,',
-  h1b: 'sen yanındasın.',
-  sub: 'Sitenize gelen biri neden vazgeçtiğini asla söylemez. Gu Live Chat onu tam o anda görür, sana haber verir ve doğru kelimeyi söylemeni sağlar. Gerisini yapay zekâ ve ekibin tamamlar.',
+  eyebrow: 'Canlı destek · Yapay zekâ · Tek gelen kutusu',
+  h1a: 'Müşterilerinle her kanaldan,',
+  h1b: 'tek yerden konuş.',
+  sub: 'Sitene tek satır kod ekle. Canlı sohbet, yapay zekâ asistanı, WhatsApp, Telegram ve Messenger mesajları ekibinin ortak gelen kutusunda buluşsun.',
   cta1: 'Ücretsiz başla',
-  cta2: 'Fiyatları gör',
+  cta2: 'Canlı demo gör',
   note: '14 gün ücretsiz · Kart gerekmez · Kurulum 30 saniye',
-  storyTag: 'Bir ziyaretçinin 90 saniyesi',
-  storyTitle: 'Çoğu satış, kimsenin görmediği bir anda kaybedilir.',
-  storyLead: 'Aşağıdaki sahne uydurma değil, her gün her sitede yaşanan şey. Fark, o anda birinin orada olup olmaması.',
-  story: [
-    { t: '0:00', h: 'Geliyor', p: 'Reklamdan ya da aramadan siteye düşüyor. Kim olduğunu, nereden geldiğini ve hangi sayfada olduğunu görüyorsun.' },
-    { t: '0:38', h: 'Takılıyor', p: 'Ödeme adımına geliyor ve duruyor. Fareyi kargo satırının üstünde gezdiriyor. Çoğu site bu anı hiç bilmez.' },
-    { t: '0:52', h: 'Sen görüyorsun', p: 'Canlı ekranını izliyorsun. Neye baktığını anlıyorsun, soru sormasını beklemeden yazıyorsun.' },
-    { t: '1:30', h: 'Tamamlıyor', p: 'Doğru cevap doğru anda geldi. Sipariş tamamlandı, kimse formu doldurmak zorunda kalmadı.' },
+  bubbles: [
+    { m: 'Yarın için randevu alabilir miyim?', ch: 'WhatsApp', dot: 'bg-emerald-400' },
+    { m: 'Bu ürün stokta var mı?', ch: 'Web', dot: 'bg-violet-400' },
+    { m: 'Kargom nerede?', ch: 'Messenger', dot: 'bg-blue-400' },
+    { m: 'Fiyat listesini alabilir miyim?', ch: 'Telegram', dot: 'bg-sky-400' },
   ],
-  pillarsTag: 'Neler var',
-  pillarsTitle: 'Tek ekranda: gören, yazan ve hatırlayan bir ekip.',
-  pillars: {
-    watch: { h: 'Ekranı canlı izle', p: 'Ziyaretçi sitende neye baktığını, nerede durduğunu ve nereye tıkladığını gör. Şifre ve kart alanları otomatik bulanık gelir.' },
-    ai: { h: 'Yapay zekâ ilk yanıtı verir', p: 'Bilgi bankanla eğitilir, markanın dilinde konuşur. Emin olmadığında susar ve konuşmayı ekibine devreder.' },
-    inbox: { h: 'Tek gelen kutusu', p: 'Site sohbeti, WhatsApp, Telegram ve Meta mesajları aynı yerde. Kimin neyi yazdığını her kanalda hatırlar.' },
-    team: { h: 'Ekip olarak çalış', p: 'Sohbeti bana ata, çöz, yeniden aç. Not bırak. Kimin ilgilendiği herkesçe görünür.' },
-  },
+  channelsTitle: 'Müşterin nerede yazarsa, cevap orada.',
+  channels: ['Web sitesi sohbeti', 'WhatsApp', 'Telegram', 'Messenger', 'LinkedIn', 'SMS', 'Mobil uygulama'],
+  installTag: 'Kurulum',
+  installTitle: '30 saniyede yayında.',
+  installLead: 'WordPress, Shopify ve tüm web siteleriyle çalışır. Teknik bilgi gerekmez, tek satır yeterli.',
+  steps: [
+    { h: 'Hesabını aç', p: 'E-posta ile kayıt ol, kredi kartı gerekmez.' },
+    { h: 'Kodu sitene yapıştır', p: 'Widget kodunu sayfanın sonuna ekle.' },
+    { h: 'İlk mesajı karşıla', p: 'Ziyaretçi yazdığı anda gelen kutunda görürsün.' },
+  ],
+  codeLabel: 'Sitenin </body> etiketinden önce',
+  featTag: 'Neler var',
+  featTitle: 'Canlı destek için gereken her şey, tek platformda.',
+  features: [
+    { h: 'Ziyaretçi takibi ve ekran izleme', p: 'Kim, nereden geldi, hangi sayfada? Gerekirse ekranı canlı izle ve doğru anda yaz. Şifre ve kart alanları otomatik bulanık gelir.' },
+    { h: 'Canlı sohbet widget’ı', p: 'Renk, karşılama mesajı ve görünümü panelden markana göre ayarla.' },
+    { h: 'Ortak gelen kutusu', p: 'Sohbeti ata, çöz, yeniden aç. Not bırak, hazır yanıtlarla hızlan.' },
+    { h: 'Yapay zekâ asistanı', p: 'Bilgi bankanla eğitilir, ilk yanıtı verir, emin değilse ekibe devreder.' },
+    { h: 'Sohbet botu editörü', p: 'Sürükle-bırak akışlarla müşteriyi doğru kişiye ya da cevaba yönlendir.' },
+    { h: 'Proaktif mesaj ve kampanyalar', p: 'Doğru sayfada, doğru anda ziyaretçiye ilk sen yaz.' },
+    { h: 'Bilet sistemi ve durum sayfası', p: 'Uzayan işleri bilete çevir, kesintileri durum sayfanda duyur.' },
+    { h: 'Otomasyon, webhook ve API', p: 'İş akışları kur, olayları kendi sistemlerine ilet, API ile entegre ol.' },
+    { h: 'Analitik ve memnuniyet puanı', p: 'Yanıt süreleri, yoğunluk ve müşteri puanları tek panelde.' },
+    { h: 'Sesli yapay zekâ', p: 'Telefon görüşmelerini karşılayan sesli asistan.' },
+    { h: '50+ dilde çeviri', p: 'Müşteri kendi dilinde yazar, sen kendi dilinde yanıtlarsın.' },
+    { h: 'Mobil uygulama', p: 'Sohbetleri telefonundan yanıtla, bildirimi kaçırma.' },
+  ] as Feature[],
   aiTag: 'Yapay zekâ ve insan, aynı sohbette',
   aiTitle: 'Önce hızlı yanıt, sonra doğru kişi.',
-  aiLead: 'Müşteri bekletilmez. Basit sorular saniyeler içinde cevaplanır, karmaşık olanlar ise geçmişiyle birlikte ekibine düşer. Müşteri tekrar anlatmak zorunda kalmaz.',
+  aiLead: 'Müşteri bekletilmez. Basit sorular saniyeler içinde cevaplanır, karmaşık olanlar geçmişiyle birlikte ekibine düşer. Müşteri aynı şeyi iki kez anlatmaz.',
   aiPoints: ['Bilgi bankandan öğrenir: SSS, fiyat listesi, iade koşulları', 'Cevabı bilmiyorsa uydurmaz, sana devreder', 'Devralırken tüm konuşma önünde hazırdır'],
   chat: [
     { who: 'v', m: 'Kargo ne zaman gelir? Cumartesiye lazım.' },
@@ -83,13 +104,13 @@ const TR = {
   ],
   handoff: 'Elif devraldı',
   trustTag: 'Güven',
-  trustTitle: 'Kullandığın araç, müşterine karşı sorumluluğundur.',
+  trustTitle: 'Müşterinin verisi, senin sorumluluğun. Biz de öyle görüyoruz.',
   trust: [
     { h: 'KVKK uyumlu, Türk altyapısı', p: 'Veri saklama süreleri ve çerez onayı panelden yönetilir.' },
     { h: 'Hassas alanlar bulanık', p: 'Parola, kart ve benzeri alanlar ekran izlemede otomatik gizlenir.' },
     { h: 'Gizlilik modu', p: 'Hassas bir giriş sırasında izleme geçici olarak kapanır, ekranda yalnızca bilgi notu görünür.' },
   ],
-  finalTitle: 'Bir sonraki ziyaretçin gitmeden önce orada ol.',
+  finalTitle: 'Bir sonraki müşterin yazdığında hazır ol.',
   finalSub: '14 gün boyunca tüm özellikleri dene. Kart bilgisi istemiyoruz.',
   finalCta: 'Ücretsiz başla',
   finalCta2: 'Bize yazın',
@@ -97,30 +118,46 @@ const TR = {
 }
 
 const EN: typeof TR = {
-  eyebrow: 'Live chat · AI · Screen watch',
-  h1a: 'The moment a visitor stalls,',
-  h1b: 'you are right there.',
-  sub: 'People rarely tell you why they left. Gu Live Chat sees them at that exact moment, tells you, and helps you say the right thing. AI and your team handle the rest.',
+  eyebrow: 'Live chat · AI · Shared inbox',
+  h1a: 'Talk to your customers on every channel,',
+  h1b: 'from one place.',
+  sub: 'Add one line of code to your site. Live chat, AI assistant, WhatsApp, Telegram and Messenger messages all land in your team’s shared inbox.',
   cta1: 'Start free',
-  cta2: 'See pricing',
+  cta2: 'See live demo',
   note: '14-day free trial · No card required · Set up in 30 seconds',
-  storyTag: '90 seconds of one visitor',
-  storyTitle: 'Most sales are lost in a moment nobody sees.',
-  storyLead: 'This scene is not invented. It happens on every site, every day. The difference is whether someone is there.',
-  story: [
-    { t: '0:00', h: 'Arrives', p: 'Lands from an ad or a search. You see who they are, where they came from and which page they are on.' },
-    { t: '0:38', h: 'Stalls', p: 'Reaches checkout and stops, hovering over the shipping line. Most sites never know this moment exists.' },
-    { t: '0:52', h: 'You see it', p: 'You watch their live screen, understand what they are looking at and write before they have to ask.' },
-    { t: '1:30', h: 'Completes', p: 'The right answer arrived at the right time. The order is done, no form was filled.' },
+  bubbles: [
+    { m: 'Can I book for tomorrow?', ch: 'WhatsApp', dot: 'bg-emerald-400' },
+    { m: 'Is this item in stock?', ch: 'Web', dot: 'bg-violet-400' },
+    { m: 'Where is my order?', ch: 'Messenger', dot: 'bg-blue-400' },
+    { m: 'Could I get the price list?', ch: 'Telegram', dot: 'bg-sky-400' },
   ],
-  pillarsTag: 'What you get',
-  pillarsTitle: 'One screen: a team that sees, writes and remembers.',
-  pillars: {
-    watch: { h: 'Watch the screen live', p: 'See what visitors look at, where they pause and what they click. Password and card fields arrive blurred.' },
-    ai: { h: 'AI gives the first reply', p: 'Trained on your knowledge base, speaks in your brand voice. When unsure it stays quiet and hands over to your team.' },
-    inbox: { h: 'One inbox', p: 'Site chat, WhatsApp, Telegram and Meta messages in one place, remembering who wrote what on every channel.' },
-    team: { h: 'Work as a team', p: 'Assign, resolve, reopen, leave notes. Who is handling what is visible to everyone.' },
-  },
+  channelsTitle: 'Wherever your customer writes, you answer there.',
+  channels: ['Website chat', 'WhatsApp', 'Telegram', 'Messenger', 'LinkedIn', 'SMS', 'Mobile app'],
+  installTag: 'Setup',
+  installTitle: 'Live in 30 seconds.',
+  installLead: 'Works with WordPress, Shopify and any website. No technical skills needed, one line is enough.',
+  steps: [
+    { h: 'Create your account', p: 'Sign up with email, no credit card required.' },
+    { h: 'Paste the code into your site', p: 'Add the widget code to the end of your page.' },
+    { h: 'Greet the first message', p: 'The moment a visitor writes, you see it in your inbox.' },
+  ],
+  codeLabel: 'Before the </body> tag of your site',
+  featTag: 'What you get',
+  featTitle: 'Everything live support needs, on one platform.',
+  features: [
+    { h: 'Visitor tracking and screen watch', p: 'Who, from where, on which page? Watch the screen live when needed and write at the right moment. Password and card fields arrive blurred.' },
+    { h: 'Live chat widget', p: 'Set colors, greeting and look to match your brand from the panel.' },
+    { h: 'Shared inbox', p: 'Assign, resolve, reopen. Leave notes and speed up with canned replies.' },
+    { h: 'AI assistant', p: 'Trained on your knowledge base, gives the first reply and hands over when unsure.' },
+    { h: 'Chatbot builder', p: 'Route customers to the right person or answer with drag-and-drop flows.' },
+    { h: 'Proactive messages and campaigns', p: 'Be the first to write, on the right page at the right moment.' },
+    { h: 'Ticketing and status page', p: 'Turn long-running issues into tickets and announce outages on your status page.' },
+    { h: 'Automation, webhooks and API', p: 'Build workflows, send events to your own systems, integrate through the API.' },
+    { h: 'Analytics and satisfaction score', p: 'Response times, volume and customer ratings in one panel.' },
+    { h: 'Voice AI', p: 'A voice assistant that answers phone calls.' },
+    { h: 'Translation in 50+ languages', p: 'Customers write in their language, you reply in yours.' },
+    { h: 'Mobile app', p: 'Reply from your phone and never miss a notification.' },
+  ],
   aiTag: 'AI and humans in the same chat',
   aiTitle: 'Fast first, then the right person.',
   aiLead: 'Nobody waits. Simple questions are answered in seconds, complex ones land with your team along with their history, so customers never repeat themselves.',
@@ -133,18 +170,24 @@ const EN: typeof TR = {
   ],
   handoff: 'Elif took over',
   trustTag: 'Trust',
-  trustTitle: 'The tool you use is your responsibility to your customers.',
+  trustTitle: 'Your customers’ data is your responsibility. We see it the same way.',
   trust: [
     { h: 'KVKK compliant, Turkish infrastructure', p: 'Retention periods and cookie consent are managed from the panel.' },
     { h: 'Sensitive fields blurred', p: 'Passwords, cards and similar fields are hidden automatically in screen watch.' },
     { h: 'Privacy mode', p: 'During a sensitive entry, watching pauses temporarily and only an info note is shown.' },
   ],
-  finalTitle: 'Be there before your next visitor leaves.',
+  finalTitle: 'Be ready when your next customer writes.',
   finalSub: 'Try every feature for 14 days. We do not ask for a card.',
   finalCta: 'Start free',
   finalCta2: 'Write to us',
   example: 'Example conversation',
 }
+
+const FEATURE_ICONS = [Eye, Palette, Inbox, Bot, Workflow, Megaphone, LifeBuoy, Terminal, BarChart3, Phone, Languages, Smartphone]
+const FEATURE_TONE = [
+  'text-teal-300', 'text-violet-300', 'text-fuchsia-300', 'text-violet-300', 'text-amber-200', 'text-rose-300',
+  'text-sky-300', 'text-emerald-300', 'text-teal-300', 'text-fuchsia-300', 'text-sky-300', 'text-violet-300',
+]
 
 export function HomeHeroV2() {
   const c = useCopy()
@@ -152,17 +195,33 @@ export function HomeHeroV2() {
     <section className="hv2 hv2-hero relative overflow-hidden bg-[#07060d] px-4 pb-28 pt-32 text-white sm:px-6 sm:pt-40 lg:pt-44">
       <div className="hv2-aurora" aria-hidden="true" />
       <div className="hv2-grid" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 top-28 hidden h-[420px] xl:block" aria-hidden="true">
+        {c.bubbles.map((b, i) => (
+          <div
+            key={b.m}
+            className="hv2-float absolute rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-[13px] text-white/80 backdrop-blur"
+            style={{
+              ...[{ left: '4%', top: '8%' }, { right: '5%', top: '4%' }, { left: '7%', top: '58%' }, { right: '3%', top: '52%' }][i],
+              animationDelay: `${i * 1.3}s`,
+            }}
+          >
+            <span className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-white/40">
+              <span className={`h-1.5 w-1.5 rounded-full ${b.dot}`} />
+              {b.ch}
+            </span>
+            {b.m}
+          </div>
+        ))}
+      </div>
       <div className="relative mx-auto max-w-5xl text-center">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-1.5 text-[12px] tracking-wide text-white/65">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           {c.eyebrow}
         </p>
-        <h1 className="mt-7 text-balance text-[2.6rem] font-semibold leading-[1.04] tracking-[-0.03em] sm:text-6xl lg:text-[5.4rem]">
+        <h1 className="mt-7 text-balance text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
           {c.h1a}
           <br />
-          <span className={`${serif.className} italic font-normal text-violet-200`}>
-            {c.h1b}
-          </span>
+          <span className={`${serif.className} italic font-normal text-violet-200`}>{c.h1b}</span>
         </h1>
         <p className="mx-auto mt-7 max-w-2xl text-pretty text-base leading-relaxed text-white/60 sm:text-lg">{c.sub}</p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -173,7 +232,7 @@ export function HomeHeroV2() {
             {c.cta1} <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            href="/pricing"
+            href="/demo"
             className="inline-flex items-center rounded-xl border border-white/15 px-7 py-3.5 text-sm font-medium text-white/80 transition hover:bg-white/[0.06]"
           >
             {c.cta2}
@@ -188,96 +247,112 @@ export function HomeHeroV2() {
   )
 }
 
-export function StoryV2() {
+export function ChannelsV2() {
+  const c = useCopy()
+  return (
+    <section className="hv2 relative bg-[#07060d] px-4 pb-8 pt-16 text-white sm:px-6">
+      <Reveal className="mx-auto max-w-5xl text-center">
+        <p className="text-sm text-white/45">{c.channelsTitle}</p>
+        <ul className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+          {c.channels.map((ch) => (
+            <li key={ch} className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[13px] text-white/75">
+              {ch}
+            </li>
+          ))}
+        </ul>
+      </Reveal>
+    </section>
+  )
+}
+
+export function InstallV2() {
   const c = useCopy()
   return (
     <section className="hv2 relative bg-[#07060d] px-4 py-24 text-white sm:px-6 sm:py-32">
-      <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="lg:sticky lg:top-32 lg:self-start">
-          <Reveal>
-            <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.storyTag}</p>
-            <h2 className="mt-4 text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.025em] sm:text-5xl">
-              {c.storyTitle}
-            </h2>
-            <p className="mt-5 max-w-md text-white/55 leading-relaxed">{c.storyLead}</p>
-          </Reveal>
-        </div>
-        <ol className="relative space-y-10 border-l border-white/10 pl-8">
-          {c.story.map((s, i) => (
-            <li key={s.t} className="relative">
-              <span className="absolute -left-[41px] top-1.5 grid h-5 w-5 place-items-center rounded-full border border-violet-300/40 bg-[#07060d]">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-              </span>
-              <Reveal delay={i * 60}>
-                <div className="flex items-baseline gap-4">
-                  <span className="font-mono text-sm tabular-nums text-violet-300/90">{s.t}</span>
-                  <h3 className="text-xl font-semibold tracking-tight">{s.h}</h3>
+      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1fr_1.1fr]">
+        <Reveal>
+          <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.installTag}</p>
+          <h2 className="mt-4 text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.025em] sm:text-5xl">
+            {c.installTitle}
+          </h2>
+          <p className="mt-5 max-w-md leading-relaxed text-white/55">{c.installLead}</p>
+          <ol className="mt-9 space-y-5">
+            {c.steps.map((s, i) => (
+              <li key={s.h} className="flex gap-4">
+                <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-violet-300/40 font-mono text-[12px] text-violet-200">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-medium text-white">{s.h}</p>
+                  <p className="mt-0.5 text-sm text-white/50">{s.p}</p>
                 </div>
-                <p className="mt-2 max-w-xl leading-relaxed text-white/55">{s.p}</p>
-              </Reveal>
-            </li>
-          ))}
-        </ol>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+        <Reveal delay={100}>
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d0b16] shadow-[0_30px_100px_-30px_rgba(124,58,237,0.5)]">
+            <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3 text-[11px] text-white/40">
+              <span className="h-2 w-2 rounded-full bg-white/15" />
+              <span className="h-2 w-2 rounded-full bg-white/15" />
+              <span className="h-2 w-2 rounded-full bg-white/15" />
+              <span className="ml-2">index.html</span>
+            </div>
+            <pre className="overflow-x-auto p-5 font-mono text-[12.5px] leading-relaxed text-white/70">
+              <code>
+                <span className="text-white/30">{`<!-- ${c.codeLabel} -->`}</span>
+                {'\n'}
+                <span className="text-fuchsia-300">{'<script'}</span> <span className="text-sky-300">async</span>{' '}
+                <span className="text-sky-300">src</span>=<span className="text-emerald-300">{'"https://www.gulivechat.com/widget.js"'}</span>
+                <span className="text-fuchsia-300">{'></script>'}</span>
+              </code>
+            </pre>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
 }
 
-export function PillarsV2() {
+export function FeaturesV2() {
   const c = useCopy()
-  const p = c.pillars
   return (
     <section className="hv2 relative bg-[#07060d] px-4 pb-28 text-white sm:px-6 sm:pb-36">
       <div className="mx-auto max-w-6xl">
         <Reveal>
-          <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.pillarsTag}</p>
+          <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.featTag}</p>
           <h2 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.025em] sm:text-5xl">
-            {c.pillarsTitle}
+            {c.featTitle}
           </h2>
         </Reveal>
-        <div className="mt-14 grid gap-4 md:grid-cols-6">
-          <Reveal className="md:col-span-4">
-            <div className="hv2-card group h-full overflow-hidden p-8">
-              <Eye className="h-6 w-6 text-teal-300" />
-              <h3 className="mt-5 text-2xl font-semibold tracking-tight">{p.watch.h}</h3>
-              <p className="mt-3 max-w-lg leading-relaxed text-white/55">{p.watch.p}</p>
-              <div className="mt-8 grid grid-cols-[1fr_auto] items-end gap-4">
-                <div className="rounded-lg border border-white/10 bg-black/30 p-3">
-                  <div className="h-2 w-1/3 rounded bg-white/15" />
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <div className="h-14 rounded bg-white/[0.07]" />
-                    <div className="h-14 rounded bg-white/[0.07]" />
-                    <div className="h-14 rounded bg-violet-400/20 ring-1 ring-violet-300/40" />
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 rounded bg-white/[0.06] px-2 py-1.5 text-[11px] text-white/40">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
-                    <span className="blur-[3px]">•••• •••• •••• 4242</span>
-                  </div>
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {c.features.map((f, i) => {
+            const Icon = FEATURE_ICONS[i]
+            const big = i === 0
+            return (
+              <Reveal key={f.h} delay={(i % 3) * 70} className={big ? 'lg:col-span-2' : i === c.features.length - 1 ? 'sm:col-span-2 lg:col-span-3' : ''}>
+                <div className={`hv2-card h-full p-7 ${big ? 'lg:p-9' : ''}`}>
+                  <Icon className={`h-5 w-5 ${FEATURE_TONE[i]}`} />
+                  <h3 className={`mt-5 font-semibold tracking-tight ${big ? 'text-2xl' : 'text-lg'}`}>{f.h}</h3>
+                  <p className={`mt-3 leading-relaxed text-white/55 ${big ? 'max-w-xl' : 'text-[15px]'}`}>{f.p}</p>
+                  {big && (
+                    <div className="mt-7 max-w-md rounded-lg border border-white/10 bg-black/30 p-3">
+                      <div className="h-2 w-1/3 rounded bg-white/15" />
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        <div className="h-12 rounded bg-white/[0.07]" />
+                        <div className="h-12 rounded bg-white/[0.07]" />
+                        <div className="h-12 rounded bg-violet-400/20 ring-1 ring-violet-300/40" />
+                      </div>
+                      <div className="mt-3 flex items-center gap-2 rounded bg-white/[0.06] px-2 py-1.5 text-[11px] text-white/40">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
+                        <span className="blur-[3px]">•••• •••• •••• 4242</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          </Reveal>
-          <Reveal className="md:col-span-2" delay={80}>
-            <div className="hv2-card h-full p-8">
-              <MessageCircle className="h-6 w-6 text-violet-300" />
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{p.ai.h}</h3>
-              <p className="mt-3 leading-relaxed text-white/55">{p.ai.p}</p>
-            </div>
-          </Reveal>
-          <Reveal className="md:col-span-3" delay={40}>
-            <div className="hv2-card h-full p-8">
-              <Inbox className="h-6 w-6 text-fuchsia-300" />
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{p.inbox.h}</h3>
-              <p className="mt-3 leading-relaxed text-white/55">{p.inbox.p}</p>
-            </div>
-          </Reveal>
-          <Reveal className="md:col-span-3" delay={120}>
-            <div className="hv2-card h-full p-8">
-              <Layers className="h-6 w-6 text-amber-200" />
-              <h3 className="mt-5 text-xl font-semibold tracking-tight">{p.team.h}</h3>
-              <p className="mt-3 leading-relaxed text-white/55">{p.team.p}</p>
-            </div>
-          </Reveal>
+              </Reveal>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -311,11 +386,11 @@ export function AiHumanV2() {
             <div className="space-y-3 text-sm">
               {c.chat.map((m, i) =>
                 m.who === 'v' ? (
-                  <div key={i} className="ml-auto w-fit max-w-[82%] rounded-2xl rounded-br-sm bg-violet-500/80 px-4 py-2.5 text-white">
+                  <div key={i} className="w-fit max-w-[82%] rounded-2xl rounded-bl-sm bg-white/[0.08] px-4 py-2.5 text-white/85">
                     {m.m}
                   </div>
                 ) : m.who === 'a' ? (
-                  <div key={i} className="w-fit max-w-[88%] rounded-2xl rounded-bl-sm bg-white/[0.08] px-4 py-2.5 text-white/85">
+                  <div key={i} className="ml-auto w-fit max-w-[88%] rounded-2xl rounded-br-sm bg-violet-500/80 px-4 py-2.5 text-white">
                     {m.m}
                   </div>
                 ) : (
@@ -370,7 +445,8 @@ export function FinalCtaV2() {
     <section className="hv2 relative overflow-hidden bg-[#07060d] px-4 py-28 text-center text-white sm:px-6 sm:py-36">
       <div className="hv2-aurora hv2-aurora-soft" aria-hidden="true" />
       <Reveal className="relative mx-auto max-w-3xl">
-        <h2 className="text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl">
+        <MessageCircle className="mx-auto h-6 w-6 text-violet-300" />
+        <h2 className="mt-6 text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl">
           {c.finalTitle}
         </h2>
         <p className="mx-auto mt-6 max-w-lg text-white/55">{c.finalSub}</p>
