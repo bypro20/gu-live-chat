@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, Inbox, Eye, MessageSquare, Users, Globe,
-  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft, Mail as MailIcon, Sparkles,
+  UserCog, Monitor, Megaphone, ShieldBan, Settings, Search, ArrowLeft, ExternalLink, Mail as MailIcon, Sparkles,
 } from 'lucide-react'
 import { AppLogo } from '@/components/brand/app-logo'
 import NotificationBell from '@/components/dashboard/notification-bell'
@@ -133,6 +133,15 @@ export function AdminSidebar({
       </nav>
 
       <div className="admin-sidebar-footer shrink-0 space-y-2">
+        <a
+          href="/"
+          className="admin-sidebar-item"
+        >
+          <span className="admin-sidebar-item-icon">
+            <ExternalLink className="w-[18px] h-[18px]" />
+          </span>
+          <span className="text-[13px] font-medium">Siteye git</span>
+        </a>
         <AdminThemeToggle variant="sidebar" />
         {showCustomerLink && (
           <Link
