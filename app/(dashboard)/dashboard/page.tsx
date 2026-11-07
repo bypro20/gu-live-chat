@@ -21,7 +21,6 @@ import {
   Check,
   Inbox,
   Sparkles,
-  Radio,
   TrendingUp,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
@@ -29,6 +28,8 @@ import { Button } from '@/components/ui/button'
 import { GrowthOpportunities } from '@/components/dashboard/growth-opportunities'
 import { LiveVisitorsSummary } from '@/components/visitors/live-visitors-summary'
 import { useDashboardI18n } from '@/lib/hooks/use-dashboard-i18n'
+import { CommandHero } from '@/components/dashboard/command-hero'
+import { SetupChecklist } from '@/components/dashboard/setup-checklist'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -86,35 +87,18 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Hoş geldin banner */}
-      <div className="app-welcome-banner animate-in-up">
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-          <div>
-            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">
-              {t.controlCenter}
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {session?.user?.name ? t.welcomeWithName(session.user.name.split(' ')[0]) : t.welcome}
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm max-w-lg">
-              {activeWebsite ? t.subtitleWithSite(activeWebsite.name) : t.subtitleDefault}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Link href="/settings/channels">
-              <Button variant="outline" size="sm" className="gap-1.5 bg-card/80">
-                <Radio className="w-4 h-4" />
-                {t.channels}
-              </Button>
-            </Link>
-            <Link href="/inbox" className="btn-primary">
-              <MessageSquare className="w-4 h-4" /> {t.inbox}
-            </Link>
-          </div>
-        </div>
+      <div className="mb-6 animate-in-up">
+        <CommandHero
+          name={session?.user?.name}
+          siteName={activeWebsite?.name}
+          planLabel={planInfo?.name}
+          activeVisitors={stats.activeVisitors}
+          openChats={stats.openConversations}
+          aiActive={stats.aiAgent.active}
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statCards.map((card) => {
           const inner = (
             <div className="app-stat-card h-full">
@@ -292,6 +276,13 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
+          <SetupChecklist
+            snippet={installSnippet}
+            hasChats={stats.totalConversations > 0}
+            aiActive={stats.aiAgent.active}
+            hasExtraChannel={stats.channelBreakdown.some((ch) => !/web|widget/i.test(ch.source))}
+            hasTeam={stats.agentPerformance.length > 1}
+          />
           {/* AI Agent */}
           <div className="app-panel p-6 border-primary/10">
             <div className="flex items-start gap-3 mb-3">

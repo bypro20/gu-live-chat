@@ -10,6 +10,7 @@ import {
 import { useLocale } from '@/components/marketing/locale-provider'
 import { HeroStage } from '@/components/marketing/home-v2/hero-stage'
 import { Marquee, Orb, SpotlightCard, Starfield, TiltStage } from '@/components/marketing/home-v2/fx'
+import { Smoke } from '@/components/marketing/home-v2/smoke'
 import { usePrefersReducedMotion } from '@/components/marketing/home-v2/use-reduced-motion'
 
 const serif = Instrument_Serif({ subsets: ['latin', 'latin-ext'], weight: '400', style: ['normal', 'italic'] })
@@ -192,6 +193,7 @@ const FEATURE_TONE = [
 
 export function HomeHeroV2() {
   const c = useCopy()
+  const stageRef = useRef<HTMLDivElement>(null)
   return (
     <section className="hv2 hv2-hero hv2-grain relative overflow-hidden bg-[#07060d] px-4 pb-28 pt-32 text-white sm:px-6 sm:pt-40 lg:pt-44">
       <div className="hv2-aurora" aria-hidden="true" />
@@ -251,9 +253,14 @@ export function HomeHeroV2() {
         <p className="mt-5 text-xs text-white/40">{c.note}</p>
       </div>
       <div className="relative mt-16 px-1 sm:mt-20">
-        <TiltStage>
-          <HeroStage />
-        </TiltStage>
+        <div className="pointer-events-none absolute -inset-x-[12%] -inset-y-[34%] hidden sm:block" aria-hidden="true">
+          <Smoke targetRef={stageRef} level={0.85} />
+        </div>
+        <div ref={stageRef} className="relative mx-auto w-full max-w-[1100px]">
+          <TiltStage>
+            <HeroStage />
+          </TiltStage>
+        </div>
       </div>
     </section>
   )
