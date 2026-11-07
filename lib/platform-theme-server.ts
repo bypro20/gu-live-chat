@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
 import {
+  CINEMATIC_DARK_THEME,
+  LEGACY_DARK_ACCENT,
   DEFAULT_PLATFORM_THEMES,
   normalizePanelTheme,
   normalizePlatformThemes,
@@ -14,7 +16,13 @@ export async function getPlatformTheme(): Promise<PlatformThemes> {
       where: { key: PLATFORM_THEME_KEY },
     })
     if (!row?.value) return { ...DEFAULT_PLATFORM_THEMES }
-    return normalizePlatformThemes(JSON.parse(row.value))
+    const saved = normalizePlatformThemes(JSON.parse(row.value))
+    // Eski (yeşil/gri) koyu varsayılan kayıtlıysa yeni sinematik palete geç.
+    return {
+      ...saved,
+      adminDark: saved.adminDark.accent === LEGACY_DARK_ACCENT ? CINEMATIC_DARK_THEME : saved.adminDark,
+      customerDark: saved.customerDark.accent === LEGACY_DARK_ACCENT ? CINEMATIC_DARK_THEME : saved.customerDark,
+    }
   } catch {
     return { ...DEFAULT_PLATFORM_THEMES }
   }

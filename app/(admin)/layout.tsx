@@ -22,6 +22,7 @@ import { AdminThemeProvider, useAdminTheme, AdminThemeToggle } from '@/component
 import { useToast } from '@/lib/toast'
 import { useLiveVisitorNotify } from '@/lib/hooks/use-live-visitor-notify'
 import { getAdminPageTitle } from '@/lib/admin-navigation'
+import { PanelBoot } from '@/components/panel/panel-boot'
 
 interface AdminUser {
   id: string
@@ -33,6 +34,7 @@ interface AdminUser {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminThemeProvider>
+      <PanelBoot />
       <AdminLayoutInner>{children}</AdminLayoutInner>
     </AdminThemeProvider>
   )

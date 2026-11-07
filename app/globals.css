@@ -3479,3 +3479,49 @@ html.native-app .native-app-shell .app-main {
 .hv2-auth input:focus{border-color:rgba(167,139,250,.7) !important;box-shadow:0 0 0 3px rgba(167,139,250,.18)}
 .hv2-auth button[type=submit]{background:#fff !important;color:#07060d !important}
 .hv2-auth button[type=submit]:hover{background:rgba(255,255,255,.9) !important}
+
+/* ───────── Paneller (müşteri + admin): sinematik koyu tema ───────── */
+.admin-shell-v2[data-admin-theme='dark']{
+  --admin-bg:#07060d;--admin-bg-subtle:#0b0914;--admin-bg-elevated:#0f0c1b;--admin-bg-card:#0f0c1b;--admin-bg-hover:#1b1532;
+  --admin-border:#2a2142;--admin-border-strong:#3b2f5e;--admin-text-muted:#a79fc0;--admin-text-faint:#7d7498;--admin-input-bg:#0b0914;
+  --admin-accent:#a78bfa;--admin-accent-hover:#c4b5fd;--admin-accent-soft:rgba(167,139,250,.14);--admin-accent-fg:#0b0618;
+  --admin-sidebar-bg:#07060d;--admin-sidebar-bg-end:#0b0914;--admin-sidebar-active:rgba(167,139,250,.14);
+  --admin-hero-gradient:linear-gradient(135deg,#120d24 0%,#07060d 60%,rgba(167,139,250,.12) 100%);
+  --sidebar-title:#fff;--sidebar-foreground:#a79fc0;--sidebar-foreground-active:#fff;--sidebar-group-label:rgba(255,255,255,.35);
+  --sidebar-border:rgba(255,255,255,.06);--sidebar-hover:rgba(255,255,255,.04);--sidebar-surface:rgba(255,255,255,.04);
+}
+.dark .app-shell,.admin-shell-v2[data-admin-theme='dark']{position:relative;isolation:isolate}
+.dark .app-shell::before,.admin-shell-v2[data-admin-theme='dark']::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(48% 42% at 14% -6%,rgba(124,58,237,.30),transparent 70%),radial-gradient(40% 36% at 96% 0%,rgba(20,184,166,.13),transparent 70%),radial-gradient(44% 32% at 50% 112%,rgba(217,70,239,.11),transparent 70%)}
+.dark .app-shell .surface,.admin-shell-v2[data-admin-theme='dark'] .surface{position:relative;border-color:rgba(255,255,255,.085);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 12px 40px -24px rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.dark .app-shell .surface::before,.admin-shell-v2[data-admin-theme='dark'] .surface::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .3s;
+  background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(167,139,250,.13),transparent 60%)}
+.dark .app-shell .surface::after,.admin-shell-v2[data-admin-theme='dark'] .surface::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .3s;padding:1px;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(196,181,253,.7),transparent 62%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.dark .app-shell .surface:hover::before,.dark .app-shell .surface:hover::after,
+.admin-shell-v2[data-admin-theme='dark'] .surface:hover::before,.admin-shell-v2[data-admin-theme='dark'] .surface:hover::after{opacity:1}
+.dark .app-shell ::-webkit-scrollbar,.admin-shell-v2[data-admin-theme='dark'] ::-webkit-scrollbar{width:9px;height:9px}
+.dark .app-shell ::-webkit-scrollbar-thumb,.admin-shell-v2[data-admin-theme='dark'] ::-webkit-scrollbar-thumb{background:rgba(167,139,250,.25);border-radius:9px}
+.dark .app-shell ::-webkit-scrollbar-thumb:hover,.admin-shell-v2[data-admin-theme='dark'] ::-webkit-scrollbar-thumb:hover{background:rgba(167,139,250,.45)}
+.admin-shell-v2[data-admin-theme='dark'] .leaflet-tile-pane{filter:invert(1) hue-rotate(205deg) brightness(.82) contrast(.92) saturate(.6)}
+.dark .leaflet-tile-pane{filter:invert(1) hue-rotate(205deg) brightness(.82) contrast(.92) saturate(.6)}
+
+/* Admin gelen kutusu: tam yükseklik + koyu palet */
+.admin-inbox-content{display:flex;flex-direction:column;min-height:0}
+.admin-inbox-content > div{flex:1 1 0%;min-height:0}
+.admin-shell-v2[data-admin-theme='dark'] .app-main .inbox-shell,
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell{
+  color-scheme:dark;
+  --background:#07060d;--foreground:#f3effa;--card:#0f0c1b;--card-foreground:#f3effa;--popover:#0f0c1b;--popover-foreground:#f3effa;
+  --muted:#16112a;--muted-foreground:#a79fc0;--accent:#1b1532;--accent-foreground:#f3effa;--border:#2a2142;--border-strong:#3b2f5e;--input:#0b0914;
+  --primary:#a78bfa;--primary-foreground:#0b0618;--primary-light:rgba(167,139,250,.14);--ring:#a78bfa;
+  --inbox-list-bg:#0b0914;--inbox-chat-bg:#07060d;--inbox-message-bg:#09071200;--inbox-message-dots:rgba(255,255,255,.04);
+  background:transparent;color:var(--foreground)}
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell .bg-white,
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell .bg-white\/80,
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell .bg-white\/95,
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell .bg-slate-100{background-color:color-mix(in srgb,var(--card) 92%,transparent) !important}
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell :is(.text-slate-400,.text-slate-500,.text-slate-600,.text-slate-700,.text-slate-800){color:var(--muted-foreground) !important}
+.admin-shell-v2[data-admin-theme='dark'] .inbox-shell :is(.border-slate-200,.border-indigo-100){border-color:var(--border) !important}

@@ -56,13 +56,8 @@ export default function GirisFormu({ googleAktif }: { googleAktif: boolean }) {
       if (sonuc?.error) {
         setHata(t.login.wrongCredentials)
       } else {
-        const oturumSonucu = await fetch('/api/auth/session')
-        const oturum = await oturumSonucu.json()
-        if (oturum?.user?.role === 'ADMIN' && !isNativeApp) {
-          router.push('/admin')
-        } else {
-          router.push(isNativeApp ? nativeAppHomePath() : (searchParams.get('callbackUrl') || '/dashboard'))
-        }
+        // Yönetici de önce istediği sayfaya gider; yönetim paneli için ayrı giriş (/admin-login) var.
+        router.push(isNativeApp ? nativeAppHomePath() : (searchParams.get('callbackUrl') || '/dashboard'))
         router.refresh()
       }
     } catch {

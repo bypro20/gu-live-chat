@@ -45,18 +45,24 @@ export const DEFAULT_ADMIN_THEME: PanelTheme = {
   hover: GU_BRAND.primaryLight,
 }
 
-export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = {
-  background: GU_BRAND.ink,
-  foreground: '#F5F3EF',
-  card: GU_BRAND.inkSoft,
-  cardForeground: '#F5F3EF',
-  muted: '#1F1D1A',
-  mutedForeground: '#A8A29E',
-  border: '#3D3935',
-  accent: '#3DBDA5',
-  accentForeground: GU_BRAND.ink,
-  hover: '#2A2724',
+/** Gu Live Chat sinematik koyu palet: panel (müşteri + admin) ortak. */
+export const CINEMATIC_DARK_THEME: PanelTheme = {
+  background: '#07060d',
+  foreground: '#F3EFFA',
+  card: '#0f0c1b',
+  cardForeground: '#F3EFFA',
+  muted: '#16112a',
+  mutedForeground: '#a79fc0',
+  border: '#2a2142',
+  accent: '#a78bfa',
+  accentForeground: '#0b0618',
+  hover: '#1b1532',
 }
+
+/** Eski sıcak gri/yeşil varsayılanı: kayıtlı eski değerleri yeni palete çevirmek için. */
+export const LEGACY_DARK_ACCENT = '#3DBDA5'
+
+export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = CINEMATIC_DARK_THEME
 
 export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
   background: GU_BRAND.background,
@@ -71,18 +77,7 @@ export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
   hover: GU_BRAND.primaryLight,
 }
 
-export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = {
-  background: GU_BRAND.ink,
-  foreground: '#F5F3EF',
-  card: '#1F1D1A',
-  cardForeground: '#F5F3EF',
-  muted: '#1F1D1A',
-  mutedForeground: '#A8A29E',
-  border: '#3D3935',
-  accent: '#3DBDA5',
-  accentForeground: GU_BRAND.ink,
-  hover: '#2A2724',
-}
+export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = CINEMATIC_DARK_THEME
 
 export const DEFAULT_PLATFORM_THEMES: PlatformThemes = {
   admin: DEFAULT_ADMIN_THEME,

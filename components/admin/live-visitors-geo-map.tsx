@@ -32,7 +32,7 @@ type LiveVisitorsGeoMapProps = {
 
 const DEFAULT_HEIGHT = 440
 const MAP_TILE =
-  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+  'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 function countryFlag(country?: string | null): string {
   if (!country) return '🌍'
@@ -184,9 +184,9 @@ export function LiveVisitorsGeoMap({
       })
 
       L.tileLayer(MAP_TILE, {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        attribution: '&copy; OpenStreetMap contributors',
         subdomains: 'abcd',
-        maxZoom: 20,
+        maxZoom: 19,
       }).addTo(map)
 
       layerRef.current = L.layerGroup().addTo(map)

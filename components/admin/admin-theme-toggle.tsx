@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { Moon, Sun } from 'lucide-react'
 
 const STORAGE_KEY = 'gu-admin-theme'
+/** Kullanıcı temayı bilerek seçtiyse işaretlenir; eski otomatik 'light' kaydı sayılmaz. */
+const CHOSEN_KEY = 'gu-admin-theme-chosen'
 
 export type AdminTheme = 'dark' | 'light'
 
@@ -17,8 +19,10 @@ interface AdminThemeContextValue {
 const AdminThemeContext = createContext<AdminThemeContextValue | null>(null)
 
 function readStoredTheme(): AdminTheme {
-  if (typeof window === 'undefined') return 'light'
-  return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
+  if (typeof window === 'undefined') return 'dark'
+  // Varsayılan koyu; yalnızca kullanıcı açıkça açık temayı seçtiyse açık kalır.
+  const chosen = localStorage.getItem(CHOSEN_KEY) === '1'
+  return chosen && localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'
 }
 
 function syncAdminThemeDom(mode: AdminTheme) {
@@ -45,6 +49,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
 
   const setTheme = useCallback(
     (next: AdminTheme) => {
+      localStorage.setItem(CHOSEN_KEY, '1')
       applyTheme(next)
     },
     [applyTheme],
@@ -53,6 +58,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark'
+      localStorage.setItem(CHOSEN_KEY, '1')
       localStorage.setItem(STORAGE_KEY, next)
       syncAdminThemeDom(next)
       return next
