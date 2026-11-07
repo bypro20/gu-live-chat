@@ -843,8 +843,8 @@
   var SCREENSHOT_THROTTLE_MS = 90;
   var SCREENSHOT_BURST_MS = 45;
   var SCREENSHOT_BURST_COUNT = 4;
-  var SCREENSHOT_QUALITY = 0.52;
-  var CAPTURE_MAX_WIDTH = 1366;
+  var SCREENSHOT_QUALITY = 0.64;
+  var CAPTURE_MAX_WIDTH = 1600;
   var screenshotTimer = null;
   var htmlToImageLoaded = false;
   var lastScreenshotLength = 0;

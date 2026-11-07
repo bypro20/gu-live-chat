@@ -48,12 +48,32 @@ export function OverlayPreview({
   const frameCountRef = useRef(0)
   const lastFrameAtRef = useRef(0)
   const [liveFps, setLiveFps] = useState(0)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [stage, setStage] = useState<{ w: number; h: number } | null>(null)
   const { emit: socketEmit } = useSocket()
 
   const viewportW = visitor.viewportW || 1920
   const viewportH = visitor.viewportH || 1080
 
   const lastInterventionEmitRef = useRef(0)
+
+  // Ziyaretçi ekranıyla aynı en-boy oranında sahne: siyah şerit yok, imleç/tıklama koordinatları doğru.
+  useEffect(() => {
+    const el = frameRef.current
+    if (!el) return
+    const ratio = viewportW / viewportH
+    const fit = () => {
+      const cw = el.clientWidth
+      const ch = el.clientHeight
+      if (!cw || !ch) return
+      const w = cw / ch > ratio ? Math.floor(ch * ratio) : cw
+      const h = cw / ch > ratio ? ch : Math.floor(cw / ratio)
+      setStage((prev) => (prev && prev.w === w && prev.h === h ? prev : { w, h }))
+    }
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [viewportW, viewportH])
 
   const hasWebRTC = !!webrtcStream
   const isConnected = hasWebRTC && webrtcState === 'connected'
@@ -424,12 +444,17 @@ export function OverlayPreview({
 
   // ─── The screen surface ───
   const screen = (
+    <div ref={frameRef} className="relative flex-1 min-h-0 overflow-hidden flex items-center justify-center bg-[#05040a]">
     <div
-      className="relative flex-1 min-h-0 bg-black overflow-hidden"
+      className="relative shrink-0 overflow-hidden bg-black"
       onClick={handleRemoteClick}
       onMouseMove={handleInterventionMouseMove}
       onWheel={handleInterventionWheel}
-      style={{ cursor: interventionMode && isActive && zoom <= 1 ? 'crosshair' : undefined }}
+      style={{
+        width: stage?.w ?? '100%',
+        height: stage?.h ?? '100%',
+        cursor: interventionMode && isActive && zoom <= 1 ? 'crosshair' : undefined,
+      }}
     >
       {/* Intervention mode banner */}
       {interventionMode && isActive && (
@@ -451,7 +476,7 @@ export function OverlayPreview({
           muted
           className="absolute inset-0 w-full h-full block"
           style={{
-            objectFit: 'contain',
+            objectFit: 'fill',
             background: '#000',
             transform: zoom > 1 ? `scale(${zoom})` : undefined,
             transformOrigin: 'center center',
@@ -469,7 +494,7 @@ export function OverlayPreview({
           fetchPriority="high"
           className="absolute inset-0 w-full h-full block"
           style={{
-            objectFit: 'contain',
+            objectFit: 'fill',
             background: '#000',
             transform: zoom > 1 ? `scale(${zoom})` : undefined,
             transformOrigin: 'center center',
@@ -605,6 +630,7 @@ export function OverlayPreview({
 
       {/* Visitor info overlay */}
       {visitorInfoOverlay}
+    </div>
     </div>
   )
 
