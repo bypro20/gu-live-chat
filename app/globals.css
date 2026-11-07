@@ -3585,3 +3585,10 @@ html:not(.dark) .app-shell .app-welcome-banner::before,html:not(.dark) .app-shel
 /* sol kenar çubuğu masaüstünde yok: ana alan tam genişlik */
 @media (min-width:1024px){.app-shell>.app-sidebar,.app-shell>.ptn-hide-lg{display:none !important}.app-shell{flex-direction:column}}
 @media (min-width:1024px){.admin-top-bar{display:none !important}}
+
+/* Hareket azaltma: kayan şerit yerine ortalanmış, sarmalanan tam liste (yarım kırpılma yok) */
+@media (prefers-reduced-motion:reduce){
+  .hv2-marquee{mask-image:none;-webkit-mask-image:none}
+  .hv2-marquee-track{animation:none;width:auto;flex-wrap:wrap;justify-content:center;padding:0 1rem}
+  .hv2-marquee-track li[aria-hidden='true']{display:none}
+}
