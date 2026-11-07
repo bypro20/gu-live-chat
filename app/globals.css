@@ -3469,3 +3469,13 @@ html.native-app .native-app-shell .app-main {
 .hv2-scope .border-border{border-color:rgba(255,255,255,.1)}
 .hv2-scope input,.hv2-scope textarea,.hv2-scope select{color:#fff}
 .hv2-scope{--premium-heading:#fff;--premium-body:rgba(255,255,255,.64);--premium-muted:rgba(255,255,255,.45);--premium-link:#c4b5fd;--premium-link-hover:#fff;--marketing-surface:transparent;--background:#07060d;--foreground:#f3effa;--card:#100d1d;--card-foreground:#f3effa;--muted:rgba(255,255,255,.06);--muted-foreground:rgba(255,255,255,.58);--border:rgba(255,255,255,.1);--primary:#a78bfa;--primary-light:rgba(167,139,250,.14)}
+
+.hv2-auth .bg-white{background:rgba(255,255,255,.07) !important}
+.hv2-auth .bg-primary-light{background:rgba(124,58,237,.10) !important;backdrop-filter:blur(2px)}
+.hv2-auth .bg-gray-950{background:rgba(7,6,13,.55) !important;backdrop-filter:blur(14px)}
+.hv2-auth .bg-mesh{opacity:.35}
+.hv2-auth input{background:rgba(255,255,255,.05) !important;border-color:rgba(255,255,255,.12) !important;color:#fff !important}
+.hv2-auth input::placeholder{color:rgba(255,255,255,.35)}
+.hv2-auth input:focus{border-color:rgba(167,139,250,.7) !important;box-shadow:0 0 0 3px rgba(167,139,250,.18)}
+.hv2-auth button[type=submit]{background:#fff !important;color:#07060d !important}
+.hv2-auth button[type=submit]:hover{background:rgba(255,255,255,.9) !important}
