@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans, IBM_Plex_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { ToastProvider } from '@/lib/toast'
 import { getSiteVerificationMetadata } from '@/lib/seo'
@@ -15,6 +15,7 @@ import { getServerLocaleContext } from '@/lib/locale-server'
 import { getSiteUrl, SITE_NAME } from '@/lib/site-config'
 import './globals.css'
 
+const plex = IBM_Plex_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-plex', weight: ['400', '500', '600', '700'] })
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -67,7 +68,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${inter.variable} ${jakarta.variable} font-[family-name:var(--font-jakarta)] min-h-full bg-background text-foreground antialiased`}>
+      <body className={`${inter.variable} ${jakarta.variable} ${plex.variable} font-[family-name:var(--font-jakarta)] min-h-full bg-background text-foreground antialiased`}>
         <PlatformThemeStyle />
         <Script id="native-shell" strategy="beforeInteractive">
           {NATIVE_SHELL_SCRIPT}

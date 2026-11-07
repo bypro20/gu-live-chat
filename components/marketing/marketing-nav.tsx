@@ -54,7 +54,7 @@ export function MarketingNav({ tone = 'light' }: { tone?: 'light' | 'dark' } = {
         className={`transition-all duration-300 border-b ${
           dark
             ? scrolled
-              ? 'bg-[#07060d]/94 backdrop-blur-xl border-white/10'
+              ? 'bg-[#04070d]/94 backdrop-blur-xl border-white/10'
               : 'bg-transparent border-transparent'
             : scrolled
               ? 'glass-nav glass-nav-scrolled bg-white/90 border-border/80'

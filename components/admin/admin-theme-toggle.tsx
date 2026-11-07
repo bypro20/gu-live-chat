@@ -19,10 +19,10 @@ interface AdminThemeContextValue {
 const AdminThemeContext = createContext<AdminThemeContextValue | null>(null)
 
 function readStoredTheme(): AdminTheme {
-  if (typeof window === 'undefined') return 'dark'
-  // Varsayılan koyu; yalnızca kullanıcı açıkça açık temayı seçtiyse açık kalır.
+  if (typeof window === 'undefined') return 'light'
+  // Varsayılan açık; yalnızca kullanıcı açıkça koyuyu seçtiyse koyu kalır.
   const chosen = localStorage.getItem(CHOSEN_KEY) === '1'
-  return chosen && localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'
+  return chosen && localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
 }
 
 function syncAdminThemeDom(mode: AdminTheme) {

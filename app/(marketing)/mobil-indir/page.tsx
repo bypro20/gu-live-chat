@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function MobilIndirPage() {
   return (
-    <div className="min-h-screen bg-[#07060d] text-foreground">
+    <div className="min-h-screen bg-[#04070d] text-foreground">
       <MarketingNav tone="dark" />
       <main>
         <MobilV2 />

@@ -310,7 +310,7 @@ export function OverlayPreview({
 
   // ─── Control bar ───
   const controlBar = (
-    <div className="flex items-center justify-between gap-3 px-3 h-12 shrink-0 bg-[#0a0813]/90 border-b border-white/[0.07]">
+    <div className="flex items-center justify-between gap-3 px-3 h-12 shrink-0 bg-[#08111d]/90 border-b border-white/[0.07]">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex shrink-0 items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
@@ -652,7 +652,7 @@ export function OverlayPreview({
 
   // ─── Embedded full-height viewer ───
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#07060d] shadow-[0_30px_100px_-40px_rgba(124,58,237,0.6)]">
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#04070d] shadow-[0_30px_100px_-40px_rgba(124,58,237,0.6)]">
       {controlBar}
       <div className="relative flex min-h-0 flex-1">
         {screen}

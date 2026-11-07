@@ -137,7 +137,7 @@ export default function PricingPage() {
                     aria-selected={billing === k}
                     onClick={() => setBilling(k)}
                     className={`rounded-full px-5 py-2 text-sm font-medium transition ${
-                      billing === k ? 'bg-white text-[#07060d]' : 'text-white/60 hover:text-white'
+                      billing === k ? 'bg-white text-[#04070d]' : 'text-white/60 hover:text-white'
                     }`}
                   >
                     {k === 'monthly' ? ui.monthly : ui.yearly}
@@ -205,7 +205,7 @@ export default function PricingPage() {
                         href={cta.href}
                         className={`hv2-btn inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
                           plan.highlighted
-                            ? 'hv2-btn-glow bg-white text-[#07060d] hover:bg-white/90'
+                            ? 'hv2-btn-glow bg-white text-[#04070d] hover:bg-white/90'
                             : 'border border-white/15 text-white hover:bg-white/[0.06]'
                         }`}
                       >
@@ -278,7 +278,7 @@ export default function PricingPage() {
                         <Link
                           href={planCta(plan.id as PlanId).href}
                           className={`inline-block rounded-lg px-4 py-2 text-xs font-semibold transition ${
-                            plan.highlighted ? 'bg-white text-[#07060d] hover:bg-white/90' : 'border border-white/15 text-white hover:bg-white/[0.06]'
+                            plan.highlighted ? 'bg-white text-[#04070d] hover:bg-white/90' : 'border border-white/15 text-white hover:bg-white/[0.06]'
                           }`}
                         >
                           {planCta(plan.id as PlanId).label}
@@ -302,7 +302,7 @@ export default function PricingPage() {
               </div>
               <Link
                 href="/register"
-                className="hv2-btn hv2-btn-glow inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#07060d]"
+                className="hv2-btn hv2-btn-glow inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#04070d]"
               >
                 {ui.startFree} <ArrowRight className="h-4 w-4" />
               </Link>
@@ -330,7 +330,7 @@ export default function PricingPage() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/register"
-                className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d]"
+                className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#04070d]"
               >
                 {ui.startFree} <ArrowRight className="h-4 w-4" />
               </Link>

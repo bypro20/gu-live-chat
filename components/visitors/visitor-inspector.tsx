@@ -112,20 +112,20 @@ export function VisitorInspector({
   }
 
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden bg-[#0a0813]/95 text-white backdrop-blur-xl">
+    <aside className="flex h-full w-full flex-col overflow-hidden bg-[#08111d]/95 text-white backdrop-blur-xl">
       <header className="shrink-0 border-b border-white/[0.07] p-4">
         <div className="flex items-start gap-3">
           <div className="relative shrink-0">
             <div
               className={`grid h-11 w-11 place-items-center rounded-full text-base font-semibold ${
                 visitor.isLive
-                  ? 'bg-gradient-to-br from-violet-400 to-teal-300 text-[#0a0813] shadow-[0_0_24px_-4px_rgba(167,139,250,.8)]'
+                  ? 'bg-gradient-to-br from-violet-400 to-teal-300 text-[#08111d] shadow-[0_0_24px_-4px_rgba(167,139,250,.8)]'
                   : 'bg-white/10 text-white/70'
               }`}
             >
               {visitorDisplayName(visitor.name)[0]?.toUpperCase() ?? 'A'}
             </div>
-            {visitor.isLive && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0a0813] bg-emerald-400" />}
+            {visitor.isLive && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#08111d] bg-emerald-400" />}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold">{visitorDisplayName(visitor.name)}</p>
@@ -196,7 +196,7 @@ export function VisitorInspector({
                   <li key={`${p.url}-${p.at}-${i}`} className="relative">
                     <span
                       className={`absolute -left-[26px] top-1 grid h-3 w-3 place-items-center rounded-full border ${
-                        i === 0 ? 'border-violet-300 bg-violet-300 shadow-[0_0_12px_rgba(167,139,250,.9)]' : 'border-white/25 bg-[#0a0813]'
+                        i === 0 ? 'border-violet-300 bg-violet-300 shadow-[0_0_12px_rgba(167,139,250,.9)]' : 'border-white/25 bg-[#08111d]'
                       }`}
                     />
                     <div className="flex items-center gap-2">

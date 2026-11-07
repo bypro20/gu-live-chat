@@ -24,7 +24,7 @@ export function Starfield({ count = 110 }: { count?: number }) {
       r: Math.random() * 1.2 + 0.3,
       p: Math.random() * Math.PI * 2,
       s: Math.random() * 0.8 + 0.3,
-      hue: Math.random() < 0.18 ? 270 : Math.random() < 0.3 ? 175 : 0,
+      hue: Math.random() < 0.2 ? 190 : Math.random() < 0.32 ? 30 : 0,
     }))
 
     const resize = () => {

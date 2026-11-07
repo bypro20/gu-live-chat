@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useLocale } from '@/components/marketing/locale-provider'
 import { HeroStage } from '@/components/marketing/home-v2/hero-stage'
-import { Marquee, Orb, SpotlightCard, Starfield, TiltStage } from '@/components/marketing/home-v2/fx'
+import { Marquee, Orb, SpotlightCard, TiltStage } from '@/components/marketing/home-v2/fx'
 import { Smoke } from '@/components/marketing/home-v2/smoke'
 import { usePrefersReducedMotion } from '@/components/marketing/home-v2/use-reduced-motion'
 
@@ -195,66 +195,19 @@ export function HomeHeroV2() {
   const c = useCopy()
   const stageRef = useRef<HTMLDivElement>(null)
   return (
-    <section className="hv2 hv2-hero hv2-grain relative overflow-hidden bg-[#07060d] px-4 pb-28 pt-32 text-white sm:px-6 sm:pt-40 lg:pt-44">
-      <div className="hv2-aurora" aria-hidden="true" />
-      <Starfield />
-      <div className="hv2-grid" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-x-0 top-28 hidden h-[420px] xl:block" aria-hidden="true">
-        {c.bubbles.map((b, i) => (
-          <div
-            key={b.m}
-            className="hv2-float absolute rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-[13px] text-white/80 backdrop-blur"
-            style={{
-              ...[{ left: '4%', top: '8%' }, { right: '5%', top: '4%' }, { left: '7%', top: '58%' }, { right: '3%', top: '52%' }][i],
-              animationDelay: `${i * 1.3}s`,
-            }}
-          >
-            <span className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-white/40">
-              <span className={`h-1.5 w-1.5 rounded-full ${b.dot}`} />
-              {b.ch}
-            </span>
-            {b.m}
-          </div>
-        ))}
-      </div>
-      <div className="relative mx-auto max-w-5xl text-center">
-        <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-1.5 text-[12px] tracking-wide text-white/65">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          {c.eyebrow}
-        </p>
-        <h1 className="mt-7 text-balance text-[2.1rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl lg:text-[5rem]">
-          {c.h1a.split(' ').map((w, i) => (
-            <span key={`${w}-${i}`}>
-              <span className="hv2-word" style={{ animationDelay: `${150 + i * 90}ms` }}>
-                {w}
-              </span>{' '}
-            </span>
-          ))}
-          <br />
-          <span className="hv2-word" style={{ animationDelay: `${150 + c.h1a.split(' ').length * 90 + 120}ms` }}>
-            <span className={`${serif.className} hv2-glowtext italic font-normal text-violet-200`}>{c.h1b}</span>
-          </span>
-        </h1>
-        <p className="mx-auto mt-7 max-w-2xl text-pretty text-base leading-relaxed text-white/60 sm:text-lg">{c.sub}</p>
-        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/register"
-            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
-          >
-            {c.cta1} <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/demo"
-            className="inline-flex items-center rounded-xl border border-white/15 px-7 py-3.5 text-sm font-medium text-white/80 transition hover:bg-white/[0.06]"
-          >
-            {c.cta2}
-          </Link>
-        </div>
+    <section className="hv2 relative overflow-hidden bg-[#04070d] px-4 pb-28 pt-24 text-white sm:px-6">
+      <div className="hv2-aurora hv2-aurora-soft" aria-hidden="true" />
+      <div className="relative mx-auto max-w-3xl text-center">
+        <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.eyebrow}</p>
+        <h2 className="mt-4 text-balance text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl">
+          {c.h1a} <span className={`${serif.className} italic font-normal text-violet-200`}>{c.h1b}</span>
+        </h2>
+        <p className="mx-auto mt-6 max-w-2xl text-pretty leading-relaxed text-white/60 sm:text-lg">{c.sub}</p>
         <p className="mt-5 text-xs text-white/40">{c.note}</p>
       </div>
-      <div className="relative mt-16 px-1 sm:mt-20">
-        <div className="pointer-events-none absolute -inset-x-[12%] -inset-y-[34%] hidden sm:block" aria-hidden="true">
-          <Smoke targetRef={stageRef} level={0.85} />
+      <div className="relative mt-14 px-1 sm:mt-16">
+        <div className="pointer-events-none absolute -inset-x-[12%] -inset-y-[34%] hidden [mask-image:radial-gradient(closest-side,#000_60%,transparent)] sm:block" aria-hidden="true">
+          <Smoke targetRef={stageRef} level={0.7} hue={200} />
         </div>
         <div ref={stageRef} className="relative mx-auto w-full max-w-[1100px]">
           <TiltStage>
@@ -271,7 +224,7 @@ const CHANNEL_DOTS = ['bg-violet-400', 'bg-emerald-400', 'bg-sky-400', 'bg-blue-
 export function ChannelsV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative bg-[#07060d] px-0 pb-8 pt-20 text-white">
+    <section className="hv2 relative bg-[#04070d] px-0 pb-8 pt-20 text-white">
       <Reveal className="mx-auto max-w-5xl px-4 text-center sm:px-6">
         <p className="text-sm text-white/45">{c.channelsTitle}</p>
       </Reveal>
@@ -285,7 +238,7 @@ export function ChannelsV2() {
 export function InstallV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative bg-[#07060d] px-4 py-24 text-white sm:px-6 sm:py-32">
+    <section className="hv2 relative bg-[#04070d] px-4 py-24 text-white sm:px-6 sm:py-32">
       <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1fr_1.1fr]">
         <Reveal>
           <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.installTag}</p>
@@ -308,7 +261,7 @@ export function InstallV2() {
           </ol>
         </Reveal>
         <Reveal delay={100}>
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d0b16] shadow-[0_30px_100px_-30px_rgba(124,58,237,0.5)]">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#08111d] shadow-[0_30px_100px_-30px_rgba(124,58,237,0.5)]">
             <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3 text-[11px] text-white/40">
               <span className="h-2 w-2 rounded-full bg-white/15" />
               <span className="h-2 w-2 rounded-full bg-white/15" />
@@ -334,7 +287,7 @@ export function InstallV2() {
 export function FeaturesV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative bg-[#07060d] px-4 pb-28 text-white sm:px-6 sm:pb-36">
+    <section className="hv2 relative bg-[#04070d] px-4 pb-28 text-white sm:px-6 sm:pb-36">
       <div className="mx-auto max-w-6xl">
         <Reveal>
           <p className="text-[12px] uppercase tracking-[0.2em] text-violet-300/80">{c.featTag}</p>
@@ -379,7 +332,7 @@ export function FeaturesV2() {
 export function AiHumanV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative overflow-hidden bg-[#0b0914] px-4 py-24 text-white sm:px-6 sm:py-32">
+    <section className="hv2 relative overflow-hidden bg-[#07101a] px-4 py-24 text-white sm:px-6 sm:py-32">
       <div className="hv2-aurora hv2-aurora-soft" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
         <Reveal>
@@ -398,7 +351,7 @@ export function AiHumanV2() {
           </ul>
         </Reveal>
         <Reveal delay={100}>
-          <div className="rounded-2xl border border-white/10 bg-[#120f20]/80 p-5 shadow-[0_30px_100px_-30px_rgba(124,58,237,0.5)]">
+          <div className="rounded-2xl border border-white/10 bg-[#0a1626]/80 p-5 shadow-[0_30px_100px_-30px_rgba(124,58,237,0.5)]">
             <p className="mb-4 text-[11px] uppercase tracking-[0.16em] text-white/35">{c.example}</p>
             <div className="space-y-3 text-sm">
               {c.chat.map((m, i) =>
@@ -431,7 +384,7 @@ export function AiHumanV2() {
 export function TrustV2() {
   const c = useCopy()
   return (
-    <section className="hv2 relative bg-[#07060d] px-4 py-24 text-white sm:px-6 sm:py-32">
+    <section className="hv2 relative bg-[#04070d] px-4 py-24 text-white sm:px-6 sm:py-32">
       <div className="mx-auto max-w-6xl">
         <Reveal>
           <p className="flex items-center gap-2 text-[12px] uppercase tracking-[0.2em] text-violet-300/80">
@@ -443,7 +396,7 @@ export function TrustV2() {
         </Reveal>
         <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-3">
           {c.trust.map((t, i) => (
-            <Reveal key={t.h} delay={i * 70} className="bg-[#0b0914]">
+            <Reveal key={t.h} delay={i * 70} className="bg-[#07101a]">
               <div className="h-full p-8">
                 <h3 className="text-lg font-semibold tracking-tight">{t.h}</h3>
                 <p className="mt-3 leading-relaxed text-white/55">{t.p}</p>
@@ -459,7 +412,7 @@ export function TrustV2() {
 export function FinalCtaV2() {
   const c = useCopy()
   return (
-    <section className="hv2 hv2-grain relative overflow-hidden bg-[#07060d] px-4 py-28 text-center text-white sm:px-6 sm:py-36">
+    <section className="hv2 hv2-grain relative overflow-hidden bg-[#04070d] px-4 py-28 text-center text-white sm:px-6 sm:py-36">
       <div className="hv2-aurora hv2-aurora-soft" aria-hidden="true" />
       <Reveal className="relative mx-auto max-w-3xl">
         <Orb />
@@ -470,7 +423,7 @@ export function FinalCtaV2() {
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/register"
-            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
+            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#04070d] transition hover:bg-white/90"
           >
             {c.finalCta} <ArrowRight className="h-4 w-4" />
           </Link>

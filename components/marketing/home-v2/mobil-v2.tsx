@@ -131,7 +131,7 @@ export function MobilV2() {
   const steps = tab === 'ios' ? c.iosSteps : c.androidSteps
 
   return (
-    <div className="hv2 bg-[#07060d] text-white">
+    <div className="hv2 bg-[#04070d] text-white">
       {/* Üst bölüm */}
       <section className="relative overflow-hidden px-4 pb-20 pt-32 text-center sm:px-6 sm:pt-40">
         <div className="hv2-aurora" aria-hidden="true" />
@@ -149,7 +149,7 @@ export function MobilV2() {
           <a
             href={APK_DOWNLOAD_PATH}
             download={APK_DOWNLOAD_FILENAME}
-            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d] transition hover:bg-white/90 sm:w-auto"
+            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#04070d] transition hover:bg-white/90 sm:w-auto"
           >
             <Download className="h-4 w-4" />
             {c.download}
@@ -194,7 +194,7 @@ export function MobilV2() {
                   aria-selected={tab === k}
                   onClick={() => setPicked(k)}
                   className={`rounded-lg px-5 py-2 text-sm font-medium transition ${
-                    tab === k ? 'bg-white text-[#07060d]' : 'text-white/60 hover:text-white'
+                    tab === k ? 'bg-white text-[#04070d]' : 'text-white/60 hover:text-white'
                   }`}
                 >
                   {c[k]}
@@ -240,8 +240,8 @@ export function MobilV2() {
 
           {/* Telefon çizimi */}
           <div className="mx-auto w-[260px]" aria-hidden="true">
-            <div className="rounded-[2.4rem] border border-white/15 bg-[#0d0b16] p-3 shadow-[0_30px_100px_-30px_rgba(124,58,237,0.6)]">
-              <div className="relative aspect-[9/13] overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-[#241b45] via-[#15112a] to-[#0d0b16] p-5">
+            <div className="rounded-[2.4rem] border border-white/15 bg-[#08111d] p-3 shadow-[0_30px_100px_-30px_rgba(124,58,237,0.6)]">
+              <div className="relative aspect-[9/13] overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-[#241b45] via-[#15112a] to-[#08111d] p-5">
                 <div className="mx-auto mb-5 h-1.5 w-16 rounded-full bg-white/15" />
                 <div className="grid grid-cols-4 gap-x-3 gap-y-5">
                   {Array.from({ length: 11 }).map((_, i) => (

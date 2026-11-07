@@ -47,7 +47,7 @@ export function PanelDemoPage() {
           </ul>
           <Link
             href="/register"
-            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#07060d] transition hover:bg-white/90"
+            className="hv2-btn hv2-btn-glow inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#04070d] transition hover:bg-white/90"
           >
             {isTr ? 'Ücretsiz hesap aç' : 'Create free account'}
             <ArrowRight className="h-4 w-4" />

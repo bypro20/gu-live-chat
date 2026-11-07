@@ -110,7 +110,7 @@ export function HeroStage() {
     <div className="relative mx-auto w-full max-w-[1100px]" aria-hidden="true">
       <div className="absolute -inset-x-10 -top-10 bottom-0 hv2-stage-glow" />
 
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0d0b16]/85 shadow-[0_40px_120px_-30px_rgba(124,58,237,0.55)] backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#08111d]/85 shadow-[0_40px_120px_-30px_rgba(124,58,237,0.55)] backdrop-blur-sm">
         <div className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3">
           <div className="flex gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
@@ -283,9 +283,9 @@ export function HeroStage() {
         </div>
       </div>
 
-      <div className="absolute -bottom-7 right-4 z-20 hidden w-[240px] rounded-2xl border border-white/10 bg-[#161226]/95 p-3 shadow-2xl backdrop-blur sm:block lg:right-[-14px]">
+      <div className="absolute -bottom-7 right-4 z-20 hidden w-[240px] rounded-2xl border border-white/10 bg-[#0a1626]/95 p-3 shadow-2xl backdrop-blur sm:block lg:right-[-14px]">
         <div className="flex items-center gap-2 border-b border-white/[0.07] pb-2">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-400 to-teal-300 text-[10px] font-bold text-[#0d0b16]">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-400 to-teal-300 text-[10px] font-bold text-[#08111d]">
             G
           </span>
           <span className="text-[11px] font-medium text-white/80">{c.widgetName}</span>

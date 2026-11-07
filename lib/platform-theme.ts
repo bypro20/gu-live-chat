@@ -32,50 +32,44 @@ export type PlatformThemes = {
 }
 
 
-export const DEFAULT_ADMIN_THEME: PanelTheme = {
-  background: GU_BRAND.background,
-  foreground: GU_BRAND.foreground,
-  card: GU_BRAND.card,
-  cardForeground: GU_BRAND.cardForeground,
-  muted: GU_BRAND.muted,
-  mutedForeground: GU_BRAND.mutedForeground,
-  border: GU_BRAND.border,
-  accent: GU_BRAND.primary,
-  accentForeground: GU_BRAND.primaryForeground,
-  hover: GU_BRAND.primaryLight,
+
+/** Ahizem iş paneli dili: kâğıt beyazı, lacivert vurgu, ince çizgi. */
+export const PAPER_THEME: PanelTheme = {
+  background: '#f3f6f8',
+  foreground: '#122033',
+  card: '#ffffff',
+  cardForeground: '#122033',
+  muted: '#e7edf2',
+  mutedForeground: '#4d5d6e',
+  border: '#d8e1e8',
+  accent: '#0c4a6e',
+  accentForeground: '#ffffff',
+  hover: '#e6f0f7',
 }
 
-/** Gu Live Chat sinematik koyu palet: panel (müşteri + admin) ortak. */
+export const DEFAULT_ADMIN_THEME: PanelTheme = PAPER_THEME
+
+/** Koyu karşılığı: derin lacivert mürekkep. */
 export const CINEMATIC_DARK_THEME: PanelTheme = {
-  background: '#07060d',
-  foreground: '#F3EFFA',
-  card: '#0f0c1b',
-  cardForeground: '#F3EFFA',
-  muted: '#16112a',
-  mutedForeground: '#a79fc0',
-  border: '#2a2142',
-  accent: '#a78bfa',
-  accentForeground: '#0b0618',
-  hover: '#1b1532',
+  background: '#0a1420',
+  foreground: '#e6edf4',
+  card: '#0f1d2e',
+  cardForeground: '#e6edf4',
+  muted: '#14263a',
+  mutedForeground: '#93a6ba',
+  border: '#1d3249',
+  accent: '#5eb4e6',
+  accentForeground: '#06121e',
+  hover: '#162b42',
 }
 
-/** Eski sıcak gri/yeşil varsayılanı: kayıtlı eski değerleri yeni palete çevirmek için. */
+/** Eski varsayılanlar: kayıtlıysa yeni palete çevrilir. */
 export const LEGACY_DARK_ACCENT = '#3DBDA5'
+export const LEGACY_LIGHT_ACCENTS = ['#9333ea', '#a78bfa']
 
 export const DEFAULT_ADMIN_DARK_THEME: PanelTheme = CINEMATIC_DARK_THEME
 
-export const DEFAULT_CUSTOMER_THEME: PanelTheme = {
-  background: GU_BRAND.background,
-  foreground: GU_BRAND.foreground,
-  card: GU_BRAND.card,
-  cardForeground: GU_BRAND.cardForeground,
-  muted: GU_BRAND.muted,
-  mutedForeground: GU_BRAND.mutedForeground,
-  border: GU_BRAND.border,
-  accent: GU_BRAND.primary,
-  accentForeground: GU_BRAND.primaryForeground,
-  hover: GU_BRAND.primaryLight,
-}
+export const DEFAULT_CUSTOMER_THEME: PanelTheme = PAPER_THEME
 
 export const DEFAULT_CUSTOMER_DARK_THEME: PanelTheme = CINEMATIC_DARK_THEME
 

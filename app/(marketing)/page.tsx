@@ -6,6 +6,7 @@ import { PricingSection, FaqSection } from '@/components/marketing/home-sections
 import {
   HomeHeroV2, ChannelsV2, InstallV2, FeaturesV2, AiHumanV2, TrustV2, FinalCtaV2,
 } from '@/components/marketing/home-v2/sections'
+import { CinemaHero } from '@/components/marketing/home-v2/cinema-hero'
 import { getHomeFaqs } from '@/lib/home-faqs'
 import { getServerLocaleContext } from '@/lib/locale-server'
 import { marketingMetadata } from '@/lib/marketing-pages/metadata'
@@ -24,6 +25,7 @@ export default async function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       <JsonLd data={[softwareApplicationJsonLd(contentLocale), faqJsonLd(faqs)]} />
       <MarketingNav tone="dark" />
+      <CinemaHero />
       <HomeHeroV2 />
       <ChannelsV2 />
       <InstallV2 />
