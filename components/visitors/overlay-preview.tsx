@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
+import { useEffect, useRef, useState, useCallback, useLayoutEffect, useSyncExternalStore } from 'react'
 import type { LiveVisitor, VisitorActivity } from '@/lib/stores/live-visitors-store'
 import { getAccent, type VisitorTheme } from '@/lib/visitors-utils'
 import { formatVisitorTechLine, formatVisitorLocationLine } from '@/lib/visitor-intelligence'
 import { useSocket } from '@/lib/hooks/use-socket'
 import { useVisitorsI18n } from '@/lib/hooks/use-visitors-i18n'
+import { VisitorInspector } from '@/components/visitors/visitor-inspector'
 
 interface OverlayPreviewProps {
   visitor: LiveVisitor
@@ -18,6 +19,13 @@ interface OverlayPreviewProps {
   webrtcState?: 'connecting' | 'connected' | 'failed' | 'denied' | 'idle' | 'new' | 'disconnected' | 'closed'
   privacyMode?: boolean
   onWebRTCHDToggle?: (visitorId: string, active: boolean) => void
+}
+
+const WIDE_QUERY = '(min-width: 1280px)'
+function subscribeWide(cb: () => void) {
+  const mq = window.matchMedia(WIDE_QUERY)
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
 }
 
 export function OverlayPreview({
@@ -40,7 +48,10 @@ export function OverlayPreview({
   const [isStopping, setIsStopping] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [zoom, setZoom] = useState(1)
-  const [showInfo, setShowInfo] = useState(false)
+  // Geniş ekranda denetçi paneli açık başlar; kullanıcı değiştirirse onun tercihi geçerli.
+  const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE_QUERY).matches, () => false)
+  const [infoOverride, setInfoOverride] = useState<boolean | null>(null)
+  const showInfo = infoOverride ?? wide
   const [screenshotReady, setScreenshotReady] = useState(false)
   const [remoteClicks, setRemoteClicks] = useState<Array<{ x: number; y: number; timestamp: number }>>([])
   const [interventionMode, setInterventionMode] = useState(false)
@@ -299,26 +310,23 @@ export function OverlayPreview({
 
   // ─── Control bar ───
   const controlBar = (
-    <div className="flex items-center justify-between gap-2 px-3 h-12 shrink-0 bg-gradient-to-r from-[#0c0f1d] to-[#111527] border-b border-white/[0.08]">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-3 px-3 h-12 shrink-0 bg-[#0a0813]/90 border-b border-white/[0.07]">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
             {(isConnected || screenshotReady) && <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />}
             <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${(isConnected || screenshotReady) ? 'bg-emerald-400' : 'bg-amber-400'}`} />
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">{(isConnected || screenshotReady) ? o.live : o.wait}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-emerald-300">{(isConnected || screenshotReady) ? o.live : o.wait}</span>
         </div>
-        <span className="h-4 w-px bg-white/[0.08]" />
-        <span className="text-[11px] font-mono tabular-nums text-white/50">{viewportW}×{viewportH}</span>
-        {scrollPercent > 0 && (
-          <>
-            <span className="h-4 w-px bg-white/[0.08]" />
-            <span className="text-[11px] font-mono tabular-nums text-white/50">↕ {scrollPercent}%</span>
-          </>
-        )}
-        <span className="h-4 w-px bg-white/[0.08]" />
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${isConnected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-          {isConnected ? (liveFps > 0 ? `${liveFps} FPS` : 'SD') : 'SD'}
+        <div className="hidden min-w-0 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.035] px-3 py-1.5 md:flex">
+          <svg className="h-3 w-3 shrink-0 text-white/35" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          <span className="max-w-[260px] truncate font-mono text-[11px] text-white/60">{visitor.currentPage || '—'}</span>
+        </div>
+        <span className="hidden shrink-0 font-mono text-[11px] tabular-nums text-white/40 lg:inline">{viewportW}×{viewportH}</span>
+        {scrollPercent > 0 && <span className="hidden shrink-0 font-mono text-[11px] tabular-nums text-white/40 lg:inline">↕ {scrollPercent}%</span>}
+        <span className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold ${isConnected ? 'bg-violet-400/15 text-violet-200' : 'bg-white/[0.07] text-white/55'}`}>
+          {isConnected ? (liveFps > 0 ? `HD · ${liveFps} FPS` : 'HD') : (liveFps > 0 ? `${locale === 'en' ? 'Snapshot' : 'Anlık görüntü'} · ${liveFps} FPS` : (locale === 'en' ? 'Snapshot' : 'Anlık görüntü'))}
         </span>
       </div>
 
@@ -346,7 +354,7 @@ export function OverlayPreview({
         )}
         {/* Visitor info toggle */}
         <button
-          onClick={() => setShowInfo((v) => !v)}
+          onClick={() => setInfoOverride(!showInfo)}
           title={o.visitorInfo}
           className={`w-8 h-8 grid place-items-center rounded-lg transition-colors ${showInfo ? 'bg-white/[0.12] text-white/90' : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70'}`}
         >
@@ -377,62 +385,13 @@ export function OverlayPreview({
     </div>
   )
 
-  // ─── Visitor info overlay (floating, bottom-left) ───
-  const visitorInfoOverlay = isActive && (
-    <div className={`absolute bottom-3 left-3 z-20 transition-all duration-300 ${showInfo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-      <div className="bg-[#0c1024]/95 backdrop-blur-xl border border-white/[0.1] rounded-2xl shadow-2xl p-3.5 min-w-[260px] max-w-[320px]">
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${accent.avatar} flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0`}>
-            {initial}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white/90 truncate">{displayName}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {visitor.isLive && (
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] text-emerald-400 font-medium">{o.online}</span>
-                </span>
-              )}
-              {visitor.startedAt && (
-                <span className="text-[10px] text-white/30">{formatDurationLocal(visitor.startedAt)}</span>
-              )}
-            </div>
-          </div>
-        </div>
-        {visitor.currentTitle && (
-          <div className="mb-2.5 px-2.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1">{o.currentPage}</p>
-            <p className="text-xs text-white/70 truncate">{visitor.currentTitle}</p>
-            {visitor.currentPage && (
-              <p className="text-[10px] text-white/30 truncate mt-0.5">{visitor.currentPage}</p>
-            )}
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-[10px] text-white/40 flex-wrap">
-          <span>{formatVisitorTechLine(visitor)}</span>
-          {formatVisitorLocationLine(visitor) && (
-            <span>• {formatVisitorLocationLine(visitor)}</span>
-          )}
-          {visitor.entrySource && <span>• {visitor.entrySource}</span>}
-        </div>
-        {activities.length > 0 && (
-          <div className="mt-2.5 pt-2.5 border-t border-white/[0.08]">
-            <p className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1.5">{o.recentActivity}</p>
-            <div className="space-y-1">
-              {activities.slice(0, 3).map((a, i) => (
-                <div key={i} className="flex items-center gap-2 text-[10px]">
-                  <span className="text-white/25">
-                    {a.eventType === 'pageview' ? '📄' : a.eventType === 'click' ? '👆' : a.eventType === 'scroll' ? '↕️' : a.eventType === 'input' ? '⌨️' : '•'}
-                  </span>
-                  <span className="text-white/50 truncate">
-                    {a.eventType === 'pageview' ? a.title || a.url : a.eventType === 'click' ? a.text || a.selector : a.eventType}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+  // ─── Visitor inspector drawer (screen yanında açılır) ───
+  const inspectorDrawer = isActive && (
+    <div
+      className={`shrink-0 overflow-hidden border-l border-white/[0.07] transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${showInfo ? 'w-[340px] max-w-[85%]' : 'w-0 border-transparent'}`}
+    >
+      <div className="h-full w-[340px] max-w-full">
+        <VisitorInspector visitor={visitor} activities={activities} onClose={() => setInfoOverride(false)} />
       </div>
     </div>
   )
@@ -444,9 +403,9 @@ export function OverlayPreview({
 
   // ─── The screen surface ───
   const screen = (
-    <div ref={frameRef} className="relative flex-1 min-h-0 overflow-hidden flex items-center justify-center bg-[#05040a]">
+    <div ref={frameRef} className="relative flex-1 min-h-0 overflow-hidden flex items-center justify-center bg-[#05040a] bg-[radial-gradient(60%_55%_at_50%_50%,rgba(124,58,237,0.16),transparent_70%)] p-0">
     <div
-      className="relative shrink-0 overflow-hidden bg-black"
+      className="relative shrink-0 overflow-hidden bg-black shadow-[0_20px_80px_-20px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
       onClick={handleRemoteClick}
       onMouseMove={handleInterventionMouseMove}
       onWheel={handleInterventionWheel}
@@ -628,8 +587,6 @@ export function OverlayPreview({
         </div>
       )}
 
-      {/* Visitor info overlay */}
-      {visitorInfoOverlay}
     </div>
     </div>
   )
@@ -685,16 +642,22 @@ export function OverlayPreview({
     return (
       <div className="fixed inset-0 z-[999999] flex flex-col bg-black">
         {controlBar}
-        {screen}
+        <div className="relative flex min-h-0 flex-1">
+          {screen}
+          {inspectorDrawer}
+        </div>
       </div>
     )
   }
 
   // ─── Embedded full-height viewer ───
   return (
-    <div className="relative w-full h-full flex flex-col rounded-[24px] border border-white/[0.08] bg-gradient-to-b from-[#070b18] to-[#0c1024] overflow-hidden shadow-2xl">
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#07060d] shadow-[0_30px_100px_-40px_rgba(124,58,237,0.6)]">
       {controlBar}
-      {screen}
+      <div className="relative flex min-h-0 flex-1">
+        {screen}
+        {inspectorDrawer}
+      </div>
     </div>
   )
 }

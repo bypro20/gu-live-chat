@@ -482,8 +482,8 @@ export function AdminVisitorsMonitor({
     })
 
   const listPanelClass = isDashboard
-    ? `w-full shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'xl:w-[400px]' : 'flex-1 min-w-0'}`
-    : `admin-monitor-panel w-full shrink-0 min-h-[480px] ${selectedVisitor ? 'xl:w-[400px]' : 'flex-1 min-w-0'}`
+    ? `w-full shrink-0 flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden min-h-[480px] ${selectedVisitor ? 'xl:w-[340px]' : 'flex-1 min-w-0'}`
+    : `admin-monitor-panel w-full shrink-0 min-h-[480px] ${selectedVisitor ? 'xl:w-[340px]' : 'flex-1 min-w-0'}`
   const detailPanelClass = isDashboard
     ? 'flex-1 flex flex-col min-h-[480px] bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden'
     : 'admin-monitor-panel flex-1 min-h-[480px]'
@@ -598,16 +598,6 @@ export function AdminVisitorsMonitor({
                         <div className={`flex items-center gap-2 mt-1.5 ${textMuted}`}>
                           <VisitorLiveProfile visitor={visitor} theme={isDashboard ? 'dashboard' : 'admin'} compact />
                         </div>
-                        {visitor.pages && visitor.pages.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {visitor.pages.slice(0, 3).map((p, i) => (
-                              <div key={i} className={`text-[10px] truncate flex items-center gap-1 ${textSecondary}`}>
-                                <span className="w-1 h-1 rounded-full bg-violet-400/60 shrink-0" />
-                                {p.title || p.url}
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                       {expanded ? <ChevronUp className="w-3.5 h-3.5 text-gray-500 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500 shrink-0" />}
                     </div>
@@ -616,13 +606,9 @@ export function AdminVisitorsMonitor({
                     <button
                       type="button"
                       onClick={() => startWatching(visitor.visitorId)}
-                      className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white touch-manipulation ${
-                        isDashboard
-                          ? 'bg-gradient-to-r from-[#1972F5] to-[#2563EB]'
-                          : 'admin-screen-watch-btn bg-violet-600 hover:bg-violet-500'
-                      }`}
+                      className="group/watch inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-300/25 bg-violet-400/10 px-3 py-1.5 text-[11px] font-semibold text-violet-100 transition hover:border-violet-300/50 hover:bg-violet-400/20 touch-manipulation"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Eye className="h-3.5 w-3.5 transition group-hover/watch:scale-110" />
                       {o.watchScreen}
                     </button>
                   </div>
@@ -681,9 +667,6 @@ export function AdminVisitorsMonitor({
                 />
               )}
               <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
-                <div className="shrink-0">
-                  <VisitorLiveProfile visitor={selectedVisitor} theme={isDashboard ? 'dashboard' : 'admin'} />
-                </div>
                 <div className="flex-1 min-h-[240px]">
                 <VisitorDetailPanel
                   visitor={selectedVisitor}
