@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useActiveWebsite } from '@/lib/hooks/use-active-website'
 import NotificationBell from '@/components/dashboard/notification-bell'
+import { PanelTopNav, AvatarMenu, type NavEntry } from '@/components/panel/top-nav'
 import { AppLogo } from '@/components/brand/app-logo'
 import { useNativeApp } from '@/lib/hooks/use-native-app'
 import { clearNativeAppMark, nativeAppHomePath } from '@/lib/native-app'
@@ -166,6 +167,36 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [mobileMenuOpen])
+
+  const tr = d.locale !== 'en'
+  const desktopEntries: NavEntry[] = [
+    { href: '/dashboard', label: tr ? 'Genel bakış' : 'Overview' },
+    { href: '/inbox', label: tr ? 'Gelen kutusu' : 'Inbox', badge: inboxUnread > 0 ? (inboxUnread > 99 ? '99+' : String(inboxUnread)) : null },
+    { href: '/visitors', label: tr ? 'Ziyaretçiler' : 'Visitors', badge: liveVisitorCount > 0 ? String(liveVisitorCount) : null },
+    { href: '/contacts', label: tr ? 'Kişiler' : 'Contacts' },
+    { href: '/analytics', label: tr ? 'Analitik' : 'Analytics' },
+    {
+      label: tr ? 'Otomasyon' : 'Automation',
+      children: [
+        { href: '/settings/chatbot', label: tr ? 'Sohbet botu' : 'Chatbot', hint: tr ? 'Akışlar ve yapay zekâ' : 'Flows and AI' },
+        { href: '/settings/knowledge', label: tr ? 'Bilgi bankası' : 'Knowledge base', hint: tr ? 'Yapay zekâyı eğit' : 'Train the AI' },
+        { href: '/settings/workflows', label: tr ? 'İş akışları' : 'Workflows' },
+        { href: '/settings/proactive', label: tr ? 'Proaktif mesajlar' : 'Proactive messages' },
+        { href: '/settings/campaigns', label: tr ? 'Kampanyalar' : 'Campaigns' },
+        { href: '/settings/canned-responses', label: tr ? 'Hazır yanıtlar' : 'Canned replies' },
+        { href: '/settings/voice-agent', label: tr ? 'Sesli yapay zekâ' : 'Voice AI' },
+      ],
+    },
+    {
+      label: tr ? 'Destek' : 'Support',
+      children: [
+        { href: '/settings/tickets', label: tr ? 'Biletler' : 'Tickets' },
+        { href: '/settings/ratings', label: tr ? 'Memnuniyet puanı' : 'Satisfaction' },
+        { href: '/settings/status-page', label: tr ? 'Durum sayfası' : 'Status page' },
+      ],
+    },
+    { href: '/settings', label: tr ? 'Ayarlar' : 'Settings', match: (p) => p === '/settings' || (p.startsWith('/settings/') && !/chatbot|knowledge|workflows|proactive|campaigns|canned|voice-agent|tickets|ratings|status-page/.test(p)) },
+  ]
 
   return (
     <div
@@ -400,6 +431,45 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className={`app-main absolute inset-0 lg:relative lg:flex-1 flex flex-col min-w-0 w-full h-full overflow-hidden ${isNativeApp ? 'native-app-main' : ''}`}>
+        {!isNativeCustomerApp && (
+          <PanelTopNav
+            pathname={pathname || ''}
+            entries={desktopEntries}
+            logo={<AppLogo variant="light" href="/dashboard" size="sm" showTagline={false} />}
+            right={
+              <>
+                {websites.length > 1 ? (
+                  <select
+                    className="ptn-select"
+                    value={activeWebsite?.websiteId ?? ''}
+                    onChange={(e) => switchWebsite(e.target.value)}
+                    aria-label={tr ? 'Site seç' : 'Select site'}
+                  >
+                    {websites.map((w) => (
+                      <option key={w.websiteId} value={w.websiteId}>{w.name}</option>
+                    ))}
+                  </select>
+                ) : activeWebsite ? (
+                  <span className="hidden max-w-[160px] truncate text-[12.5px] text-[var(--ptn-muted)] xl:inline">{activeWebsite.domain || activeWebsite.name}</span>
+                ) : null}
+                <a href="/" className="ptn-btn">{tr ? 'Siteye git' : 'Go to site'}</a>
+                <NotificationBell variant="toolbar" />
+                <AvatarMenu
+                  initial={userInitial}
+                  name={session?.user?.name}
+                  email={session?.user?.email}
+                  items={[
+                    { label: tr ? 'Siteye git' : 'Go to site', href: '/' },
+                    { label: tr ? 'Faturalama' : 'Billing', href: '/settings/billing' },
+                    { label: theme === 'dark' ? (tr ? 'Açık tema' : 'Light theme') : (tr ? 'Koyu tema' : 'Dark theme'), onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark') },
+                    ...(isAdmin ? [{ label: tr ? 'Yönetim paneli' : 'Admin panel', href: '/admin' }] : []),
+                    { label: tr ? 'Çıkış yap' : 'Sign out', onClick: () => void handleSignOut(), danger: true },
+                  ]}
+                />
+              </>
+            }
+          />
+        )}
         {isNativeCustomerApp ? (
           <NativeTopBar
             pathname={pathname}

@@ -21,7 +21,8 @@ import { AdminShellProvider } from '@/components/admin/admin-shell-context'
 import { AdminThemeProvider, useAdminTheme, AdminThemeToggle } from '@/components/admin/admin-theme-toggle'
 import { useToast } from '@/lib/toast'
 import { useLiveVisitorNotify } from '@/lib/hooks/use-live-visitor-notify'
-import { getAdminPageTitle } from '@/lib/admin-navigation'
+import { getAdminPageTitle, ADMIN_NAV_GROUPS } from '@/lib/admin-navigation'
+import { PanelTopNav, AvatarMenu, type NavEntry } from '@/components/panel/top-nav'
 import { PanelBoot } from '@/components/panel/panel-boot'
 
 interface AdminUser {
@@ -60,7 +61,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     variant: 'admin',
     userId: admin?.id,
   })
-  const { theme: adminTheme } = useAdminTheme()
+  const { theme: adminTheme, toggleTheme } = useAdminTheme()
 
   // Müşteri paneli koyu modu admin'i etkilemesin
   useEffect(() => {
@@ -186,6 +187,15 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const isFullBleed = pathname.startsWith('/admin/customer-sites')
   const hideBottomNav = isFullBleed
 
+  const badgeOf = (k?: string) => {
+    const n = k === 'inbox' ? inboxUnread : k === 'mail' ? mailUnread : k === 'visitors' ? liveVisitorCount : 0
+    return n > 0 ? (n > 99 ? '99+' : String(n)) : null
+  }
+  const adminEntries: NavEntry[] = ADMIN_NAV_GROUPS.map((g) => ({
+    label: g.label,
+    children: g.items.map((it) => ({ href: it.href, label: it.label, hint: it.description, badge: badgeOf(it.badge), match: it.match })),
+  }))
+
   return (
     <SessionProvider>
       <AdminShellProvider
@@ -215,7 +225,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         )}
 
         <div
-          className={`fixed lg:static inset-y-0 left-0 z-50 h-full transform transition-transform duration-200 ease-out ${
+          className={`ptn-hide-lg fixed lg:static inset-y-0 left-0 z-50 h-full transform transition-transform duration-200 ease-out ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
         >
@@ -239,6 +249,28 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             isNativeAdminApp ? 'native-app-main z-10' : ''
           } ${isFullBleed || isInboxRoute ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
         >
+          <PanelTopNav
+            pathname={pathname}
+            entries={adminEntries}
+            logo={<AppLogo variant="light" href="/admin" size="sm" showTagline={false} />}
+            right={
+              <>
+                <button type="button" onClick={() => setPaletteOpen(true)} className="ptn-btn" aria-label="Ara">Ara <kbd className="text-[10px] opacity-60">⌘K</kbd></button>
+                <a href="/" className="ptn-btn">Siteye git</a>
+                <AvatarMenu
+                  initial={(admin.name || 'A').charAt(0).toUpperCase()}
+                  name={admin.name}
+                  email={admin.email}
+                  items={[
+                    { label: 'Siteye git', href: '/' },
+                    ...(!isNativeAdminApp ? [{ label: 'Müşteri paneli', href: '/dashboard' }] : []),
+                    { label: adminTheme === 'dark' ? 'Açık tema' : 'Koyu tema', onClick: toggleTheme },
+                    { label: 'Çıkış yap', onClick: () => void handleSignOut(), danger: true },
+                  ]}
+                />
+              </>
+            }
+          />
           <AdminTopBar
             inboxUnread={inboxUnread}
             liveVisitorCount={liveVisitorCount}
